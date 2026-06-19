@@ -119,7 +119,7 @@ const [search, setSearch] = useState("");
 
 </a>
 
-      <div className="flex flex-wrap items-center gap-4 mb-8">
+      <div className="flex flex-wrap items-center gap-4 mb-8 pt-24">
 
         <div className="flex items-center gap-3">
 
@@ -211,7 +211,7 @@ const [search, setSearch] = useState("");
   );
 }
   return (
-  <main className="min-h-screen bg-slate-950 text-white p-6 pt-100 pb-40">
+  <main className="min-h-screen bg-slate-950 text-white p-6 pb-40">
 
     <div className="flex flex-col items-center mb-8">
 
