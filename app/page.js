@@ -48,7 +48,9 @@ const [search, setSearch] = useState("");
     <main
   className="
     min-h-screen
-    overflow-x-hidden max-w-full
+    overflow-x-hidden
+    w-full
+    max-w-full
     bg-gradient-to-b
     from-[#0b1020]
     via-[#070b17]
@@ -192,7 +194,7 @@ const [search, setSearch] = useState("");
   "
 >
 
-            <div className="flex items-center justify-between w-full min-w-0 overflow-hidden">
+            <div className="flex items-center w-full min-w-0 gap-3">
 
   {/* LEFT SIDE */}
   <div className="flex items-center gap-3 min-w-0 overflow-hidden">
@@ -207,8 +209,8 @@ const [search, setSearch] = useState("");
       className="w-10 h-10"
     />
 
-    <div className="flex flex-col">
-      <span className="font-semibold text-white">
+    <div className="flex flex-col min-w-0">
+      <span className="font-semibold text-white truncate block max-w-[140px]">
   {player.account}
 </span>
 
@@ -275,7 +277,9 @@ const [search, setSearch] = useState("");
   <main
   className="
     min-h-screen
-    overflow-x-hidden max-w-full
+    overflow-x-hidden
+    w-full
+    max-w-full
     bg-gradient-to-b
     from-[#0b1020]
     via-[#070b17]
@@ -484,7 +488,7 @@ const [search, setSearch] = useState("");
       </span>
     </div>
 
-    <div className="flex items-center gap-3 text-xs text-slate-400">
+    <div className="flex items-center gap-2 text-xs text-slate-400 shrink-0 whitespace-nowrap">
 
       <span
         className={`
