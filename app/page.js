@@ -47,16 +47,16 @@ const [search, setSearch] = useState("");
 
     <main
   className="
-  min-h-screen
-  overflow-x-hidden
-  bg-gradient-to-b
-  from-[#0b1020]
-  via-[#070b17]
-  to-[#05070f]
-  text-white
-  p-6
-  pb-6
-"
+    min-h-screen
+    overflow-x-hidden max-w-full
+    bg-gradient-to-b
+    from-[#0b1020]
+    via-[#070b17]
+    to-[#05070f]
+    text-white
+    p-6
+    pb-6
+  "
 >
 
   <div className="absolute inset-0 pointer-events-none">
@@ -138,7 +138,7 @@ const [search, setSearch] = useState("");
 
       <div className="flex flex-wrap items-center gap-4 mb-8 pt-12">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
 
   <img
     src={BRANDING.cgnshield}
@@ -192,10 +192,10 @@ const [search, setSearch] = useState("");
   "
 >
 
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full min-w-0 overflow-hidden">
 
   {/* LEFT SIDE */}
-  <div className="flex items-center gap-3">
+  <div className="flex items-center gap-3 min-w-0 overflow-hidden">
 
     <div className="text-lg font-bold w-8">
       {player.position}
@@ -212,7 +212,7 @@ const [search, setSearch] = useState("");
   {player.account}
 </span>
 
-      <span className="text-xs text-slate-500">
+      <span className="text-xs text-slate-500 truncate block max-w-[120px]">
   {player.clan}
 </span>
     </div>
@@ -274,16 +274,16 @@ const [search, setSearch] = useState("");
   return (
   <main
   className="
-  min-h-screen
-  overflow-x-hidden
-  bg-gradient-to-b
-  from-[#0b1020]
-  via-[#070b17]
-  to-[#05070f]
-  text-white
-  p-6
-  pb-6
-"
+    min-h-screen
+    overflow-x-hidden max-w-full
+    bg-gradient-to-b
+    from-[#0b1020]
+    via-[#070b17]
+    to-[#05070f]
+    text-white
+    p-6
+    pb-6
+  "
 >
 
   <div className="absolute inset-0 pointer-events-none">
@@ -470,12 +470,12 @@ const [search, setSearch] = useState("");
       transition
     "
   >
-    <div className="flex items-center gap-3 min-w-0">
+    <div className="flex items-center gap-3 min-w-0 overflow-hidden">
       <span className="text-slate-500 w-6">
         {player.position}
       </span>
 
-      <span className="font-medium text-white truncate">
+      <span className="font-medium text-white truncate max-w-[140px] block">
         {player.account}
       </span>
 
