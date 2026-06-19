@@ -119,7 +119,7 @@ const [search, setSearch] = useState("");
 
 </a>
 
-      <div className="flex flex-wrap items-center gap-4 mb-8 pt-24">
+      <div className="flex flex-wrap items-center gap-4 mb-8 pt-12">
 
         <div className="flex items-center gap-3">
 
