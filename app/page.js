@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { getLeagueStyles } from "../lib/leagueColors";
 import { CWL_ICONS, TH_ICONS } from "../lib/icons";
 import { BRANDING } from "../lib/branding";
 
@@ -29,8 +30,7 @@ const [search, setSearch] = useState("");
 
   if (selectedClan) {
 
-  const rank =
-    clanPlayers[0]?.cwlRank || "";
+  const rank = clanPlayers?.[0]?.cwlRank ?? "unranked";
 
   const season =
     clanPlayers[0]?.season || "";
@@ -54,9 +54,13 @@ const [search, setSearch] = useState("");
     to-[#05070f]
     text-white
     p-6
-    pb-40
+    pb-6
   "
 >
+
+  <div className="absolute inset-0 pointer-events-none">
+  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+</div>
 
       <div
   className="
@@ -167,52 +171,96 @@ const [search, setSearch] = useState("");
 
         {clanPlayers.map(player => (
 
-          <div
-            key={`${player.clan}-${player.account}-${player.position}`}
-            className="
-              bg-slate-900
-              border
-              border-slate-800
-              rounded-xl
-              p-4
-            "
-          >
+          <motion.div
+  key={`${player.clan}-${player.account}-${player.position}`}
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.2 }}
+  className="
+    rounded-2xl
+    border
+    border-white/10
+    bg-white/[0.04]
+    backdrop-blur-xl
+    p-4
+    shadow-lg
+    transition
+    hover:border-white/20
+    hover:bg-white/[0.06]
+    hover:scale-[1.01]
+  "
+>
 
-            <div className="
-              flex
-              flex-wrap
-              items-center
-              gap-3
-              font-bold
-            ">
+            <div className="flex items-center justify-between w-full">
 
-              <div className="text-lg font-bold">
-                {player.position}
-              </div>
-              
-              <img
-                src={TH_ICONS[player.townHall]}
-                alt={player.townHall}
-                className="w-10 h-10"
-              />
+  {/* LEFT SIDE */}
+  <div className="flex items-center gap-3">
 
-              <span>{player.account}</span>
+    <div className="text-lg font-bold w-8">
+      {player.position}
+    </div>
 
-              <span>|</span>
+    <img
+      src={TH_ICONS[player.townHall]}
+      alt={player.townHall}
+      className="w-10 h-10"
+    />
 
-              <span>{player.clan}</span>
+    <div className="flex flex-col">
+      <span className="font-semibold text-white">
+  {player.account}
+</span>
 
-              <span>|</span>
+      <span className="text-xs text-slate-500">
+  {player.clan}
+</span>
+    </div>
 
-              <span>{player.status}</span>
+  </div>
 
-              <span>|</span>
+  {/* RIGHT SIDE */}
+  <div className="flex items-center gap-3 text-sm text-slate-300">
 
-              <span>{player.cwlRank}</span>
+    <span
+  className={`
+    px-2
+    py-1
+    rounded-full
+    text-xs
+    font-semibold
+    ${
+      player.status?.toLowerCase() === "active"
+        ? "bg-green-500/20 text-green-300 border border-green-500/30"
+        : player.status?.toLowerCase() === "benched"
+        ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+        : player.status?.toLowerCase() === "inactive"
+        ? "bg-red-500/20 text-red-300 border border-red-500/30"
+        : "bg-slate-500/20 text-slate-300 border border-slate-500/30"
+    }
+  `}
+>
+  {player.status}
+</span>
 
-            </div>
+    <span className="text-slate-500">|</span>
 
-          </div>
+<div className="flex items-center gap-2">
+  <img
+    src={CWL_ICONS[player.cwlRank]}
+    alt={player.cwlRank}
+    className="w-5 h-5"
+  />
+
+  <span className="text-xs text-slate-300">
+    {player.cwlRank}
+  </span>
+</div>
+
+  </div>
+
+</div>
+
+          </motion.div>
 
         ))}
 
@@ -225,6 +273,8 @@ const [search, setSearch] = useState("");
   return (
   <main
   className="
+    relative
+    overflow-hidden
     min-h-screen
     bg-gradient-to-b
     from-[#0b1020]
@@ -232,53 +282,176 @@ const [search, setSearch] = useState("");
     to-[#05070f]
     text-white
     p-6
-    pb-40
+    pb-6
   "
 >
 
-    <div className="flex flex-col items-center mb-8">
+  <div className="absolute inset-0 pointer-events-none">
+  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+</div>
+
+  <div className="absolute inset-0 pointer-events-none">
+
+  <div
+    className="
+      absolute
+      top-0
+      left-1/2
+      -translate-x-1/2
+      w-[700px]
+      h-[700px]
+      rounded-full
+      bg-purple-500/10
+      blur-3xl
+    "
+  />
+
+</div>
+
+    <motion.div
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+  className="
+    relative
+    z-10
+    mb-10
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.03]
+    backdrop-blur-xl
+    p-8
+    text-center
+  "
+>
 
   <img
     src={BRANDING.cwlhub}
     alt="CWL Hub"
-    className="w-32 h-32 mb-4"
+    className="w-28 h-28 mx-auto mb-5"
   />
 
-  <h1 className="text-4xl font-bold text-center">
-    {"{CGN} Collective CWL Hub"}
+  <h1 className="text-5xl font-bold tracking-tight">
+    CWL Hub
   </h1>
 
-  <p className="text-slate-400 mt-2">
+  <p className="text-slate-300 mt-3 text-lg">
+    Cognition Collective
+  </p>
+
+  <p className="text-slate-500 mt-2">
     Search • Browse • Join
   </p>
 
+</motion.div>
+
+    <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
+
+  <div className="
+  rounded-3xl
+  border
+  border-white/10
+  bg-white/[0.04]
+  backdrop-blur-xl
+  p-6
+  min-h-[120px]
+  flex
+  flex-col
+  items-center
+  justify-center
+  shadow-xl
+">
+    <div className="text-2xl md:text-3xl font-bold">
+      {players.length}
+    </div>
+
+    <div className="text-slate-400">
+      Players
+    </div>
+  </div>
+
+  <div
+    className="
+      rounded-3xl
+      border
+      border-white/10
+      bg-white/[0.03]
+      backdrop-blur-xl
+      p-5
+      text-center
+    "
+  >
+    <div className="text-3xl font-bold">
+      {clans.length}
+    </div>
+
+    <div className="text-slate-400">
+      Clans
+    </div>
+  </div>
+
+  <div
+    className="
+      rounded-3xl
+      border
+      border-white/10
+      bg-white/[0.03]
+      backdrop-blur-xl
+      p-5
+      text-center
+    "
+  >
+    <div className="text-3xl font-bold">
+      {
+        players.length
+          ? (
+              players.reduce(
+                (sum, p) => sum + Number(p.townHall || 0),
+                0
+              ) / players.length
+            ).toFixed(1)
+          : "-"
+      }
+    </div>
+
+    <div className="text-slate-400">
+      Avg TH
+    </div>
+  </div>
+
 </div>
 
-    <div className="grid grid-cols-2 gap-4 mb-8">
+<div className="mb-8 relative z-10">
 
-      <div className="bg-slate-900 rounded-2xl p-4 text-center border border-slate-800">
-        <div className="text-3xl font-bold">
-          {players.length}
-        </div>
-        <div className="text-slate-400">
-          Players
-        </div>
-      </div>
+  <input
+    type="text"
+    placeholder="Search players..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="
+  w-full
+  rounded-3xl
+  border
+  border-white/10
+  bg-white/[0.04]
+  backdrop-blur-xl
+  px-5
+  py-4
+  text-white
+  placeholder:text-slate-500
+  focus:outline-none
+  focus:border-white/20
+  focus:bg-white/[0.06]
+  transition
+"
+  />
 
-      <div className="bg-slate-900 rounded-2xl p-4 text-center border border-slate-800">
-        <div className="text-3xl font-bold">
-          {clans.length}
-        </div>
-        <div className="text-slate-400">
-          Clans
-        </div>
-      </div>
-
-    </div>
+</div>
 
     {search ? (
 
-      <div className="space-y-3">
+      <div className="space-y-4 mt-2">
 
         {searchResults.map(player => (
 
@@ -343,69 +516,93 @@ const [search, setSearch] = useState("");
 
         {clans.map(clan => {
 
-          const clanPlayers =
+          const members =
             players.filter(p => p.clan === clan);
 
           const count =
-            clanPlayers.length;
+            members.length;
 
-          const rank =
-            clanPlayers[0]?.cwlRank || "";
+          const rank = members?.[0]?.cwlRank ?? "unranked";
+          
+          const league = getLeagueStyles(rank) ?? {
+  border: "border-white/10",
+  glow: ""
+};
 
           const season =
-            clanPlayers[0]?.season || "";
+            members[0]?.season || "";
 
           const format =
             count >= 30 ? "30v30" : "15v15";
 
           return (
 
-            <div
+            <motion.div
               key={clan}
               onClick={() => setSelectedClan(clan)}
+              whileHover={{
+                y: -4,
+                scale: 1.02
+              }}
+              whileTap={{
+                scale: 0.98
+              }}
               className="
-                bg-slate-900
-                border
-                border-slate-800
-                rounded-2xl
-                p-6
-                min-h-[280px]
-                flex
-                flex-col
-                items-center
-                justify-between
-                cursor-pointer
-                hover:border-slate-600
+              rounded-3xl
+              border
+              border-white/10
+              bg-white/[0.04]
+              backdrop-blur-xl
+              p-6
+              min-h-[280px]
+              flex
+              flex-col
+              items-center
+              justify-between
+              cursor-pointer
+              shadow-xl
               "
             >
 
               <div className="text-center">
 
+                <div
+  className="
+    text-xs
+    uppercase
+    tracking-[0.2em]
+    text-purple-300
+    mb-4
+  "
+>
+  {rank}
+</div>
+
                 <img
-                  src={CWL_ICONS[rank]}
-                  alt={rank}
-                  className="w-24 h-24 mx-auto mb-4"
-                />
+  src={CWL_ICONS[rank] || CWL_ICONS["unranked"]}
+  alt={rank}
+  className="w-24 h-24 mx-auto mb-4"
+/>
 
-                <div className="text-xl font-bold">
-                  {clan}
-                </div>
+                <div className="text-2xl font-bold mt-2">
+  {clan}
+</div>
 
-                <div className="text-lg font-bold mt-3">
-                  {format}
-                </div>
+                <div className="text-lg text-slate-300 mt-4">
+  {format}
+</div>
 
-                <div className="text-base font-bold mt-2">
-                  {season}
-                </div>
+                <div className="text-sm text-slate-500 mt-2">
+  {season}
+</div>
 
               </div>
 
-              <div className="text-slate-400 text-sm">
-                Tap to view roster →
-              </div>
+              <div className="text-slate-500 text-sm">
+  View Roster
+</div>
 
-            </div>
+            </motion.div>
 
           );
 
@@ -414,38 +611,6 @@ const [search, setSearch] = useState("");
       </div>
 
     )}
-
-    <div
-      className="
-        fixed
-        bottom-0
-        left-0
-        right-0
-        bg-slate-950
-        border-t
-        border-slate-800
-        p-3
-        z-50
-      "
-    >
-
-      <input
-        type="text"
-        placeholder="🔍 Search any account..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="
-          w-full
-          rounded-xl
-          p-4
-          bg-slate-900
-          border
-          border-slate-700
-          text-white
-        "
-      />
-
-    </div>
 
   </main>
 );
