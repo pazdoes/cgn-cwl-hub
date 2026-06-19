@@ -454,59 +454,64 @@ const [search, setSearch] = useState("");
       <div className="space-y-4 mt-2">
 
         {searchResults.map(player => (
+  <div
+    key={`${player.clan}-${player.account}-${player.position}`}
+    onClick={() => setSelectedClan(player.clan)}
+    className="
+      flex
+      items-center
+      justify-between
+      py-3
+      px-1
+      border-b
+      border-white/5
+      cursor-pointer
+      hover:bg-white/[0.03]
+      transition
+    "
+  >
+    <div className="flex items-center gap-3">
+      <span className="text-slate-500 w-6">
+        {player.position}
+      </span>
 
-          <div
-            key={`${player.clan}-${player.account}-${player.position}`}
-            onClick={() => setSelectedClan(player.clan)}
-            className="
-              bg-slate-900
-              border
-              border-slate-800
-              rounded-xl
-              p-4
-              cursor-pointer
-            "
-          >
+      <span className="font-medium text-white">
+        {player.account}
+      </span>
 
-            <div className="flex flex-wrap items-center gap-2 font-bold">
+      <span className="text-xs text-slate-500">
+        {player.clan}
+      </span>
+    </div>
 
-  <span>
-    {player.position}
-  </span>
+    <div className="flex items-center gap-3 text-xs text-slate-400">
 
-  <img
-    src={TH_ICONS[player.townHall]}
-    alt={player.townHall}
-    className="w-8 h-8"
-  />
+      <span
+        className={`
+          px-2
+          py-0.5
+          rounded-full
+          ${
+            player.status?.toLowerCase() === "active"
+              ? "bg-green-500/10 text-green-300"
+              : player.status?.toLowerCase() === "benched"
+              ? "bg-yellow-500/10 text-yellow-300"
+              : player.status?.toLowerCase() === "inactive"
+              ? "bg-red-500/10 text-red-300"
+              : "text-slate-400"
+          }
+        `}
+      >
+        {player.status}
+      </span>
 
-  <span>
-    {player.account}
-  </span>
+      <span>
+        {player.cwlRank}
+      </span>
 
-  <span>|</span>
-
-  <span>
-    {player.status}
-  </span>
-
-  <span>|</span>
-
-  <span>
-    {player.clan}
-  </span>
-
-  <img
-    src={CWL_ICONS[player.cwlRank]}
-    alt={player.cwlRank}
-    className="w-6 h-6"
-  />
-
-</div>
-
-          </div>
-
-        ))}
+    </div>
+  </div>
+))}
 
       </div>
 
