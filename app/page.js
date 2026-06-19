@@ -245,7 +245,7 @@ const [search, setSearch] = useState("");
   </span>
 
   {/* Row 2 — CWL Rank */}
-  <div className="flex items-center gap-2">
+  <div className="flex items-center gap-2 min-w-0">
     <img
       src={CWL_ICONS[player.cwlRank]}
       alt={player.cwlRank}
@@ -470,16 +470,16 @@ const [search, setSearch] = useState("");
       transition
     "
   >
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 min-w-0">
       <span className="text-slate-500 w-6">
         {player.position}
       </span>
 
-      <span className="font-medium text-white">
+      <span className="font-medium text-white truncate">
         {player.account}
       </span>
 
-      <span className="text-xs text-slate-500">
+      <span className="text-xs text-slate-500 truncate max-w-[120px]">
         {player.clan}
       </span>
     </div>
