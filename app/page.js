@@ -47,15 +47,16 @@ const [search, setSearch] = useState("");
 
     <main
   className="
-    min-h-screen
-    bg-gradient-to-b
-    from-[#0b1020]
-    via-[#070b17]
-    to-[#05070f]
-    text-white
-    p-6
-    pb-6
-  "
+  min-h-screen
+  overflow-x-hidden
+  bg-gradient-to-b
+  from-[#0b1020]
+  via-[#070b17]
+  to-[#05070f]
+  text-white
+  p-6
+  pb-6
+"
 >
 
   <div className="absolute inset-0 pointer-events-none">
@@ -273,17 +274,16 @@ const [search, setSearch] = useState("");
   return (
   <main
   className="
-    relative
-    overflow-hidden
-    min-h-screen
-    bg-gradient-to-b
-    from-[#0b1020]
-    via-[#070b17]
-    to-[#05070f]
-    text-white
-    p-6
-    pb-6
-  "
+  min-h-screen
+  overflow-x-hidden
+  bg-gradient-to-b
+  from-[#0b1020]
+  via-[#070b17]
+  to-[#05070f]
+  text-white
+  p-6
+  pb-6
+"
 >
 
   <div className="absolute inset-0 pointer-events-none">
@@ -517,7 +517,7 @@ const [search, setSearch] = useState("");
 
     ) : (
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {clans.map(clan => {
 
@@ -560,6 +560,8 @@ const [search, setSearch] = useState("");
               backdrop-blur-xl
               p-6
               min-h-[280px]
+              w-full
+              max-w-full
               flex
               flex-col
               items-center
