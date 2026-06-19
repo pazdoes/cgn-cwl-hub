@@ -62,7 +62,7 @@ const [search, setSearch] = useState("");
 >
 
   <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
 </div>
 
 <div className="
@@ -235,7 +235,7 @@ const [search, setSearch] = useState("");
 >
 
   <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
 </div>
 
   <div className="absolute inset-0 pointer-events-none">
@@ -246,8 +246,10 @@ const [search, setSearch] = useState("");
       top-0
       left-1/2
       -translate-x-1/2
-      w-[700px]
-      h-[700px]
+      w-[100px]
+      max-w-[700px]
+      h-[100px]
+      max-h-[700px]
       rounded-full
       bg-purple-500/10
       blur-3xl
