@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { CWL_ICONS, TH_ICONS } from "../lib/icons";
 import { BRANDING } from "../lib/branding";
 
@@ -44,7 +45,18 @@ const [search, setSearch] = useState("");
 
   return (
 
-    <main className="min-h-screen bg-slate-950 text-white p-6 pb-40">
+    <main
+  className="
+    min-h-screen
+    bg-gradient-to-b
+    from-[#0b1020]
+    via-[#070b17]
+    to-[#05070f]
+    text-white
+    p-6
+    pb-40
+  "
+>
 
       <div
   className="
@@ -211,7 +223,18 @@ const [search, setSearch] = useState("");
   );
 }
   return (
-  <main className="min-h-screen bg-slate-950 text-white p-6 pb-40">
+  <main
+  className="
+    min-h-screen
+    bg-gradient-to-b
+    from-[#0b1020]
+    via-[#070b17]
+    to-[#05070f]
+    text-white
+    p-6
+    pb-40
+  "
+>
 
     <div className="flex flex-col items-center mb-8">
 
