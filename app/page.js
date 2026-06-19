@@ -219,42 +219,42 @@ const [search, setSearch] = useState("");
   </div>
 
   {/* RIGHT SIDE */}
-  <div className="flex items-center gap-3 text-sm text-slate-300">
+<div className="flex flex-col items-end gap-2 text-sm text-slate-300">
 
-    <span
-  className={`
-    px-2
-    py-1
-    rounded-full
-    text-xs
-    font-semibold
-    ${
-      player.status?.toLowerCase() === "active"
-        ? "bg-green-500/20 text-green-300 border border-green-500/30"
-        : player.status?.toLowerCase() === "benched"
-        ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-        : player.status?.toLowerCase() === "inactive"
-        ? "bg-red-500/20 text-red-300 border border-red-500/30"
-        : "bg-slate-500/20 text-slate-300 border border-slate-500/30"
-    }
-  `}
->
-  {player.status}
-</span>
-
-    <span className="text-slate-500">|</span>
-
-<div className="flex items-center gap-2">
-  <img
-    src={CWL_ICONS[player.cwlRank]}
-    alt={player.cwlRank}
-    className="w-5 h-5"
-  />
-
-  <span className="text-xs text-slate-300">
-    {player.cwlRank}
+  {/* Row 1 — Status */}
+  <span
+    className={`
+      px-2
+      py-1
+      rounded-full
+      text-xs
+      font-semibold
+      ${
+        player.status?.toLowerCase() === "active"
+          ? "bg-green-500/20 text-green-300 border border-green-500/30"
+          : player.status?.toLowerCase() === "benched"
+          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+          : player.status?.toLowerCase() === "inactive"
+          ? "bg-red-500/20 text-red-300 border border-red-500/30"
+          : "bg-slate-500/20 text-slate-300 border border-slate-500/30"
+      }
+    `}
+  >
+    {player.status}
   </span>
-</div>
+
+  {/* Row 2 — CWL Rank */}
+  <div className="flex items-center gap-2">
+    <img
+      src={CWL_ICONS[player.cwlRank]}
+      alt={player.cwlRank}
+      className="w-5 h-5"
+    />
+
+    <span className="text-xs text-slate-300">
+      {player.cwlRank}
+    </span>
+  </div>
 
   </div>
 
