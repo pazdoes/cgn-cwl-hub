@@ -153,7 +153,7 @@ const [search, setSearch] = useState("");
   "
 >
 
-            <div className="flex items-center w-full min-w-0 gap-3">
+            <div className="flex items-center w-full justify-between min-w-0 gap-3">
 
   {/* LEFT SIDE */}
   <div className="flex items-center gap-3 min-w-0 overflow-hidden">
