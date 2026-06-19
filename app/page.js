@@ -46,29 +46,52 @@ const [search, setSearch] = useState("");
 
     <main className="min-h-screen bg-slate-950 text-white p-6 pb-40">
 
-      <div className="flex justify-between items-center mb-6">
+      <div
+  className="
+    fixed
+    top-0
+    left-0
+    right-0
+    z-50
+    bg-slate-950
+    border-b
+    border-slate-800
+    backdrop-blur
+  "
+>
+  <div className="relative flex items-center justify-center h-16 px-4">
 
-  <button
-    onClick={() => {
-      setSelectedClan(null);
-      setSearch("");
-    }}
-  >
-    <img
-      src={BRANDING.backbutton}
-      alt="Back"
-      className="w-10 h-10 hover:scale-110 transition"
-    />
-  </button>
+    <button
+      onClick={() => {
+        setSelectedClan(null);
+        setSearch("");
+      }}
+      className="absolute left-4"
+    >
+      <img
+        src={BRANDING.backbutton}
+        alt="Back"
+        className="w-10 h-10 hover:scale-110 transition"
+      />
+    </button>
 
-  <a
-    href={clanLink}
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    
-  </a>
+    <div className="flex items-center gap-3">
+      <span className="text-xl font-bold">
+        Cognition
+      </span>
 
+      <img
+        src={BRANDING.cgnskull}
+        alt="CGN Skull"
+        className="w-8 h-8"
+      />
+
+      <span className="text-xl font-bold">
+        Collective
+      </span>
+    </div>
+
+  </div>
 </div>
 
       <a
@@ -77,7 +100,7 @@ const [search, setSearch] = useState("");
   rel="noopener noreferrer"
   className="
     fixed
-    top-4
+    bottom-4
     right-4
     z-50
   "
@@ -188,7 +211,7 @@ const [search, setSearch] = useState("");
   );
 }
   return (
-  <main className="min-h-screen bg-slate-950 text-white p-6 pb-40">
+  <main className="min-h-screen bg-slate-950 text-white p-6 pt-100 pb-40">
 
     <div className="flex flex-col items-center mb-8">
 
