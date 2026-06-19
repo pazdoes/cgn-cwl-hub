@@ -65,68 +65,53 @@ const [search, setSearch] = useState("");
   <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
 </div>
 
-<div className="mb-8 relative z-10">
-  <div className="
-    rounded-3xl
-    border
-    border-white/10
-    bg-white/[0.04]
-    backdrop-blur-xl
-    p-6
-    text-center
-    shadow-xl
-  ">
+<div className="
+  rounded-3xl
+  border
+  border-white/10
+  bg-white/[0.04]
+  backdrop-blur-xl
+  p-6
+  mb-6
+  text-center
+  shadow-xl
+  relative
+">
 
-    {/* Clan Shield */}
-    <img
-      src={BRANDING.cgnshield}
-      alt="Clan Shield"
-      className="w-16 h-16 mx-auto mb-3"
-    />
+  {/* Clan Name */}
+  <h1 className="text-2xl font-bold">
+    {selectedClan}
+  </h1>
 
-    {/* Clan Name */}
-    <h1 className="text-2xl font-bold">
-      {selectedClan}
-    </h1>
-
-    {/* Roster + Season Row */}
-    <div className="mt-3 text-sm text-slate-300 space-y-1">
-
-      <div>
-        {clanPlayers.length >= 30 ? "30v30" : "15v15"}
-      </div>
-
-      <div>
-        {clanPlayers[0]?.season || ""}
-      </div>
-
+  {/* Info Lines */}
+  <div className="mt-3 text-sm text-slate-300 space-y-1">
+    <div>
+      {clanPlayers.length >= 30 ? "30v30" : "15v15"}
     </div>
-
-    {/* Open Link Button */}
-    <a
-      href={clanPlayers[0]?.clanLink || ""}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="
-        inline-flex
-        items-center
-        justify-center
-        mt-4
-        px-4
-        py-2
-        rounded-xl
-        bg-white/5
-        hover:bg-white/10
-        transition
-        text-sm
-        border
-        border-white/10
-      "
-    >
-      Open Clan
-    </a>
-
+    <div>
+      {clanPlayers[0]?.season || ""}
+    </div>
   </div>
+
+  {/* Open Link Icon Button */}
+  <a
+  href={clanPlayers[0]?.clanLink || ""}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex justify-center mt-4"
+>
+  <img
+    src={BRANDING.openlink}
+    alt="Open Clan"
+    className="
+      w-12
+      h-12
+      hover:scale-110
+      transition
+    "
+  />
+</a>
+
 </div>
 
       <div className="space-y-3">
