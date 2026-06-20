@@ -79,6 +79,11 @@ export default function Home() {
     };
   }, []);
 
+  const handleBack = () => {
+    window.history.pushState({}, "", window.location.pathname);
+    setSelectedClan(null);
+  };
+
   const handleUnlockOfficer = async () => {
     const pin = window.prompt("Enter officer PIN:");
     if (!pin) return;
@@ -225,6 +230,19 @@ export default function Home() {
             relative
           "
         >
+          {/* Back Button */}
+          <button
+            onClick={handleBack}
+            aria-label="Back to clans"
+            className="
+              absolute top-4 left-4
+              inline-flex items-center justify-center
+              hover:scale-110 transition
+            "
+          >
+            <img src={BRANDING.backbutton} alt="" className="w-8 h-8" />
+          </button>
+
           {/* Clan Name */}
           <h1 className="text-2xl font-bold">{selectedClan}</h1>
 
@@ -553,6 +571,7 @@ export default function Home() {
             const league = getLeagueStyles(rank) ?? {
               border: "border-white/10",
               glow: "",
+              text: "text-slate-300",
             };
 
             const season = members[0]?.season || "";
@@ -567,10 +586,10 @@ export default function Home() {
                 }}
                 whileHover={{ y: -4, scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="
+                className={`
                   rounded-3xl
                   border
-                  border-white/10
+                  ${league.border}
                   bg-white/[0.04]
                   backdrop-blur-xl
                   p-6
@@ -583,10 +602,11 @@ export default function Home() {
                   justify-between
                   cursor-pointer
                   shadow-xl
-                "
+                  ${league.glow}
+                `}
               >
                 <div className="text-center">
-                  <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">
+                  <div className={`text-xs uppercase tracking-[0.2em] mb-4 ${league.text}`}>
                     {rank}
                   </div>
 
