@@ -1,613 +1,662 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getLeagueStyles } from "../lib/leagueColors";
 import { CWL_ICONS, TH_ICONS } from "../lib/icons";
 import { BRANDING } from "../lib/branding";
 
+const OFFICER_PIN_KEY = "cgn_officer_pin";
+
 export default function Home() {
-
   const [players, setPlayers] = useState([]);
-const [selectedClan, setSelectedClan] = useState(null);
-const [search, setSearch] = useState("");
+  const [selectedClan, setSelectedClan] = useState(null);
+  const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetch("/api/roster")
-      .then(res => res.json())
-      .then(data => setPlayers(data));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const [officerMode, setOfficerMode] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [now, setNow] = useState(null);
+
+  const loadRoster = useCallback(() => {
+    return fetch("/api/roster")
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to load roster");
+        return res.json();
+      })
+      .then((data) => {
+        setPlayers(data);
+        setLastUpdated(Date.now());
+        setError(null);
+      })
+      .catch(() => {
+        setError("Couldn't load the roster right now. Please try again.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
-  const handlePopState = () => {
-    const clan =
-      window.location.hash.replace("#", "");
+    loadRoster();
+  }, [loadRoster]);
 
-    setSelectedClan(clan || null);
+  // Restore officer mode if a PIN was previously verified on this device.
+  // localStorage isn't available during SSR, so this has to run in an
+  // effect after mount to avoid a hydration mismatch — there's no
+  // synchronous alternative for reading browser-only storage on mount.
+  useEffect(() => {
+    const stored = window.localStorage.getItem(OFFICER_PIN_KEY);
+    if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOfficerMode(true);
+    }
+  }, []);
+
+  // Ticks once a second so "updated Xs ago" can be computed purely from
+  // state during render instead of calling Date.now() in the render body.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now());
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const clan = window.location.hash.replace("#", "");
+      setSelectedClan(clan || null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    handlePopState();
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  const handleUnlockOfficer = async () => {
+    const pin = window.prompt("Enter officer PIN:");
+    if (!pin) return;
+
+    try {
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+
+      if (data.valid) {
+        window.localStorage.setItem(OFFICER_PIN_KEY, pin);
+        setOfficerMode(true);
+      } else {
+        window.alert("Incorrect PIN.");
+      }
+    } catch {
+      window.alert("Couldn't verify the PIN right now. Try again.");
+    }
   };
 
-  window.addEventListener(
-    "popstate",
-    handlePopState
+  const handleRefresh = async () => {
+    const pin = window.localStorage.getItem(OFFICER_PIN_KEY);
+    if (!pin) return handleUnlockOfficer();
+
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+
+      if (res.status === 401) {
+        window.localStorage.removeItem(OFFICER_PIN_KEY);
+        setOfficerMode(false);
+        window.alert("That PIN is no longer valid. Please re-enter it.");
+        return;
+      }
+
+      await loadRoster();
+    } catch {
+      window.alert("Refresh failed. Try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const clans = [...new Set(players.map((p) => p.clan))];
+  const searchResults = players.filter((player) =>
+    player.account.toLowerCase().includes(search.toLowerCase())
   );
-
-  handlePopState();
-
-  return () => {
-    window.removeEventListener(
-      "popstate",
-      handlePopState
-    );
-  };
-}, []);
-
-  const clans = [...new Set(players.map(p => p.clan))];
-  const searchResults = players.filter(player =>
-  player.account
-    .toLowerCase()
-    .includes(search.toLowerCase())
-);
   const clanPlayers = selectedClan
-  ? players.filter(p => p.clan === selectedClan)
-  : [];
+    ? players.filter((p) => p.clan === selectedClan)
+    : [];
+
+  const secondsAgo =
+    now && lastUpdated ? Math.max(0, Math.round((now - lastUpdated) / 1000)) : null;
+
+  // Initial load only — subsequent refreshes use the OfficerBar's own
+  // "Refreshing…" state instead of blanking the whole screen.
+  if (loading) {
+    return (
+      <main
+        className="
+          min-h-screen
+          flex items-center justify-center
+          bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]
+          text-white
+        "
+      >
+        <p className="text-slate-400">Loading roster…</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main
+        className="
+          min-h-screen
+          flex items-center justify-center
+          bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]
+          text-white
+          p-6 text-center
+        "
+      >
+        <div>
+          <p className="text-lg font-semibold mb-2">Something went wrong</p>
+          <p className="text-slate-400 mb-6">{error}</p>
+          <button
+            onClick={loadRoster}
+            className="
+              rounded-full border border-white/10
+              bg-white/[0.06]
+              px-5 py-2
+              hover:bg-white/[0.1]
+              transition
+            "
+          >
+            Try again
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (selectedClan) {
+    const format = clanPlayers.length >= 30 ? "30v30" : "15v15";
 
-  const rank = clanPlayers?.[0]?.cwlRank ?? "unranked";
-
-  const season =
-    clanPlayers[0]?.season || "";
-
-  const clanLink =
-    clanPlayers[0]?.clanLink || "";
-
-  const format =
-    clanPlayers.length >= 30
-      ? "30v30"
-      : "15v15";
-
-  return (
-
-    <main
-  className="
-    min-h-screen
-    overflow-x-hidden
-    w-full
-    max-w-full
-    bg-gradient-to-b
-    from-[#0b1020]
-    via-[#070b17]
-    to-[#05070f]
-    text-white
-    p-6
-    pb-6
-  "
->
-
-  <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
-</div>
-
-<div className="
-  rounded-3xl
-  border
-  border-white/10
-  bg-white/[0.04]
-  backdrop-blur-xl
-  p-6
-  mb-6
-  text-center
-  shadow-xl
-  relative
-">
-
-  {/* Clan Name */}
-  <h1 className="text-2xl font-bold">
-    {selectedClan}
-  </h1>
-
-  {/* Info Lines */}
-  <div className="mt-3 text-sm text-slate-300 space-y-1">
-    <div>
-      {clanPlayers.length >= 30 ? "30v30" : "15v15"}
-    </div>
-    <div>
-      {clanPlayers[0]?.season || ""}
-    </div>
-  </div>
-
-  {/* Open Link Icon Button */}
-  <a
-  href={clanPlayers[0]?.clanLink || ""}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-flex justify-center mt-4"
->
-  <img
-    src={BRANDING.openlink}
-    alt="Open Clan"
-    className="
-      w-12
-      h-12
-      hover:scale-110
-      transition
-    "
-  />
-</a>
-
-</div>
-
-      <div className="space-y-3">
-
-        {clanPlayers.map(player => (
-
-          <motion.div
-  key={`${player.clan}-${player.account}-${player.position}`}
-  initial={{ opacity: 0, y: 10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.2 }}
-  className="
-    rounded-2xl
-    border
-    border-white/10
-    bg-white/[0.04]
-    backdrop-blur-xl
-    p-4
-    shadow-lg
-    transition
-    hover:border-white/20
-    hover:bg-white/[0.06]
-    hover:scale-[1.01]
-  "
->
-
-            <div className="flex items-center w-full justify-between min-w-0 gap-3">
-
-  {/* LEFT SIDE */}
-  <div className="flex items-center min-w-0 overflow-hidden">
-
-  <div className="text-lg font-bold w-8">
-    {player.position}
-  </div>
-
-  <img
-    src={TH_ICONS[player.townHall]}
-    alt={player.townHall}
-    className="w-10 h-10 ml-1"
-  />
-
-  <div className="flex flex-col min-w-0 ml-3">
-      <span className="font-semibold text-white truncate block max-w-[140px]">
-  {player.account}
-</span>
-
-      <span className="text-xs text-slate-500 truncate block max-w-[120px]">
-  {player.clan}
-</span>
-    </div>
-
-  </div>
-
-  {/* RIGHT SIDE */}
-<div className="flex flex-col items-end gap-2 text-sm text-slate-300">
-
-  {/* Row 1 — Status */}
-  <span
-    className={`
-      px-2
-      py-1
-      rounded-full
-      text-xs
-      font-semibold
-      ${
-        player.status?.toLowerCase() === "active"
-          ? "bg-green-500/20 text-green-300 border border-green-500/30"
-          : player.status?.toLowerCase() === "benched"
-          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-          : player.status?.toLowerCase() === "inactive"
-          ? "bg-red-500/20 text-red-300 border border-red-500/30"
-          : "bg-slate-500/20 text-slate-300 border border-slate-500/30"
-      }
-    `}
-  >
-    {player.status}
-  </span>
-
-  {/* Row 2 — CWL Rank */}
-  <div className="flex items-center gap-2 min-w-0">
-    <img
-      src={CWL_ICONS[player.cwlRank]}
-      alt={player.cwlRank}
-      className="w-5 h-5"
-    />
-
-    <span className="text-xs text-slate-300">
-      {player.cwlRank}
-    </span>
-  </div>
-
-  </div>
-
-</div>
-
-          </motion.div>
-
-        ))}
-
-      </div>
-
-    </main>
-
-  );
-}
-  return (
-  <main
-  className="
-    min-h-screen
-    overflow-x-hidden
-    w-full
-    max-w-full
-    bg-gradient-to-b
-    from-[#0b1020]
-    via-[#070b17]
-    to-[#05070f]
-    text-white
-    p-6
-    pb-6
-  "
->
-
-  <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
-</div>
-
-  <div className="absolute inset-0 pointer-events-none">
-
-  <div
-    className="
-      absolute
-      top-0
-      left-1/2
-      -translate-x-1/2
-      w-[100px]
-      max-w-[700px]
-      h-[100px]
-      max-h-[700px]
-      rounded-full
-      bg-purple-500/10
-      blur-3xl
-    "
-  />
-
-</div>
-
-    <motion.div
-  initial={{ opacity: 0, y: 15 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5 }}
-  className="
-    relative
-    z-10
-    mb-10
-    rounded-3xl
-    border
-    border-white/10
-    bg-white/[0.03]
-    backdrop-blur-xl
-    p-8
-    text-center
-  "
->
-
-  <img
-    src={BRANDING.cwlhub}
-    alt="CWL Hub"
-    className="w-28 h-28 mx-auto mb-5"
-  />
-
-  <h1 className="text-5xl font-bold tracking-tight">
-    CWL Hub
-  </h1>
-
-  <p className="text-slate-300 mt-3 text-lg">
-    Cognition Collective
-  </p>
-
-  <p className="text-slate-500 mt-2">
-    Search • Browse • Join
-  </p>
-
-</motion.div>
-
-    <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
-
-  <div className="
-  rounded-3xl
-  border
-  border-white/10
-  bg-white/[0.04]
-  backdrop-blur-xl
-  p-6
-  min-h-[120px]
-  flex
-  flex-col
-  items-center
-  justify-center
-  shadow-xl
-">
-    <div className="text-2xl md:text-3xl font-bold">
-      {players.length}
-    </div>
-
-    <div className="text-slate-400">
-      Players
-    </div>
-  </div>
-
-  <div
-    className="
-      rounded-3xl
-      border
-      border-white/10
-      bg-white/[0.03]
-      backdrop-blur-xl
-      p-5
-      text-center
-    "
-  >
-    <div className="text-3xl font-bold">
-      {clans.length}
-    </div>
-
-    <div className="text-slate-400">
-      Clans
-    </div>
-  </div>
-
-  <div
-    className="
-      rounded-3xl
-      border
-      border-white/10
-      bg-white/[0.03]
-      backdrop-blur-xl
-      p-5
-      text-center
-    "
-  >
-    <div className="text-3xl font-bold">
-      {
-        players.length
-          ? (
-              players.reduce(
-                (sum, p) => sum + Number(p.townHall || 0),
-                0
-              ) / players.length
-            ).toFixed(1)
-          : "-"
-      }
-    </div>
-
-    <div className="text-slate-400">
-      Avg TH
-    </div>
-  </div>
-
-</div>
-
-<div className="mb-8 relative z-10">
-
-  <input
-    type="text"
-    placeholder="Search players..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="
-  w-full
-  rounded-3xl
-  border
-  border-white/10
-  bg-white/[0.04]
-  backdrop-blur-xl
-  px-5
-  py-4
-  text-white
-  placeholder:text-slate-500
-  focus:outline-none
-  focus:border-white/20
-  focus:bg-white/[0.06]
-  transition
-"
-  />
-
-</div>
-
-    {search ? (
-
-      <div className="space-y-4 mt-2">
-
-        {searchResults.map(player => (
-  <div
-    key={`${player.clan}-${player.account}-${player.position}`}
-    onClick={() => {
-  window.history.pushState(
-    {},
-    "",
-    `#${player.clan}`
-  );
-
-  setSelectedClan(player.clan);
-}}
-    className="
-      flex
-      items-center
-      justify-between
-      py-3
-      px-1
-      border-b
-      border-white/5
-      cursor-pointer
-      hover:bg-white/[0.03]
-      transition
-    "
-  >
-    <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-      <span className="text-slate-500 w-6">
-        {player.position}
-      </span>
-
-      <span className="font-medium text-white truncate max-w-[140px] block">
-        {player.account}
-      </span>
-
-      <span className="text-xs text-slate-500 truncate max-w-[120px]">
-        {player.clan}
-      </span>
-    </div>
-
-    <div className="flex items-center gap-2 text-xs text-slate-400 shrink-0 whitespace-nowrap">
-
-      <span
-        className={`
-          px-2
-          py-0.5
-          rounded-full
-          ${
-            player.status?.toLowerCase() === "active"
-              ? "bg-green-500/10 text-green-300"
-              : player.status?.toLowerCase() === "benched"
-              ? "bg-yellow-500/10 text-yellow-300"
-              : player.status?.toLowerCase() === "inactive"
-              ? "bg-red-500/10 text-red-300"
-              : "text-slate-400"
-          }
-        `}
+    return (
+      <main
+        className="
+          min-h-screen
+          overflow-x-hidden
+          w-full
+          max-w-full
+          bg-gradient-to-b
+          from-[#0b1020]
+          via-[#070b17]
+          to-[#05070f]
+          text-white
+          p-6
+          pb-6
+        "
       >
-        {player.status}
-      </span>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+        </div>
 
-      <span>
-        {player.cwlRank}
-      </span>
+        <div
+          className="
+            rounded-3xl
+            border
+            border-white/10
+            bg-white/[0.04]
+            backdrop-blur-xl
+            p-6
+            mb-6
+            text-center
+            shadow-xl
+            relative
+          "
+        >
+          {/* Clan Name */}
+          <h1 className="text-2xl font-bold">{selectedClan}</h1>
 
-    </div>
-  </div>
-))}
+          {/* Info Lines */}
+          <div className="mt-3 text-sm text-slate-300 space-y-1">
+            <div>{format}</div>
+            <div>{clanPlayers[0]?.season || ""}</div>
+          </div>
 
-      </div>
+          {/* Open Link Icon Button */}
+          <a
+            href={clanPlayers[0]?.clanLink || ""}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex justify-center mt-4"
+          >
+            <img
+              src={BRANDING.openlink}
+              alt="Open Clan"
+              className="w-12 h-12 hover:scale-110 transition"
+            />
+          </a>
+        </div>
 
-    ) : (
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        {clans.map(clan => {
-
-          const members =
-            players.filter(p => p.clan === clan);
-
-          const count =
-            members.length;
-
-          const rank = members?.[0]?.cwlRank ?? "unranked";
-          
-          const league = getLeagueStyles(rank) ?? {
-  border: "border-white/10",
-  glow: ""
-};
-
-          const season =
-            members[0]?.season || "";
-
-          const format =
-            count >= 30 ? "30v30" : "15v15";
-
-          return (
-
+        <div className="space-y-3">
+          {clanPlayers.map((player) => (
             <motion.div
-              key={clan}
-              onClick={() => {
-  window.history.pushState(
-    {},
-    "",
-    `#${clan}`
-  );
-
-  setSelectedClan(clan);
-}}
-              whileHover={{
-                y: -4,
-                scale: 1.02
-              }}
-              whileTap={{
-                scale: 0.98
-              }}
+              key={`${player.clan}-${player.account}-${player.position}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
               className="
-              rounded-3xl
-              border
-              border-white/10
-              bg-white/[0.04]
-              backdrop-blur-xl
-              p-6
-              min-h-[280px]
-              w-full
-              max-w-full
-              flex
-              flex-col
-              items-center
-              justify-between
-              cursor-pointer
-              shadow-xl
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/[0.04]
+                backdrop-blur-xl
+                p-4
+                shadow-lg
+                transition
+                hover:border-white/20
+                hover:bg-white/[0.06]
+                hover:scale-[1.01]
               "
             >
+              <div className="flex items-center w-full justify-between min-w-0 gap-3">
+                {/* LEFT SIDE */}
+                <div className="flex items-center min-w-0 overflow-hidden">
+                  <div className="text-lg font-bold w-8">{player.position}</div>
 
-              <div className="text-center">
+                  <img
+                    src={TH_ICONS[player.townHall] || "/icons/branding/cgn-shield.png"}
+                    alt={player.townHall || "TH"}
+                    className="w-10 h-10 ml-1"
+                  />
 
-                <div
-  className="
-    text-xs
-    uppercase
-    tracking-[0.2em]
-    text-purple-300
-    mb-4
-  "
->
-  {rank}
-</div>
+                  <div className="flex flex-col min-w-0 ml-3">
+                    <span className="font-semibold text-white truncate block max-w-[140px]">
+                      {player.account}
+                    </span>
+                    <span className="text-xs text-slate-500 truncate block max-w-[120px]">
+                      {player.clan}
+                    </span>
+                  </div>
+                </div>
 
-                <img
-  src={CWL_ICONS[rank] || CWL_ICONS["unranked"]}
-  alt={rank}
-  className="w-24 h-24 mx-auto mb-4"
-/>
+                {/* RIGHT SIDE */}
+                <div className="flex flex-col items-end gap-2 text-sm text-slate-300">
+                  {/* Row 1 — Status */}
+                  <span
+                    className={`
+                      px-2 py-1 rounded-full text-xs font-semibold
+                      ${
+                        player.status?.toLowerCase() === "active"
+                          ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                          : player.status?.toLowerCase() === "benched"
+                          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                          : player.status?.toLowerCase() === "inactive"
+                          ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                          : "bg-slate-500/20 text-slate-300 border border-slate-500/30"
+                      }
+                    `}
+                  >
+                    {player.status}
+                  </span>
 
-                <div className="text-2xl font-bold mt-2">
-  {clan}
-</div>
-
-                <div className="text-lg text-slate-300 mt-4">
-  {format}
-</div>
-
-                <div className="text-sm text-slate-500 mt-2">
-  {season}
-</div>
-
+                  {/* Row 2 — CWL Rank */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img
+                      src={CWL_ICONS[player.cwlRank] || "/icons/branding/cgn-shield.png"}
+                      alt={player.cwlRank || "Unranked"}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-xs text-slate-300">{player.cwlRank}</span>
+                  </div>
+                </div>
               </div>
-
-              <div className="text-slate-500 text-sm">
-  View Roster
-</div>
-
             </motion.div>
+          ))}
+        </div>
 
-          );
+        <OfficerBar
+          officerMode={officerMode}
+          refreshing={refreshing}
+          secondsAgo={secondsAgo}
+          onUnlock={handleUnlockOfficer}
+          onRefresh={handleRefresh}
+        />
+      </main>
+    );
+  }
 
-        })}
-
+  return (
+    <main
+      className="
+        min-h-screen
+        overflow-x-hidden
+        w-full
+        max-w-full
+        bg-gradient-to-b
+        from-[#0b1020]
+        via-[#070b17]
+        to-[#05070f]
+        text-white
+        p-6
+        pb-6
+      "
+    >
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-    )}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="
+            absolute
+            top-0
+            left-1/2
+            -translate-x-1/2
+            w-[100px]
+            max-w-[700px]
+            h-[100px]
+            max-h-[700px]
+            rounded-full
+            bg-purple-500/10
+            blur-3xl
+          "
+        />
+      </div>
 
-  </main>
-);
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="
+          relative
+          z-10
+          mb-10
+          rounded-3xl
+          border
+          border-white/10
+          bg-white/[0.03]
+          backdrop-blur-xl
+          p-8
+          text-center
+        "
+      >
+        <img
+          src={BRANDING.cwlhub}
+          alt="CWL Hub"
+          className="w-28 h-28 mx-auto mb-5"
+        />
+
+        <h1 className="text-5xl font-bold tracking-tight">CWL Hub</h1>
+
+        <p className="text-slate-300 mt-3 text-lg">Cognition Collective</p>
+
+        <p className="text-slate-500 mt-2">Search • Browse • Join</p>
+      </motion.div>
+
+      <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
+        <div
+          className="
+            rounded-3xl
+            border
+            border-white/10
+            bg-white/[0.04]
+            backdrop-blur-xl
+            p-6
+            min-h-[120px]
+            flex
+            flex-col
+            items-center
+            justify-center
+            shadow-xl
+          "
+        >
+          <div className="text-2xl md:text-3xl font-bold">{players.length}</div>
+          <div className="text-slate-400">Players</div>
+        </div>
+
+        <div
+          className="
+            rounded-3xl
+            border
+            border-white/10
+            bg-white/[0.03]
+            backdrop-blur-xl
+            p-5
+            text-center
+          "
+        >
+          <div className="text-3xl font-bold">{clans.length}</div>
+          <div className="text-slate-400">Clans</div>
+        </div>
+
+        <div
+          className="
+            rounded-3xl
+            border
+            border-white/10
+            bg-white/[0.03]
+            backdrop-blur-xl
+            p-5
+            text-center
+          "
+        >
+          <div className="text-3xl font-bold">
+            {players.length
+              ? (
+                  players.reduce((sum, p) => sum + Number(p.townHall || 0), 0) /
+                  players.length
+                ).toFixed(1)
+              : "-"}
+          </div>
+          <div className="text-slate-400">Avg TH</div>
+        </div>
+      </div>
+
+      <div className="mb-8 relative z-10">
+        <input
+          type="text"
+          placeholder="Search players..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="
+            w-full
+            rounded-3xl
+            border
+            border-white/10
+            bg-white/[0.04]
+            backdrop-blur-xl
+            px-5
+            py-4
+            text-white
+            placeholder:text-slate-500
+            focus:outline-none
+            focus:border-white/20
+            focus:bg-white/[0.06]
+            transition
+          "
+        />
+      </div>
+
+      {search ? (
+        <div className="space-y-4 mt-2">
+          {searchResults.map((player) => (
+            <div
+              key={`${player.clan}-${player.account}-${player.position}`}
+              onClick={() => {
+                window.history.pushState({}, "", `#${player.clan}`);
+                setSelectedClan(player.clan);
+              }}
+              className="
+                flex
+                items-center
+                justify-between
+                py-3
+                px-1
+                border-b
+                border-white/5
+                cursor-pointer
+                hover:bg-white/[0.03]
+                transition
+              "
+            >
+              <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+                <span className="text-slate-500 w-6">{player.position}</span>
+                <span className="font-medium text-white truncate max-w-[140px] block">
+                  {player.account}
+                </span>
+                <span className="text-xs text-slate-500 truncate max-w-[120px]">
+                  {player.clan}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-400 shrink-0 whitespace-nowrap">
+                <span
+                  className={`
+                    px-2 py-0.5 rounded-full
+                    ${
+                      player.status?.toLowerCase() === "active"
+                        ? "bg-green-500/10 text-green-300"
+                        : player.status?.toLowerCase() === "benched"
+                        ? "bg-yellow-500/10 text-yellow-300"
+                        : player.status?.toLowerCase() === "inactive"
+                        ? "bg-red-500/10 text-red-300"
+                        : "text-slate-400"
+                    }
+                  `}
+                >
+                  {player.status}
+                </span>
+                <span>{player.cwlRank}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {clans.map((clan) => {
+            const members = players.filter((p) => p.clan === clan);
+            const count = members.length;
+            const rank = members?.[0]?.cwlRank ?? "unranked";
+
+            const league = getLeagueStyles(rank) ?? {
+              border: "border-white/10",
+              glow: "",
+            };
+
+            const season = members[0]?.season || "";
+            const format = count >= 30 ? "30v30" : "15v15";
+
+            return (
+              <motion.div
+                key={clan}
+                onClick={() => {
+                  window.history.pushState({}, "", `#${clan}`);
+                  setSelectedClan(clan);
+                }}
+                whileHover={{ y: -4, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="
+                  rounded-3xl
+                  border
+                  border-white/10
+                  bg-white/[0.04]
+                  backdrop-blur-xl
+                  p-6
+                  min-h-[280px]
+                  w-full
+                  max-w-full
+                  flex
+                  flex-col
+                  items-center
+                  justify-between
+                  cursor-pointer
+                  shadow-xl
+                "
+              >
+                <div className="text-center">
+                  <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">
+                    {rank}
+                  </div>
+
+                  <img
+                    src={CWL_ICONS[rank] || "/icons/branding/cgn-shield.png"}
+                    alt={rank}
+                    className="w-24 h-24 mx-auto mb-4"
+                  />
+
+                  <div className="text-2xl font-bold mt-2">{clan}</div>
+                  <div className="text-lg text-slate-300 mt-4">{format}</div>
+                  <div className="text-sm text-slate-500 mt-2">{season}</div>
+                </div>
+
+                <div className="text-slate-500 text-sm">View Roster</div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      <OfficerBar
+        officerMode={officerMode}
+        refreshing={refreshing}
+        secondsAgo={secondsAgo}
+        onUnlock={handleUnlockOfficer}
+        onRefresh={handleRefresh}
+      />
+    </main>
+  );
+}
+
+function OfficerBar({ officerMode, refreshing, secondsAgo, onUnlock, onRefresh }) {
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      {officerMode ? (
+        <button
+          onClick={onRefresh}
+          disabled={refreshing}
+          className="
+            flex items-center gap-2
+            rounded-full border border-white/10
+            bg-white/[0.08] backdrop-blur-xl
+            px-4 py-2
+            text-xs text-slate-300
+            hover:bg-white/[0.12]
+            transition
+            disabled:opacity-50
+          "
+        >
+          <span>{refreshing ? "Refreshing…" : "↻ Refresh"}</span>
+          {secondsAgo !== null && !refreshing && (
+            <span className="text-slate-500">· updated {secondsAgo}s ago</span>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={onUnlock}
+          className="
+            rounded-full border border-white/5
+            bg-white/[0.02]
+            px-3 py-1.5
+            text-[10px] text-slate-600
+            hover:text-slate-400
+            transition
+          "
+        >
+          Officer
+        </button>
+      )}
+    </div>
+  );
 }
