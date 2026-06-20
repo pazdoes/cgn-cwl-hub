@@ -18,6 +18,29 @@ const [search, setSearch] = useState("");
       .then(data => setPlayers(data));
   }, []);
 
+  useEffect(() => {
+  const handlePopState = () => {
+    const clan =
+      window.location.hash.replace("#", "");
+
+    setSelectedClan(clan || null);
+  };
+
+  window.addEventListener(
+    "popstate",
+    handlePopState
+  );
+
+  handlePopState();
+
+  return () => {
+    window.removeEventListener(
+      "popstate",
+      handlePopState
+    );
+  };
+}, []);
+
   const clans = [...new Set(players.map(p => p.clan))];
   const searchResults = players.filter(player =>
   player.account
@@ -141,19 +164,19 @@ const [search, setSearch] = useState("");
             <div className="flex items-center w-full justify-between min-w-0 gap-3">
 
   {/* LEFT SIDE */}
-  <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+  <div className="flex items-center min-w-0 overflow-hidden">
 
-    <div className="text-lg font-bold w-8">
-      {player.position}
-    </div>
+  <div className="text-lg font-bold w-8">
+    {player.position}
+  </div>
 
-    <img
-      src={TH_ICONS[player.townHall]}
-      alt={player.townHall}
-      className="w-10 h-10"
-    />
+  <img
+    src={TH_ICONS[player.townHall]}
+    alt={player.townHall}
+    className="w-10 h-10 ml-1"
+  />
 
-    <div className="flex flex-col min-w-0">
+  <div className="flex flex-col min-w-0 ml-3">
       <span className="font-semibold text-white truncate block max-w-[140px]">
   {player.account}
 </span>
@@ -406,7 +429,15 @@ const [search, setSearch] = useState("");
         {searchResults.map(player => (
   <div
     key={`${player.clan}-${player.account}-${player.position}`}
-    onClick={() => setSelectedClan(player.clan)}
+    onClick={() => {
+  window.history.pushState(
+    {},
+    "",
+    `#${player.clan}`
+  );
+
+  setSelectedClan(player.clan);
+}}
     className="
       flex
       items-center
@@ -494,7 +525,15 @@ const [search, setSearch] = useState("");
 
             <motion.div
               key={clan}
-              onClick={() => setSelectedClan(clan)}
+              onClick={() => {
+  window.history.pushState(
+    {},
+    "",
+    `#${clan}`
+  );
+
+  setSelectedClan(clan);
+}}
               whileHover={{
                 y: -4,
                 scale: 1.02
