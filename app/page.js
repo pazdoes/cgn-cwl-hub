@@ -137,6 +137,18 @@ export default function Home() {
     ? players.filter((p) => p.clan === selectedClan)
     : [];
 
+  // Only count players with a real Town Hall value — blank/missing entries
+  // shouldn't drag the average down by counting as 0.
+  const playersWithTH = players.filter(
+    (p) => p.townHall && !Number.isNaN(Number(p.townHall))
+  );
+  const avgTownHall = playersWithTH.length
+    ? (
+        playersWithTH.reduce((sum, p) => sum + Number(p.townHall), 0) /
+        playersWithTH.length
+      ).toFixed(1)
+    : "-";
+
   const secondsAgo =
     now && lastUpdated ? Math.max(0, Math.round((now - lastUpdated) / 1000)) : null;
 
@@ -453,12 +465,7 @@ export default function Home() {
           "
         >
           <div className="text-3xl font-bold">
-            {players.length
-              ? (
-                  players.reduce((sum, p) => sum + Number(p.townHall || 0), 0) /
-                  players.length
-                ).toFixed(1)
-              : "-"}
+            {avgTownHall}
           </div>
           <div className="text-slate-400">Avg TH</div>
         </div>
