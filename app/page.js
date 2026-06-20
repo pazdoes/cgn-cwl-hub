@@ -79,11 +79,6 @@ export default function Home() {
     };
   }, []);
 
-  const handleBack = () => {
-    window.history.pushState({}, "", window.location.pathname);
-    setSelectedClan(null);
-  };
-
   const handleUnlockOfficer = async () => {
     const pin = window.prompt("Enter officer PIN:");
     if (!pin) return;
@@ -230,19 +225,6 @@ export default function Home() {
             relative
           "
         >
-          {/* Back Button */}
-          <button
-            onClick={handleBack}
-            aria-label="Back to clans"
-            className="
-              absolute top-4 left-4
-              inline-flex items-center justify-center
-              hover:scale-110 transition
-            "
-          >
-            <img src={BRANDING.backbutton} alt="" className="w-8 h-8" />
-          </button>
-
           {/* Clan Name */}
           <h1 className="text-2xl font-bold">{selectedClan}</h1>
 
