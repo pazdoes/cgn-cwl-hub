@@ -130,9 +130,14 @@ export default function Home() {
   };
 
   const clans = [...new Set(players.map((p) => p.clan))];
-  const searchResults = players.filter((player) =>
-    player.account.toLowerCase().includes(search.toLowerCase())
-  );
+  const searchResults = players.filter((player) => {
+    const query = search.toLowerCase();
+    return (
+      player.account.toLowerCase().includes(query) ||
+      player.clan.toLowerCase().includes(query) ||
+      (player.playerTag || "").toLowerCase().includes(query)
+    );
+  });
   const clanPlayers = selectedClan
     ? players.filter((p) => p.clan === selectedClan)
     : [];
