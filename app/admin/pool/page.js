@@ -803,8 +803,14 @@ export default function AdminPoolPage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden mt-5 text-left"
               >
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
-                  <div>
+                <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+                  <div className="absolute top-3 right-3">
+                    <XButton
+                      onClick={() => toggleClanForm("add")}
+                      title="Close"
+                    />
+                  </div>
+                  <div className="pr-6">
                     <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Tag</label>
                     <div className="flex gap-2">
                       <input
@@ -911,8 +917,14 @@ export default function AdminPoolPage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden mt-5 text-left"
               >
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-5 space-y-4">
-                  <p className="text-xs text-slate-400">
+                <div className="relative rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-5 space-y-4">
+                  <div className="absolute top-3 right-3">
+                    <XButton
+                      onClick={() => toggleClanForm("delete")}
+                      title="Close"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 pr-6">
                     Type the exact clan name to confirm deletion. This permanently
                     removes the Sheet tab and all its data — blocked if any players
                     are still assigned to this clan.
