@@ -48,6 +48,41 @@ function ThIcon({ level, size = "w-8 h-8" }) {
 // Clan names must match the Sheet tab names (partial match is used server-side).
 // These are read dynamically from the pool data itself.
 
+/* ─── CWL Rank refresh button (admin only, once-per-season action) ─────── */
+
+function RankRefreshButton({ busy, result, onClick }) {
+  const title = busy
+    ? "Refreshing…"
+    : result
+    ? (result.ok ? `Updated: ${result.message}` : result.message)
+    : "Refresh CWL Rank from CoC API (once per season)";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      title={title}
+      className={`
+        shrink-0 w-6 h-6 rounded-full flex items-center justify-center
+        border transition disabled:opacity-50
+        ${result?.ok === false
+          ? "bg-red-500/10 border-red-500/30 text-red-300"
+          : "bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.08] hover:text-slate-200"
+        }
+      `}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`}
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
+  );
+}
+
 /* ─── Confirmed / Substitute status toggle (admin only) ─────────────────── */
 
 function StatusToggle({ status, busy, error, onSetStatus }) {
@@ -266,6 +301,10 @@ export default function AdminPoolPage() {
   const [formatBusy,   setFormatBusy]   = useState(null); // clan currently toggling format
   const [formatError,  setFormatError]  = useState({});   // { [clan]: message }
 
+  /* --- item 6: CWL Rank refresh feedback --- */
+  const [rankBusy,  setRankBusy]  = useState(null); // clan currently refreshing rank
+  const [rankResult, setRankResult] = useState({});  // { [clan]: {ok, message} }
+
   /* --- load pool data --- */
   async function loadPool(savedPin) {
     setLoading(true);
@@ -468,6 +507,29 @@ export default function AdminPoolPage() {
       setFormatError(prev => ({ ...prev, [clan]: "Network error" }));
     } finally {
       setFormatBusy(null);
+    }
+  }
+
+  /* --- item 6: CWL Rank refresh (per clan, manual, once-per-season) --- */
+  async function doRefreshRank(clan) {
+    setRankBusy(clan);
+    setRankResult(prev => ({ ...prev, [clan]: null }));
+    try {
+      const res = await fetch("/api/admin/cwl-rank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clan }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRankResult(prev => ({ ...prev, [clan]: { ok: true, message: data.rank } }));
+      } else {
+        setRankResult(prev => ({ ...prev, [clan]: { ok: false, message: data.error || "Refresh failed" } }));
+      }
+    } catch {
+      setRankResult(prev => ({ ...prev, [clan]: { ok: false, message: "Network error" } }));
+    } finally {
+      setRankBusy(null);
     }
   }
 
@@ -695,6 +757,11 @@ export default function AdminPoolPage() {
                       <p className="font-semibold text-sm text-white truncate">{clan}</p>
                       <div className="flex items-center gap-2 shrink-0">
                         <Pill variant="purple">{clanEntries.length}</Pill>
+                        <RankRefreshButton
+                          busy={rankBusy === clan}
+                          result={rankResult[clan]}
+                          onClick={() => doRefreshRank(clan)}
+                        />
                         <FormatToggle
                           format={format}
                           busy={formatBusy === clan}
