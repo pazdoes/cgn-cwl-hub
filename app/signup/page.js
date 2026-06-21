@@ -414,6 +414,7 @@ export default function SignupPage() {
       state.el.style.transform = "";
       state.el.style.zIndex = "";
       state.el.style.transition = "";
+      state.el.style.pointerEvents = "";
       state.el = null;
     }
   }
@@ -436,9 +437,20 @@ export default function SignupPage() {
       // Visually lift the dragged card above its neighbors while held —
       // desktop's native drag API shows a ghost image automatically;
       // touch has no equivalent, so this is the explicit replacement.
+      //
+      // pointer-events: none is essential here, not optional polish:
+      // elementFromPoint(x, y) returns the TOPMOST element at that
+      // screen point, and the dragged card — now sitting at the
+      // finger's position with the highest z-index — was itself being
+      // returned on every touchmove, so the hit-test kept finding the
+      // dragged card instead of whatever it was actually hovering
+      // over. pointer-events: none makes elementFromPoint see straight
+      // through it to the real target underneath, while it stays
+      // fully visible and still visually follows the finger.
       if (state.el) {
         state.el.style.zIndex = "50";
         state.el.style.transition = "none";
+        state.el.style.pointerEvents = "none";
       }
 
       // Drag confirmed — attach the real, non-passive touchmove handler

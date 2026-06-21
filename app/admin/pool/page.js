@@ -428,6 +428,7 @@ export default function AdminPoolPage() {
       state.el.style.transform = "";
       state.el.style.zIndex = "";
       state.el.style.transition = "";
+      state.el.style.pointerEvents = "";
       state.el = null;
     }
   }
@@ -447,9 +448,15 @@ export default function AdminPoolPage() {
       state.active = true;
       onDragStart(entry);
 
+      // pointer-events: none is essential, not optional — see the
+      // matching comment in the signup page's touch handling. Without
+      // it, elementFromPoint kept returning the dragged card itself
+      // (now sitting at the highest z-index under the finger) instead
+      // of the clan zone underneath, so drops never registered.
       if (state.el) {
         state.el.style.zIndex = "50";
         state.el.style.transition = "none";
+        state.el.style.pointerEvents = "none";
       }
 
       const moveListener = (moveEvent) => {
@@ -477,15 +484,16 @@ export default function AdminPoolPage() {
       };
 
       const finish = async (endEvent) => {
-        cleanupPlayerTouchListeners();
-
-        // changedTouches (not touches) — by the time touchend fires,
-        // the finger has already lifted, so touches is empty;
-        // changedTouches still holds the final position.
+        // Detect the drop target BEFORE cleanup — cleanup restores the
+        // dragged card's pointer-events to normal, which would make
+        // elementFromPoint find the card itself again (the same
+        // self-detection bug the move-handler had) if it ran first.
         const touch2 = endEvent.changedTouches?.[0];
         const el = touch2 && document.elementFromPoint(touch2.clientX, touch2.clientY);
         const zone = el?.closest("[data-clan-zone]");
         const clan = zone?.getAttribute("data-clan-zone");
+
+        cleanupPlayerTouchListeners();
 
         if (clan) {
           await onDrop({ preventDefault: () => {} }, clan);
