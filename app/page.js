@@ -18,11 +18,303 @@ function rankSortIndex(rank) {
   return idx === -1 ? CWL_RANK_ORDER.length : idx;
 }
 
+/* ─── stat tile click-through views ──────────────────────── */
+
+// Read-only roster list, same player set already counted on the Players
+// tile (Sheet-derived, current rostered state) — deliberately the SAME
+// data as the tile's printed number, not a broader Neon-pool view, per
+// the confirmed scope. Visually modeled on the admin pool page's card
+// style, but with every admin control (drag-and-drop, X buttons, status
+// toggles) stripped out — this is a public, read-only view.
+function PlayersView({ players, onBack }) {
+  return (
+    <main className="
+      min-h-screen overflow-x-hidden w-full max-w-full
+      bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]
+      text-white p-6 pb-12
+    ">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2
+          w-[100vw] max-w-[600px] h-[100vw] max-h-[600px]
+          bg-purple-500/10 blur-3xl rounded-full" />
+      </div>
+
+      <div className="relative z-10 mb-6">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Hub
+        </button>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
+        <h1 className="text-2xl font-bold">All Players</h1>
+        <p className="text-slate-400 text-sm mt-1">{players.length} rostered this season</p>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="space-y-2">
+          {players.map(player => (
+            <div
+              key={`${player.clan}-${player.account}-${player.position}`}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  {TH_ICONS[String(player.townHall)] && (
+                    <img
+                      src={TH_ICONS[String(player.townHall)]}
+                      alt={`TH${player.townHall}`}
+                      className="w-8 h-8 shrink-0"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-white truncate">{player.account}</p>
+                    <p className="text-xs text-slate-500 font-mono mt-0.5">{player.playerTag}</p>
+                  </div>
+                </div>
+                <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  {player.clan}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// Unified page listing every clan's roster consecutively, rather than
+// requiring a click into each clan separately — same per-clan data
+// already used by the single-clan overview, just compiled onto one page.
+function ClansView({ clans, players, onBack, onOpenClan }) {
+  return (
+    <main className="
+      min-h-screen overflow-x-hidden w-full max-w-full
+      bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]
+      text-white p-6 pb-12
+    ">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2
+          w-[100vw] max-w-[600px] h-[100vw] max-h-[600px]
+          bg-purple-500/10 blur-3xl rounded-full" />
+      </div>
+
+      <div className="relative z-10 mb-6">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Hub
+        </button>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
+        <h1 className="text-2xl font-bold">All Clans</h1>
+        <p className="text-slate-400 text-sm mt-1">{clans.length} clans rostered this season</p>
+      </div>
+
+      <div className="relative z-10 space-y-6">
+        {clans.map(clan => {
+          const clanPlayers = players.filter(p => p.clan === clan);
+          const rank = clanPlayers[0]?.cwlRank || "Unranked";
+          const format = clanPlayers[0]?.cwlFormat || (clanPlayers.length >= 30 ? "30v30" : "15v15");
+          const clanLink = clanPlayers[0]?.clanLink || "";
+
+          return (
+            <div key={clan} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-lg font-bold truncate">{clan}</h2>
+                  <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    {clanPlayers.length}
+                  </span>
+                </div>
+                {clanLink && (
+                  <a
+                    href={clanLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="
+                      shrink-0 inline-flex items-center gap-1.5
+                      px-3 py-1.5 rounded-full text-xs font-semibold
+                      bg-purple-600/30 text-purple-200 border border-purple-500/30
+                      hover:bg-purple-600/50 hover:text-white transition
+                    "
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Open
+                  </a>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mb-4">{format} · {rank}</p>
+
+              <div className="space-y-1.5">
+                {clanPlayers.map(player => (
+                  <div
+                    key={`${player.clan}-${player.account}-${player.position}`}
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
+                  >
+                    {TH_ICONS[String(player.townHall)] && (
+                      <img
+                        src={TH_ICONS[String(player.townHall)]}
+                        alt={`TH${player.townHall}`}
+                        className="w-6 h-6 shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-white truncate">{player.account}</p>
+                      <p className="text-[10px] text-slate-600 font-mono">{player.playerTag}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </main>
+  );
+}
+
+
+
+// Live SVG pie chart breaking down the same player set already used for
+// the Avg TH calculation, grouped by Town Hall level. Built as plain SVG
+// rather than a charting library — this codebase has no chart dependency
+// anywhere, and a hand-built SVG stays consistent with that. It's
+// "live" in the sense the task required: driven directly from the same
+// players React state every other view on this page uses, so any
+// roster change that re-fetches players re-renders this chart
+// automatically — no separate static-image step anywhere.
+const PIE_COLORS = [
+  "#a78bfa", "#818cf8", "#60a5fa", "#38bdf8", "#22d3ee",
+  "#2dd4bf", "#34d399", "#a3e635", "#facc15", "#fb923c",
+  "#f87171", "#f472b6",
+];
+
+function polarPoint(cx, cy, r, angleDeg) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function AvgThView({ players, onBack }) {
+  const counts = {};
+  players.forEach(p => {
+    const th = p.townHall || "Unknown";
+    counts[th] = (counts[th] || 0) + 1;
+  });
+
+  const sortedLevels = Object.keys(counts).sort((a, b) => Number(b) - Number(a));
+  const total = players.length;
+
+  let cumulativeAngle = 0;
+  const slices = sortedLevels.map((level, i) => {
+    const count = counts[level];
+    const fraction = total > 0 ? count / total : 0;
+    const angle = fraction * 360;
+    const startAngle = cumulativeAngle;
+    const endAngle = cumulativeAngle + angle;
+    cumulativeAngle = endAngle;
+
+    const cx = 100, cy = 100, r = 90;
+    const start = polarPoint(cx, cy, r, startAngle);
+    const end = polarPoint(cx, cy, r, endAngle);
+    const largeArc = angle > 180 ? 1 : 0;
+
+    const path = total > 0 && fraction < 1
+      ? `M ${cx},${cy} L ${start.x},${start.y} A ${r},${r} 0 ${largeArc},1 ${end.x},${end.y} Z`
+      : null; // a single 100% slice degenerates to a full circle, drawn separately below
+
+    return {
+      level,
+      count,
+      fraction,
+      path,
+      color: PIE_COLORS[i % PIE_COLORS.length],
+    };
+  });
+
+  const isSingleSlice = slices.length === 1;
+
+  return (
+    <main className="
+      min-h-screen overflow-x-hidden w-full max-w-full
+      bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]
+      text-white p-6 pb-12
+    ">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2
+          w-[100vw] max-w-[600px] h-[100vw] max-h-[600px]
+          bg-purple-500/10 blur-3xl rounded-full" />
+      </div>
+
+      <div className="relative z-10 mb-6">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Hub
+        </button>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
+        <h1 className="text-2xl font-bold">Town Hall Breakdown</h1>
+        <p className="text-slate-400 text-sm mt-1">{total} players rostered this season</p>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 flex flex-col items-center">
+        {total === 0 ? (
+          <p className="text-slate-600 text-sm py-8">No players to chart yet.</p>
+        ) : (
+          <>
+            <svg viewBox="0 0 200 200" className="w-56 h-56 mb-6">
+              {isSingleSlice ? (
+                <circle cx="100" cy="100" r="90" fill={slices[0].color} />
+              ) : (
+                slices.map(slice => (
+                  <path key={slice.level} d={slice.path} fill={slice.color} />
+                ))
+              )}
+            </svg>
+
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {slices.map(slice => (
+                <div key={slice.level} className="flex items-center gap-2 text-xs">
+                  <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
+                  <span className="text-slate-300">TH{slice.level}</span>
+                  <span className="text-slate-500 ml-auto">{slice.count} ({(slice.fraction * 100).toFixed(0)}%)</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
+
+
 export default function Home() {
 
   const [players, setPlayers] = useState([]);
 const [selectedClan, setSelectedClan] = useState(null);
 const [search, setSearch] = useState("");
+const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
 
   useEffect(() => {
     fetch("/api/roster")
@@ -66,6 +358,18 @@ const [search, setSearch] = useState("");
   const clanPlayers = selectedClan
   ? players.filter(p => p.clan === selectedClan)
   : [];
+
+  if (statView === "players") {
+    return <PlayersView players={players} onBack={() => setStatView(null)} />;
+  }
+
+  if (statView === "clans") {
+    return <ClansView clans={clans} players={players} onBack={() => setStatView(null)} />;
+  }
+
+  if (statView === "avgth") {
+    return <AvgThView players={players} onBack={() => setStatView(null)} />;
+  }
 
   if (selectedClan) {
 
@@ -368,7 +672,9 @@ const [search, setSearch] = useState("");
 
     <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
 
-  <div className="
+  <div
+    onClick={() => setStatView("players")}
+    className="
   rounded-3xl
   border
   border-white/10
@@ -381,6 +687,10 @@ const [search, setSearch] = useState("");
   items-center
   justify-center
   shadow-xl
+  cursor-pointer
+  hover:bg-white/[0.06]
+  hover:border-white/20
+  transition
 ">
     <div className="text-2xl md:text-3xl font-bold">
       {players.length}
@@ -391,7 +701,9 @@ const [search, setSearch] = useState("");
     </div>
   </div>
 
-  <div className="
+  <div
+    onClick={() => setStatView("clans")}
+    className="
     rounded-3xl
     border
     border-white/10
@@ -403,6 +715,10 @@ const [search, setSearch] = useState("");
     flex-col
     items-center
     justify-center
+    cursor-pointer
+    hover:bg-white/[0.06]
+    hover:border-white/20
+    transition
   ">
     <div className="text-2xl md:text-3xl font-bold">
       {clans.length}
@@ -413,7 +729,9 @@ const [search, setSearch] = useState("");
     </div>
   </div>
 
-  <div className="
+  <div
+    onClick={() => setStatView("avgth")}
+    className="
     rounded-3xl
     border
     border-white/10
@@ -425,6 +743,10 @@ const [search, setSearch] = useState("");
     flex-col
     items-center
     justify-center
+    cursor-pointer
+    hover:bg-white/[0.06]
+    hover:border-white/20
+    transition
   ">
     <div className="text-2xl md:text-3xl font-bold">
       {
@@ -514,6 +836,26 @@ const [search, setSearch] = useState("");
       <span className="text-xs text-slate-500 truncate max-w-[120px]">
         {player.clan}
       </span>
+
+      {player.clanLink && (
+        <a
+          href={player.clanLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="
+            inline-flex items-center gap-1 shrink-0
+            px-2 py-0.5 rounded-full text-[10px] font-semibold
+            bg-purple-600/20 text-purple-300 border border-purple-500/20
+            hover:bg-purple-600/40 hover:text-white transition
+          "
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          Open
+        </a>
+      )}
     </div>
 
     <div className="flex items-center gap-2 text-xs text-slate-400 shrink-0 whitespace-nowrap">
