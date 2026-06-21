@@ -97,8 +97,12 @@ export default function SignupPage() {
   const [leaveError, setLeaveError]   = useState({}); // { [tag]: message }
 
   // Manage panel — remove an account from this device entirely (item 9,
-  // distinct from the per-account X above, which only leaves the pool)
+  // distinct from the per-account X above, which only leaves the pool).
+  // Also now hosts the Add Account form as a second tab (item 9 follow-up
+  // — consolidating what was previously a separate, always-visible
+  // "Add a New Account" card into this single panel).
   const [manageOpen,        setManageOpen]        = useState(false);
+  const [manageTab,         setManageTab]         = useState("add"); // "add" | "remove"
   const [manageTag,         setManageTag]         = useState("");
   const [manageSubmitting,  setManageSubmitting]  = useState(false);
   const [manageResult,      setManageResult]      = useState(null); // {ok, message}
@@ -239,10 +243,22 @@ export default function SignupPage() {
   }
 
   /* --- remove an account from this device entirely (item 9) --- */
-  function toggleManage() {
+  function toggleManage(tab = "add") {
     setManageOpen(prev => !prev);
+    setManageTab(tab);
     setManageTag("");
     setManageResult(null);
+    setVerifyStatus(null);
+  }
+
+  // Used by the zero-accounts "Add Account" button, which should always
+  // open the panel (never close it, since it's the first interaction)
+  // on the "add" tab specifically.
+  function openManageAdd() {
+    setManageOpen(true);
+    setManageTab("add");
+    setManageResult(null);
+    setVerifyStatus(null);
   }
 
   async function handleManageSubmit(e) {
@@ -330,79 +346,193 @@ export default function SignupPage() {
         <Card>
           <div className="flex items-start justify-between gap-3 mb-1">
             <h2 className="text-lg font-semibold">Your Accounts</h2>
-            <button
-              type="button"
-              onClick={toggleManage}
-              className={`
-                shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition
-                ${manageOpen
-                  ? "bg-slate-500/30 text-white border-slate-500/40"
-                  : "bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30 hover:text-white"
-                }
-              `}
-            >
-              Manage
-            </button>
+            {myAccounts.length === 0 ? (
+              <button
+                type="button"
+                onClick={openManageAdd}
+                className="
+                  shrink-0 px-3 py-1 rounded-full text-xs font-semibold
+                  bg-purple-600/30 text-purple-200 border border-purple-500/30
+                  hover:bg-purple-600/50 hover:text-white transition
+                "
+              >
+                Add Account
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => toggleManage(manageTab)}
+                className={`
+                  shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition
+                  ${manageOpen
+                    ? "bg-slate-500/30 text-white border-slate-500/40"
+                    : "bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30 hover:text-white"
+                  }
+                `}
+              >
+                Manage
+              </button>
+            )}
           </div>
           <p className="text-slate-500 text-xs mb-4">
             Accounts you've already verified on this device. Tap to sign up for this season — no token needed.
           </p>
 
-          {/* Manage panel — remove an account from this device entirely */}
+          {/* Manage panel — Add Account and Remove Account, toggleable */}
           <AnimatePresence>
             {manageOpen && (
-              <motion.form
-                onSubmit={handleManageSubmit}
+              <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden mb-4"
               >
-                <div className="relative rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-4 space-y-3">
+                <div className={`
+                  relative rounded-2xl border p-4 space-y-3
+                  ${manageTab === "remove"
+                    ? "border-red-500/20 bg-red-500/[0.04]"
+                    : "border-purple-500/20 bg-purple-500/[0.04]"
+                  }
+                `}>
                   <div className="absolute top-3 right-3">
-                    <XButton onClick={toggleManage} title="Close" />
+                    <XButton onClick={() => toggleManage(manageTab)} title="Close" />
                   </div>
-                  <p className="text-xs text-slate-400 pr-6">
-                    Enter a player tag to remove that account from this device.
-                    You can always add it back later by verifying again.
-                  </p>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
-                    <input
-                      type="text"
-                      placeholder="#ABC123"
-                      value={manageTag}
-                      onChange={e => setManageTag(e.target.value)}
-                      autoCapitalize="characters"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      className="
-                        w-full rounded-xl border border-red-500/20 bg-white/[0.04]
-                        px-4 py-2.5 text-white placeholder:text-slate-600
-                        focus:outline-none focus:border-red-500/50 transition
-                        font-mono tracking-wide text-sm
-                      "
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={manageSubmitting || !manageTag.trim()}
-                    className="
-                      w-full py-2.5 rounded-xl font-semibold text-sm
-                      bg-red-600/40 text-red-100 border border-red-500/30
-                      hover:bg-red-600/60 hover:text-white transition
-                      disabled:opacity-40 disabled:cursor-not-allowed
-                    "
-                  >
-                    {manageSubmitting ? "Removing…" : "Remove Account"}
-                  </button>
-                  {manageResult && (
-                    <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>
-                      {manageResult.message}
-                    </p>
+
+                  {/* tab toggle — only relevant once there's something to
+                      remove; with zero accounts, Add is the only option
+                      so the toggle would be pointless clutter */}
+                  {myAccounts.length > 0 && (
+                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-0.5 w-fit text-xs mb-1">
+                      <button
+                        type="button"
+                        onClick={() => { setManageTab("add"); setManageResult(null); setVerifyStatus(null); }}
+                        className={`
+                          px-3 py-1 rounded-full transition font-semibold
+                          ${manageTab === "add" ? "bg-purple-500/30 text-purple-200" : "text-slate-500 hover:text-slate-300"}
+                        `}
+                      >
+                        Add Account
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setManageTab("remove"); setManageResult(null); }}
+                        className={`
+                          px-3 py-1 rounded-full transition font-semibold
+                          ${manageTab === "remove" ? "bg-red-500/30 text-red-200" : "text-slate-500 hover:text-slate-300"}
+                        `}
+                      >
+                        Remove Account
+                      </button>
+                    </div>
+                  )}
+
+                  {manageTab === "add" ? (
+                    <form onSubmit={handleVerify} className="space-y-3 pr-6">
+                      <p className="text-xs text-slate-400">
+                        Enter a player tag to sign up. Adding your API token
+                        (Settings → API Token) is optional, but confirms it's
+                        really your account.
+                      </p>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                        <input
+                          type="text"
+                          placeholder="#ABC123"
+                          value={tag}
+                          onChange={e => setTag(e.target.value)}
+                          autoCapitalize="characters"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="
+                            w-full rounded-xl border border-white/10 bg-white/[0.04]
+                            px-4 py-2.5 text-white placeholder:text-slate-600
+                            focus:outline-none focus:border-purple-500/50 transition
+                            font-mono tracking-wide text-sm
+                          "
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1 ml-1">
+                          In-Game API Token <span className="text-slate-600">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Paste your token here, or leave blank"
+                          value={token}
+                          onChange={e => setToken(e.target.value)}
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="
+                            w-full rounded-xl border border-white/10 bg-white/[0.04]
+                            px-4 py-2.5 text-white placeholder:text-slate-600
+                            focus:outline-none focus:border-purple-500/50 transition
+                            font-mono text-sm
+                          "
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={verifying || !tag.trim()}
+                        className="
+                          w-full py-2.5 rounded-xl font-semibold text-sm
+                          bg-purple-600/40 text-purple-100 border border-purple-500/30
+                          hover:bg-purple-600/60 hover:text-white transition
+                          disabled:opacity-40 disabled:cursor-not-allowed
+                        "
+                      >
+                        {verifying ? "Signing up…" : "Sign Up"}
+                      </button>
+                      {verifyStatus && (
+                        <p className={`text-xs text-center ${verifyStatus.ok ? "text-green-300" : "text-red-400"}`}>
+                          {verifyStatus.message}
+                        </p>
+                      )}
+                    </form>
+                  ) : (
+                    <form onSubmit={handleManageSubmit} className="space-y-3 pr-6">
+                      <p className="text-xs text-slate-400">
+                        Enter a player tag to remove that account from this device.
+                        You can always add it back later by verifying again.
+                      </p>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                        <input
+                          type="text"
+                          placeholder="#ABC123"
+                          value={manageTag}
+                          onChange={e => setManageTag(e.target.value)}
+                          autoCapitalize="characters"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="
+                            w-full rounded-xl border border-red-500/20 bg-white/[0.04]
+                            px-4 py-2.5 text-white placeholder:text-slate-600
+                            focus:outline-none focus:border-red-500/50 transition
+                            font-mono tracking-wide text-sm
+                          "
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={manageSubmitting || !manageTag.trim()}
+                        className="
+                          w-full py-2.5 rounded-xl font-semibold text-sm
+                          bg-red-600/40 text-red-100 border border-red-500/30
+                          hover:bg-red-600/60 hover:text-white transition
+                          disabled:opacity-40 disabled:cursor-not-allowed
+                        "
+                      >
+                        {manageSubmitting ? "Removing…" : "Remove Account"}
+                      </button>
+                      {manageResult && (
+                        <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>
+                          {manageResult.message}
+                        </p>
+                      )}
+                    </form>
                   )}
                 </div>
-              </motion.form>
+              </motion.div>
             )}
           </AnimatePresence>
 
@@ -411,7 +541,7 @@ export default function SignupPage() {
           ) : myAccounts.length === 0 ? (
             <div className="text-slate-600 text-sm py-4 text-center">
               No verified accounts on this device yet.<br />
-              <span className="text-slate-500">Use the form below to add your first account.</span>
+              <span className="text-slate-500">Tap "Add Account" above to get started.</span>
             </div>
           ) : (
             <div className="space-y-3">
@@ -479,99 +609,6 @@ export default function SignupPage() {
               })}
             </div>
           )}
-        </Card>
-      </motion.div>
-
-      {/* ── verify new account form ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.16 }}
-        className="relative z-10 mb-6"
-      >
-        <Card>
-          <h2 className="text-lg font-semibold mb-1">Add a New Account</h2>
-          <p className="text-slate-500 text-xs mb-5">
-            Enter a player tag to sign up. Adding the in-game API token
-            (Settings → API Token) is optional, but confirms it's really
-            your account.
-          </p>
-
-          <form onSubmit={handleVerify} className="space-y-4">
-
-            {/* Player Tag */}
-            <div>
-              <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
-              <input
-                type="text"
-                placeholder="#ABC123"
-                value={tag}
-                onChange={e => setTag(e.target.value)}
-                autoCapitalize="characters"
-                autoCorrect="off"
-                spellCheck={false}
-                className="
-                  w-full rounded-2xl border border-white/10 bg-white/[0.04]
-                  backdrop-blur-xl px-5 py-3.5 text-white placeholder:text-slate-600
-                  focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.06] transition
-                  font-mono tracking-wide
-                "
-              />
-            </div>
-
-            {/* API Token — optional */}
-            <div>
-              <label className="block text-xs text-slate-400 mb-1 ml-1">
-                In-Game API Token <span className="text-slate-600">(optional)</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Paste your token here, or leave blank"
-                value={token}
-                onChange={e => setToken(e.target.value)}
-                autoCorrect="off"
-                spellCheck={false}
-                className="
-                  w-full rounded-2xl border border-white/10 bg-white/[0.04]
-                  backdrop-blur-xl px-5 py-3.5 text-white placeholder:text-slate-600
-                  focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.06] transition
-                  font-mono
-                "
-              />
-            </div>
-
-            {/* submit */}
-            <button
-              type="submit"
-              disabled={verifying || !tag.trim()}
-              className="
-                w-full py-4 rounded-2xl font-semibold text-sm
-                bg-purple-600/40 text-purple-100 border border-purple-500/30
-                hover:bg-purple-600/60 hover:text-white transition
-                disabled:opacity-40 disabled:cursor-not-allowed
-              "
-            >
-              {verifying ? "Signing up…" : "Sign Up"}
-            </button>
-
-          </form>
-
-          {/* result message */}
-          <AnimatePresence>
-            {verifyStatus && (
-              <motion.div
-                key="verify-result"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mt-4"
-              >
-                <StatusPill variant={verifyStatus.ok ? "success" : "error"}>
-                  {verifyStatus.ok ? "✓ " : "✗ "}{verifyStatus.message}
-                </StatusPill>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </Card>
       </motion.div>
 
