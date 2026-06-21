@@ -346,19 +346,7 @@ export default function SignupPage() {
         <Card>
           <div className="flex items-start justify-between gap-3 mb-1">
             <h2 className="text-lg font-semibold">Your Accounts</h2>
-            {myAccounts.length === 0 ? (
-              <button
-                type="button"
-                onClick={openManageAdd}
-                className="
-                  shrink-0 px-3 py-1 rounded-full text-xs font-semibold
-                  bg-purple-600/30 text-purple-200 border border-purple-500/30
-                  hover:bg-purple-600/50 hover:text-white transition
-                "
-              >
-                Add Account
-              </button>
-            ) : (
+            {myAccounts.length > 0 && (
               <button
                 type="button"
                 onClick={() => toggleManage(manageTab)}
@@ -539,9 +527,28 @@ export default function SignupPage() {
           {loadingMine ? (
             <div className="text-slate-500 text-sm py-4 text-center animate-pulse">Loading…</div>
           ) : myAccounts.length === 0 ? (
-            <div className="text-slate-600 text-sm py-4 text-center">
-              No verified accounts on this device yet.<br />
-              <span className="text-slate-500">Tap "Add Account" above to get started.</span>
+            <div className="text-center py-4">
+              <p className="text-slate-600 text-sm mb-5">
+                No verified accounts on this device yet.<br />
+                <span className="text-slate-500">Add your first account to get started.</span>
+              </p>
+              <button
+                type="button"
+                onClick={openManageAdd}
+                className="
+                  inline-flex items-center gap-2
+                  px-6 py-3 rounded-full
+                  bg-purple-600/30 text-purple-200
+                  border border-purple-500/30
+                  hover:bg-purple-600/50 hover:text-white
+                  transition font-semibold text-sm
+                "
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Account
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
