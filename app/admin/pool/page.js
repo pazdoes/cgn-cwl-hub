@@ -391,6 +391,98 @@ export default function AdminPoolPage() {
     setDragging(null);
   }
 
+  // Touch equivalent of the above. Same rationale as the signup page's
+  // account reorder — HTML5's native draggable/onDragOver/onDrop API
+  // never fires from touch gestures at all, so dragging a player onto a
+  // clan silently did nothing on mobile without this.
+  //
+  // Same long-press threshold as the signup page's reorder, and for the
+  // same reason — without it, ANY touch-and-move starting on a player
+  // card would be treated as a drag attempt, making it impossible to
+  // scroll the pool list by touching a card directly. touchAction stays
+  // "pan-y" so native vertical scroll is never blocked; only once the
+  // press has held still past LONG_PRESS_MS does it convert into a drag.
+  const touchPlayerStateRef = useRef({ timer: null, startX: 0, startY: 0, entry: null, active: false });
+
+  function onTouchStartPlayer(e, entry) {
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    touchPlayerStateRef.current.startX = touch.clientX;
+    touchPlayerStateRef.current.startY = touch.clientY;
+    touchPlayerStateRef.current.entry = entry;
+    touchPlayerStateRef.current.active = false;
+
+    touchPlayerStateRef.current.timer = setTimeout(() => {
+      touchPlayerStateRef.current.active = true;
+      onDragStart(entry);
+    }, 280);
+  }
+
+  function onTouchMovePlayer(e) {
+    const state = touchPlayerStateRef.current;
+    const touch = e.touches[0];
+    if (!touch || !state.entry) return;
+
+    if (!state.active) {
+      const dx = Math.abs(touch.clientX - state.startX);
+      const dy = Math.abs(touch.clientY - state.startY);
+      if (dx > 10 || dy > 10) {
+        clearTimeout(state.timer);
+        state.entry = null;
+      }
+      return;
+    }
+
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const zone = el?.closest("[data-clan-zone]");
+    if (!zone) {
+      setOverClan(null);
+      return;
+    }
+
+    const clan = zone.getAttribute("data-clan-zone");
+    if (!clan) return;
+
+    onDragOver({ preventDefault: () => {} }, clan);
+  }
+
+  async function onTouchEndPlayer(e) {
+    const state = touchPlayerStateRef.current;
+    clearTimeout(state.timer);
+
+    if (!state.active) {
+      state.entry = null;
+      return;
+    }
+
+    // changedTouches (not touches) — by the time touchend fires, the
+    // finger has already lifted, so e.touches is empty; changedTouches
+    // still holds the final position of the touch that just ended.
+    const touch = e.changedTouches?.[0];
+    if (!touch || !dragging) {
+      setDragging(null);
+      setOverClan(null);
+      state.entry = null;
+      state.active = false;
+      return;
+    }
+
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const zone = el?.closest("[data-clan-zone]");
+    const clan = zone?.getAttribute("data-clan-zone");
+
+    if (clan) {
+      await onDrop({ preventDefault: () => {} }, clan);
+    } else {
+      setDragging(null);
+      setOverClan(null);
+    }
+
+    state.entry = null;
+    state.active = false;
+  }
+
   /* --- assignment call --- */
   async function doAssign(entry, clan) {
     setAssigning(entry.player_tag);
@@ -1052,6 +1144,10 @@ export default function AdminPoolPage() {
                         draggable
                         onDragStart={() => onDragStart(entry)}
                         onDragEnd={onDragEnd}
+                        onTouchStart={e => onTouchStartPlayer(e, entry)}
+                        onTouchMove={onTouchMovePlayer}
+                        onTouchEnd={onTouchEndPlayer}
+                        style={{ touchAction: "pan-y" }}
                         className={`
                           rounded-2xl border p-3.5 select-none
                           transition cursor-grab active:cursor-grabbing
@@ -1103,6 +1199,7 @@ export default function AdminPoolPage() {
                 return (
                   <div
                     key={clan}
+                    data-clan-zone={clan}
                     onDragOver={e => onDragOver(e, clan)}
                     onDragLeave={onDragLeave}
                     onDrop={e => onDrop(e, clan)}

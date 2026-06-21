@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BRANDING } from "../../lib/branding";
@@ -359,6 +359,80 @@ export default function SignupPage() {
     }
   }
 
+  // Touch equivalent of the drag handlers above. HTML5's native
+  // draggable/onDragStart/onDragOver API is desktop-only — mobile touch
+  // browsers never fire those events at all, so reordering silently did
+  // nothing on a phone without this.
+  //
+  // Uses a LONG-PRESS threshold to distinguish an intentional drag from
+  // an ordinary scroll — without this, ANY touch-and-move starting on a
+  // row would be treated as a drag attempt, making it impossible to
+  // scroll past a row by touching it directly (the same pattern iOS
+  // itself uses for reorderable lists). touchAction stays "pan-y"
+  // (allows native vertical scroll) rather than "none" — the press only
+  // converts into a drag after holding still past LONG_PRESS_MS; if the
+  // finger moves more than MOVE_CANCEL_PX before that, it's treated as
+  // a scroll and the pending drag is cancelled, letting the browser's
+  // native scroll behavior proceed untouched.
+  const touchStateRef = useRef({ timer: null, startX: 0, startY: 0, tag: null, active: false });
+
+  function onAccountTouchStart(e, tag) {
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    touchStateRef.current.startX = touch.clientX;
+    touchStateRef.current.startY = touch.clientY;
+    touchStateRef.current.tag = tag;
+    touchStateRef.current.active = false;
+
+    touchStateRef.current.timer = setTimeout(() => {
+      touchStateRef.current.active = true;
+      onAccountDragStart(tag);
+    }, 280);
+  }
+
+  function onAccountTouchMove(e) {
+    const state = touchStateRef.current;
+    const touch = e.touches[0];
+    if (!touch || !state.tag) return;
+
+    if (!state.active) {
+      // Not yet a confirmed drag — if the finger has moved enough,
+      // this is a scroll, not a hold. Cancel the pending drag-start
+      // timer and let the browser handle the rest of the gesture
+      // natively (touchAction: pan-y already permits vertical scroll).
+      const dx = Math.abs(touch.clientX - state.startX);
+      const dy = Math.abs(touch.clientY - state.startY);
+      if (dx > 10 || dy > 10) {
+        clearTimeout(state.timer);
+        state.tag = null;
+      }
+      return;
+    }
+
+    // Confirmed drag — proceed with the existing hit-testing logic.
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const row = el?.closest("[data-account-tag]");
+    if (!row) return;
+
+    const overTag = row.getAttribute("data-account-tag");
+    if (!overTag) return;
+
+    onAccountDragOver({ preventDefault: () => {} }, overTag);
+  }
+
+  function onAccountTouchEnd() {
+    const state = touchStateRef.current;
+    clearTimeout(state.timer);
+
+    if (state.active) {
+      onAccountDrop();
+    }
+
+    state.tag = null;
+    state.active = false;
+  }
+
   /* ─── render ─────────────────────────────────────────── */
   return (
     <main className="
@@ -643,6 +717,7 @@ export default function SignupPage() {
                 return (
                   <motion.div
                     key={acct.tag}
+                    data-account-tag={acct.tag}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     draggable
@@ -650,6 +725,10 @@ export default function SignupPage() {
                     onDragOver={e => onAccountDragOver(e, acct.tag)}
                     onDragLeave={onAccountDragLeave}
                     onDragEnd={onAccountDrop}
+                    onTouchStart={e => onAccountTouchStart(e, acct.tag)}
+                    onTouchMove={onAccountTouchMove}
+                    onTouchEnd={onAccountTouchEnd}
+                    style={{ touchAction: "pan-y" }}
                     className={`
                       flex items-center justify-between gap-3
                       rounded-2xl border bg-white/[0.03]
@@ -658,10 +737,16 @@ export default function SignupPage() {
                       ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
                     `}
                   >
-                    {/* drag handle */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 9h.01M8 15h.01M16 9h.01M16 15h.01M8 12h.01M16 12h.01" />
-                    </svg>
+                    {/* drag handle — larger touch target and explicit
+                        right margin than the icon's own visual size,
+                        since a finger needs more room to grab accurately
+                        than a mouse cursor does; this also fixes the
+                        overlap with the account info next to it */}
+                    <div className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center -ml-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 9h.01M8 15h.01M16 9h.01M16 15h.01M8 12h.01M16 12h.01" />
+                      </svg>
+                    </div>
 
                     {/* account info */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
