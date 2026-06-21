@@ -384,6 +384,13 @@ export default function AdminPoolPage() {
           tag:        entry.player_tag,
           playerName: entry.player_name,
           clan,
+          // assignPlayerToRoster has always accepted townHall and would
+          // write it correctly — the gap was purely that nothing on this
+          // page ever sent it, leaving the Sheet's Town Hall column
+          // permanently blank on every assignment. thLevels is already
+          // fetched on page load for the TH icon (item 4); reusing it
+          // here closes that gap with no new CoC API calls needed.
+          townHall:   thLevels[entry.player_tag] || "",
           season,
         }),
       });
