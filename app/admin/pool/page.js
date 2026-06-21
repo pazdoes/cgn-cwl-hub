@@ -6,6 +6,29 @@ import Link from "next/link";
 import { BRANDING } from "../../../lib/branding";
 import { TH_ICONS } from "../../../lib/icons";
 
+/* ─── circular X (remove) button ─────────────────────────── */
+
+function XButton({ onClick, busy, title }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      title={title}
+      className="
+        shrink-0 w-5 h-5 rounded-full flex items-center justify-center
+        bg-white/[0.06] border border-white/10 text-slate-400
+        hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300
+        transition disabled:opacity-40 disabled:pointer-events-none
+      "
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  );
+}
+
 /* ─── TH icon ────────────────────────────────────────────── */
 
 function ThIcon({ level, size = "w-8 h-8" }) {
@@ -24,6 +47,100 @@ function ThIcon({ level, size = "w-8 h-8" }) {
 
 // Clan names must match the Sheet tab names (partial match is used server-side).
 // These are read dynamically from the pool data itself.
+
+/* ─── Confirmed / Substitute status toggle (admin only) ─────────────────── */
+
+function StatusToggle({ status, busy, error, onSetStatus }) {
+  const isConfirmed = status === "confirmed";
+  const isSubstitute = status === "substitute";
+  return (
+    <div className="flex flex-col items-end gap-1">
+      {/* row 1: status pill */}
+      <span
+        className={`
+          inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border
+          ${isConfirmed
+            ? "bg-green-500/20 text-green-300 border-green-500/30"
+            : isSubstitute
+            ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
+            : "bg-slate-500/10 text-slate-500 border-slate-500/20"
+          }
+        `}
+      >
+        {isConfirmed ? "Confirmed" : isSubstitute ? "Substitute" : "Unset"}
+      </span>
+
+      {/* row 2: toggle */}
+      <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onSetStatus("confirmed")}
+          className={`
+            px-2 py-0.5 rounded-full transition disabled:opacity-50
+            ${isConfirmed ? "bg-green-500/30 text-green-200" : "text-slate-500 hover:text-slate-300"}
+          `}
+        >
+          Conf
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onSetStatus("substitute")}
+          className={`
+            px-2 py-0.5 rounded-full transition disabled:opacity-50
+            ${isSubstitute ? "bg-orange-500/30 text-orange-200" : "text-slate-500 hover:text-slate-300"}
+          `}
+        >
+          Sub
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-[9px] text-red-400 text-right max-w-[140px] leading-tight">{error}</p>
+      )}
+    </div>
+  );
+}
+
+/* ─── per-clan CWL Format toggle (admin only) ────────────────────────────── */
+
+function FormatToggle({ format, busy, error, onSetFormat }) {
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-slate-400 font-mono">{format}v{format}</span>
+        <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onSetFormat(15)}
+            className={`
+              px-2 py-0.5 rounded-full transition disabled:opacity-50
+              ${format === 15 ? "bg-purple-500/30 text-purple-200" : "text-slate-500 hover:text-slate-300"}
+            `}
+          >
+            15
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onSetFormat(30)}
+            className={`
+              px-2 py-0.5 rounded-full transition disabled:opacity-50
+              ${format === 30 ? "bg-purple-500/30 text-purple-200" : "text-slate-500 hover:text-slate-300"}
+            `}
+          >
+            30
+          </button>
+        </div>
+      </div>
+      {error && (
+        <p className="text-[9px] text-red-400 text-right max-w-[180px] leading-tight">{error}</p>
+      )}
+    </div>
+  );
+}
 
 /* ─── tiny helpers ───────────────────────────────────────── */
 
@@ -130,6 +247,7 @@ export default function AdminPoolPage() {
   const [entries, setEntries] = useState([]);
   const [clans,   setClans]   = useState([]);
   const [thLevels, setThLevels] = useState({}); // { [player_tag]: number }
+  const [clanFormats, setClanFormats] = useState({}); // { [clan]: 15 | 30 }
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
 
@@ -140,6 +258,13 @@ export default function AdminPoolPage() {
   /* --- assignment feedback --- */
   const [assignStatus, setAssignStatus] = useState({}); // { [tag]: {ok,msg} }
   const [assigning,    setAssigning]    = useState(null);
+
+  /* --- item 5: unassign / status / format feedback --- */
+  const [unassigning,  setUnassigning]  = useState(null); // tag currently being unassigned
+  const [statusBusy,   setStatusBusy]   = useState(null); // tag currently toggling status
+  const [statusError,  setStatusError]  = useState({});   // { [tag]: message }
+  const [formatBusy,   setFormatBusy]   = useState(null); // clan currently toggling format
+  const [formatError,  setFormatError]  = useState({});   // { [clan]: message }
 
   /* --- load pool data --- */
   async function loadPool(savedPin) {
@@ -153,6 +278,7 @@ export default function AdminPoolPage() {
       const data = await res.json();
       setSeason(data.season);
       setEntries(data.entries || []);
+      setClanFormats(data.clanFormats || {});
       // derive unique clan list from assigned entries + a fallback static list
       const assignedClans = [...new Set(
         (data.entries || [])
@@ -265,6 +391,83 @@ export default function AdminPoolPage() {
       }));
     } finally {
       setAssigning(null);
+    }
+  }
+
+  /* --- item 5: unassign (admin X button) --- */
+  async function doUnassign(entry) {
+    setUnassigning(entry.player_tag);
+    try {
+      const res = await fetch("/api/admin/unassign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ tag: entry.player_tag }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // optimistic local update — player goes back to the unassigned pool
+        setEntries(prev =>
+          prev.map(e =>
+            e.player_tag === entry.player_tag
+              ? { ...e, assigned_clan: null, assigned_at: null, status: null }
+              : e
+          )
+        );
+      } else {
+        setStatusError(prev => ({ ...prev, [entry.player_tag]: data.error || "Unassign failed" }));
+      }
+    } catch {
+      setStatusError(prev => ({ ...prev, [entry.player_tag]: "Network error" }));
+    } finally {
+      setUnassigning(null);
+    }
+  }
+
+  /* --- item 5: Confirmed/Substitute status toggle --- */
+  async function doSetStatus(entry, status) {
+    setStatusBusy(entry.player_tag);
+    setStatusError(prev => ({ ...prev, [entry.player_tag]: null }));
+    try {
+      const res = await fetch("/api/admin/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ tag: entry.player_tag, clan: entry.assigned_clan, status }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEntries(prev =>
+          prev.map(e => e.player_tag === entry.player_tag ? { ...e, status } : e)
+        );
+      } else {
+        setStatusError(prev => ({ ...prev, [entry.player_tag]: data.error || "Status update failed" }));
+      }
+    } catch {
+      setStatusError(prev => ({ ...prev, [entry.player_tag]: "Network error" }));
+    } finally {
+      setStatusBusy(null);
+    }
+  }
+
+  /* --- item 5: CWL Format toggle (per clan) --- */
+  async function doSetFormat(clan, format) {
+    setFormatBusy(clan);
+    setFormatError(prev => ({ ...prev, [clan]: null }));
+    try {
+      const res = await fetch("/api/admin/format", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clan, format }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setClanFormats(prev => ({ ...prev, [clan]: format }));
+      } else {
+        setFormatError(prev => ({ ...prev, [clan]: data.error || "Format update failed" }));
+      }
+    } catch {
+      setFormatError(prev => ({ ...prev, [clan]: "Network error" }));
+    } finally {
+      setFormatBusy(null);
     }
   }
 
@@ -473,6 +676,7 @@ export default function AdminPoolPage() {
               {clans.map(clan => {
                 const clanEntries = assigned.filter(e => e.assigned_clan === clan);
                 const isOver = overClan === clan;
+                const format = clanFormats[clan] ?? 15;
                 return (
                   <div
                     key={clan}
@@ -487,9 +691,17 @@ export default function AdminPoolPage() {
                       }
                     `}
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-start justify-between mb-3 gap-3">
                       <p className="font-semibold text-sm text-white truncate">{clan}</p>
-                      <Pill variant="purple">{clanEntries.length}</Pill>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Pill variant="purple">{clanEntries.length}</Pill>
+                        <FormatToggle
+                          format={format}
+                          busy={formatBusy === clan}
+                          error={formatError[clan]}
+                          onSetFormat={(f) => doSetFormat(clan, f)}
+                        />
+                      </div>
                     </div>
 
                     {clanEntries.length === 0 && !isOver && (
@@ -501,11 +713,28 @@ export default function AdminPoolPage() {
 
                     <div className="space-y-1.5 mt-1">
                       {clanEntries.map(e => (
-                        <div key={e.player_tag} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 flex items-center gap-2">
-                          <ThIcon level={thLevels[e.player_tag]} size="w-6 h-6" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-white truncate">{e.player_name}</p>
-                            <p className="text-[10px] text-slate-600 font-mono">{e.player_tag}</p>
+                        <div key={e.player_tag} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 relative">
+                          <div className="absolute top-1.5 right-1.5">
+                            <XButton
+                              onClick={() => doUnassign(e)}
+                              busy={unassigning === e.player_tag}
+                              title="Unassign — return to pool"
+                            />
+                          </div>
+                          <div className="flex items-center justify-between gap-2 pr-6">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <ThIcon level={thLevels[e.player_tag]} size="w-6 h-6" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-white truncate">{e.player_name}</p>
+                                <p className="text-[10px] text-slate-600 font-mono">{e.player_tag}</p>
+                              </div>
+                            </div>
+                            <StatusToggle
+                              status={e.status}
+                              busy={statusBusy === e.player_tag}
+                              error={statusError[e.player_tag]}
+                              onSetStatus={(status) => doSetStatus(e, status)}
+                            />
                           </div>
                         </div>
                       ))}
