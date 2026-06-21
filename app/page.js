@@ -18,6 +18,17 @@ function rankSortIndex(rank) {
   return idx === -1 ? CWL_RANK_ORDER.length : idx;
 }
 
+/* ─── skeleton loading placeholder ───────────────────────────
+   Reused across the homepage, signup page, and admin pool page so
+   loading states share one consistent visual treatment — a pulsing
+   translucent block shaped like the content it's standing in for,
+   rather than a flash of "0" or plain "Loading…" text. */
+function Skeleton({ className = "" }) {
+  return (
+    <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />
+  );
+}
+
 /* ─── stat tile click-through views ──────────────────────── */
 
 // Read-only roster list, same player set already counted on the Players
@@ -315,11 +326,13 @@ export default function Home() {
 const [selectedClan, setSelectedClan] = useState(null);
 const [search, setSearch] = useState("");
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
+const [loadingRoster, setLoadingRoster] = useState(true);
 
   useEffect(() => {
     fetch("/api/roster")
       .then(res => res.json())
-      .then(data => setPlayers(data));
+      .then(data => setPlayers(data))
+      .finally(() => setLoadingRoster(false));
   }, []);
 
   useEffect(() => {
@@ -688,7 +701,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
 
   <div
-    onClick={() => setStatView("players")}
+    onClick={() => !loadingRoster && setStatView("players")}
     className="
   rounded-3xl
   border
@@ -707,17 +720,25 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   hover:border-white/20
   transition
 ">
-    <div className="text-2xl md:text-3xl font-bold">
-      {players.length}
-    </div>
-
-    <div className="text-slate-400">
-      Players
-    </div>
+    {loadingRoster ? (
+      <>
+        <Skeleton className="w-10 h-7 mb-2" />
+        <Skeleton className="w-14 h-3" />
+      </>
+    ) : (
+      <>
+        <div className="text-2xl md:text-3xl font-bold">
+          {players.length}
+        </div>
+        <div className="text-slate-400">
+          Players
+        </div>
+      </>
+    )}
   </div>
 
   <div
-    onClick={() => setStatView("clans")}
+    onClick={() => !loadingRoster && setStatView("clans")}
     className="
     rounded-3xl
     border
@@ -735,17 +756,25 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     hover:border-white/20
     transition
   ">
-    <div className="text-2xl md:text-3xl font-bold">
-      {clans.length}
-    </div>
-
-    <div className="text-slate-400">
-      Clans
-    </div>
+    {loadingRoster ? (
+      <>
+        <Skeleton className="w-10 h-7 mb-2" />
+        <Skeleton className="w-12 h-3" />
+      </>
+    ) : (
+      <>
+        <div className="text-2xl md:text-3xl font-bold">
+          {clans.length}
+        </div>
+        <div className="text-slate-400">
+          Clans
+        </div>
+      </>
+    )}
   </div>
 
   <div
-    onClick={() => setStatView("avgth")}
+    onClick={() => !loadingRoster && setStatView("avgth")}
     className="
     rounded-3xl
     border
@@ -763,22 +792,30 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     hover:border-white/20
     transition
   ">
-    <div className="text-2xl md:text-3xl font-bold">
-      {
-        players.length
-          ? (
-              players.reduce(
-                (sum, p) => sum + Number(p.townHall || 0),
-                0
-              ) / players.length
-            ).toFixed(1)
-          : "-"
-      }
-    </div>
-
-    <div className="text-slate-400">
-      Avg TH
-    </div>
+    {loadingRoster ? (
+      <>
+        <Skeleton className="w-10 h-7 mb-2" />
+        <Skeleton className="w-14 h-3" />
+      </>
+    ) : (
+      <>
+        <div className="text-2xl md:text-3xl font-bold">
+          {
+            players.length
+              ? (
+                  players.reduce(
+                    (sum, p) => sum + Number(p.townHall || 0),
+                    0
+                  ) / players.length
+                ).toFixed(1)
+              : "-"
+          }
+        </div>
+        <div className="text-slate-400">
+          Avg TH
+        </div>
+      </>
+    )}
   </div>
 
 </div>
@@ -810,7 +847,15 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
 
 </div>
 
-    {search ? (
+    {loadingRoster ? (
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="min-h-[280px] w-full rounded-3xl" />
+        ))}
+      </div>
+
+    ) : search ? (
 
       <div className="space-y-4 mt-2">
 
