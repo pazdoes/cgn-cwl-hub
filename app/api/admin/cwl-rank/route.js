@@ -54,7 +54,16 @@ export async function POST(request) {
     );
   }
 
-  const rank = cocClan?.warLeague?.name || "Unranked";
+  // The CoC API returns the full official league name (e.g. "Champion
+  // League III"), but every icon lookup in this app (lib/icons.js's
+  // CWL_ICONS map) and every value previously hand-typed by officers in
+  // this column uses the shorter form without the word "League" (e.g.
+  // "Champion III"). Writing the raw API value broke icon matching on
+  // both the homepage and clan-detail view the first time this route was
+  // used — this strips "League " out so the stored value matches the
+  // format every icon lookup in the app already expects.
+  const rawRank = cocClan?.warLeague?.name || "Unranked";
+  const rank = rawRank.replace(/\bLeague\s+/i, "").trim();
 
   try {
     await writeCwlRankToSheet({ clan, rank });
@@ -66,5 +75,5 @@ export async function POST(request) {
     );
   }
 
-  return NextResponse.json({ clan, clanTag, rank });
+  return NextResponse.json({ clan, clanTag, rank, rawRank });
 }
