@@ -91,6 +91,12 @@ export default function SignupPage() {
   const [loadingMine, setLoadingMine] = useState(true);
   const [thLevels, setThLevels] = useState({}); // { [tag]: number }
 
+  // manual drag-and-drop reordering (item 13) — purely client-side
+  // during the drag itself; the new order is only persisted to Neon
+  // once the drop completes, via /api/accounts/reorder
+  const [draggingTag, setDraggingTag] = useState(null);
+  const [dragOverTag, setDragOverTag] = useState(null);
+
   // verify-new-account form
   const [tag,   setTag]   = useState("");
   const [token, setToken] = useState("");
@@ -299,6 +305,57 @@ export default function SignupPage() {
       setManageResult({ ok: false, message: "Network error — please try again." });
     } finally {
       setManageSubmitting(false);
+    }
+  }
+
+  /* --- drag-and-drop reordering of Your Accounts (item 13) ---
+     Purely cosmetic per the confirmed scope, but persisted: the new
+     order is written to Neon on drop, so it survives a refresh. Reorders
+     the myAccounts array optimistically as the user drags over each
+     item, then saves the final order once they actually drop. */
+  function onAccountDragStart(tag) {
+    setDraggingTag(tag);
+  }
+
+  function onAccountDragOver(e, overTag) {
+    e.preventDefault();
+    if (overTag === draggingTag) return;
+    setDragOverTag(overTag);
+
+    if (!draggingTag || draggingTag === overTag) return;
+
+    setMyAccounts(prev => {
+      const fromIndex = prev.findIndex(a => a.tag === draggingTag);
+      const toIndex = prev.findIndex(a => a.tag === overTag);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  }
+
+  function onAccountDragLeave() {
+    setDragOverTag(null);
+  }
+
+  async function onAccountDrop() {
+    setDraggingTag(null);
+    setDragOverTag(null);
+
+    // Persist whatever order myAccounts is in right now — it's already
+    // been reordered optimistically during the drag itself, so the
+    // drop just needs to save it, not compute anything new.
+    try {
+      await fetch("/api/accounts/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedTags: myAccounts.map(a => a.tag) }),
+      });
+    } catch {
+      // non-fatal — the order still looks right on screen even if the
+      // save failed; it just won't survive a refresh in that case
     }
   }
 
@@ -580,20 +637,34 @@ export default function SignupPage() {
               {myAccounts.map(acct => {
                 const result = joinResult[acct.tag];
                 const busy   = joiningTag === acct.tag;
+                const isDragging = draggingTag === acct.tag;
+                const isDragOver  = dragOverTag === acct.tag && draggingTag !== acct.tag;
 
                 return (
                   <motion.div
                     key={acct.tag}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="
+                    draggable
+                    onDragStart={() => onAccountDragStart(acct.tag)}
+                    onDragOver={e => onAccountDragOver(e, acct.tag)}
+                    onDragLeave={onAccountDragLeave}
+                    onDragEnd={onAccountDrop}
+                    className={`
                       flex items-center justify-between gap-3
-                      rounded-2xl border border-white/10 bg-white/[0.03]
-                      p-4 transition hover:bg-white/[0.05]
-                    "
+                      rounded-2xl border bg-white/[0.03]
+                      p-4 transition hover:bg-white/[0.05] cursor-grab active:cursor-grabbing
+                      ${isDragging ? "opacity-40 border-purple-500/40" : "border-white/10"}
+                      ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
+                    `}
                   >
+                    {/* drag handle */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 9h.01M8 15h.01M16 9h.01M16 15h.01M8 12h.01M16 12h.01" />
+                    </svg>
+
                     {/* account info */}
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <ThIcon level={thLevels[acct.tag]} />
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-white truncate">{acct.name}</span>
