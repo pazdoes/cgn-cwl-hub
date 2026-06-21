@@ -96,6 +96,13 @@ export default function SignupPage() {
   const [leavingTag, setLeavingTag]   = useState(null);
   const [leaveError, setLeaveError]   = useState({}); // { [tag]: message }
 
+  // Manage panel — remove an account from this device entirely (item 9,
+  // distinct from the per-account X above, which only leaves the pool)
+  const [manageOpen,        setManageOpen]        = useState(false);
+  const [manageTag,         setManageTag]         = useState("");
+  const [manageSubmitting,  setManageSubmitting]  = useState(false);
+  const [manageResult,      setManageResult]      = useState(null); // {ok, message}
+
   /* --- fetch TH levels for a set of tags, merging into existing state --- */
   async function loadThLevels(tags) {
     if (!tags || tags.length === 0) return;
@@ -231,6 +238,45 @@ export default function SignupPage() {
     }
   }
 
+  /* --- remove an account from this device entirely (item 9) --- */
+  function toggleManage() {
+    setManageOpen(prev => !prev);
+    setManageTag("");
+    setManageResult(null);
+  }
+
+  async function handleManageSubmit(e) {
+    e.preventDefault();
+    const normTag = normaliseTag(manageTag);
+    if (!normTag) return;
+
+    setManageSubmitting(true);
+    setManageResult(null);
+
+    try {
+      const res = await fetch("/api/accounts/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tag: normTag }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setManageResult({ ok: true, message: `${normTag} removed from this device.` });
+        // refresh the list so the removed account disappears immediately
+        const mine = await fetch("/api/accounts/mine").then(r => r.json());
+        setMyAccounts(mine.accounts || []);
+        setManageTag("");
+      } else {
+        setManageResult({ ok: false, message: data.error || "Couldn't remove account." });
+      }
+    } catch {
+      setManageResult({ ok: false, message: "Network error — please try again." });
+    } finally {
+      setManageSubmitting(false);
+    }
+  }
+
   /* ─── render ─────────────────────────────────────────── */
   return (
     <main className="
@@ -282,10 +328,83 @@ export default function SignupPage() {
         className="relative z-10 mb-6"
       >
         <Card>
-          <h2 className="text-lg font-semibold mb-1">Your Accounts</h2>
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <h2 className="text-lg font-semibold">Your Accounts</h2>
+            <button
+              type="button"
+              onClick={toggleManage}
+              className={`
+                shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition
+                ${manageOpen
+                  ? "bg-slate-500/30 text-white border-slate-500/40"
+                  : "bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30 hover:text-white"
+                }
+              `}
+            >
+              Manage
+            </button>
+          </div>
           <p className="text-slate-500 text-xs mb-4">
             Accounts you've already verified on this device. Tap to sign up for this season — no token needed.
           </p>
+
+          {/* Manage panel — remove an account from this device entirely */}
+          <AnimatePresence>
+            {manageOpen && (
+              <motion.form
+                onSubmit={handleManageSubmit}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mb-4"
+              >
+                <div className="relative rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-4 space-y-3">
+                  <div className="absolute top-3 right-3">
+                    <XButton onClick={toggleManage} title="Close" />
+                  </div>
+                  <p className="text-xs text-slate-400 pr-6">
+                    Enter a player tag to remove that account from this device.
+                    You can always add it back later by verifying again.
+                  </p>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                    <input
+                      type="text"
+                      placeholder="#ABC123"
+                      value={manageTag}
+                      onChange={e => setManageTag(e.target.value)}
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      className="
+                        w-full rounded-xl border border-red-500/20 bg-white/[0.04]
+                        px-4 py-2.5 text-white placeholder:text-slate-600
+                        focus:outline-none focus:border-red-500/50 transition
+                        font-mono tracking-wide text-sm
+                      "
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={manageSubmitting || !manageTag.trim()}
+                    className="
+                      w-full py-2.5 rounded-xl font-semibold text-sm
+                      bg-red-600/40 text-red-100 border border-red-500/30
+                      hover:bg-red-600/60 hover:text-white transition
+                      disabled:opacity-40 disabled:cursor-not-allowed
+                    "
+                  >
+                    {manageSubmitting ? "Removing…" : "Remove Account"}
+                  </button>
+                  {manageResult && (
+                    <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>
+                      {manageResult.message}
+                    </p>
+                  )}
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
 
           {loadingMine ? (
             <div className="text-slate-500 text-sm py-4 text-center animate-pulse">Loading…</div>
