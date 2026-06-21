@@ -368,69 +368,118 @@ export default function SignupPage() {
   // an ordinary scroll — without this, ANY touch-and-move starting on a
   // row would be treated as a drag attempt, making it impossible to
   // scroll past a row by touching it directly (the same pattern iOS
-  // itself uses for reorderable lists). touchAction stays "pan-y"
-  // (allows native vertical scroll) rather than "none" — the press only
-  // converts into a drag after holding still past LONG_PRESS_MS; if the
-  // finger moves more than MOVE_CANCEL_PX before that, it's treated as
-  // a scroll and the pending drag is cancelled, letting the browser's
-  // native scroll behavior proceed untouched.
-  const touchStateRef = useRef({ timer: null, startX: 0, startY: 0, tag: null, active: false });
+  // itself uses for reorderable lists).
+  //
+  // touch-action alone can't fully solve this: it's a static CSS
+  // property the browser commits to at the very start of the touch,
+  // before any JS runs — it does NOT respect JS state changes mid-
+  // gesture. So even after the long-press timer confirms "this is now
+  // a drag" (the card visibly highlights), touch-action: pan-y had
+  // already told the browser scrolling was fair game for this touch
+  // from the first frame, and native scrolling kept running in
+  // parallel underneath the (correctly-computed) drag logic — the bug
+  // reported after the first touch fix.
+  //
+  // The actual fix: once the long-press fires, manually attach a
+  // touchmove listener via raw addEventListener with { passive: false }
+  // — NOT React's onTouchMove JSX prop, which Chrome/React always
+  // treats as passive and silently ignores preventDefault() inside.
+  // Only once a drag is confirmed do we call preventDefault() (stopping
+  // native scroll from that point on); before the threshold, no extra
+  // listener exists at all, so ordinary swipes scroll completely
+  // normally with no interference.
+  const LONG_PRESS_MS = 280;
+  const MOVE_CANCEL_PX = 10;
+  const touchStateRef = useRef({
+    timer: null, startX: 0, startY: 0, tag: null, active: false,
+    moveListener: null, endListener: null, cancelListener: null,
+  });
+
+  function cleanupAccountTouchListeners() {
+    const state = touchStateRef.current;
+    if (state.moveListener) document.removeEventListener("touchmove", state.moveListener);
+    if (state.endListener) document.removeEventListener("touchend", state.endListener);
+    if (state.cancelListener) document.removeEventListener("touchcancel", state.cancelListener);
+    state.moveListener = null;
+    state.endListener = null;
+    state.cancelListener = null;
+  }
 
   function onAccountTouchStart(e, tag) {
     const touch = e.touches[0];
     if (!touch) return;
 
-    touchStateRef.current.startX = touch.clientX;
-    touchStateRef.current.startY = touch.clientY;
-    touchStateRef.current.tag = tag;
-    touchStateRef.current.active = false;
+    const state = touchStateRef.current;
+    state.startX = touch.clientX;
+    state.startY = touch.clientY;
+    state.tag = tag;
+    state.active = false;
 
-    touchStateRef.current.timer = setTimeout(() => {
-      touchStateRef.current.active = true;
+    state.timer = setTimeout(() => {
+      state.active = true;
       onAccountDragStart(tag);
-    }, 280);
+
+      // Drag confirmed — attach the real, non-passive touchmove handler
+      // now, scoped only to the lifetime of this one drag gesture.
+      const moveListener = (moveEvent) => {
+        if (moveEvent.cancelable) moveEvent.preventDefault();
+        const t = moveEvent.touches[0];
+        if (!t) return;
+
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        const row = el?.closest("[data-account-tag]");
+        if (!row) return;
+
+        const overTag = row.getAttribute("data-account-tag");
+        if (!overTag) return;
+
+        onAccountDragOver({ preventDefault: () => {} }, overTag);
+      };
+
+      const finish = () => {
+        cleanupAccountTouchListeners();
+        onAccountDrop();
+        state.tag = null;
+        state.active = false;
+      };
+
+      state.moveListener = moveListener;
+      state.endListener = finish;
+      state.cancelListener = finish;
+      document.addEventListener("touchmove", moveListener, { passive: false });
+      document.addEventListener("touchend", finish, { passive: true });
+      document.addEventListener("touchcancel", finish, { passive: true });
+    }, LONG_PRESS_MS);
   }
 
   function onAccountTouchMove(e) {
     const state = touchStateRef.current;
+    if (state.active || !state.tag) return; // confirmed drags are handled by the manual listener above
+
+    // Pre-threshold: only used to detect "this is a scroll, not a
+    // hold" and cancel the pending timer — never calls preventDefault,
+    // so native scrolling for an ordinary swipe is never interrupted.
     const touch = e.touches[0];
-    if (!touch || !state.tag) return;
+    if (!touch) return;
 
-    if (!state.active) {
-      // Not yet a confirmed drag — if the finger has moved enough,
-      // this is a scroll, not a hold. Cancel the pending drag-start
-      // timer and let the browser handle the rest of the gesture
-      // natively (touchAction: pan-y already permits vertical scroll).
-      const dx = Math.abs(touch.clientX - state.startX);
-      const dy = Math.abs(touch.clientY - state.startY);
-      if (dx > 10 || dy > 10) {
-        clearTimeout(state.timer);
-        state.tag = null;
-      }
-      return;
+    const dx = Math.abs(touch.clientX - state.startX);
+    const dy = Math.abs(touch.clientY - state.startY);
+    if (dx > MOVE_CANCEL_PX || dy > MOVE_CANCEL_PX) {
+      clearTimeout(state.timer);
+      state.tag = null;
     }
-
-    // Confirmed drag — proceed with the existing hit-testing logic.
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    const row = el?.closest("[data-account-tag]");
-    if (!row) return;
-
-    const overTag = row.getAttribute("data-account-tag");
-    if (!overTag) return;
-
-    onAccountDragOver({ preventDefault: () => {} }, overTag);
   }
 
   function onAccountTouchEnd() {
     const state = touchStateRef.current;
     clearTimeout(state.timer);
-
-    if (state.active) {
-      onAccountDrop();
+    // If a drag was confirmed, the manually-attached touchend/touchcancel
+    // listener already handles finishing it — this only needs to cover
+    // the case where the finger lifted BEFORE the long-press threshold
+    // fired at all (a simple tap or a scroll that ended quickly).
+    if (!state.active) {
+      state.tag = null;
     }
-
-    state.tag = null;
-    state.active = false;
   }
 
   /* ─── render ─────────────────────────────────────────── */

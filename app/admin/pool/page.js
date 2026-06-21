@@ -396,91 +396,119 @@ export default function AdminPoolPage() {
   // never fires from touch gestures at all, so dragging a player onto a
   // clan silently did nothing on mobile without this.
   //
-  // Same long-press threshold as the signup page's reorder, and for the
-  // same reason — without it, ANY touch-and-move starting on a player
-  // card would be treated as a drag attempt, making it impossible to
-  // scroll the pool list by touching a card directly. touchAction stays
-  // "pan-y" so native vertical scroll is never blocked; only once the
-  // press has held still past LONG_PRESS_MS does it convert into a drag.
-  const touchPlayerStateRef = useRef({ timer: null, startX: 0, startY: 0, entry: null, active: false });
+  // Same long-press threshold and the same fix as the signup page's
+  // reorder: touch-action alone can't stop native scrolling reactively
+  // once a drag is confirmed mid-gesture (it's a static decision the
+  // browser locks in at touchstart), so once the long-press fires, a
+  // touchmove listener is attached manually via addEventListener with
+  // { passive: false } — not React's onTouchMove JSX prop, which is
+  // always passive and silently ignores preventDefault() — so native
+  // scrolling can actually be stopped once a drag is genuinely active.
+  const LONG_PRESS_MS = 280;
+  const MOVE_CANCEL_PX = 10;
+  const touchPlayerStateRef = useRef({
+    timer: null, startX: 0, startY: 0, entry: null, active: false,
+    moveListener: null, endListener: null, cancelListener: null,
+  });
+
+  function cleanupPlayerTouchListeners() {
+    const state = touchPlayerStateRef.current;
+    if (state.moveListener) document.removeEventListener("touchmove", state.moveListener);
+    if (state.endListener) document.removeEventListener("touchend", state.endListener);
+    if (state.cancelListener) document.removeEventListener("touchcancel", state.cancelListener);
+    state.moveListener = null;
+    state.endListener = null;
+    state.cancelListener = null;
+  }
 
   function onTouchStartPlayer(e, entry) {
     const touch = e.touches[0];
     if (!touch) return;
 
-    touchPlayerStateRef.current.startX = touch.clientX;
-    touchPlayerStateRef.current.startY = touch.clientY;
-    touchPlayerStateRef.current.entry = entry;
-    touchPlayerStateRef.current.active = false;
+    const state = touchPlayerStateRef.current;
+    state.startX = touch.clientX;
+    state.startY = touch.clientY;
+    state.entry = entry;
+    state.active = false;
 
-    touchPlayerStateRef.current.timer = setTimeout(() => {
-      touchPlayerStateRef.current.active = true;
+    state.timer = setTimeout(() => {
+      state.active = true;
       onDragStart(entry);
-    }, 280);
+
+      const moveListener = (moveEvent) => {
+        if (moveEvent.cancelable) moveEvent.preventDefault();
+        const t = moveEvent.touches[0];
+        if (!t) return;
+
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        const zone = el?.closest("[data-clan-zone]");
+        if (!zone) {
+          setOverClan(null);
+          return;
+        }
+
+        const clan = zone.getAttribute("data-clan-zone");
+        if (!clan) return;
+
+        onDragOver({ preventDefault: () => {} }, clan);
+      };
+
+      const finish = async (endEvent) => {
+        cleanupPlayerTouchListeners();
+
+        // changedTouches (not touches) — by the time touchend fires,
+        // the finger has already lifted, so touches is empty;
+        // changedTouches still holds the final position.
+        const touch2 = endEvent.changedTouches?.[0];
+        const el = touch2 && document.elementFromPoint(touch2.clientX, touch2.clientY);
+        const zone = el?.closest("[data-clan-zone]");
+        const clan = zone?.getAttribute("data-clan-zone");
+
+        if (clan) {
+          await onDrop({ preventDefault: () => {} }, clan);
+        } else {
+          setDragging(null);
+          setOverClan(null);
+        }
+
+        state.entry = null;
+        state.active = false;
+      };
+
+      state.moveListener = moveListener;
+      state.endListener = finish;
+      state.cancelListener = finish;
+      document.addEventListener("touchmove", moveListener, { passive: false });
+      document.addEventListener("touchend", finish, { passive: true });
+      document.addEventListener("touchcancel", finish, { passive: true });
+    }, LONG_PRESS_MS);
   }
 
   function onTouchMovePlayer(e) {
     const state = touchPlayerStateRef.current;
+    if (state.active || !state.entry) return; // confirmed drags are handled by the manual listener above
+
     const touch = e.touches[0];
-    if (!touch || !state.entry) return;
+    if (!touch) return;
 
-    if (!state.active) {
-      const dx = Math.abs(touch.clientX - state.startX);
-      const dy = Math.abs(touch.clientY - state.startY);
-      if (dx > 10 || dy > 10) {
-        clearTimeout(state.timer);
-        state.entry = null;
-      }
-      return;
+    const dx = Math.abs(touch.clientX - state.startX);
+    const dy = Math.abs(touch.clientY - state.startY);
+    if (dx > MOVE_CANCEL_PX || dy > MOVE_CANCEL_PX) {
+      clearTimeout(state.timer);
+      state.entry = null;
     }
-
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    const zone = el?.closest("[data-clan-zone]");
-    if (!zone) {
-      setOverClan(null);
-      return;
-    }
-
-    const clan = zone.getAttribute("data-clan-zone");
-    if (!clan) return;
-
-    onDragOver({ preventDefault: () => {} }, clan);
   }
 
-  async function onTouchEndPlayer(e) {
+  function onTouchEndPlayer() {
     const state = touchPlayerStateRef.current;
     clearTimeout(state.timer);
-
+    // If a drag was confirmed, the manually-attached touchend/touchcancel
+    // listener already handles finishing it — this only needs to cover
+    // the case where the finger lifted before the long-press threshold
+    // fired (a simple tap, or a scroll that ended quickly).
     if (!state.active) {
       state.entry = null;
-      return;
     }
-
-    // changedTouches (not touches) — by the time touchend fires, the
-    // finger has already lifted, so e.touches is empty; changedTouches
-    // still holds the final position of the touch that just ended.
-    const touch = e.changedTouches?.[0];
-    if (!touch || !dragging) {
-      setDragging(null);
-      setOverClan(null);
-      state.entry = null;
-      state.active = false;
-      return;
-    }
-
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    const zone = el?.closest("[data-clan-zone]");
-    const clan = zone?.getAttribute("data-clan-zone");
-
-    if (clan) {
-      await onDrop({ preventDefault: () => {} }, clan);
-    } else {
-      setDragging(null);
-      setOverClan(null);
-    }
-
-    state.entry = null;
-    state.active = false;
   }
 
   /* --- assignment call --- */
