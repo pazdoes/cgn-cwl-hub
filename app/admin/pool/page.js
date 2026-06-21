@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BRANDING } from "../../../lib/branding";
-import { TH_ICONS } from "../../../lib/icons";
+import { TH_ICONS, CWL_ICONS } from "../../../lib/icons";
 
 /* ─── circular X (remove) button ─────────────────────────── */
 
@@ -289,6 +289,23 @@ export default function AdminPoolPage() {
   const [rankBusy,  setRankBusy]  = useState(null); // clan currently refreshing rank
   const [rankResult, setRankResult] = useState({});  // { [clan]: {ok, message} }
 
+  /* --- item 7: Add / Delete Clan forms (mutually exclusive) --- */
+  const [activeClanForm, setActiveClanForm] = useState(null); // null | "add" | "delete"
+
+  // Add Clan form fields
+  const [addClanTag,  setAddClanTag]  = useState("");
+  const [addClanLink, setAddClanLink] = useState("");
+  const [addClanRank, setAddClanRank] = useState("");
+  const [addClanSuggestedName, setAddClanSuggestedName] = useState(null);
+  const [addClanLookupBusy, setAddClanLookupBusy] = useState(false);
+  const [addClanSubmitting, setAddClanSubmitting] = useState(false);
+  const [addClanResult, setAddClanResult] = useState(null); // {ok, message}
+
+  // Delete Clan form fields
+  const [deleteClanTag, setDeleteClanTag] = useState("");
+  const [deleteClanSubmitting, setDeleteClanSubmitting] = useState(false);
+  const [deleteClanResult, setDeleteClanResult] = useState(null); // {ok, message}
+
   /* --- load pool data --- */
   async function loadPool(savedPin) {
     setLoading(true);
@@ -302,18 +319,13 @@ export default function AdminPoolPage() {
       setSeason(data.season);
       setEntries(data.entries || []);
       setClanFormats(data.clanFormats || {});
-      // derive unique clan list from assigned entries + a fallback static list
-      const assignedClans = [...new Set(
-        (data.entries || [])
-          .filter(e => e.assigned_clan)
-          .map(e => e.assigned_clan)
-      )];
-      // We also want unassigned clans visible — fetch from roster API
-      const rosterRes = await fetch("/api/roster");
-      const roster    = await rosterRes.json();
-      const rosterClans = [...new Set(roster.map(p => p.clan))];
-      const allClans  = [...new Set([...rosterClans, ...assignedClans])].sort();
-      setClans(allClans);
+      // Clan list now comes directly from Neon's clans table (item 7),
+      // not inferred from non-empty Sheet rows via /api/roster — that
+      // inference approach made any clan with zero assigned players
+      // invisible here, including a brand-new clan just added via Add
+      // Clan. clanNames is authoritative: every registered clan appears
+      // regardless of roster size.
+      setClans(data.clanNames || []);
 
       // fetch TH levels for every player currently in the pool, in one
       // batched call rather than one CoC request per pill
@@ -524,6 +536,106 @@ export default function AdminPoolPage() {
     }
   }
 
+  /* --- item 7: Add / Delete Clan --- */
+
+  // Toggles which form (if any) is open — opening one always closes the
+  // other, per the confirmed mutually-exclusive requirement. Also resets
+  // each form's own fields/results when switching, so re-opening a form
+  // doesn't show stale state from a previous attempt.
+  function toggleClanForm(form) {
+    setActiveClanForm(prev => (prev === form ? null : form));
+    setAddClanTag("");
+    setAddClanLink("");
+    setAddClanRank("");
+    setAddClanSuggestedName(null);
+    setAddClanResult(null);
+    setDeleteClanTag("");
+    setDeleteClanResult(null);
+  }
+
+  // Lightweight lookup as the admin enters a Clan Tag — pre-fills the
+  // suggested clan name and CWL Rank, but doesn't create anything. The
+  // admin can still override the rank field manually afterward,
+  // including typing "Unranked" for a clan that's never done CWL.
+  async function doLookupClan() {
+    if (!addClanTag.trim()) return;
+    setAddClanLookupBusy(true);
+    setAddClanResult(null);
+    try {
+      const res = await fetch("/api/admin/clans/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clanTag: addClanTag.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddClanSuggestedName(data.clanName);
+        setAddClanRank(data.suggestedRank || "Unranked");
+      } else {
+        setAddClanSuggestedName(null);
+        setAddClanResult({ ok: false, message: data.error || "Lookup failed" });
+      }
+    } catch {
+      setAddClanResult({ ok: false, message: "Network error" });
+    } finally {
+      setAddClanLookupBusy(false);
+    }
+  }
+
+  async function doAddClan(e) {
+    e.preventDefault();
+    if (!addClanTag.trim() || !addClanLink.trim()) return;
+    setAddClanSubmitting(true);
+    setAddClanResult(null);
+    try {
+      const res = await fetch("/api/admin/clans/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({
+          clanTag: addClanTag.trim(),
+          clanLink: addClanLink.trim(),
+          cwlRank: addClanRank.trim() || "Unranked",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddClanResult({ ok: true, message: `${data.clanName} added.` });
+        await loadPool(pin); // refresh so the new clan appears immediately
+      } else {
+        setAddClanResult({ ok: false, message: data.error || "Failed to add clan" });
+      }
+    } catch {
+      setAddClanResult({ ok: false, message: "Network error" });
+    } finally {
+      setAddClanSubmitting(false);
+    }
+  }
+
+  async function doDeleteClan(e) {
+    e.preventDefault();
+    if (!deleteClanTag.trim()) return;
+    setDeleteClanSubmitting(true);
+    setDeleteClanResult(null);
+    try {
+      const res = await fetch("/api/admin/clans/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clanName: deleteClanTag.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDeleteClanResult({ ok: true, message: `${data.clanName} deleted.` });
+        await loadPool(pin); // refresh so the removed clan disappears immediately
+      } else {
+        setDeleteClanResult({ ok: false, message: data.error || "Failed to delete clan" });
+      }
+    } catch {
+      setDeleteClanResult({ ok: false, message: "Network error" });
+    } finally {
+      setDeleteClanSubmitting(false);
+    }
+  }
+
   /* --- derived lists --- */
   const unassigned = entries.filter(e => !e.assigned_clan);
   const assigned   = entries.filter(e =>  e.assigned_clan);
@@ -638,6 +750,212 @@ export default function AdminPoolPage() {
               · {unassigned.length} unassigned
             </p>
           )}
+
+          {/* Add / Delete Clan — pill style, matching the homepage's
+              Join the Pool / Open Clan buttons. Mutually exclusive:
+              opening one closes the other. */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => toggleClanForm("add")}
+              className={`
+                inline-flex items-center gap-2
+                px-5 py-2.5 rounded-full
+                border transition font-semibold text-sm
+                ${activeClanForm === "add"
+                  ? "bg-purple-600/50 text-white border-purple-500/50"
+                  : "bg-purple-600/30 text-purple-200 border-purple-500/30 hover:bg-purple-600/50 hover:text-white"
+                }
+              `}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Clan
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleClanForm("delete")}
+              className={`
+                inline-flex items-center gap-2
+                px-5 py-2.5 rounded-full
+                border transition font-semibold text-sm
+                ${activeClanForm === "delete"
+                  ? "bg-red-600/40 text-white border-red-500/50"
+                  : "bg-red-600/20 text-red-200 border-red-500/30 hover:bg-red-600/40 hover:text-white"
+                }
+              `}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Clan
+            </button>
+          </div>
+
+          {/* Add Clan form */}
+          <AnimatePresence>
+            {activeClanForm === "add" && (
+              <motion.form
+                onSubmit={doAddClan}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mt-5 text-left"
+              >
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Tag</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="#ABC123"
+                        value={addClanTag}
+                        onChange={e => setAddClanTag(e.target.value)}
+                        onBlur={doLookupClan}
+                        autoCapitalize="characters"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        className="
+                          flex-1 rounded-xl border border-white/10 bg-white/[0.04]
+                          px-4 py-2.5 text-white placeholder:text-slate-600
+                          focus:outline-none focus:border-purple-500/50 transition
+                          font-mono tracking-wide text-sm
+                        "
+                      />
+                      <button
+                        type="button"
+                        onClick={doLookupClan}
+                        disabled={addClanLookupBusy || !addClanTag.trim()}
+                        className="
+                          px-4 py-2.5 rounded-xl text-xs font-semibold shrink-0
+                          bg-white/[0.06] border border-white/10 text-slate-300
+                          hover:bg-white/[0.1] transition
+                          disabled:opacity-40 disabled:cursor-not-allowed
+                        "
+                      >
+                        {addClanLookupBusy ? "Looking up…" : "Lookup"}
+                      </button>
+                    </div>
+                    {addClanSuggestedName && (
+                      <p className="text-xs text-purple-300 mt-1.5 ml-1">→ {addClanSuggestedName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Link</label>
+                    <input
+                      type="text"
+                      placeholder="https://link.clashofclans.com/..."
+                      value={addClanLink}
+                      onChange={e => setAddClanLink(e.target.value)}
+                      autoCorrect="off"
+                      spellCheck={false}
+                      className="
+                        w-full rounded-xl border border-white/10 bg-white/[0.04]
+                        px-4 py-2.5 text-white placeholder:text-slate-600
+                        focus:outline-none focus:border-purple-500/50 transition text-sm
+                      "
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">CWL Rank</label>
+                    <select
+                      value={addClanRank}
+                      onChange={e => setAddClanRank(e.target.value)}
+                      className="
+                        w-full rounded-xl border border-white/10 bg-white/[0.04]
+                        px-4 py-2.5 text-white
+                        focus:outline-none focus:border-purple-500/50 transition text-sm
+                      "
+                    >
+                      <option value="">Select…</option>
+                      <option value="Unranked">Unranked</option>
+                      {Object.keys(CWL_ICONS).map(rank => (
+                        <option key={rank} value={rank}>{rank}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={addClanSubmitting || !addClanTag.trim() || !addClanLink.trim()}
+                    className="
+                      w-full py-3 rounded-xl font-semibold text-sm
+                      bg-purple-600/40 text-purple-100 border border-purple-500/30
+                      hover:bg-purple-600/60 hover:text-white transition
+                      disabled:opacity-40 disabled:cursor-not-allowed
+                    "
+                  >
+                    {addClanSubmitting ? "Adding…" : "Add Clan"}
+                  </button>
+
+                  {addClanResult && (
+                    <p className={`text-xs text-center ${addClanResult.ok ? "text-green-300" : "text-red-400"}`}>
+                      {addClanResult.message}
+                    </p>
+                  )}
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
+
+          {/* Delete Clan form */}
+          <AnimatePresence>
+            {activeClanForm === "delete" && (
+              <motion.form
+                onSubmit={doDeleteClan}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mt-5 text-left"
+              >
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-5 space-y-4">
+                  <p className="text-xs text-slate-400">
+                    Type the exact clan name to confirm deletion. This permanently
+                    removes the Sheet tab and all its data — blocked if any players
+                    are still assigned to this clan.
+                  </p>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Cognition {CGN}"
+                      value={deleteClanTag}
+                      onChange={e => setDeleteClanTag(e.target.value)}
+                      autoCorrect="off"
+                      spellCheck={false}
+                      className="
+                        w-full rounded-xl border border-red-500/20 bg-white/[0.04]
+                        px-4 py-2.5 text-white placeholder:text-slate-600
+                        focus:outline-none focus:border-red-500/50 transition text-sm
+                      "
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={deleteClanSubmitting || !deleteClanTag.trim()}
+                    className="
+                      w-full py-3 rounded-xl font-semibold text-sm
+                      bg-red-600/40 text-red-100 border border-red-500/30
+                      hover:bg-red-600/60 hover:text-white transition
+                      disabled:opacity-40 disabled:cursor-not-allowed
+                    "
+                  >
+                    {deleteClanSubmitting ? "Deleting…" : "Delete Clan"}
+                  </button>
+
+                  {deleteClanResult && (
+                    <p className={`text-xs text-center ${deleteClanResult.ok ? "text-green-300" : "text-red-400"}`}>
+                      {deleteClanResult.message}
+                    </p>
+                  )}
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
         </Card>
       </motion.div>
 
