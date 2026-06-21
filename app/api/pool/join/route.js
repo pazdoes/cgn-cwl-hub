@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAccountOwner, joinPool } from "@/lib/pool";
 import { readOwnerSecret } from "@/lib/ownerCookie";
-import { getCurrentSeason } from "@/lib/season";
+import { getOpenPoolSeason } from "@/lib/season";
 
 export async function POST(request) {
   const { tag } = await request.json().catch(() => ({}));
@@ -10,7 +10,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing tag" }, { status: 400 });
   }
 
-  const season = getCurrentSeason();
+  const season = getOpenPoolSeason();
   const ownerSecret = await readOwnerSecret();
 
   if (!ownerSecret) {

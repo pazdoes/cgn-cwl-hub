@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { verifyPlayerToken, getPlayer } from "@/lib/coc";
 import { upsertAccount, joinPool } from "@/lib/pool";
 import { getOrCreateOwnerSecret, setOwnerCookie } from "@/lib/ownerCookie";
-import { getCurrentSeason } from "@/lib/season";
+import { getOpenPoolSeason } from "@/lib/season";
 
 // Verifies a CoC account via its in-game API token (Settings > API Token),
-// then immediately records the account and joins it to the current
-// season's pool in the same action — deliberately paired so the first
-// thing a person does is also the last thing they need to do.
+// then immediately records the account and joins it to the currently open
+// pool season — deliberately paired so the first thing a person does is
+// also the last thing they need to do.
 export async function POST(request) {
   const { tag, token } = await request.json().catch(() => ({}));
 
@@ -15,7 +15,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing tag or token" }, { status: 400 });
   }
 
-  const season = getCurrentSeason();
+  const season = getOpenPoolSeason();
   const normalizedTag = tag.trim().startsWith("#") ? tag.trim() : `#${tag.trim()}`;
 
   let isValid;

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAccountsByOwner, isInPool } from "@/lib/pool";
 import { readOwnerSecret } from "@/lib/ownerCookie";
-import { getCurrentSeason } from "@/lib/season";
+import { getOpenPoolSeason } from "@/lib/season";
 
 export async function GET() {
-  const season = getCurrentSeason();
+  const season = getOpenPoolSeason();
   const ownerSecret = await readOwnerSecret();
 
   if (!ownerSecret) {
