@@ -4,6 +4,21 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BRANDING } from "../../../lib/branding";
+import { TH_ICONS } from "../../../lib/icons";
+
+/* ─── TH icon ────────────────────────────────────────────── */
+
+function ThIcon({ level, size = "w-8 h-8" }) {
+  const src = level ? TH_ICONS[String(level)] : null;
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={`TH${level}`}
+      className={`${size} shrink-0`}
+    />
+  );
+}
 
 /* ─── constants ──────────────────────────────────────────── */
 
@@ -114,6 +129,7 @@ export default function AdminPoolPage() {
   const [season,  setSeason]  = useState(null);
   const [entries, setEntries] = useState([]);
   const [clans,   setClans]   = useState([]);
+  const [thLevels, setThLevels] = useState({}); // { [player_tag]: number }
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
 
@@ -149,6 +165,23 @@ export default function AdminPoolPage() {
       const rosterClans = [...new Set(roster.map(p => p.clan))];
       const allClans  = [...new Set([...rosterClans, ...assignedClans])].sort();
       setClans(allClans);
+
+      // fetch TH levels for every player currently in the pool, in one
+      // batched call rather than one CoC request per pill
+      const tags = (data.entries || []).map(e => e.player_tag);
+      if (tags.length > 0) {
+        try {
+          const thRes = await fetch("/api/admin/th-levels", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tags }),
+          });
+          const thData = await thRes.json();
+          setThLevels(thData.thLevels || {});
+        } catch {
+          // non-fatal — pills just render without a TH icon if this fails
+        }
+      }
     } catch {
       setError("Couldn't load pool data — check your connection.");
     } finally {
@@ -404,9 +437,12 @@ export default function AdminPoolPage() {
                         `}
                       >
                         <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm text-white truncate">{entry.player_name}</p>
-                            <p className="text-xs text-slate-500 font-mono mt-0.5">{entry.player_tag}</p>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <ThIcon level={thLevels[entry.player_tag]} />
+                            <div className="min-w-0">
+                              <p className="font-semibold text-sm text-white truncate">{entry.player_name}</p>
+                              <p className="text-xs text-slate-500 font-mono mt-0.5">{entry.player_tag}</p>
+                            </div>
                           </div>
                           <div className="shrink-0 flex items-center gap-2">
                             {busy && (
@@ -465,9 +501,12 @@ export default function AdminPoolPage() {
 
                     <div className="space-y-1.5 mt-1">
                       {clanEntries.map(e => (
-                        <div key={e.player_tag} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                          <p className="text-xs font-medium text-white">{e.player_name}</p>
-                          <p className="text-[10px] text-slate-600 font-mono">{e.player_tag}</p>
+                        <div key={e.player_tag} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 flex items-center gap-2">
+                          <ThIcon level={thLevels[e.player_tag]} size="w-6 h-6" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-white truncate">{e.player_name}</p>
+                            <p className="text-[10px] text-slate-600 font-mono">{e.player_tag}</p>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -487,9 +526,12 @@ export default function AdminPoolPage() {
                 <div className="space-y-2">
                   {assigned.map(e => (
                     <div key={e.player_tag} className="flex items-center justify-between gap-3 py-1">
-                      <div className="min-w-0">
-                        <span className="text-sm font-medium text-white">{e.player_name}</span>
-                        <span className="text-xs text-slate-600 font-mono ml-2">{e.player_tag}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ThIcon level={thLevels[e.player_tag]} size="w-6 h-6" />
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium text-white">{e.player_name}</span>
+                          <span className="text-xs text-slate-600 font-mono ml-2">{e.player_tag}</span>
+                        </div>
                       </div>
                       <Pill variant="success">{e.assigned_clan}</Pill>
                     </div>

@@ -4,6 +4,21 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BRANDING } from "../../lib/branding";
+import { TH_ICONS } from "../../lib/icons";
+
+/* ─── TH icon ────────────────────────────────────────────── */
+
+function ThIcon({ level }) {
+  const src = level ? TH_ICONS[String(level)] : null;
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={`TH${level}`}
+      className="w-8 h-8 shrink-0"
+    />
+  );
+}
 
 /* ─── small helpers ─────────────────────────────────────── */
 
@@ -42,6 +57,7 @@ export default function SignupPage() {
   const [season, setSeason]         = useState(null);
   const [myAccounts, setMyAccounts] = useState([]);   // quick-pick list from cookie
   const [loadingMine, setLoadingMine] = useState(true);
+  const [thLevels, setThLevels] = useState({}); // { [tag]: number }
 
   // verify-new-account form
   const [tag,   setTag]   = useState("");
@@ -53,13 +69,31 @@ export default function SignupPage() {
   const [joiningTag, setJoiningTag]   = useState(null);
   const [joinResult, setJoinResult]   = useState({}); // { [tag]: {ok, message} }
 
+  /* --- fetch TH levels for a set of tags, merging into existing state --- */
+  async function loadThLevels(tags) {
+    if (!tags || tags.length === 0) return;
+    try {
+      const res = await fetch("/api/admin/th-levels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags }),
+      });
+      const data = await res.json();
+      setThLevels(prev => ({ ...prev, ...(data.thLevels || {}) }));
+    } catch {
+      // non-fatal — pills just render without a TH icon if this fails
+    }
+  }
+
   /* --- load owned accounts on mount --- */
   useEffect(() => {
     fetch("/api/accounts/mine")
       .then(r => r.json())
       .then(data => {
-        setMyAccounts(data.accounts || []);
+        const accounts = data.accounts || [];
+        setMyAccounts(accounts);
         setSeason(data.season || null);
+        loadThLevels(accounts.map(a => a.tag));
       })
       .catch(() => {})
       .finally(() => setLoadingMine(false));
@@ -88,6 +122,7 @@ export default function SignupPage() {
         const mine = await fetch("/api/accounts/mine").then(r => r.json());
         setMyAccounts(mine.accounts || []);
         setSeason(mine.season || season);
+        loadThLevels((mine.accounts || []).map(a => a.tag));
         setTag("");
         setToken("");
       } else {
@@ -216,9 +251,12 @@ export default function SignupPage() {
                     "
                   >
                     {/* account info */}
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-semibold text-white truncate">{acct.name}</span>
-                      <span className="text-xs text-slate-500 font-mono">{acct.tag}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ThIcon level={thLevels[acct.tag]} />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-semibold text-white truncate">{acct.name}</span>
+                        <span className="text-xs text-slate-500 font-mono">{acct.tag}</span>
+                      </div>
                     </div>
 
                     {/* right side: status + button */}
