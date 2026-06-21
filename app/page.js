@@ -62,10 +62,15 @@ const [search, setSearch] = useState("");
   const clanLink =
     clanPlayers[0]?.clanLink || "";
 
+  // CWL Format now comes from the Sheet's own CWL Format column (item 5),
+  // not inferred from row count — row count alone became unreliable once
+  // Substitutes could push a clan's total assigned players past 15/30
+  // without that meaning the clan's actual format changed. Falls back to
+  // the old row-count guess only if no clan tab row has a format value
+  // set yet (e.g. before any admin has touched the format toggle).
   const format =
-    clanPlayers.length >= 30
-      ? "30v30"
-      : "15v15";
+    clanPlayers[0]?.cwlFormat ||
+    (clanPlayers.length >= 30 ? "30v30" : "15v15");
 
   return (
 
@@ -110,7 +115,7 @@ const [search, setSearch] = useState("");
   {/* Info Lines */}
   <div className="mt-3 text-sm text-slate-300 space-y-1">
     <div>
-      {clanPlayers.length >= 30 ? "30v30" : "15v15"}
+      {format}
     </div>
     <div>
       {clanPlayers[0]?.season || ""}
@@ -201,7 +206,11 @@ const [search, setSearch] = useState("");
       text-xs
       font-semibold
       ${
-        player.status?.toLowerCase() === "active"
+        player.status?.toLowerCase() === "confirmed"
+          ? "bg-green-500/20 text-green-300 border border-green-500/30"
+          : player.status?.toLowerCase() === "substitute"
+          ? "bg-orange-500/20 text-orange-300 border border-orange-500/30"
+          : player.status?.toLowerCase() === "active"
           ? "bg-green-500/20 text-green-300 border border-green-500/30"
           : player.status?.toLowerCase() === "benched"
           ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
@@ -493,7 +502,11 @@ const [search, setSearch] = useState("");
           py-0.5
           rounded-full
           ${
-            player.status?.toLowerCase() === "active"
+            player.status?.toLowerCase() === "confirmed"
+              ? "bg-green-500/10 text-green-300"
+              : player.status?.toLowerCase() === "substitute"
+              ? "bg-orange-500/10 text-orange-300"
+              : player.status?.toLowerCase() === "active"
               ? "bg-green-500/10 text-green-300"
               : player.status?.toLowerCase() === "benched"
               ? "bg-yellow-500/10 text-yellow-300"
@@ -539,7 +552,8 @@ const [search, setSearch] = useState("");
             members[0]?.season || "";
 
           const format =
-            count >= 30 ? "30v30" : "15v15";
+            members[0]?.cwlFormat ||
+            (count >= 30 ? "30v30" : "15v15");
 
           return (
 

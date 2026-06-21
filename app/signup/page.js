@@ -6,6 +6,29 @@ import Link from "next/link";
 import { BRANDING } from "../../lib/branding";
 import { TH_ICONS } from "../../lib/icons";
 
+/* ─── circular X (remove) button ─────────────────────────── */
+
+function XButton({ onClick, busy, title }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      title={title}
+      className="
+        shrink-0 w-5 h-5 rounded-full flex items-center justify-center
+        bg-white/[0.06] border border-white/10 text-slate-400
+        hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300
+        transition disabled:opacity-40 disabled:pointer-events-none
+      "
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  );
+}
+
 /* ─── TH icon ────────────────────────────────────────────── */
 
 function ThIcon({ level }) {
@@ -68,6 +91,10 @@ export default function SignupPage() {
   // re-join existing account
   const [joiningTag, setJoiningTag]   = useState(null);
   const [joinResult, setJoinResult]   = useState({}); // { [tag]: {ok, message} }
+
+  // leave the pool entirely (item 5 — distinct from admin unassign)
+  const [leavingTag, setLeavingTag]   = useState(null);
+  const [leaveError, setLeaveError]   = useState({}); // { [tag]: message }
 
   /* --- fetch TH levels for a set of tags, merging into existing state --- */
   async function loadThLevels(tags) {
@@ -170,6 +197,40 @@ export default function SignupPage() {
     }
   }
 
+  /* --- leave the pool entirely (item 5) --- */
+  async function handleLeave(accountTag) {
+    setLeavingTag(accountTag);
+    setLeaveError(prev => ({ ...prev, [accountTag]: null }));
+    try {
+      const res = await fetch("/api/pool/leave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tag: accountTag }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        // refresh list so inCurrentPool updates and the leave button
+        // reverts back to a "Sign up" button
+        const mine = await fetch("/api/accounts/mine").then(r => r.json());
+        setMyAccounts(mine.accounts || []);
+        // clear any stale join-result for this tag, since it's a fresh
+        // not-in-pool state now, not a "just signed up" state
+        setJoinResult(prev => {
+          const next = { ...prev };
+          delete next[accountTag];
+          return next;
+        });
+      } else {
+        setLeaveError(prev => ({ ...prev, [accountTag]: data.error || "Couldn't leave pool." }));
+      }
+    } catch {
+      setLeaveError(prev => ({ ...prev, [accountTag]: "Network error — please try again." }));
+    } finally {
+      setLeavingTag(null);
+    }
+  }
+
   /* ─── render ─────────────────────────────────────────── */
   return (
     <main className="
@@ -260,9 +321,16 @@ export default function SignupPage() {
                     </div>
 
                     {/* right side: status + button */}
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
                       {acct.inCurrentPool ? (
-                        <StatusPill variant="success">✓ Signed up</StatusPill>
+                        <div className="flex items-center gap-2">
+                          <StatusPill variant="success">✓ Signed up</StatusPill>
+                          <XButton
+                            onClick={() => handleLeave(acct.tag)}
+                            busy={leavingTag === acct.tag}
+                            title="Leave the pool for this season"
+                          />
+                        </div>
                       ) : result ? (
                         <StatusPill variant={result.ok ? "success" : "error"}>
                           {result.ok ? "✓ Signed up" : "Failed"}
@@ -280,6 +348,11 @@ export default function SignupPage() {
                         >
                           {busy ? "Signing up…" : "Sign up"}
                         </button>
+                      )}
+                      {leaveError[acct.tag] && (
+                        <p className="text-[10px] text-red-400 text-right max-w-[160px] leading-tight">
+                          {leaveError[acct.tag]}
+                        </p>
                       )}
                     </div>
                   </motion.div>
