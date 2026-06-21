@@ -393,6 +393,7 @@ export default function SignupPage() {
   const touchStateRef = useRef({
     timer: null, startX: 0, startY: 0, tag: null, active: false,
     moveListener: null, endListener: null, cancelListener: null,
+    el: null,
   });
 
   function cleanupAccountTouchListeners() {
@@ -403,6 +404,18 @@ export default function SignupPage() {
     state.moveListener = null;
     state.endListener = null;
     state.cancelListener = null;
+
+    // Reset the visual transform applied during the drag — the
+    // element's actual position in the list is now handled by React
+    // re-rendering against the already-reordered myAccounts array; the
+    // transform was only ever a temporary overlay tracking the finger
+    // during the gesture itself, not a permanent positioning mechanism.
+    if (state.el) {
+      state.el.style.transform = "";
+      state.el.style.zIndex = "";
+      state.el.style.transition = "";
+      state.el = null;
+    }
   }
 
   function onAccountTouchStart(e, tag) {
@@ -414,10 +427,19 @@ export default function SignupPage() {
     state.startY = touch.clientY;
     state.tag = tag;
     state.active = false;
+    state.el = e.currentTarget;
 
     state.timer = setTimeout(() => {
       state.active = true;
       onAccountDragStart(tag);
+
+      // Visually lift the dragged card above its neighbors while held —
+      // desktop's native drag API shows a ghost image automatically;
+      // touch has no equivalent, so this is the explicit replacement.
+      if (state.el) {
+        state.el.style.zIndex = "50";
+        state.el.style.transition = "none";
+      }
 
       // Drag confirmed — attach the real, non-passive touchmove handler
       // now, scoped only to the lifetime of this one drag gesture.
@@ -425,6 +447,16 @@ export default function SignupPage() {
         if (moveEvent.cancelable) moveEvent.preventDefault();
         const t = moveEvent.touches[0];
         if (!t) return;
+
+        // Make the dragged card itself follow the finger — without
+        // this, the underlying reorder logic runs correctly (other
+        // rows shift as you cross them) but the held card visually
+        // stays put, reading as "locked" even though it's functioning.
+        if (state.el) {
+          const dx = t.clientX - state.startX;
+          const dy = t.clientY - state.startY;
+          state.el.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
 
         const el = document.elementFromPoint(t.clientX, t.clientY);
         const row = el?.closest("[data-account-tag]");

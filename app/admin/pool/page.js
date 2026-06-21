@@ -409,6 +409,7 @@ export default function AdminPoolPage() {
   const touchPlayerStateRef = useRef({
     timer: null, startX: 0, startY: 0, entry: null, active: false,
     moveListener: null, endListener: null, cancelListener: null,
+    el: null,
   });
 
   function cleanupPlayerTouchListeners() {
@@ -419,6 +420,16 @@ export default function AdminPoolPage() {
     state.moveListener = null;
     state.endListener = null;
     state.cancelListener = null;
+
+    // Reset the visual transform applied during the drag — see the
+    // matching comment in the signup page's touch handling for why
+    // this exists (no native ghost-image equivalent for touch).
+    if (state.el) {
+      state.el.style.transform = "";
+      state.el.style.zIndex = "";
+      state.el.style.transition = "";
+      state.el = null;
+    }
   }
 
   function onTouchStartPlayer(e, entry) {
@@ -430,15 +441,27 @@ export default function AdminPoolPage() {
     state.startY = touch.clientY;
     state.entry = entry;
     state.active = false;
+    state.el = e.currentTarget;
 
     state.timer = setTimeout(() => {
       state.active = true;
       onDragStart(entry);
 
+      if (state.el) {
+        state.el.style.zIndex = "50";
+        state.el.style.transition = "none";
+      }
+
       const moveListener = (moveEvent) => {
         if (moveEvent.cancelable) moveEvent.preventDefault();
         const t = moveEvent.touches[0];
         if (!t) return;
+
+        if (state.el) {
+          const dx = t.clientX - state.startX;
+          const dy = t.clientY - state.startY;
+          state.el.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
 
         const el = document.elementFromPoint(t.clientX, t.clientY);
         const zone = el?.closest("[data-clan-zone]");
