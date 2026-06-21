@@ -413,6 +413,21 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
 </div>
 
+<div className="relative z-10 mb-6">
+  <button
+    onClick={() => {
+      window.history.pushState({}, "", window.location.pathname);
+      setSelectedClan(null);
+    }}
+    className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to Hub
+  </button>
+</div>
+
 <div className="
   rounded-3xl
   border
