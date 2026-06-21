@@ -126,11 +126,11 @@ export default function SignupPage() {
       .finally(() => setLoadingMine(false));
   }, []);
 
-  /* --- verify + sign up a new account --- */
+  /* --- register a new account (token optional — item 8) --- */
   async function handleVerify(e) {
     e.preventDefault();
     const normTag = normaliseTag(tag);
-    if (!normTag || !token.trim()) return;
+    if (!normTag) return;
 
     setVerifying(true);
     setVerifyStatus(null);
@@ -139,7 +139,7 @@ export default function SignupPage() {
       const res = await fetch("/api/accounts/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tag: normTag, token: token.trim() }),
+        body: JSON.stringify({ tag: normTag, token: token.trim() || undefined }),
       });
       const data = await res.json();
 
@@ -373,7 +373,9 @@ export default function SignupPage() {
         <Card>
           <h2 className="text-lg font-semibold mb-1">Add a New Account</h2>
           <p className="text-slate-500 text-xs mb-5">
-            Open Clash of Clans → Settings → API Token → copy the token. This verifies you own the account and signs it up in one step.
+            Enter a player tag to sign up. Adding the in-game API token
+            (Settings → API Token) is optional, but confirms it's really
+            your account.
           </p>
 
           <form onSubmit={handleVerify} className="space-y-4">
@@ -398,12 +400,14 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* API Token */}
+            {/* API Token — optional */}
             <div>
-              <label className="block text-xs text-slate-400 mb-1 ml-1">In-Game API Token</label>
+              <label className="block text-xs text-slate-400 mb-1 ml-1">
+                In-Game API Token <span className="text-slate-600">(optional)</span>
+              </label>
               <input
                 type="text"
-                placeholder="Paste your token here"
+                placeholder="Paste your token here, or leave blank"
                 value={token}
                 onChange={e => setToken(e.target.value)}
                 autoCorrect="off"
@@ -420,7 +424,7 @@ export default function SignupPage() {
             {/* submit */}
             <button
               type="submit"
-              disabled={verifying || !tag.trim() || !token.trim()}
+              disabled={verifying || !tag.trim()}
               className="
                 w-full py-4 rounded-2xl font-semibold text-sm
                 bg-purple-600/40 text-purple-100 border border-purple-500/30
@@ -428,7 +432,7 @@ export default function SignupPage() {
                 disabled:opacity-40 disabled:cursor-not-allowed
               "
             >
-              {verifying ? "Verifying…" : "Verify & Sign Up"}
+              {verifying ? "Signing up…" : "Sign Up"}
             </button>
 
           </form>
@@ -463,7 +467,7 @@ export default function SignupPage() {
           <h2 className="text-base font-semibold mb-4 text-slate-300">How it works</h2>
           <ol className="space-y-3">
             {[
-              ["Verify your account", "Enter your player tag and the API token from the in-game settings. This proves you own the account without sharing your password."],
+              ["Sign up with your tag", "Enter your player tag to join the pool. Adding your API token is optional, but confirms it's really your account."],
               ["Join the pool", "Once verified, your account goes into the shared available-player pool for this season."],
               ["Get assigned", "Admins review the pool and assign players to specific clan rosters each season based on clan needs."],
               ["Repeat each season", "For future seasons, just tap Sign up on any of your saved accounts — no reverification needed."],

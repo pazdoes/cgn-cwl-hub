@@ -7,6 +7,17 @@ import { getLeagueStyles } from "../lib/leagueColors";
 import { CWL_ICONS, TH_ICONS } from "../lib/icons";
 import { BRANDING } from "../lib/branding";
 
+// CWL_ICONS' key order already encodes the correct league hierarchy
+// (Champion I/II/III highest, down to Bronze I/II/III lowest) — reusing
+// that order here rather than maintaining a second ranking list. Ranks
+// not found in CWL_ICONS (including "Unranked" and any genuinely unset
+// value) sort after every real league, lowest priority.
+const CWL_RANK_ORDER = Object.keys(CWL_ICONS);
+function rankSortIndex(rank) {
+  const idx = CWL_RANK_ORDER.indexOf(rank);
+  return idx === -1 ? CWL_RANK_ORDER.length : idx;
+}
+
 export default function Home() {
 
   const [players, setPlayers] = useState([]);
@@ -42,7 +53,11 @@ const [search, setSearch] = useState("");
   };
 }, []);
 
-  const clans = [...new Set(players.map(p => p.clan))];
+  const clans = [...new Set(players.map(p => p.clan))].sort((a, b) => {
+    const rankA = players.find(p => p.clan === a)?.cwlRank;
+    const rankB = players.find(p => p.clan === b)?.cwlRank;
+    return rankSortIndex(rankA) - rankSortIndex(rankB);
+  });
   const searchResults = players.filter(player =>
   player.account
     .toLowerCase()
@@ -122,27 +137,24 @@ const [search, setSearch] = useState("");
     </div>
   </div>
 
-  {/* Open Clan — pill style, matching the homepage's Join the Pool button */}
-  <div className="mt-4">
-    <a
-      href={clanPlayers[0]?.clanLink || ""}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="
-        inline-flex items-center gap-2
-        px-6 py-3 rounded-full
-        bg-purple-600/30 text-purple-200
-        border border-purple-500/30
-        hover:bg-purple-600/50 hover:text-white
-        transition font-semibold text-sm
-      "
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-      </svg>
-      Open Clan
-    </a>
-  </div>
+  {/* Open Link Icon Button */}
+  <a
+  href={clanPlayers[0]?.clanLink || ""}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex justify-center mt-4"
+>
+  <img
+    src={BRANDING.openlink}
+    alt="Open Clan"
+    className="
+      w-12
+      h-12
+      hover:scale-110
+      transition
+    "
+  />
+</a>
 
 </div>
 
@@ -376,18 +388,20 @@ const [search, setSearch] = useState("");
     </div>
   </div>
 
-  <div
-    className="
-      rounded-3xl
-      border
-      border-white/10
-      bg-white/[0.03]
-      backdrop-blur-xl
-      p-5
-      text-center
-    "
-  >
-    <div className="text-3xl font-bold">
+  <div className="
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.03]
+    backdrop-blur-xl
+    p-6
+    min-h-[120px]
+    flex
+    flex-col
+    items-center
+    justify-center
+  ">
+    <div className="text-2xl md:text-3xl font-bold">
       {clans.length}
     </div>
 
@@ -396,18 +410,20 @@ const [search, setSearch] = useState("");
     </div>
   </div>
 
-  <div
-    className="
-      rounded-3xl
-      border
-      border-white/10
-      bg-white/[0.03]
-      backdrop-blur-xl
-      p-5
-      text-center
-    "
-  >
-    <div className="text-3xl font-bold">
+  <div className="
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.03]
+    backdrop-blur-xl
+    p-6
+    min-h-[120px]
+    flex
+    flex-col
+    items-center
+    justify-center
+  ">
+    <div className="text-2xl md:text-3xl font-bold">
       {
         players.length
           ? (
