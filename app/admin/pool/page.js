@@ -90,44 +90,28 @@ function StatusToggle({ status, busy, error, onSetStatus }) {
   const isSubstitute = status === "substitute";
   return (
     <div className="flex flex-col items-end gap-1">
-      {/* row 1: status pill */}
-      <span
-        className={`
-          inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border
-          ${isConfirmed
-            ? "bg-green-500/20 text-green-300 border-green-500/30"
-            : isSubstitute
-            ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-            : "bg-slate-500/10 text-slate-500 border-slate-500/20"
-          }
-        `}
-      >
-        {isConfirmed ? "Confirmed" : isSubstitute ? "Substitute" : "Unset"}
-      </span>
-
-      {/* row 2: toggle */}
       <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
         <button
           type="button"
           disabled={busy}
           onClick={() => onSetStatus("confirmed")}
           className={`
-            px-2 py-0.5 rounded-full transition disabled:opacity-50
+            px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold
             ${isConfirmed ? "bg-green-500/30 text-green-200" : "text-slate-500 hover:text-slate-300"}
           `}
         >
-          Conf
+          Confirmed
         </button>
         <button
           type="button"
           disabled={busy}
           onClick={() => onSetStatus("substitute")}
           className={`
-            px-2 py-0.5 rounded-full transition disabled:opacity-50
+            px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold
             ${isSubstitute ? "bg-orange-500/30 text-orange-200" : "text-slate-500 hover:text-slate-300"}
           `}
         >
-          Sub
+          Substitute
         </button>
       </div>
 
@@ -754,19 +738,21 @@ export default function AdminPoolPage() {
                     `}
                   >
                     <div className="flex items-start justify-between mb-3 gap-3">
-                      <p className="font-semibold text-sm text-white truncate">{clan}</p>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-semibold text-sm text-white truncate">{clan}</p>
                         <Pill variant="purple">{clanEntries.length}</Pill>
-                        <RankRefreshButton
-                          busy={rankBusy === clan}
-                          result={rankResult[clan]}
-                          onClick={() => doRefreshRank(clan)}
-                        />
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
                         <FormatToggle
                           format={format}
                           busy={formatBusy === clan}
                           error={formatError[clan]}
                           onSetFormat={(f) => doSetFormat(clan, f)}
+                        />
+                        <RankRefreshButton
+                          busy={rankBusy === clan}
+                          result={rankResult[clan]}
+                          onClick={() => doRefreshRank(clan)}
                         />
                       </div>
                     </div>
