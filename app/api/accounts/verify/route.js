@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyPlayerToken, getPlayer } from "@/lib/coc";
 import { upsertAccount, joinPool } from "@/lib/pool";
 import { getOrCreateOwnerSecret, setOwnerCookie } from "@/lib/ownerCookie";
-
-const CURRENT_SEASON = process.env.CURRENT_SEASON;
+import { getCurrentSeason } from "@/lib/season";
 
 // Verifies a CoC account via its in-game API token (Settings > API Token),
 // then immediately records the account and joins it to the current
@@ -16,13 +15,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing tag or token" }, { status: 400 });
   }
 
-  if (!CURRENT_SEASON) {
-    return NextResponse.json(
-      { error: "No active season is configured right now — ask an officer to set CURRENT_SEASON." },
-      { status: 503 }
-    );
-  }
-
+  const season = getCurrentSeason();
   const normalizedTag = tag.trim().startsWith("#") ? tag.trim() : `#${tag.trim()}`;
 
   let isValid;
@@ -55,12 +48,12 @@ export async function POST(request) {
   const ownerSecret = await getOrCreateOwnerSecret();
 
   await upsertAccount(normalizedTag, player.name, ownerSecret);
-  await joinPool(normalizedTag, CURRENT_SEASON);
+  await joinPool(normalizedTag, season);
 
   const response = NextResponse.json({
     tag: normalizedTag,
     name: player.name,
-    season: CURRENT_SEASON,
+    season,
   });
 
   setOwnerCookie(response, ownerSecret);

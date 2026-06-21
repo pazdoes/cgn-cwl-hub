@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { getAccountsByOwner, isInPool } from "@/lib/pool";
 import { readOwnerSecret } from "@/lib/ownerCookie";
-
-const CURRENT_SEASON = process.env.CURRENT_SEASON;
+import { getCurrentSeason } from "@/lib/season";
 
 export async function GET() {
+  const season = getCurrentSeason();
   const ownerSecret = await readOwnerSecret();
 
   if (!ownerSecret) {
-    return NextResponse.json({ accounts: [], season: CURRENT_SEASON || null });
+    return NextResponse.json({ accounts: [], season });
   }
 
   const accounts = await getAccountsByOwner(ownerSecret);
@@ -17,9 +17,9 @@ export async function GET() {
     accounts.map(async (account) => ({
       tag: account.player_tag,
       name: account.player_name,
-      inCurrentPool: CURRENT_SEASON ? await isInPool(account.player_tag, CURRENT_SEASON) : false,
+      inCurrentPool: await isInPool(account.player_tag, season),
     }))
   );
 
-  return NextResponse.json({ accounts: withPoolStatus, season: CURRENT_SEASON || null });
+  return NextResponse.json({ accounts: withPoolStatus, season });
 }
