@@ -43,7 +43,7 @@ export async function POST(request) {
 
   // Mark assigned in Neon (non-fatal if this fails — sheet is source of truth).
   try {
-    await markAssigned(tag, season);
+    await markAssigned(tag, season, clan);
   } catch (err) {
     console.error("DB mark-assigned failed (non-fatal):", err);
   }
