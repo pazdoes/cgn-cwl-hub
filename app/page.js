@@ -33,7 +33,7 @@ const [search, setSearch] = useState("");
   useEffect(() => {
   const handlePopState = () => {
     const clan =
-      window.location.hash.replace("#", "");
+      decodeURIComponent(window.location.hash.replace("#", ""));
 
     setSelectedClan(clan || null);
   };
