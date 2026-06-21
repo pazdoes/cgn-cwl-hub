@@ -728,7 +728,7 @@ export default function SignupPage() {
                     onTouchStart={e => onAccountTouchStart(e, acct.tag)}
                     onTouchMove={onAccountTouchMove}
                     onTouchEnd={onAccountTouchEnd}
-                    style={{ touchAction: "pan-y" }}
+                    style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                     className={`
                       flex items-center justify-between gap-3
                       rounded-2xl border bg-white/[0.03]

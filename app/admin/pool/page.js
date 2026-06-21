@@ -1147,7 +1147,7 @@ export default function AdminPoolPage() {
                         onTouchStart={e => onTouchStartPlayer(e, entry)}
                         onTouchMove={onTouchMovePlayer}
                         onTouchEnd={onTouchEndPlayer}
-                        style={{ touchAction: "pan-y" }}
+                        style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                         className={`
                           rounded-2xl border p-3.5 select-none
                           transition cursor-grab active:cursor-grabbing
