@@ -6,6 +6,15 @@ import Link from "next/link";
 import { BRANDING } from "../../lib/branding";
 import { TH_ICONS } from "../../lib/icons";
 
+/* ─── skeleton loading placeholder ───────────────────────────
+   Same treatment as the homepage and admin pool page — a pulsing
+   translucent block shaped like the content it stands in for. */
+function Skeleton({ className = "" }) {
+  return (
+    <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />
+  );
+}
+
 /* ─── circular X (remove) button ─────────────────────────── */
 
 function XButton({ onClick, busy, title }) {
@@ -525,7 +534,23 @@ export default function SignupPage() {
           </AnimatePresence>
 
           {loadingMine ? (
-            <div className="text-slate-500 text-sm py-4 text-center animate-pulse">Loading…</div>
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                    <div className="flex flex-col gap-1.5">
+                      <Skeleton className="w-28 h-3.5" />
+                      <Skeleton className="w-20 h-3" />
+                    </div>
+                  </div>
+                  <Skeleton className="w-20 h-6 rounded-full shrink-0" />
+                </div>
+              ))}
+            </div>
           ) : myAccounts.length === 0 ? (
             <div className="text-center py-4">
               <p className="text-slate-600 text-sm mb-5">

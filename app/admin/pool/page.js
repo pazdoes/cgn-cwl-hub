@@ -6,6 +6,15 @@ import Link from "next/link";
 import { BRANDING } from "../../../lib/branding";
 import { TH_ICONS, CWL_ICONS } from "../../../lib/icons";
 
+/* ─── skeleton loading placeholder ───────────────────────────
+   Same treatment as the homepage and signup page — a pulsing
+   translucent block shaped like the content it stands in for. */
+function Skeleton({ className = "" }) {
+  return (
+    <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />
+  );
+}
+
 /* ─── circular X (remove) button ─────────────────────────── */
 
 function XButton({ onClick, busy, title }) {
@@ -744,12 +753,16 @@ export default function AdminPoolPage() {
       >
         <Card className="text-center py-5">
           <h1 className="text-2xl font-bold">Pool Manager</h1>
-          {season && (
+          {season ? (
             <p className="text-slate-400 text-sm mt-1">
               <span className="text-purple-300 font-semibold">{season}</span> · {entries.length} in pool
               · {unassigned.length} unassigned
             </p>
-          )}
+          ) : loading ? (
+            <div className="flex justify-center mt-2">
+              <Skeleton className="w-48 h-4" />
+            </div>
+          ) : null}
 
           {/* Add / Delete Clan — pill style, matching the homepage's
               Join the Pool / Open Clan buttons. Mutually exclusive:
@@ -972,8 +985,35 @@ export default function AdminPoolPage() {
       </motion.div>
 
       {loading && (
-        <div className="relative z-10 text-center text-slate-500 py-12 animate-pulse">
-          Loading pool…
+        <div className="relative z-10 space-y-6">
+          <section>
+            <Skeleton className="w-32 h-3 mb-3 ml-1" />
+            <Card>
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                      <div className="flex flex-col gap-1.5">
+                        <Skeleton className="w-24 h-3.5" />
+                        <Skeleton className="w-16 h-3" />
+                      </div>
+                    </div>
+                    <Skeleton className="w-16 h-3" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </section>
+
+          <section>
+            <Skeleton className="w-28 h-3 mb-3 ml-1" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="min-h-[140px] w-full rounded-3xl" />
+              ))}
+            </div>
+          </section>
         </div>
       )}
 
