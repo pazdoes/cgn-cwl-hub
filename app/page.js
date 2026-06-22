@@ -798,6 +798,50 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
 </motion.div>
 
+<div className="mb-8 relative z-10">
+
+  <div className="relative">
+    <input
+      type="text"
+      placeholder="Search players..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="
+    w-full
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.04]
+    backdrop-blur-xl
+    px-5
+    py-4
+    text-white
+    placeholder:text-slate-500
+    focus:outline-none
+    focus:border-white/20
+    focus:bg-white/[0.06]
+    transition
+  "
+    />
+    {search && (
+      <button
+        onClick={() => setSearch("")}
+        className="
+          absolute right-4 top-1/2 -translate-y-1/2
+          w-6 h-6 rounded-full flex items-center justify-center
+          bg-white/[0.08] text-slate-400
+          hover:bg-white/[0.15] hover:text-white transition
+        "
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    )}
+  </div>
+
+</div>
+
     <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
 
   <div
@@ -892,50 +936,6 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
     <div className="text-slate-400">
       Avg TH
     </div>
-  </div>
-
-</div>
-
-<div className="mb-8 relative z-10">
-
-  <div className="relative">
-    <input
-      type="text"
-      placeholder="Search players..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="
-    w-full
-    rounded-3xl
-    border
-    border-white/10
-    bg-white/[0.04]
-    backdrop-blur-xl
-    px-5
-    py-4
-    text-white
-    placeholder:text-slate-500
-    focus:outline-none
-    focus:border-white/20
-    focus:bg-white/[0.06]
-    transition
-  "
-    />
-    {search && (
-      <button
-        onClick={() => setSearch("")}
-        className="
-          absolute right-4 top-1/2 -translate-y-1/2
-          w-6 h-6 rounded-full flex items-center justify-center
-          bg-white/[0.08] text-slate-400
-          hover:bg-white/[0.15] hover:text-white transition
-        "
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    )}
   </div>
 
 </div>
