@@ -283,6 +283,10 @@ export default function AdminPoolPage() {
   const [dragging,  setDragging]  = useState(null); // entry object
   const [overClan,  setOverClan]  = useState(null); // clan string
 
+  /* --- clan tile reorder drag state (item 14) --- */
+  const [draggingClan, setDraggingClan] = useState(null); // clan name being dragged
+  const [overClanTile, setOverClanTile] = useState(null); // clan tile being hovered
+
   /* --- assignment feedback --- */
   const [assignStatus, setAssignStatus] = useState({}); // { [tag]: {ok,msg} }
   const [assigning,    setAssigning]    = useState(null);
@@ -555,12 +559,184 @@ export default function AdminPoolPage() {
   function onTouchEndPlayer() {
     const state = touchPlayerStateRef.current;
     clearTimeout(state.timer);
-    // If a drag was confirmed, the manually-attached touchend/touchcancel
-    // listener already handles finishing it — this only needs to cover
-    // the case where the finger lifted before the long-press threshold
-    // fired (a simple tap, or a scroll that ended quickly).
     if (!state.active) {
       state.entry = null;
+    }
+  }
+
+  /* --- clan tile reorder handlers (item 14) ─────────────────────────────
+     Desktop: standard HTML5 drag-and-drop, same pattern as player-to-clan.
+     Mobile: long-press touch with optimistic UI and revert on failure,
+     same pattern as the signup page's account reorder and the player cards.  */
+
+  // ── Desktop handlers ──
+  function onClanTileDragStart(clan) {
+    setDraggingClan(clan);
+  }
+
+  function onClanTileDragEnd() {
+    setDraggingClan(null);
+    setOverClanTile(null);
+  }
+
+  function onClanTileDragOver(e, clan) {
+    e.preventDefault();
+    if (clan === draggingClan) return;
+    setOverClanTile(clan);
+    setClans(prev => {
+      const fromIndex = prev.indexOf(draggingClan);
+      const toIndex = prev.indexOf(clan);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+      const next = [...prev];
+      next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, draggingClan);
+      return next;
+    });
+  }
+
+  function onClanTileDragLeave() {
+    setOverClanTile(null);
+  }
+
+  async function onClanTileDrop(e, clan) {
+    e.preventDefault();
+    setDraggingClan(null);
+    setOverClanTile(null);
+
+    // Persist current order — already optimistically updated during the drag.
+    let currentOrder = null;
+    setClans(prev => { currentOrder = [...prev]; return prev; });
+
+    try {
+      const res = await fetch("/api/admin/clans/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ orderedNames: currentOrder }),
+      });
+      if (!res.ok) {
+        // Non-fatal: the visual order is already correct; just note
+        // the save failed silently — next page load will restore the
+        // server-persisted order.
+        console.error("Clan reorder save failed");
+      }
+    } catch {
+      console.error("Clan reorder network error");
+    }
+  }
+
+  // ── Mobile touch handlers ──
+  const touchClanStateRef = useRef({
+    timer: null, startX: 0, startY: 0, clan: null, active: false,
+    moveListener: null, endListener: null, cancelListener: null,
+    snapshot: null,
+  });
+
+  function cleanupClanTouchListeners() {
+    const state = touchClanStateRef.current;
+    if (state.moveListener) document.removeEventListener("touchmove", state.moveListener);
+    if (state.endListener) document.removeEventListener("touchend", state.endListener);
+    if (state.cancelListener) document.removeEventListener("touchcancel", state.cancelListener);
+    state.moveListener = null;
+    state.endListener = null;
+    state.cancelListener = null;
+  }
+
+  function onClanTileTouchStart(e, clan) {
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const state = touchClanStateRef.current;
+    state.startX = touch.clientX;
+    state.startY = touch.clientY;
+    state.clan = clan;
+    state.active = false;
+
+    state.timer = setTimeout(() => {
+      state.active = true;
+      setDraggingClan(clan);
+
+      // Snapshot current order for revert on API failure.
+      setClans(prev => { state.snapshot = [...prev]; return prev; });
+
+      const moveListener = (moveEvent) => {
+        if (moveEvent.cancelable) moveEvent.preventDefault();
+        const t = moveEvent.touches[0];
+        if (!t) return;
+
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        const tile = el?.closest("[data-clan-tile]");
+        if (!tile) return;
+
+        const overClanName = tile.getAttribute("data-clan-tile");
+        if (!overClanName || overClanName === state.clan) return;
+
+        setOverClanTile(overClanName);
+        setClans(prev => {
+          const fromIndex = prev.indexOf(state.clan);
+          const toIndex = prev.indexOf(overClanName);
+          if (fromIndex === -1 || toIndex === -1) return prev;
+          const next = [...prev];
+          next.splice(fromIndex, 1);
+          next.splice(toIndex, 0, state.clan);
+          return next;
+        });
+      };
+
+      const finish = async () => {
+        cleanupClanTouchListeners();
+        setDraggingClan(null);
+        setOverClanTile(null);
+
+        let currentOrder = null;
+        setClans(prev => { currentOrder = [...prev]; return prev; });
+
+        try {
+          const res = await fetch("/api/admin/clans/reorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+            body: JSON.stringify({ orderedNames: currentOrder }),
+          });
+          if (!res.ok && state.snapshot) {
+            setClans(state.snapshot);
+          }
+        } catch {
+          if (state.snapshot) setClans(state.snapshot);
+        }
+
+        state.clan = null;
+        state.active = false;
+        state.snapshot = null;
+      };
+
+      state.moveListener = moveListener;
+      state.endListener = finish;
+      state.cancelListener = finish;
+      document.addEventListener("touchmove", moveListener, { passive: false });
+      document.addEventListener("touchend", finish, { passive: true });
+      document.addEventListener("touchcancel", finish, { passive: true });
+    }, 280);
+  }
+
+  function onClanTileTouchMove(e) {
+    const state = touchClanStateRef.current;
+    if (state.active || !state.clan) return;
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const dx = Math.abs(touch.clientX - state.startX);
+    const dy = Math.abs(touch.clientY - state.startY);
+    if (dx > 10 || dy > 10) {
+      clearTimeout(state.timer);
+      state.clan = null;
+    }
+  }
+
+  function onClanTileTouchEnd() {
+    const state = touchClanStateRef.current;
+    clearTimeout(state.timer);
+    if (!state.active) {
+      state.clan = null;
     }
   }
 
@@ -1276,19 +1452,48 @@ export default function AdminPoolPage() {
               {clans.map(clan => {
                 const clanEntries = assigned.filter(e => e.assigned_clan === clan);
                 const isOver = overClan === clan;
+                const isClanDragging = draggingClan === clan;
+                const isClanOver = overClanTile === clan && draggingClan !== clan;
                 const format = clanFormats[clan] ?? 15;
                 return (
                   <div
                     key={clan}
                     data-clan-zone={clan}
-                    onDragOver={e => onDragOver(e, clan)}
-                    onDragLeave={onDragLeave}
-                    onDrop={e => onDrop(e, clan)}
+                    data-clan-tile={clan}
+                    draggable
+                    onDragStart={() => onClanTileDragStart(clan)}
+                    onDragEnd={onClanTileDragEnd}
+                    onDragOver={e => {
+                      // If a player card is being dragged, use the player handler;
+                      // otherwise handle clan tile reorder.
+                      if (dragging) {
+                        onDragOver(e, clan);
+                      } else {
+                        onClanTileDragOver(e, clan);
+                      }
+                    }}
+                    onDragLeave={() => {
+                      if (dragging) onDragLeave();
+                      else onClanTileDragLeave();
+                    }}
+                    onDrop={e => {
+                      if (dragging) {
+                        onDrop(e, clan);
+                      } else {
+                        onClanTileDrop(e, clan);
+                      }
+                    }}
+                    onTouchStart={e => onClanTileTouchStart(e, clan)}
+                    onTouchMove={onClanTileTouchMove}
+                    onTouchEnd={onClanTileTouchEnd}
+                    style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                     className={`
-                      rounded-3xl border min-h-[140px] p-4 transition
-                      ${isOver
+                      rounded-3xl border min-h-[140px] p-4 transition cursor-grab active:cursor-grabbing
+                      ${isClanDragging ? "opacity-50 border-purple-400/40" : ""}
+                      ${isClanOver ? "border-purple-400/60 bg-purple-500/5" : ""}
+                      ${isOver && !isClanDragging && !isClanOver
                         ? "border-purple-400/50 bg-purple-500/5 shadow-lg shadow-purple-500/5"
-                        : "border-white/10 bg-white/[0.02]"
+                        : !isClanDragging && !isClanOver ? "border-white/10 bg-white/[0.02]" : ""
                       }
                     `}
                   >
