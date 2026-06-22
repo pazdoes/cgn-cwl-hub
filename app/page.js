@@ -610,7 +610,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
         {[...clanPlayers]
           .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
-          .map(player => (
+          .map((player, index) => (
 
           <motion.div
   key={`${player.clan}-${player.account}-${player.position}`}
@@ -633,7 +633,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
   <div className="flex items-center min-w-0 overflow-hidden">
 
   <div className="text-lg font-bold w-8">
-    {player.position}
+    {index + 1}
   </div>
 
   <img
