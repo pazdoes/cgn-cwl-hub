@@ -1123,28 +1123,26 @@ export default function AdminPoolPage() {
           bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      {/* header */}
-      <div className="relative z-10 flex items-center justify-between mb-6">
-        <Link href="/" className="text-sm text-slate-500 hover:text-white transition flex items-center gap-1.5">
+      {/* header — Hub left, Discord centred, Refresh right, all in one row */}
+      <div className="relative z-10 grid grid-cols-3 items-center mb-6">
+        <Link href="/" className="text-sm text-slate-500 hover:text-white transition flex items-center gap-1.5 justify-self-start">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Hub
         </Link>
+        <div className="flex justify-center">
+          <DiscordWidget variant="center" />
+        </div>
         <button
           onClick={() => loadPool(pin)}
-          className="text-xs text-slate-500 hover:text-white transition flex items-center gap-1.5"
+          className="text-xs text-slate-500 hover:text-white transition flex items-center gap-1.5 justify-self-end"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Refresh
         </button>
-      </div>
-
-      {/* Discord widget — centred, static, above Pool Manager card */}
-      <div className="relative z-10 flex justify-center mb-4">
-        <DiscordWidget variant="center" />
       </div>
 
       {/* title + season */}

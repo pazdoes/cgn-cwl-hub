@@ -736,9 +736,14 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
 </div>
 
-  {/* Discord widget — centred, static, above header card */}
-  <div className="relative z-10 flex justify-center mb-4">
-    <DiscordWidget variant="center" />
+  {/* top row — three-column grid matching admin page layout:
+      left empty, Discord centred, right empty for balance */}
+  <div className="relative z-10 grid grid-cols-3 items-center mb-6">
+    <div />
+    <div className="flex justify-center">
+      <DiscordWidget variant="center" />
+    </div>
+    <div />
   </div>
 
     <motion.div
