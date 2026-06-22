@@ -1111,11 +1111,11 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
   hover:border-white/20
   transition
 ">
-    <div className="text-2xl md:text-3xl font-bold">
+    <div className="text-4xl font-thin tracking-widest text-white tabular-nums">
       {players.length}
     </div>
 
-    <div className="text-slate-400">
+    <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">
       Players
     </div>
   </div>
@@ -1139,11 +1139,11 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
     hover:border-white/20
     transition
   ">
-    <div className="text-2xl md:text-3xl font-bold">
+    <div className="text-4xl font-thin tracking-widest text-white tabular-nums">
       {clans.length}
     </div>
 
-    <div className="text-slate-400">
+    <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">
       Clans
     </div>
   </div>
@@ -1167,7 +1167,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
     hover:border-white/20
     transition
   ">
-    <div className="text-2xl md:text-3xl font-bold">
+    <div className="text-4xl font-thin tracking-widest text-white tabular-nums">
       {
         players.length
           ? (
@@ -1180,7 +1180,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
       }
     </div>
 
-    <div className="text-slate-400">
+    <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">
       Avg TH
     </div>
   </div>
@@ -1204,10 +1204,11 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
     hover:border-white/20
     transition
   ">
-    <div className="text-2xl md:text-3xl font-bold">
-      📈
-    </div>
-    <div className="text-slate-400">
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l4-8 4 5 2-3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+    </svg>
+    <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">
       History
     </div>
   </div>
