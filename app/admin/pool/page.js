@@ -1529,13 +1529,13 @@ export default function AdminPoolPage() {
         <div className="relative z-10 text-center text-red-400 text-sm py-6">{error}</div>
       )}
 
-      {!loading && !error && entries.length === 0 && (
+      {!loading && entries.length === 0 && clans.length === 0 && (
         <div className="relative z-10 text-center text-slate-600 py-12">
           No players have signed up for {season} yet.
         </div>
       )}
 
-      {!loading && entries.length > 0 && (
+      {!loading && (clans.length > 0 || entries.length > 0) && (
         <div className="relative z-10 space-y-6">
 
           {/* ── pool toggle: Available Pool / Assigned ── */}
