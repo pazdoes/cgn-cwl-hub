@@ -964,40 +964,40 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   <div
     key={`${player.clan}-${player.account}-${player.position}`}
     onClick={() => {
-  window.history.pushState(
-    {},
-    "",
-    `#${player.clan}`
-  );
-
+  window.history.pushState({}, "", `#${player.clan}`);
   setSelectedClan(player.clan);
 }}
     className="
-      flex
-      items-center
-      justify-between
-      py-3
-      px-1
-      border-b
-      border-white/5
-      cursor-pointer
-      hover:bg-white/[0.03]
-      transition
+      flex items-center justify-between
+      py-3 px-1
+      border-b border-white/5
+      cursor-pointer hover:bg-white/[0.03] transition
     "
   >
-    <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-      <span className="text-slate-500 w-6">
-        {player.position}
-      </span>
-
-      <span className="font-medium text-white truncate max-w-[140px] block">
+    {/* Left: TH icon + account name */}
+    <div className="flex items-center gap-2.5 min-w-0">
+      {TH_ICONS[String(player.townHall)] ? (
+        <img
+          src={TH_ICONS[String(player.townHall)]}
+          alt={`TH${player.townHall}`}
+          className="w-7 h-7 shrink-0"
+        />
+      ) : (
+        <div className="w-7 h-7 shrink-0" />
+      )}
+      <span className="font-medium text-white truncate">
         {player.account}
       </span>
+    </div>
 
-      <span className="text-xs text-slate-500 truncate max-w-[120px]">
-        {player.clan}
-      </span>
-
+    {/* Right: status circle + Open clan button */}
+    <div className="flex items-center gap-2 shrink-0 ml-2">
+      {player.status?.toLowerCase() === "confirmed" && (
+        <span className="w-2.5 h-2.5 rounded-full bg-green-400 shrink-0" title="Confirmed" />
+      )}
+      {player.status?.toLowerCase() === "substitute" && (
+        <span className="w-2.5 h-2.5 rounded-full bg-orange-400 shrink-0" title="Substitute" />
+      )}
       {player.clanLink && (
         <a
           href={player.clanLink}
@@ -1017,37 +1017,6 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
           Open
         </a>
       )}
-    </div>
-
-    <div className="flex items-center gap-2 text-xs text-slate-400 shrink-0 whitespace-nowrap">
-
-      <span
-        className={`
-          px-2
-          py-0.5
-          rounded-full
-          ${
-            player.status?.toLowerCase() === "confirmed"
-              ? "bg-green-500/10 text-green-300"
-              : player.status?.toLowerCase() === "substitute"
-              ? "bg-orange-500/10 text-orange-300"
-              : player.status?.toLowerCase() === "active"
-              ? "bg-green-500/10 text-green-300"
-              : player.status?.toLowerCase() === "benched"
-              ? "bg-yellow-500/10 text-yellow-300"
-              : player.status?.toLowerCase() === "inactive"
-              ? "bg-red-500/10 text-red-300"
-              : "text-slate-400"
-          }
-        `}
-      >
-        {player.status}
-      </span>
-
-      <span>
-        {player.cwlRank}
-      </span>
-
     </div>
   </div>
 ))}
