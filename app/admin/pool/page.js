@@ -282,6 +282,9 @@ export default function AdminPoolPage() {
   const [thRefreshing, setThRefreshing] = useState(false);
   const [thRefreshResult, setThRefreshResult] = useState(null); // {ok, message}
 
+  // toggle between Available Pool and Assigned views (item 16)
+  const [poolTab, setPoolTab] = useState("available"); // "available" | "assigned"
+
   /* --- drag state (vanilla HTML5 DnD — no extra lib needed) --- */
   const [dragging,  setDragging]  = useState(null); // entry object
   const [overClan,  setOverClan]  = useState(null); // clan string
@@ -1395,11 +1398,37 @@ export default function AdminPoolPage() {
       {!loading && entries.length > 0 && (
         <div className="relative z-10 space-y-6">
 
-          {/* ── unassigned pool ── */}
+          {/* ── pool toggle: Available Pool / Assigned ── */}
           <section>
-            <h2 className="text-xs uppercase tracking-widest text-slate-500 mb-3 ml-1">
-              Available Pool ({unassigned.length})
-            </h2>
+            {/* Tab switcher */}
+            <div className="flex items-center gap-2 mb-3 ml-1">
+              <button
+                onClick={() => setPoolTab("available")}
+                className={`
+                  px-3 py-1 rounded-full text-xs font-semibold border transition
+                  ${poolTab === "available"
+                    ? "bg-purple-600/30 text-purple-200 border-purple-500/40"
+                    : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"
+                  }
+                `}
+              >
+                Available Pool ({unassigned.length})
+              </button>
+              <button
+                onClick={() => setPoolTab("assigned")}
+                className={`
+                  px-3 py-1 rounded-full text-xs font-semibold border transition
+                  ${poolTab === "assigned"
+                    ? "bg-purple-600/30 text-purple-200 border-purple-500/40"
+                    : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"
+                  }
+                `}
+              >
+                Assigned ({assigned.length})
+              </button>
+            </div>
+
+            {poolTab === "available" ? (
             <Card>
               {unassigned.length === 0 ? (
                 <p className="text-slate-600 text-sm text-center py-4">All players have been assigned.</p>
@@ -1457,6 +1486,30 @@ export default function AdminPoolPage() {
                 </div>
               )}
             </Card>
+            ) : (
+              <Card>
+                {assigned.length === 0 ? (
+                  <p className="text-slate-600 text-sm text-center py-4">No players assigned yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {assigned
+                      .sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0))
+                      .map(e => (
+                        <div key={e.player_tag} className="flex items-center justify-between gap-3 py-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <ThIcon level={e.town_hall_level} size="w-6 h-6" />
+                            <div className="min-w-0">
+                              <span className="text-sm font-medium text-white truncate block">{e.player_name}</span>
+                              <span className="text-xs text-slate-600 font-mono">{e.player_tag}</span>
+                            </div>
+                          </div>
+                          <Pill variant="success">{e.assigned_clan}</Pill>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </Card>
+            )}
           </section>
 
           {/* ── clan drop zones ── */}
@@ -1575,31 +1628,6 @@ export default function AdminPoolPage() {
               })}
             </div>
           </section>
-
-          {/* ── already assigned summary ── */}
-          {assigned.length > 0 && (
-            <section>
-              <h2 className="text-xs uppercase tracking-widest text-slate-500 mb-3 ml-1">
-                Assigned ({assigned.length})
-              </h2>
-              <Card>
-                <div className="space-y-2">
-                  {assigned.map(e => (
-                    <div key={e.player_tag} className="flex items-center justify-between gap-3 py-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <ThIcon level={e.town_hall_level} size="w-6 h-6" />
-                        <div className="min-w-0">
-                          <span className="text-sm font-medium text-white">{e.player_name}</span>
-                          <span className="text-xs text-slate-600 font-mono ml-2">{e.player_tag}</span>
-                        </div>
-                      </div>
-                      <Pill variant="success">{e.assigned_clan}</Pill>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </section>
-          )}
 
         </div>
       )}
