@@ -868,26 +868,14 @@ export default function SignupPage() {
                     onTouchEnd={onAccountTouchEnd}
                     style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                     className={`
-                      flex items-center justify-between gap-3
                       rounded-2xl border bg-white/[0.03]
                       p-4 transition hover:bg-white/[0.05] cursor-grab active:cursor-grabbing
                       ${isDragging ? "opacity-40 border-purple-500/40" : "border-white/10"}
                       ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
                     `}
                   >
-                    {/* drag handle — larger touch target and explicit
-                        right margin than the icon's own visual size,
-                        since a finger needs more room to grab accurately
-                        than a mouse cursor does; this also fixes the
-                        overlap with the account info next to it */}
-                    <div className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center -ml-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 9h.01M8 15h.01M16 9h.01M16 15h.01M8 12h.01M16 12h.01" />
-                      </svg>
-                    </div>
-
-                    {/* account info */}
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* account info row — TH icon and name flush left */}
+                    <div className="flex items-center gap-3 min-w-0 mb-3">
                       <ThIcon level={acct.townHallLevel} />
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-white truncate">{acct.name}</span>
@@ -895,37 +883,45 @@ export default function SignupPage() {
                       </div>
                     </div>
 
-                    {/* right side: status + button */}
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    {/* unified toggle — centred below name row */}
+                    <div className="flex flex-col items-center gap-1.5">
                       {acct.inCurrentPool ? (
-                        <div className="flex items-center gap-2">
-                          <StatusPill variant="success">✓ Signed up</StatusPill>
-                          <XButton
-                            onClick={() => handleLeave(acct.tag)}
-                            busy={leavingTag === acct.tag}
-                            title="Leave the pool for this season"
-                          />
-                        </div>
+                        <button
+                          onClick={() => handleLeave(acct.tag)}
+                          disabled={leavingTag === acct.tag}
+                          className="
+                            w-full px-4 py-1.5 rounded-full text-xs font-semibold text-center
+                            bg-green-500/20 text-green-300 border border-green-500/30
+                            hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30
+                            disabled:opacity-50 disabled:cursor-not-allowed transition
+                          "
+                        >
+                          {leavingTag === acct.tag ? "Leaving…" : "✓ Signed Up — tap to leave"}
+                        </button>
                       ) : result ? (
-                        <StatusPill variant={result.ok ? "success" : "error"}>
-                          {result.ok ? "✓ Signed up" : "Failed"}
-                        </StatusPill>
+                        <span className={`w-full text-center px-4 py-1.5 rounded-full text-xs font-semibold border ${
+                          result.ok
+                            ? "bg-green-500/20 text-green-300 border-green-500/30"
+                            : "bg-red-500/20 text-red-300 border-red-500/30"
+                        }`}>
+                          {result.ok ? "✓ Signed Up" : "Failed — try again"}
+                        </span>
                       ) : (
                         <button
                           onClick={() => handleJoin(acct.tag)}
                           disabled={busy}
                           className="
-                            px-4 py-1.5 rounded-full text-xs font-semibold
+                            w-full px-4 py-1.5 rounded-full text-xs font-semibold text-center
                             bg-purple-600/30 text-purple-200 border border-purple-500/30
                             hover:bg-purple-600/50 hover:text-white transition
                             disabled:opacity-50 disabled:cursor-not-allowed
                           "
                         >
-                          {busy ? "Signing up…" : "Sign up"}
+                          {busy ? "Signing up…" : "Sign Up"}
                         </button>
                       )}
                       {leaveError[acct.tag] && (
-                        <p className="text-[10px] text-red-400 text-right max-w-[160px] leading-tight">
+                        <p className="text-[10px] text-red-400 text-center leading-tight">
                           {leaveError[acct.tag]}
                         </p>
                       )}

@@ -192,38 +192,53 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
 }
 
 
-
-// Live SVG pie chart breaking down the same player set already used for
-// the Avg TH calculation, grouped by Town Hall level. Built as plain SVG
-// rather than a charting library — this codebase has no chart dependency
-// anywhere, and a hand-built SVG stays consistent with that. It's
-// "live" in the sense the task required: driven directly from the same
-// players React state every other view on this page uses, so any
-// roster change that re-fetches players re-renders this chart
-// automatically — no separate static-image step anywhere.
+// Live SVG pie/bar chart breaking down players by Town Hall level.
+// Accepts a clan filter (default: all clans combined) and a chart type
+// toggle (pie | bar). Both charts use PIE_COLORS keyed by TH level for
+// visual consistency. Built as plain SVG — no charting library needed.
 const PIE_COLORS = [
   "#a78bfa", "#818cf8", "#60a5fa", "#38bdf8", "#22d3ee",
   "#2dd4bf", "#34d399", "#a3e635", "#facc15", "#fb923c",
   "#f87171", "#f472b6",
 ];
 
+// Stable color assignment by TH level so the same TH always gets the
+// same color regardless of which clans/levels are present in the view.
+const ALL_TH_LEVELS = ["17","16","15","14","13","12","11","10","9","8","7","6","5","4","3","2","1"];
+function thColor(level) {
+  const idx = ALL_TH_LEVELS.indexOf(String(level));
+  return PIE_COLORS[idx >= 0 ? idx : PIE_COLORS.length - 1];
+}
+
 function polarPoint(cx, cy, r, angleDeg) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-function AvgThView({ players, onBack }) {
+function AvgThView({ players, clans, onBack }) {
+  const [chartType, setChartType] = useState("pie"); // "pie" | "bar"
+  const [selectedClanFilter, setSelectedClanFilter] = useState("all");
+
+  // Clans that actually have players rostered — only these appear in the filter.
+  const rostered = clans.filter(c => players.some(p => p.clan === c));
+
+  // Apply filter
+  const filtered = selectedClanFilter === "all"
+    ? players
+    : players.filter(p => p.clan === selectedClanFilter);
+
   const counts = {};
-  players.forEach(p => {
+  filtered.forEach(p => {
     const th = p.townHall || "Unknown";
     counts[th] = (counts[th] || 0) + 1;
   });
 
   const sortedLevels = Object.keys(counts).sort((a, b) => Number(b) - Number(a));
-  const total = players.length;
+  const total = filtered.length;
 
+  // ── Pie chart slices ──
   let cumulativeAngle = 0;
-  const slices = sortedLevels.map((level, i) => {
+  const slices = sortedLevels.map((level) => {
     const count = counts[level];
     const fraction = total > 0 ? count / total : 0;
     const angle = fraction * 360;
@@ -235,21 +250,20 @@ function AvgThView({ players, onBack }) {
     const start = polarPoint(cx, cy, r, startAngle);
     const end = polarPoint(cx, cy, r, endAngle);
     const largeArc = angle > 180 ? 1 : 0;
-
     const path = total > 0 && fraction < 1
       ? `M ${cx},${cy} L ${start.x},${start.y} A ${r},${r} 0 ${largeArc},1 ${end.x},${end.y} Z`
-      : null; // a single 100% slice degenerates to a full circle, drawn separately below
+      : null;
 
-    return {
-      level,
-      count,
-      fraction,
-      path,
-      color: PIE_COLORS[i % PIE_COLORS.length],
-    };
+    return { level, count, fraction, path, color: thColor(level) };
   });
-
   const isSingleSlice = slices.length === 1;
+
+  // ── Bar chart dimensions ──
+  const BAR_W = 280;
+  const BAR_H = 160;
+  const maxCount = sortedLevels.length > 0 ? Math.max(...sortedLevels.map(l => counts[l])) : 1;
+  const barWidth = sortedLevels.length > 0 ? Math.floor((BAR_W - 24) / sortedLevels.length) : 20;
+  const barGap = 2;
 
   return (
     <main className="
@@ -275,15 +289,65 @@ function AvgThView({ players, onBack }) {
         </button>
       </div>
 
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
-        <h1 className="text-2xl font-bold">Town Hall Breakdown</h1>
-        <p className="text-slate-400 text-sm mt-1">{total} players rostered this season</p>
+      {/* Header tile — title, chart toggle, clan filter */}
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6">
+        <h1 className="text-2xl font-bold text-center mb-4">Town Hall Breakdown</h1>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+
+          {/* Chart type toggle */}
+          <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
+            <button
+              onClick={() => setChartType("pie")}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                chartType === "pie"
+                  ? "bg-purple-600/40 text-purple-200"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Pie
+            </button>
+            <button
+              onClick={() => setChartType("bar")}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                chartType === "bar"
+                  ? "bg-purple-600/40 text-purple-200"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Bar
+            </button>
+          </div>
+
+          {/* Clan filter dropdown */}
+          <select
+            value={selectedClanFilter}
+            onChange={e => setSelectedClanFilter(e.target.value)}
+            className="
+              px-3 py-1.5 rounded-full text-xs font-semibold
+              border border-white/10 bg-white/[0.06] text-slate-300
+              focus:outline-none focus:border-purple-500/40
+              transition cursor-pointer
+            "
+          >
+            <option value="all">All Clans ({players.length})</option>
+            {rostered.map(c => (
+              <option key={c} value={c}>
+                {c} ({players.filter(p => p.clan === c).length})
+              </option>
+            ))}
+          </select>
+
+        </div>
+        <p className="text-slate-500 text-xs text-center mt-3">
+          {total} player{total !== 1 ? "s" : ""}{selectedClanFilter !== "all" ? ` · ${selectedClanFilter}` : " · all clans"}
+        </p>
       </div>
 
+      {/* Chart tile */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 flex flex-col items-center">
         {total === 0 ? (
           <p className="text-slate-600 text-sm py-8">No players to chart yet.</p>
-        ) : (
+        ) : chartType === "pie" ? (
           <>
             <svg viewBox="0 0 200 200" className="w-56 h-56 mb-6">
               {isSingleSlice ? (
@@ -294,8 +358,61 @@ function AvgThView({ players, onBack }) {
                 ))
               )}
             </svg>
-
             <div className="w-full grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {slices.map(slice => (
+                <div key={slice.level} className="flex items-center gap-2 text-xs">
+                  <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
+                  <span className="text-slate-300">TH{slice.level}</span>
+                  <span className="text-slate-500 ml-auto">{slice.count} ({(slice.fraction * 100).toFixed(0)}%)</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Bar chart — same colour scheme as pie chart */}
+            <div className="w-full overflow-x-auto pb-2">
+              <svg
+                viewBox={`0 0 ${Math.max(BAR_W, sortedLevels.length * (barWidth + barGap) + 24)} ${BAR_H + 40}`}
+                className="w-full"
+              >
+                {sortedLevels.map((level, i) => {
+                  const count = counts[level];
+                  const barH = maxCount > 0 ? Math.round((count / maxCount) * BAR_H) : 0;
+                  const x = 12 + i * (barWidth + barGap);
+                  const y = BAR_H - barH;
+                  const color = thColor(level);
+                  return (
+                    <g key={level}>
+                      <rect
+                        x={x} y={y}
+                        width={barWidth - barGap} height={barH}
+                        fill={color} rx="3"
+                        opacity="0.85"
+                      />
+                      {/* count label above bar */}
+                      <text
+                        x={x + (barWidth - barGap) / 2} y={y - 4}
+                        textAnchor="middle" fontSize="8" fill={color}
+                      >
+                        {count}
+                      </text>
+                      {/* TH label below bar */}
+                      <text
+                        x={x + (barWidth - barGap) / 2} y={BAR_H + 14}
+                        textAnchor="middle" fontSize="8" fill="#94a3b8"
+                      >
+                        {level}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Y-axis baseline */}
+                <line x1="8" y1={BAR_H} x2={Math.max(BAR_W, sortedLevels.length * (barWidth + barGap) + 24) - 4} y2={BAR_H} stroke="#334155" strokeWidth="1" />
+              </svg>
+            </div>
+            {/* Legend — same as pie chart */}
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
               {slices.map(slice => (
                 <div key={slice.level} className="flex items-center gap-2 text-xs">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
@@ -328,24 +445,24 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
 
   useEffect(() => {
   const handlePopState = () => {
-    const clan =
-      decodeURIComponent(window.location.hash.replace("#", ""));
+    const hash = decodeURIComponent(window.location.hash.replace("#", ""));
 
-    setSelectedClan(clan || null);
+    // Stat tile views use reserved hash names; anything else is treated
+    // as a clan name (the original selectedClan behaviour).
+    if (hash === "players" || hash === "clans" || hash === "avgth") {
+      setStatView(hash);
+      setSelectedClan(null);
+    } else {
+      setStatView(null);
+      setSelectedClan(hash || null);
+    }
   };
 
-  window.addEventListener(
-    "popstate",
-    handlePopState
-  );
-
+  window.addEventListener("popstate", handlePopState);
   handlePopState();
 
   return () => {
-    window.removeEventListener(
-      "popstate",
-      handlePopState
-    );
+    window.removeEventListener("popstate", handlePopState);
   };
 }, []);
 
@@ -364,15 +481,15 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   : [];
 
   if (statView === "players") {
-    return <PlayersView players={players} onBack={() => setStatView(null)} />;
+    return <PlayersView players={players} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (statView === "clans") {
-    return <ClansView clans={clans} players={players} onBack={() => setStatView(null)} />;
+    return <ClansView clans={clans} players={players} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (statView === "avgth") {
-    return <AvgThView players={players} onBack={() => setStatView(null)} />;
+    return <AvgThView players={players} clans={clans} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (selectedClan) {
@@ -659,7 +776,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   />
 
   <h1 className="text-5xl font-bold tracking-tight">
-    CWL Hub
+    {players[0]?.season || "CWL Hub"}
   </h1>
 
   <p className="text-slate-300 mt-3 text-lg">
@@ -685,7 +802,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
       </svg>
-      Join the Pool
+      Sign Up
     </Link>
   </div>
 
@@ -694,7 +811,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
 
   <div
-    onClick={() => setStatView("players")}
+    onClick={() => { window.history.pushState({}, "", "#players"); setStatView("players"); }}
     className="
   rounded-3xl
   border
@@ -723,7 +840,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   </div>
 
   <div
-    onClick={() => setStatView("clans")}
+    onClick={() => { window.history.pushState({}, "", "#clans"); setStatView("clans"); }}
     className="
     rounded-3xl
     border
@@ -751,7 +868,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   </div>
 
   <div
-    onClick={() => setStatView("avgth")}
+    onClick={() => { window.history.pushState({}, "", "#avgth"); setStatView("avgth"); }}
     className="
     rounded-3xl
     border
@@ -791,28 +908,45 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
 
 <div className="mb-8 relative z-10">
 
-  <input
-    type="text"
-    placeholder="Search players..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="
-  w-full
-  rounded-3xl
-  border
-  border-white/10
-  bg-white/[0.04]
-  backdrop-blur-xl
-  px-5
-  py-4
-  text-white
-  placeholder:text-slate-500
-  focus:outline-none
-  focus:border-white/20
-  focus:bg-white/[0.06]
-  transition
-"
-  />
+  <div className="relative">
+    <input
+      type="text"
+      placeholder="Search players..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="
+    w-full
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.04]
+    backdrop-blur-xl
+    px-5
+    py-4
+    text-white
+    placeholder:text-slate-500
+    focus:outline-none
+    focus:border-white/20
+    focus:bg-white/[0.06]
+    transition
+  "
+    />
+    {search && (
+      <button
+        onClick={() => setSearch("")}
+        className="
+          absolute right-4 top-1/2 -translate-y-1/2
+          w-6 h-6 rounded-full flex items-center justify-center
+          bg-white/[0.08] text-slate-400
+          hover:bg-white/[0.15] hover:text-white transition
+        "
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    )}
+  </div>
 
 </div>
 
