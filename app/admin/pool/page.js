@@ -1153,18 +1153,7 @@ export default function AdminPoolPage() {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 mb-6"
       >
-        <Card className="text-center py-5 relative">
-          {/* TH refresh — top right corner, same circular style as the
-              per-clan rank-refresh button; batch-updates TH for all pool
-              players from CoC API and writes to Neon truth source. */}
-          <div className="absolute top-4 right-4">
-            <RankRefreshButton
-              busy={thRefreshing}
-              result={thRefreshResult}
-              onClick={doRefreshThLevels}
-            />
-          </div>
-
+        <Card className="text-center py-5">
           <h1 className="text-2xl font-bold">Pool Manager</h1>
           {season ? (
             <p className="text-slate-400 text-sm mt-1">
@@ -1445,7 +1434,7 @@ export default function AdminPoolPage() {
 
           {/* ── pool toggle: Available Pool / Assigned ── */}
           <section>
-            {/* Tab switcher */}
+            {/* Tab switcher + TH refresh */}
             <div className="flex items-center gap-2 mb-3 ml-1">
               <button
                 onClick={() => setPoolTab("available")}
@@ -1471,6 +1460,12 @@ export default function AdminPoolPage() {
               >
                 Assigned ({assigned.length})
               </button>
+              {/* TH refresh — moved here from hero card top-right */}
+              <RankRefreshButton
+                busy={thRefreshing}
+                result={thRefreshResult}
+                onClick={doRefreshThLevels}
+              />
             </div>
 
             {poolTab === "available" ? (
