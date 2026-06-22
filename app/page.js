@@ -457,6 +457,7 @@ function rankY(rank, chartH) {
 function HistoryView({ onBack }) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [clanFilter, setClanFilter] = useState("all");
 
   useEffect(() => {
     fetch("/api/history")
@@ -495,6 +496,10 @@ function HistoryView({ onBack }) {
     return { clan, points, color: CLAN_COLORS[ci % CLAN_COLORS.length] };
   });
 
+  const filteredSeries = clanFilter === "all"
+    ? series
+    : series.filter(s => s.clan === clanFilter);
+
   const CHART_W = 320;
   const CHART_H = 200;
   const PAD_L = 72;
@@ -523,6 +528,25 @@ function HistoryView({ onBack }) {
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
         <h1 className="text-2xl font-bold">CWL Rank History</h1>
         <p className="text-slate-500 text-xs mt-1">Recorded each season by admins · dashed = carried forward</p>
+        {clans.length > 0 && (
+          <div className="flex justify-center mt-3">
+            <select
+              value={clanFilter}
+              onChange={e => setClanFilter(e.target.value)}
+              className="
+                px-3 py-1.5 rounded-full text-xs font-semibold
+                border border-white/10 bg-white/[0.06] text-slate-300
+                focus:outline-none focus:border-purple-500/40
+                transition cursor-pointer
+              "
+            >
+              <option value="all">All Clans</option>
+              {clans.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
@@ -556,7 +580,7 @@ function HistoryView({ onBack }) {
                 })}
 
                 {/* Clan lines */}
-                {series.map(({ clan, points, color }) => {
+                {filteredSeries.map(({ clan, points, color }) => {
                   const validPoints = points.filter(p => p.rank);
                   if (validPoints.length === 0) return null;
 
@@ -629,7 +653,7 @@ function HistoryView({ onBack }) {
 
             {/* Legend */}
             <div className="flex flex-wrap gap-3 mt-4">
-              {series.map(({ clan, color }) => (
+              {filteredSeries.map(({ clan, color }) => (
                 <div key={clan} className="flex items-center gap-1.5 text-xs">
                   <span className="w-4 h-0.5 rounded-full inline-block" style={{ backgroundColor: color }} />
                   <span className="text-slate-400">{clan}</span>
