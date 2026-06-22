@@ -356,6 +356,12 @@ export default function AdminPoolPage() {
   const [deleteClanSubmitting, setDeleteClanSubmitting] = useState(false);
   const [deleteClanResult, setDeleteClanResult] = useState(null);
 
+  // Close Season (item 30) — type CONFIRM to unlock, same pattern as Delete Clan
+  const [showCloseSeasonForm, setShowCloseSeasonForm] = useState(false);
+  const [closeSeasonConfirm, setCloseSeasonConfirm] = useState("");
+  const [closeSeasonSubmitting, setCloseSeasonSubmitting] = useState(false);
+  const [closeSeasonResult, setCloseSeasonResult] = useState(null);
+
   /* --- load pool data --- */
   async function loadPool(savedPin) {
     setLoading(true);
@@ -1015,6 +1021,38 @@ export default function AdminPoolPage() {
     }
   }
 
+  /* --- item 30: Close Season --- */
+  async function doCloseSeason(e) {
+    e.preventDefault();
+    if (closeSeasonConfirm !== "CONFIRM") return;
+    setCloseSeasonSubmitting(true);
+    setCloseSeasonResult(null);
+    try {
+      const res = await fetch("/api/admin/season/close", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ confirm: "CONFIRM" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCloseSeasonResult({
+          ok: true,
+          message: `${data.closed} closed → ${data.opened} now open`,
+        });
+        setCloseSeasonConfirm("");
+        setShowCloseSeasonForm(false);
+        // Reload pool so the new season label is reflected immediately
+        await loadPool(pin);
+      } else {
+        setCloseSeasonResult({ ok: false, message: data.error || "Failed to close season" });
+      }
+    } catch {
+      setCloseSeasonResult({ ok: false, message: "Network error" });
+    } finally {
+      setCloseSeasonSubmitting(false);
+    }
+  }
+
   async function doDeleteClan(e) {
     e.preventDefault();
     if (!deleteClanTag.trim()) return;
@@ -1204,6 +1242,76 @@ export default function AdminPoolPage() {
               </svg>
               Delete Clan
             </button>
+          </div>
+
+          {/* Close Season — type CONFIRM to unlock, same guard as Delete Clan */}
+          <div className="flex flex-col items-center gap-1.5 mt-3">
+            {!showCloseSeasonForm ? (
+              <button
+                type="button"
+                onClick={() => { setShowCloseSeasonForm(true); setCloseSeasonResult(null); }}
+                className="
+                  inline-flex items-center gap-2
+                  px-4 py-1.5 rounded-full
+                  border border-amber-500/20 bg-amber-500/10
+                  text-amber-300 text-xs font-semibold
+                  hover:bg-amber-500/20 hover:text-amber-200 transition
+                "
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Close Season
+              </button>
+            ) : (
+              <motion.form
+                onSubmit={doCloseSeason}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden w-full max-w-xs"
+              >
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3 text-left relative">
+                  <button
+                    type="button"
+                    onClick={() => { setShowCloseSeasonForm(false); setCloseSeasonConfirm(""); }}
+                    className="absolute top-3 right-3 text-slate-500 hover:text-white transition text-xs"
+                  >✕</button>
+                  <p className="text-xs text-amber-300 font-semibold">Close {season}?</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    This will record current CWL ranks and advance the season to the next month. Past roster data is preserved. Type <span className="text-white font-mono">CONFIRM</span> to proceed.
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="Type CONFIRM"
+                    value={closeSeasonConfirm}
+                    onChange={e => setCloseSeasonConfirm(e.target.value)}
+                    className="
+                      w-full rounded-xl border border-white/10 bg-white/[0.04]
+                      px-3 py-2 text-sm text-white placeholder:text-slate-600
+                      focus:outline-none focus:border-amber-500/40 transition
+                    "
+                  />
+                  <button
+                    type="submit"
+                    disabled={closeSeasonConfirm !== "CONFIRM" || closeSeasonSubmitting}
+                    className="
+                      w-full px-4 py-2 rounded-xl text-xs font-semibold
+                      bg-amber-500/20 text-amber-200 border border-amber-500/30
+                      hover:bg-amber-500/30 hover:text-white transition
+                      disabled:opacity-40 disabled:cursor-not-allowed
+                    "
+                  >
+                    {closeSeasonSubmitting ? "Closing…" : `Close ${season} & Open Next`}
+                  </button>
+                </div>
+              </motion.form>
+            )}
+            {closeSeasonResult && (
+              <p className={`text-[11px] text-center ${closeSeasonResult.ok ? "text-green-400" : "text-red-400"}`}>
+                {closeSeasonResult.message}
+              </p>
+            )}
           </div>
 
           {/* Add Clan form */}

@@ -14,7 +14,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const season = getOpenPoolSeason();
+  const season = await getOpenPoolSeason();
   if (!season) {
     return NextResponse.json({ error: "No open season found" }, { status: 400 });
   }

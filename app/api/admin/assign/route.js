@@ -21,7 +21,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing tag or clan" }, { status: 400 });
   }
 
-  const season = getOpenPoolSeason();
+  const season = await getOpenPoolSeason();
 
   // Write to Sheet first — if that fails, don't mark as assigned in the DB.
   let sheetResult;
