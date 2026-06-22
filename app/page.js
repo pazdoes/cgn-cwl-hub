@@ -429,6 +429,220 @@ function AvgThView({ players, clans, onBack }) {
   );
 }
 
+// CWL Rank Progression chart — one line per clan, X = season,
+// Y = CWL rank tier (Champion I at top, Bronze III at bottom).
+// Missing seasons carry the previous rank forward as a dashed line,
+// so the chart never breaks — it just shows the rank held flat until
+// a new value is recorded.
+const RANK_ORDER = [
+  "Champion I","Champion II","Champion III",
+  "Master I","Master II","Master III",
+  "Crystal I","Crystal II","Crystal III",
+  "Gold I","Gold II","Gold III",
+  "Silver I","Silver II","Silver III",
+  "Bronze I","Bronze II","Bronze III",
+];
+
+const CLAN_COLORS = [
+  "#a78bfa","#60a5fa","#34d399","#fb923c","#f472b6","#38bdf8","#facc15",
+];
+
+function rankY(rank, chartH) {
+  const idx = RANK_ORDER.indexOf(rank);
+  const total = RANK_ORDER.length - 1;
+  const pos = idx === -1 ? total : idx;
+  return Math.round((pos / total) * chartH);
+}
+
+function HistoryView({ onBack }) {
+  const [history, setHistory] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/history")
+      .then(r => r.json())
+      .then(data => setHistory(data.history || []))
+      .catch(() => setHistory([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Build chart data — one series per clan, all seasons sorted
+  const byClan = {};
+  (history || []).forEach(row => {
+    if (!byClan[row.clan_name]) byClan[row.clan_name] = [];
+    byClan[row.clan_name].push({ season: row.season, rank: row.cwl_rank });
+  });
+
+  const clans = Object.keys(byClan);
+  const allSeasons = [...new Set((history || []).map(r => r.season))]
+    .sort((a, b) => {
+      // Sort by recorded_at order — use index in original data as proxy
+      const ia = (history || []).findIndex(r => r.season === a);
+      const ib = (history || []).findIndex(r => r.season === b);
+      return ia - ib;
+    });
+
+  // For each clan, build a complete series across all seasons,
+  // carrying the last known rank forward for missing seasons.
+  const series = clans.map((clan, ci) => {
+    const recorded = byClan[clan];
+    let lastRank = null;
+    const points = allSeasons.map(season => {
+      const found = recorded.find(r => r.season === season);
+      if (found) { lastRank = found.rank; return { season, rank: found.rank, interpolated: false }; }
+      return { season, rank: lastRank, interpolated: true };
+    });
+    return { clan, points, color: CLAN_COLORS[ci % CLAN_COLORS.length] };
+  });
+
+  const CHART_W = 320;
+  const CHART_H = 200;
+  const PAD_L = 72;
+  const PAD_R = 12;
+  const PAD_T = 12;
+  const PAD_B = 28;
+  const plotW = CHART_W - PAD_L - PAD_R;
+  const plotH = CHART_H - PAD_T - PAD_B;
+  const xStep = allSeasons.length > 1 ? plotW / (allSeasons.length - 1) : plotW;
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+      </div>
+
+      <div className="relative z-10 mb-6">
+        <button onClick={onBack} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Hub
+        </button>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
+        <h1 className="text-2xl font-bold">CWL Rank History</h1>
+        <p className="text-slate-500 text-xs mt-1">Recorded each season by admins · dashed = carried forward</p>
+      </div>
+
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+        {loading ? (
+          <div className="animate-pulse h-48 rounded-xl bg-white/[0.06]" />
+        ) : allSeasons.length === 0 ? (
+          <p className="text-slate-600 text-sm text-center py-8">No history recorded yet. Admins can record each season using the "Record Season" button on the admin page.</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
+                {/* Y-axis gridlines + labels */}
+                {RANK_ORDER.filter((_, i) => i % 3 === 0).map(rank => {
+                  const y = PAD_T + rankY(rank, plotH);
+                  return (
+                    <g key={rank}>
+                      <line x1={PAD_L} y1={y} x2={PAD_L + plotW} y2={y} stroke="#1e293b" strokeWidth="1" />
+                      <text x={PAD_L - 4} y={y + 4} textAnchor="end" fontSize="7" fill="#475569">{rank}</text>
+                    </g>
+                  );
+                })}
+
+                {/* X-axis labels */}
+                {allSeasons.map((season, i) => {
+                  const x = PAD_L + (allSeasons.length > 1 ? i * xStep : plotW / 2);
+                  return (
+                    <text key={season} x={x} y={CHART_H - 6} textAnchor="middle" fontSize="7" fill="#475569">
+                      {season.split(" ")[0].slice(0, 3)}
+                    </text>
+                  );
+                })}
+
+                {/* Clan lines */}
+                {series.map(({ clan, points, color }) => {
+                  const validPoints = points.filter(p => p.rank);
+                  if (validPoints.length === 0) return null;
+
+                  // Build path segments — switch between solid and dashed
+                  const segments = [];
+                  let segStart = null;
+                  let segInterp = null;
+
+                  const ptX = (i) => PAD_L + (allSeasons.length > 1 ? i * xStep : plotW / 2);
+                  const ptY = (rank) => PAD_T + rankY(rank, plotH);
+
+                  points.forEach((pt, i) => {
+                    if (!pt.rank) { segStart = null; return; }
+                    if (segStart === null) {
+                      segStart = i;
+                      segInterp = pt.interpolated;
+                      return;
+                    }
+                    if (pt.interpolated !== segInterp) {
+                      segments.push({ from: segStart, to: i - 1, interpolated: segInterp });
+                      segStart = i - 1;
+                      segInterp = pt.interpolated;
+                    }
+                  });
+                  if (segStart !== null) {
+                    segments.push({ from: segStart, to: points.length - 1, interpolated: segInterp });
+                  }
+
+                  return (
+                    <g key={clan}>
+                      {segments.map((seg, si) => {
+                        const d = points
+                          .slice(seg.from, seg.to + 1)
+                          .filter(p => p.rank)
+                          .map((p, j) => {
+                            const idx = allSeasons.indexOf(p.season);
+                            return `${j === 0 ? "M" : "L"} ${ptX(idx)} ${ptY(p.rank)}`;
+                          })
+                          .join(" ");
+                        return (
+                          <path
+                            key={si}
+                            d={d}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="1.5"
+                            strokeDasharray={seg.interpolated ? "4 3" : "none"}
+                            opacity="0.85"
+                          />
+                        );
+                      })}
+                      {/* Dots at recorded points only */}
+                      {points.filter(p => p.rank && !p.interpolated).map(p => {
+                        const idx = allSeasons.indexOf(p.season);
+                        return (
+                          <circle
+                            key={p.season}
+                            cx={ptX(idx)}
+                            cy={ptY(p.rank)}
+                            r="2.5"
+                            fill={color}
+                          />
+                        );
+                      })}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 mt-4">
+              {series.map(({ clan, color }) => (
+                <div key={clan} className="flex items-center gap-1.5 text-xs">
+                  <span className="w-4 h-0.5 rounded-full inline-block" style={{ backgroundColor: color }} />
+                  <span className="text-slate-400">{clan}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
 
 
 export default function Home() {
@@ -451,7 +665,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
     // Stat tile views use reserved hash names; anything else is treated
     // as a clan name (the original selectedClan behaviour).
-    if (hash === "players" || hash === "clans" || hash === "avgth") {
+    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history") {
       setStatView(hash);
       setSelectedClan(null);
       setHighlightedAccount(null);
@@ -494,6 +708,10 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
   if (statView === "avgth") {
     return <AvgThView players={players} clans={clans} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+  }
+
+  if (statView === "history") {
+    return <HistoryView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (selectedClan) {
@@ -847,7 +1065,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
 </div>
 
-    <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 relative z-10">
 
   <div
     onClick={() => { window.history.pushState({}, "", "#players"); setStatView("players"); }}
@@ -940,6 +1158,33 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 
     <div className="text-slate-400">
       Avg TH
+    </div>
+  </div>
+
+  <div
+    onClick={() => { window.history.pushState({}, "", "#history"); setStatView("history"); }}
+    className="
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.03]
+    backdrop-blur-xl
+    p-6
+    min-h-[120px]
+    flex
+    flex-col
+    items-center
+    justify-center
+    cursor-pointer
+    hover:bg-white/[0.06]
+    hover:border-white/20
+    transition
+  ">
+    <div className="text-2xl md:text-3xl font-bold">
+      📈
+    </div>
+    <div className="text-slate-400">
+      History
     </div>
   </div>
 
