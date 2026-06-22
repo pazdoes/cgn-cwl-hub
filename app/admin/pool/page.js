@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { BRANDING } from "../../../lib/branding";
 import { TH_ICONS, CWL_ICONS } from "../../../lib/icons";
 import DiscordWidget from "../../components/DiscordWidget";
@@ -271,6 +272,37 @@ export default function AdminPoolPage() {
   const [pinError,   setPinError]   = useState(false);
   const [authed,     setAuthed]     = useState(false);
 
+  // Discord session — used to gate the sessionStorage PIN-skip.
+  // Only Discord-authenticated admins get the remembered PIN benefit;
+  // non-Discord admins always see the PIN prompt (unchanged behaviour).
+  const { data: discordSession, status: discordStatus } = useSession();
+  const SESSION_KEY = "cwl_admin_pin_confirmed";
+
+  // On mount: if the admin is signed in with Discord AND has already
+  // confirmed their PIN this browser session, skip the prompt entirely
+  // and restore the saved PIN so API calls keep working. This check
+  // runs once after the Discord session resolves so we don't flash the
+  // PIN gate briefly before hiding it.
+  useEffect(() => {
+    if (discordStatus !== "authenticated") return;
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      setPin(saved);
+      setAuthed(true);
+      loadPool(saved);
+    }
+  }, [discordStatus]);
+
+  // When Discord sign-out happens mid-session, clear the stored PIN
+  // so the next visitor (or the same admin after re-sign-in) must
+  // re-confirm. This runs whenever discordStatus changes to
+  // "unauthenticated" while authed is true.
+  useEffect(() => {
+    if (discordStatus === "unauthenticated") {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+  }, [discordStatus]);
+
   /* --- data --- */
   const [season,  setSeason]  = useState(null);
   const [entries, setEntries] = useState([]);
@@ -355,6 +387,13 @@ export default function AdminPoolPage() {
     setPin(pinInput);
     setAuthed(true);
     setPinError(false);
+    // If the admin is signed in with Discord, remember the confirmed PIN
+    // for the rest of this browser session so they won't be re-prompted
+    // when navigating back to this page. The value is cleared automatically
+    // when the browser tab/session closes, or when they sign out of Discord.
+    if (discordStatus === "authenticated") {
+      sessionStorage.setItem(SESSION_KEY, pinInput);
+    }
     loadPool(pinInput);
   }
 
