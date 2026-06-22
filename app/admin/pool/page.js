@@ -484,22 +484,33 @@ export default function AdminPoolPage() {
       };
 
       const finish = async (endEvent) => {
-        // Detect the drop target BEFORE cleanup — cleanup restores the
-        // dragged card's pointer-events to normal, which would make
-        // elementFromPoint find the card itself again (the same
-        // self-detection bug the move-handler had) if it ran first.
+        // Detect the drop target BEFORE cleanup — cleanup restores
+        // pointer-events which would make elementFromPoint find the
+        // dragged card itself again if it ran first.
         const touch2 = endEvent.changedTouches?.[0];
         const el = touch2 && document.elementFromPoint(touch2.clientX, touch2.clientY);
         const zone = el?.closest("[data-clan-zone]");
         const clan = zone?.getAttribute("data-clan-zone");
 
+        // Capture entry from ref BEFORE cleanup clears it — same
+        // staleness fix as the signup page's moveListener: onDrop reads
+        // 'dragging' from React state, but that's a stale closure value
+        // inside a setTimeout-created async callback, causing the
+        // '!dragging' guard to fire and silently cancel the assignment.
+        const entryNow = state.entry;
+
         cleanupPlayerTouchListeners();
 
-        if (clan) {
-          await onDrop({ preventDefault: () => {} }, clan);
-        } else {
-          setDragging(null);
-          setOverClan(null);
+        // Always clear visual drag state immediately, regardless of
+        // whether a valid drop target was found or the API call succeeds
+        // — this is what was causing the 'severely delayed snap-back',
+        // since setDragging(null) was previously tied to onDrop's return
+        // path which could be skipped by the stale-state guard.
+        setDragging(null);
+        setOverClan(null);
+
+        if (clan && entryNow && entryNow.assigned_clan !== clan) {
+          await doAssign(entryNow, clan);
         }
 
         state.entry = null;

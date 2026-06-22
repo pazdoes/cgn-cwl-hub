@@ -460,10 +460,7 @@ export default function SignupPage() {
         const t = moveEvent.touches[0];
         if (!t) return;
 
-        // Make the dragged card itself follow the finger — without
-        // this, the underlying reorder logic runs correctly (other
-        // rows shift as you cross them) but the held card visually
-        // stays put, reading as "locked" even though it's functioning.
+        // Make the dragged card itself follow the finger.
         if (state.el) {
           const dx = t.clientX - state.startX;
           const dy = t.clientY - state.startY;
@@ -477,7 +474,28 @@ export default function SignupPage() {
         const overTag = row.getAttribute("data-account-tag");
         if (!overTag) return;
 
-        onAccountDragOver({ preventDefault: () => {} }, overTag);
+        // NOTE: calling onAccountDragOver here would cause a stale
+        // closure bug — that function reads 'draggingTag' from React
+        // state, but inside a setTimeout-created closure the setState
+        // called moments earlier (setDraggingTag) hasn't propagated
+        // yet, so 'draggingTag' appears null and the reorder guard
+        // '!draggingTag' returns early every time, preventing other
+        // cards from shifting. Instead, read the tag directly from
+        // the ref (always synchronously current) and inline the reorder.
+        const draggingTagNow = state.tag;
+        if (!draggingTagNow || overTag === draggingTagNow) return;
+
+        setDragOverTag(overTag);
+        setMyAccounts(prev => {
+          const fromIndex = prev.findIndex(a => a.tag === draggingTagNow);
+          const toIndex = prev.findIndex(a => a.tag === overTag);
+          if (fromIndex === -1 || toIndex === -1) return prev;
+
+          const next = [...prev];
+          const [moved] = next.splice(fromIndex, 1);
+          next.splice(toIndex, 0, moved);
+          return next;
+        });
       };
 
       const finish = () => {
