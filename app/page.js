@@ -53,7 +53,7 @@ function PlayersView({ players, onBack }) {
       </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
-        <h1 className="text-2xl font-thin tracking-widest">All Players</h1>
+        <h1 className="text-2xl font-bold">All Players</h1>
         <p className="text-slate-400 text-sm mt-1">{players.length} rostered this season</p>
       </div>
 
@@ -121,7 +121,7 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
       </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
-        <h1 className="text-2xl font-thin tracking-widest">All Clans</h1>
+        <h1 className="text-2xl font-bold">All Clans</h1>
         <p className="text-slate-400 text-sm mt-1">{clans.length} clans rostered this season</p>
       </div>
 
@@ -136,7 +136,7 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
             <div key={clan} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="flex items-center gap-2 min-w-0">
-                  <h2 className="text-lg font-thin tracking-widest truncate">{clan}</h2>
+                  <h2 className="text-lg font-bold truncate">{clan}</h2>
                   <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     {clanPlayers.length}
                   </span>
@@ -292,7 +292,7 @@ function AvgThView({ players, clans, onBack }) {
 
       {/* Header tile — title, chart toggle, clan filter */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6">
-        <h1 className="text-2xl font-thin tracking-widest text-center mb-4">Town Hall Breakdown</h1>
+        <h1 className="text-2xl font-bold text-center mb-4">Town Hall Breakdown</h1>
         <div className="flex items-center justify-center gap-3 flex-wrap">
 
           {/* Chart type toggle */}
@@ -526,7 +526,7 @@ function HistoryView({ onBack }) {
       </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
-        <h1 className="text-2xl font-thin tracking-widest">CWL Rank History</h1>
+        <h1 className="text-2xl font-bold">CWL Rank History</h1>
         <p className="text-slate-500 text-xs mt-1">Recorded each season by admins · dashed = carried forward</p>
         {clans.length > 0 && (
           <div className="flex justify-center mt-3">
@@ -675,12 +675,22 @@ export default function Home() {
 const [selectedClan, setSelectedClan] = useState(null);
 const [search, setSearch] = useState("");
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
-const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of account clicked from search
+const [highlightedAccount, setHighlightedAccount] = useState(null);
+const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth source
 
   useEffect(() => {
     fetch("/api/roster")
       .then(res => res.json())
       .then(data => setPlayers(data));
+  }, []);
+
+  // Fetch the current season from Neon so the homepage title always
+  // reflects the admin-controlled season, not the Sheet-derived value.
+  useEffect(() => {
+    fetch("/api/season")
+      .then(r => r.json())
+      .then(data => setCurrentSeason(data.season || null))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -815,7 +825,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
   />
 
   {/* Clan name */}
-  <h1 className="text-2xl font-thin tracking-widest">{selectedClan}</h1>
+  <h1 className="text-2xl font-bold">{selectedClan}</h1>
 
   {/* Format + season */}
   <div className="text-lg text-slate-300 mt-4">{format}</div>
@@ -1012,8 +1022,8 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
     className="w-28 h-28 mx-auto mb-5"
   />
 
-  <h1 className="text-5xl font-thin tracking-widest">
-    {players[0]?.season || "CWL Hub"}
+  <h1 className="text-5xl font-bold tracking-tight">
+    {currentSeason || players[0]?.season || "CWL Hub"}
   </h1>
 
   <p className="text-slate-300 mt-3 text-lg">
@@ -1368,7 +1378,7 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
   className="w-24 h-24 mx-auto mb-4"
 />
 
-                <div className="text-2xl font-thin tracking-widest mt-2">
+                <div className="text-2xl font-bold mt-2">
   {clan}
 </div>
 
