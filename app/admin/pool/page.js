@@ -356,10 +356,6 @@ export default function AdminPoolPage() {
   const [deleteClanSubmitting, setDeleteClanSubmitting] = useState(false);
   const [deleteClanResult, setDeleteClanResult] = useState(null);
 
-  // Record Season — stores current CWL ranks for all clans in history
-  const [recordingHistory, setRecordingHistory] = useState(false);
-  const [recordHistoryResult, setRecordHistoryResult] = useState(null);
-
   /* --- load pool data --- */
   async function loadPool(savedPin) {
     setLoading(true);
@@ -921,50 +917,6 @@ export default function AdminPoolPage() {
     }
   }
 
-  /* --- item 26: record current season CWL ranks to history --- */
-  async function doRecordSeasonHistory() {
-    setRecordingHistory(true);
-    setRecordHistoryResult(null);
-
-    // Build clanRanks from the currently loaded clan data — admins
-    // should use the rank refresh button first to ensure these are
-    // current before recording.
-    const clanRanks = clans
-      .map(clan => {
-        const members = entries.filter(e => e.assigned_clan === clan);
-        const cwlRank = clanFormats[clan]
-          ? members[0]?.cwl_rank
-          : null;
-        // Fallback: read cwlRank from the sheet data we already have
-        // via the roster — same source the admin page header uses.
-        return {
-          clanName: clan,
-          cwlRank: cwlRank || "Unranked",
-        };
-      });
-
-    try {
-      const res = await fetch("/api/admin/history/record", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-officer-pin": pin,
-        },
-        body: JSON.stringify({ clanRanks }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setRecordHistoryResult({ ok: true, message: `Recorded ${data.count} clan${data.count !== 1 ? "s" : ""} for ${data.season}` });
-      } else {
-        setRecordHistoryResult({ ok: false, message: data.error || "Record failed" });
-      }
-    } catch {
-      setRecordHistoryResult({ ok: false, message: "Network error" });
-    } finally {
-      setRecordingHistory(false);
-    }
-  }
-
   /* --- item 6: CWL Rank refresh (per clan, manual, once-per-season) --- */
   async function doRefreshRank(clan) {
     setRankBusy(clan);
@@ -1200,7 +1152,7 @@ export default function AdminPoolPage() {
         className="relative z-10 mb-6"
       >
         <Card className="text-center py-5">
-          <h1 className="text-2xl font-bold">Pool Manager</h1>
+          <h1 className="text-2xl font-thin tracking-widest">Pool Manager</h1>
           {season ? (
             <p className="text-slate-400 text-sm mt-1">
               <span className="text-purple-300 font-semibold">{season}</span> · {entries.length} in pool
@@ -1252,33 +1204,6 @@ export default function AdminPoolPage() {
               </svg>
               Delete Clan
             </button>
-          </div>
-
-          {/* Record Season — writes current CWL ranks to history */}
-          <div className="flex flex-col items-center gap-1.5 mt-3">
-            <button
-              type="button"
-              onClick={doRecordSeasonHistory}
-              disabled={recordingHistory}
-              className="
-                inline-flex items-center gap-2
-                px-4 py-1.5 rounded-full
-                border border-white/10 bg-white/[0.03]
-                text-slate-400 text-xs font-semibold
-                hover:bg-white/[0.06] hover:text-slate-200 transition
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${recordingHistory ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              {recordingHistory ? "Recording…" : "Record Season"}
-            </button>
-            {recordHistoryResult && (
-              <p className={`text-[11px] ${recordHistoryResult.ok ? "text-green-400" : "text-red-400"}`}>
-                {recordHistoryResult.message}
-              </p>
-            )}
           </div>
 
           {/* Add Clan form */}

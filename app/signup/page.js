@@ -600,7 +600,7 @@ export default function SignupPage() {
       >
         <Card className="text-center">
           <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold tracking-tight">Sign Up for CWL</h1>
+          <h1 className="text-3xl font-thin tracking-widest">Sign Up for CWL</h1>
           <p className="text-slate-400 mt-2 text-sm">
             {season
               ? <>Register your account for the <span className="text-purple-300 font-semibold">{season}</span> roster pool.</>
