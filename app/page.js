@@ -555,55 +555,53 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
 </div>
 
 <div className="
-  rounded-3xl
-  border
-  border-white/10
-  bg-white/[0.04]
-  backdrop-blur-xl
-  p-6
-  mb-6
-  text-center
-  shadow-xl
-  relative
+  rounded-3xl border border-white/10
+  bg-white/[0.04] backdrop-blur-xl
+  p-6 mb-6 shadow-xl
+  flex flex-col items-center text-center
 ">
-
-  {/* Clan Name */}
-  <h1 className="text-2xl font-bold">
-    {selectedClan}
-  </h1>
-
-  {/* Info Lines */}
-  <div className="mt-3 text-sm text-slate-300 space-y-1">
-    <div>
-      {format}
-    </div>
-    <div>
-      {clanPlayers[0]?.season || ""}
-    </div>
+  {/* Rank label */}
+  <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">
+    {rank}
   </div>
 
-  {/* Open Clan — pill style, matching the homepage's Join the Pool button */}
-  <div className="mt-4">
-    <a
-      href={clanPlayers[0]?.clanLink || ""}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="
-        inline-flex items-center gap-2
-        px-6 py-3 rounded-full
-        bg-purple-600/30 text-purple-200
-        border border-purple-500/30
-        hover:bg-purple-600/50 hover:text-white
-        transition font-semibold text-sm
-      "
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-      </svg>
-      Open Clan
-    </a>
-  </div>
+  {/* CWL icon */}
+  <img
+    src={CWL_ICONS[rank] || CWL_ICONS["unranked"]}
+    alt={rank}
+    className="w-24 h-24 mx-auto mb-4"
+  />
 
+  {/* Clan name */}
+  <h1 className="text-2xl font-bold">{selectedClan}</h1>
+
+  {/* Format + season */}
+  <div className="text-lg text-slate-300 mt-4">{format}</div>
+  <div className="text-sm text-slate-500 mt-2">{season}</div>
+
+  {/* Open Clan button */}
+  {clanLink && (
+    <div className="mt-5">
+      <a
+        href={clanLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="
+          inline-flex items-center gap-2
+          px-6 py-3 rounded-full
+          bg-purple-600/30 text-purple-200
+          border border-purple-500/30
+          hover:bg-purple-600/50 hover:text-white
+          transition font-semibold text-sm
+        "
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+        Open Clan
+      </a>
+    </div>
+  )}
 </div>
 
       <div className="space-y-3">
@@ -682,19 +680,6 @@ const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of ac
   >
     {player.status}
   </span>
-
-  {/* Row 2 — CWL Rank */}
-  <div className="flex items-center gap-2 min-w-0">
-    <img
-      src={CWL_ICONS[player.cwlRank]}
-      alt={player.cwlRank}
-      className="w-5 h-5"
-    />
-
-    <span className="text-xs text-slate-300">
-      {player.cwlRank}
-    </span>
-  </div>
 
   </div>
 
