@@ -409,7 +409,6 @@ export default function AdminPoolPage() {
   const touchPlayerStateRef = useRef({
     timer: null, startX: 0, startY: 0, entry: null, active: false,
     moveListener: null, endListener: null, cancelListener: null,
-    el: null,
   });
 
   function cleanupPlayerTouchListeners() {
@@ -420,17 +419,6 @@ export default function AdminPoolPage() {
     state.moveListener = null;
     state.endListener = null;
     state.cancelListener = null;
-
-    // Reset the visual transform applied during the drag — see the
-    // matching comment in the signup page's touch handling for why
-    // this exists (no native ghost-image equivalent for touch).
-    if (state.el) {
-      state.el.style.transform = "";
-      state.el.style.zIndex = "";
-      state.el.style.transition = "";
-      state.el.style.pointerEvents = "";
-      state.el = null;
-    }
   }
 
   function onTouchStartPlayer(e, entry) {
@@ -442,33 +430,20 @@ export default function AdminPoolPage() {
     state.startY = touch.clientY;
     state.entry = entry;
     state.active = false;
-    state.el = e.currentTarget;
 
     state.timer = setTimeout(() => {
       state.active = true;
       onDragStart(entry);
 
-      // pointer-events: none is essential, not optional — see the
-      // matching comment in the signup page's touch handling. Without
-      // it, elementFromPoint kept returning the dragged card itself
-      // (now sitting at the highest z-index under the finger) instead
-      // of the clan zone underneath, so drops never registered.
-      if (state.el) {
-        state.el.style.zIndex = "50";
-        state.el.style.transition = "none";
-        state.el.style.pointerEvents = "none";
-      }
-
+      // No CSS transform or pointer-events tricks needed here —
+      // the card stays visually in the pool list at reduced opacity
+      // (via isDragging) while clan zones highlight as the finger
+      // crosses over them. This eliminates the transform/pointer-events
+      // conflict that caused snap-back and delayed visual updates.
       const moveListener = (moveEvent) => {
         if (moveEvent.cancelable) moveEvent.preventDefault();
         const t = moveEvent.touches[0];
         if (!t) return;
-
-        if (state.el) {
-          const dx = t.clientX - state.startX;
-          const dy = t.clientY - state.startY;
-          state.el.style.transform = `translate(${dx}px, ${dy}px)`;
-        }
 
         const el = document.elementFromPoint(t.clientX, t.clientY);
         const zone = el?.closest("[data-clan-zone]");
@@ -484,33 +459,69 @@ export default function AdminPoolPage() {
       };
 
       const finish = async (endEvent) => {
-        // Detect the drop target BEFORE cleanup — cleanup restores
-        // pointer-events which would make elementFromPoint find the
-        // dragged card itself again if it ran first.
         const touch2 = endEvent.changedTouches?.[0];
         const el = touch2 && document.elementFromPoint(touch2.clientX, touch2.clientY);
         const zone = el?.closest("[data-clan-zone]");
         const clan = zone?.getAttribute("data-clan-zone");
-
-        // Capture entry from ref BEFORE cleanup clears it — same
-        // staleness fix as the signup page's moveListener: onDrop reads
-        // 'dragging' from React state, but that's a stale closure value
-        // inside a setTimeout-created async callback, causing the
-        // '!dragging' guard to fire and silently cancel the assignment.
         const entryNow = state.entry;
 
         cleanupPlayerTouchListeners();
 
-        // Always clear visual drag state immediately, regardless of
-        // whether a valid drop target was found or the API call succeeds
-        // — this is what was causing the 'severely delayed snap-back',
-        // since setDragging(null) was previously tied to onDrop's return
-        // path which could be skipped by the stale-state guard.
+        // Clear drag visual state immediately — no snap-back.
         setDragging(null);
         setOverClan(null);
 
-        if (clan && entryNow && entryNow.assigned_clan !== clan) {
-          await doAssign(entryNow, clan);
+        if (!clan || !entryNow || entryNow.assigned_clan === clan) {
+          state.entry = null;
+          state.active = false;
+          return;
+        }
+
+        // Optimistic update: immediately move the card into the clan
+        // roster in local state, before the API call completes. If
+        // the save fails, revert to the previous entries state.
+        const previousEntries = await new Promise(resolve => {
+          setEntries(prev => {
+            resolve(prev);
+            return prev.map(e =>
+              e.player_tag === entryNow.player_tag
+                ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString() }
+                : e
+            );
+          });
+        });
+
+        try {
+          const res = await fetch("/api/admin/assign", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-officer-pin": pin,
+            },
+            body: JSON.stringify({
+              tag:        entryNow.player_tag,
+              playerName: entryNow.player_name,
+              clan,
+              townHall:   thLevels[entryNow.player_tag] || "",
+              season,
+            }),
+          });
+
+          if (!res.ok) {
+            // Revert the optimistic update
+            setEntries(previousEntries);
+            setAssignStatus(prev => ({
+              ...prev,
+              [entryNow.player_tag]: { ok: false, msg: "Assignment failed" },
+            }));
+          } else {
+            setAssignStatus(prev => ({
+              ...prev,
+              [entryNow.player_tag]: { ok: true, msg: `→ ${clan}` },
+            }));
+          }
+        } catch {
+          setEntries(previousEntries);
         }
 
         state.entry = null;

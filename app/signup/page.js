@@ -393,7 +393,7 @@ export default function SignupPage() {
   const touchStateRef = useRef({
     timer: null, startX: 0, startY: 0, tag: null, active: false,
     moveListener: null, endListener: null, cancelListener: null,
-    el: null,
+    snapshot: null, // pre-drag order snapshot for revert on API failure
   });
 
   function cleanupAccountTouchListeners() {
@@ -404,19 +404,6 @@ export default function SignupPage() {
     state.moveListener = null;
     state.endListener = null;
     state.cancelListener = null;
-
-    // Reset the visual transform applied during the drag — the
-    // element's actual position in the list is now handled by React
-    // re-rendering against the already-reordered myAccounts array; the
-    // transform was only ever a temporary overlay tracking the finger
-    // during the gesture itself, not a permanent positioning mechanism.
-    if (state.el) {
-      state.el.style.transform = "";
-      state.el.style.zIndex = "";
-      state.el.style.transition = "";
-      state.el.style.pointerEvents = "";
-      state.el = null;
-    }
   }
 
   function onAccountTouchStart(e, tag) {
@@ -428,44 +415,33 @@ export default function SignupPage() {
     state.startY = touch.clientY;
     state.tag = tag;
     state.active = false;
-    state.el = e.currentTarget;
 
     state.timer = setTimeout(() => {
       state.active = true;
+
+      // Snapshot the current order before any dragging begins — used
+      // to revert if the API save fails after the drop completes.
+      // Done here (inside the timer) rather than in onTouchStart, so
+      // the snapshot is taken at the moment the drag is confirmed, not
+      // before (which would be the same thing in practice, but makes
+      // the intent explicit: this is the "last known good" order).
+      setMyAccounts(prev => {
+        state.snapshot = [...prev];
+        return prev; // no change yet, just snapshot
+      });
+
       onAccountDragStart(tag);
 
-      // Visually lift the dragged card above its neighbors while held —
-      // desktop's native drag API shows a ghost image automatically;
-      // touch has no equivalent, so this is the explicit replacement.
-      //
-      // pointer-events: none is essential here, not optional polish:
-      // elementFromPoint(x, y) returns the TOPMOST element at that
-      // screen point, and the dragged card — now sitting at the
-      // finger's position with the highest z-index — was itself being
-      // returned on every touchmove, so the hit-test kept finding the
-      // dragged card instead of whatever it was actually hovering
-      // over. pointer-events: none makes elementFromPoint see straight
-      // through it to the real target underneath, while it stays
-      // fully visible and still visually follows the finger.
-      if (state.el) {
-        state.el.style.zIndex = "50";
-        state.el.style.transition = "none";
-        state.el.style.pointerEvents = "none";
-      }
-
-      // Drag confirmed — attach the real, non-passive touchmove handler
-      // now, scoped only to the lifetime of this one drag gesture.
+      // Drag confirmed — attach the real, non-passive touchmove handler.
+      // No CSS transform needed: the card stays in its list position
+      // (rendering at reduced opacity via isDragging) while other cards
+      // shift in real time as the finger crosses over them. This removes
+      // the visual alignment drift that came from the transform approach,
+      // and eliminates the need for pointer-events tricks entirely.
       const moveListener = (moveEvent) => {
         if (moveEvent.cancelable) moveEvent.preventDefault();
         const t = moveEvent.touches[0];
         if (!t) return;
-
-        // Make the dragged card itself follow the finger.
-        if (state.el) {
-          const dx = t.clientX - state.startX;
-          const dy = t.clientY - state.startY;
-          state.el.style.transform = `translate(${dx}px, ${dy}px)`;
-        }
 
         const el = document.elementFromPoint(t.clientX, t.clientY);
         const row = el?.closest("[data-account-tag]");
@@ -474,14 +450,6 @@ export default function SignupPage() {
         const overTag = row.getAttribute("data-account-tag");
         if (!overTag) return;
 
-        // NOTE: calling onAccountDragOver here would cause a stale
-        // closure bug — that function reads 'draggingTag' from React
-        // state, but inside a setTimeout-created closure the setState
-        // called moments earlier (setDraggingTag) hasn't propagated
-        // yet, so 'draggingTag' appears null and the reorder guard
-        // '!draggingTag' returns early every time, preventing other
-        // cards from shifting. Instead, read the tag directly from
-        // the ref (always synchronously current) and inline the reorder.
         const draggingTagNow = state.tag;
         if (!draggingTagNow || overTag === draggingTagNow) return;
 
@@ -498,11 +466,35 @@ export default function SignupPage() {
         });
       };
 
-      const finish = () => {
+      const finish = async () => {
         cleanupAccountTouchListeners();
-        onAccountDrop();
+        setDraggingTag(null);
+        setDragOverTag(null);
+
+        // The list is already showing the correct final order
+        // optimistically (real-time shifts happened during the drag).
+        // Read the current order from state via a functional update
+        // (avoids stale closure), persist it, and revert to the
+        // pre-drag snapshot if the API save fails for any reason.
+        let currentOrder = null;
+        setMyAccounts(prev => { currentOrder = prev.map(a => a.tag); return prev; });
+
+        try {
+          const res = await fetch("/api/accounts/reorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderedTags: currentOrder }),
+          });
+          if (!res.ok && state.snapshot) {
+            setMyAccounts(state.snapshot);
+          }
+        } catch {
+          if (state.snapshot) setMyAccounts(state.snapshot);
+        }
+
         state.tag = null;
         state.active = false;
+        state.snapshot = null;
       };
 
       state.moveListener = moveListener;
