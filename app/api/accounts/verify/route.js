@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyPlayerToken, getPlayer } from "@/lib/coc";
-import { upsertAccount, joinPool } from "@/lib/pool";
+import { upsertAccount, joinPool, linkDiscordId } from "@/lib/pool";
 import { getOrCreateOwnerSecret, setOwnerCookie } from "@/lib/ownerCookie";
 import { getOpenPoolSeason } from "@/lib/season";
+import { auth } from "@/auth";
 
 // Registers a CoC account and immediately joins it to the currently open
 // pool season — deliberately paired so the first thing a person does is
@@ -80,13 +81,23 @@ export async function POST(request) {
 
   const ownerSecret = await getOrCreateOwnerSecret();
 
-  // player.townHallLevel is already in the getPlayer() response we just
-  // received — storing it here costs nothing extra (no second API call)
-  // and makes it available as a durable Neon truth source for every
-  // subsequent read (admin pool, signup page TH icons, sorting) without
-  // needing another CoC API round-trip later. Item 15.
+  // Store TH at registration time — player.townHallLevel is already in
+  // the getPlayer() response, costs nothing extra to store (item 15).
   await upsertAccount(normalizedTag, player.name, ownerSecret, player.townHallLevel ?? null);
   await joinPool(normalizedTag, season);
+
+  // If the player is signed in with Discord, immediately link their
+  // Discord ID to this account — so it's durable from the first
+  // registration, not requiring a separate link step (item 17).
+  try {
+    const session = await auth();
+    if (session?.user?.discordId) {
+      await linkDiscordId(ownerSecret, session.user.discordId);
+    }
+  } catch {
+    // non-fatal — account is registered, Discord link can be done
+    // via the link-discord route if this step fails
+  }
 
   const response = NextResponse.json({
     tag: normalizedTag,
