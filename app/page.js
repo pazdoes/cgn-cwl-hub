@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getLeagueStyles } from "../lib/leagueColors";
 import { CWL_ICONS, TH_ICONS } from "../lib/icons";
 import { BRANDING } from "../lib/branding";
+import DiscordWidget from "./components/DiscordWidget";
 
 // CWL_ICONS' key order already encodes the correct league hierarchy
 // (Champion I/II/III highest, down to Bronze I/II/III lowest) — reusing
@@ -750,6 +751,11 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   />
 
 </div>
+
+  {/* Discord widget — centred, static, above header card */}
+  <div className="relative z-10 flex justify-center mb-4">
+    <DiscordWidget variant="center" />
+  </div>
 
     <motion.div
   initial={{ opacity: 0, y: 15 }}

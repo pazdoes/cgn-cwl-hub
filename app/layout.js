@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
-import DiscordWidget from "./components/DiscordWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +26,6 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <SessionProvider>
-          {/* Discord identity widget — fixed top-right, visible on every
-              page. Shows "Discord" button when signed out, avatar +
-              username + sign-out when signed in. */}
-          <DiscordWidget />
           {children}
         </SessionProvider>
       </body>

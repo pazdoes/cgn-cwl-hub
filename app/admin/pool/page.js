@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BRANDING } from "../../../lib/branding";
 import { TH_ICONS, CWL_ICONS } from "../../../lib/icons";
+import DiscordWidget from "../../components/DiscordWidget";
 
 /* ─── skeleton loading placeholder ───────────────────────────
    Same treatment as the homepage and signup page — a pulsing
@@ -1100,6 +1101,11 @@ export default function AdminPoolPage() {
           </svg>
           Refresh
         </button>
+      </div>
+
+      {/* Discord widget — centred, static, above Pool Manager card */}
+      <div className="relative z-10 flex justify-center mb-4">
+        <DiscordWidget variant="center" />
       </div>
 
       {/* title + season */}
