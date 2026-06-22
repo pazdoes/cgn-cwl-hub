@@ -18,17 +18,6 @@ function rankSortIndex(rank) {
   return idx === -1 ? CWL_RANK_ORDER.length : idx;
 }
 
-/* ─── skeleton loading placeholder ───────────────────────────
-   Reused across the homepage, signup page, and admin pool page so
-   loading states share one consistent visual treatment — a pulsing
-   translucent block shaped like the content it's standing in for,
-   rather than a flash of "0" or plain "Loading…" text. */
-function Skeleton({ className = "" }) {
-  return (
-    <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />
-  );
-}
-
 /* ─── stat tile click-through views ──────────────────────── */
 
 // Read-only roster list, same player set already counted on the Players
@@ -69,7 +58,9 @@ function PlayersView({ players, onBack }) {
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
         <div className="space-y-2">
-          {players.map(player => (
+          {[...players]
+            .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
+            .map(player => (
             <div
               key={`${player.clan}-${player.account}-${player.position}`}
               className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5"
@@ -171,7 +162,9 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
               <p className="text-xs text-slate-500 mb-4">{format} · {rank}</p>
 
               <div className="space-y-1.5">
-                {clanPlayers.map(player => (
+                {[...clanPlayers]
+                  .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
+                  .map(player => (
                   <div
                     key={`${player.clan}-${player.account}-${player.position}`}
                     className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
@@ -326,13 +319,11 @@ export default function Home() {
 const [selectedClan, setSelectedClan] = useState(null);
 const [search, setSearch] = useState("");
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
-const [loadingRoster, setLoadingRoster] = useState(true);
 
   useEffect(() => {
     fetch("/api/roster")
       .then(res => res.json())
-      .then(data => setPlayers(data))
-      .finally(() => setLoadingRoster(false));
+      .then(data => setPlayers(data));
   }, []);
 
   useEffect(() => {
@@ -495,7 +486,9 @@ const [loadingRoster, setLoadingRoster] = useState(true);
 
       <div className="space-y-3">
 
-        {clanPlayers.map(player => (
+        {[...clanPlayers]
+          .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
+          .map(player => (
 
           <motion.div
   key={`${player.clan}-${player.account}-${player.position}`}
@@ -701,7 +694,7 @@ const [loadingRoster, setLoadingRoster] = useState(true);
     <div className="grid grid-cols-3 gap-3 mb-8 relative z-10">
 
   <div
-    onClick={() => !loadingRoster && setStatView("players")}
+    onClick={() => setStatView("players")}
     className="
   rounded-3xl
   border
@@ -720,25 +713,17 @@ const [loadingRoster, setLoadingRoster] = useState(true);
   hover:border-white/20
   transition
 ">
-    {loadingRoster ? (
-      <>
-        <Skeleton className="w-10 h-7 mb-2" />
-        <Skeleton className="w-14 h-3" />
-      </>
-    ) : (
-      <>
-        <div className="text-2xl md:text-3xl font-bold">
-          {players.length}
-        </div>
-        <div className="text-slate-400">
-          Players
-        </div>
-      </>
-    )}
+    <div className="text-2xl md:text-3xl font-bold">
+      {players.length}
+    </div>
+
+    <div className="text-slate-400">
+      Players
+    </div>
   </div>
 
   <div
-    onClick={() => !loadingRoster && setStatView("clans")}
+    onClick={() => setStatView("clans")}
     className="
     rounded-3xl
     border
@@ -756,25 +741,17 @@ const [loadingRoster, setLoadingRoster] = useState(true);
     hover:border-white/20
     transition
   ">
-    {loadingRoster ? (
-      <>
-        <Skeleton className="w-10 h-7 mb-2" />
-        <Skeleton className="w-12 h-3" />
-      </>
-    ) : (
-      <>
-        <div className="text-2xl md:text-3xl font-bold">
-          {clans.length}
-        </div>
-        <div className="text-slate-400">
-          Clans
-        </div>
-      </>
-    )}
+    <div className="text-2xl md:text-3xl font-bold">
+      {clans.length}
+    </div>
+
+    <div className="text-slate-400">
+      Clans
+    </div>
   </div>
 
   <div
-    onClick={() => !loadingRoster && setStatView("avgth")}
+    onClick={() => setStatView("avgth")}
     className="
     rounded-3xl
     border
@@ -792,30 +769,22 @@ const [loadingRoster, setLoadingRoster] = useState(true);
     hover:border-white/20
     transition
   ">
-    {loadingRoster ? (
-      <>
-        <Skeleton className="w-10 h-7 mb-2" />
-        <Skeleton className="w-14 h-3" />
-      </>
-    ) : (
-      <>
-        <div className="text-2xl md:text-3xl font-bold">
-          {
-            players.length
-              ? (
-                  players.reduce(
-                    (sum, p) => sum + Number(p.townHall || 0),
-                    0
-                  ) / players.length
-                ).toFixed(1)
-              : "-"
-          }
-        </div>
-        <div className="text-slate-400">
-          Avg TH
-        </div>
-      </>
-    )}
+    <div className="text-2xl md:text-3xl font-bold">
+      {
+        players.length
+          ? (
+              players.reduce(
+                (sum, p) => sum + Number(p.townHall || 0),
+                0
+              ) / players.length
+            ).toFixed(1)
+          : "-"
+      }
+    </div>
+
+    <div className="text-slate-400">
+      Avg TH
+    </div>
   </div>
 
 </div>
@@ -847,15 +816,7 @@ const [loadingRoster, setLoadingRoster] = useState(true);
 
 </div>
 
-    {loadingRoster ? (
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="min-h-[280px] w-full rounded-3xl" />
-        ))}
-      </div>
-
-    ) : search ? (
+    {search ? (
 
       <div className="space-y-4 mt-2">
 

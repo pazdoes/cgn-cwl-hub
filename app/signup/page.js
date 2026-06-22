@@ -89,11 +89,8 @@ export default function SignupPage() {
   const [season, setSeason]         = useState(null);
   const [myAccounts, setMyAccounts] = useState([]);   // quick-pick list from cookie
   const [loadingMine, setLoadingMine] = useState(true);
-  const [thLevels, setThLevels] = useState({}); // { [tag]: number }
 
-  // manual drag-and-drop reordering (item 13) — purely client-side
-  // during the drag itself; the new order is only persisted to Neon
-  // once the drop completes, via /api/accounts/reorder
+  // manual drag-and-drop reordering (item 13)
   const [draggingTag, setDraggingTag] = useState(null);
   const [dragOverTag, setDragOverTag] = useState(null);
 
@@ -107,46 +104,34 @@ export default function SignupPage() {
   const [joiningTag, setJoiningTag]   = useState(null);
   const [joinResult, setJoinResult]   = useState({}); // { [tag]: {ok, message} }
 
-  // leave the pool entirely (item 5 — distinct from admin unassign)
+  // leave the pool entirely (item 5)
   const [leavingTag, setLeavingTag]   = useState(null);
   const [leaveError, setLeaveError]   = useState({}); // { [tag]: message }
 
-  // Manage panel — remove an account from this device entirely (item 9,
-  // distinct from the per-account X above, which only leaves the pool).
-  // Also now hosts the Add Account form as a second tab (item 9 follow-up
-  // — consolidating what was previously a separate, always-visible
-  // "Add a New Account" card into this single panel).
+  // Manage panel (item 9)
   const [manageOpen,        setManageOpen]        = useState(false);
   const [manageTab,         setManageTab]         = useState("add"); // "add" | "remove"
   const [manageTag,         setManageTag]         = useState("");
   const [manageSubmitting,  setManageSubmitting]  = useState(false);
   const [manageResult,      setManageResult]      = useState(null); // {ok, message}
 
-  /* --- fetch TH levels for a set of tags, merging into existing state --- */
-  async function loadThLevels(tags) {
-    if (!tags || tags.length === 0) return;
-    try {
-      const res = await fetch("/api/admin/th-levels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tags }),
-      });
-      const data = await res.json();
-      setThLevels(prev => ({ ...prev, ...(data.thLevels || {}) }));
-    } catch {
-      // non-fatal — pills just render without a TH icon if this fails
-    }
-  }
+  // TH refresh button (item 15) — fetches fresh TH from CoC for all
+  // linked accounts and updates Neon, so the stored TH reflects any
+  // upgrades since the account was first registered.
+  const [thRefreshing, setThRefreshing] = useState(false);
+  const [thRefreshResult, setThRefreshResult] = useState(null); // {ok, message}
 
   /* --- load owned accounts on mount --- */
+  // TH level now comes from Neon (accounts.town_hall_level, item 15)
+  // via the /api/accounts/mine response — no separate CoC API call
+  // needed. accounts/mine already includes townHallLevel in each entry.
+  // myAccounts entries now carry { tag, name, inCurrentPool, townHallLevel }.
   useEffect(() => {
     fetch("/api/accounts/mine")
       .then(r => r.json())
       .then(data => {
-        const accounts = data.accounts || [];
-        setMyAccounts(accounts);
+        setMyAccounts(data.accounts || []);
         setSeason(data.season || null);
-        loadThLevels(accounts.map(a => a.tag));
       })
       .catch(() => {})
       .finally(() => setLoadingMine(false));
@@ -171,11 +156,11 @@ export default function SignupPage() {
 
       if (res.ok) {
         setVerifyStatus({ ok: true, message: `${data.name} (${data.tag}) signed up for ${data.season}.` });
-        // refresh quick-pick list
+        // refresh quick-pick list — TH level is now included in the
+        // accounts/mine response from Neon, no separate CoC API call needed
         const mine = await fetch("/api/accounts/mine").then(r => r.json());
         setMyAccounts(mine.accounts || []);
         setSeason(mine.season || season);
-        loadThLevels((mine.accounts || []).map(a => a.tag));
         setTag("");
         setToken("");
       } else {
@@ -254,6 +239,30 @@ export default function SignupPage() {
       setLeaveError(prev => ({ ...prev, [accountTag]: "Network error — please try again." }));
     } finally {
       setLeavingTag(null);
+    }
+  }
+
+  /* --- TH refresh (item 15) — fetch fresh TH for all linked accounts --- */
+  async function handleThRefresh() {
+    setThRefreshing(true);
+    setThRefreshResult(null);
+    try {
+      const res = await fetch("/api/accounts/refresh-th", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        // Re-fetch accounts/mine so the updated TH levels are reflected
+        // immediately in the displayed icons without a page reload.
+        const mine = await fetch("/api/accounts/mine").then(r => r.json());
+        setMyAccounts(mine.accounts || []);
+        const count = Object.keys(data.updated || {}).length;
+        setThRefreshResult({ ok: true, message: `Updated ${count} account${count !== 1 ? "s" : ""}` });
+      } else {
+        setThRefreshResult({ ok: false, message: data.error || "Refresh failed" });
+      }
+    } catch {
+      setThRefreshResult({ ok: false, message: "Network error" });
+    } finally {
+      setThRefreshing(false);
     }
   }
 
@@ -590,19 +599,45 @@ export default function SignupPage() {
           <div className="flex items-start justify-between gap-3 mb-1">
             <h2 className="text-lg font-semibold">Your Accounts</h2>
             {myAccounts.length > 0 && (
-              <button
-                type="button"
-                onClick={() => toggleManage(manageTab)}
-                className={`
-                  shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition
-                  ${manageOpen
-                    ? "bg-slate-500/30 text-white border-slate-500/40"
-                    : "bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30 hover:text-white"
-                  }
-                `}
-              >
-                Manage
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {/* TH refresh — same circular style as the clan card
+                    rank-refresh button; only shown once at least one
+                    account is linked, since there's nothing to refresh
+                    before then. */}
+                <button
+                  type="button"
+                  onClick={handleThRefresh}
+                  disabled={thRefreshing}
+                  title={thRefreshResult
+                    ? (thRefreshResult.ok ? `Updated: ${thRefreshResult.message}` : thRefreshResult.message)
+                    : "Refresh Town Hall levels from game"}
+                  className={`
+                    w-6 h-6 rounded-full flex items-center justify-center
+                    border transition disabled:opacity-50
+                    ${thRefreshResult?.ok === false
+                      ? "bg-red-500/10 border-red-500/30 text-red-300"
+                      : "bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.08] hover:text-slate-200"
+                    }
+                  `}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${thRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleManage(manageTab)}
+                  className={`
+                    shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition
+                    ${manageOpen
+                      ? "bg-slate-500/30 text-white border-slate-500/40"
+                      : "bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30 hover:text-white"
+                    }
+                  `}
+                >
+                  Manage
+                </button>
+              </div>
             )}
           </div>
           <p className="text-slate-500 text-xs mb-4">
@@ -853,7 +888,7 @@ export default function SignupPage() {
 
                     {/* account info */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <ThIcon level={thLevels[acct.tag]} />
+                      <ThIcon level={acct.townHallLevel} />
                       <div className="flex flex-col min-w-0">
                         <span className="font-semibold text-white truncate">{acct.name}</span>
                         <span className="text-xs text-slate-500 font-mono">{acct.tag}</span>

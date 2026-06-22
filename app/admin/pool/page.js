@@ -274,10 +274,13 @@ export default function AdminPoolPage() {
   const [season,  setSeason]  = useState(null);
   const [entries, setEntries] = useState([]);
   const [clans,   setClans]   = useState([]);
-  const [thLevels, setThLevels] = useState({}); // { [player_tag]: number }
   const [clanFormats, setClanFormats] = useState({}); // { [clan]: 15 | 30 }
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
+
+  // TH refresh button (item 15)
+  const [thRefreshing, setThRefreshing] = useState(false);
+  const [thRefreshResult, setThRefreshResult] = useState(null); // {ok, message}
 
   /* --- drag state (vanilla HTML5 DnD — no extra lib needed) --- */
   const [dragging,  setDragging]  = useState(null); // entry object
@@ -292,32 +295,30 @@ export default function AdminPoolPage() {
   const [assigning,    setAssigning]    = useState(null);
 
   /* --- item 5: unassign / status / format feedback --- */
-  const [unassigning,  setUnassigning]  = useState(null); // tag currently being unassigned
-  const [statusBusy,   setStatusBusy]   = useState(null); // tag currently toggling status
-  const [statusError,  setStatusError]  = useState({});   // { [tag]: message }
-  const [formatBusy,   setFormatBusy]   = useState(null); // clan currently toggling format
-  const [formatError,  setFormatError]  = useState({});   // { [clan]: message }
+  const [unassigning,  setUnassigning]  = useState(null);
+  const [statusBusy,   setStatusBusy]   = useState(null);
+  const [statusError,  setStatusError]  = useState({});
+  const [formatBusy,   setFormatBusy]   = useState(null);
+  const [formatError,  setFormatError]  = useState({});
 
   /* --- item 6: CWL Rank refresh feedback --- */
-  const [rankBusy,  setRankBusy]  = useState(null); // clan currently refreshing rank
-  const [rankResult, setRankResult] = useState({});  // { [clan]: {ok, message} }
+  const [rankBusy,  setRankBusy]  = useState(null);
+  const [rankResult, setRankResult] = useState({});
 
   /* --- item 7: Add / Delete Clan forms (mutually exclusive) --- */
-  const [activeClanForm, setActiveClanForm] = useState(null); // null | "add" | "delete"
+  const [activeClanForm, setActiveClanForm] = useState(null);
 
-  // Add Clan form fields
   const [addClanTag,  setAddClanTag]  = useState("");
   const [addClanLink, setAddClanLink] = useState("");
   const [addClanRank, setAddClanRank] = useState("");
   const [addClanSuggestedName, setAddClanSuggestedName] = useState(null);
   const [addClanLookupBusy, setAddClanLookupBusy] = useState(false);
   const [addClanSubmitting, setAddClanSubmitting] = useState(false);
-  const [addClanResult, setAddClanResult] = useState(null); // {ok, message}
+  const [addClanResult, setAddClanResult] = useState(null);
 
-  // Delete Clan form fields
   const [deleteClanTag, setDeleteClanTag] = useState("");
   const [deleteClanSubmitting, setDeleteClanSubmitting] = useState(false);
-  const [deleteClanResult, setDeleteClanResult] = useState(null); // {ok, message}
+  const [deleteClanResult, setDeleteClanResult] = useState(null);
 
   /* --- load pool data --- */
   async function loadPool(savedPin) {
@@ -332,30 +333,12 @@ export default function AdminPoolPage() {
       setSeason(data.season);
       setEntries(data.entries || []);
       setClanFormats(data.clanFormats || {});
-      // Clan list now comes directly from Neon's clans table (item 7),
-      // not inferred from non-empty Sheet rows via /api/roster — that
-      // inference approach made any clan with zero assigned players
-      // invisible here, including a brand-new clan just added via Add
-      // Clan. clanNames is authoritative: every registered clan appears
-      // regardless of roster size.
+      // TH level now comes from Neon (accounts.town_hall_level, item 15)
+      // via getPoolEntries JOIN — no separate batch CoC API call needed.
+      // entries[*].town_hall_level is the truth source for TH icons
+      // and sorting. Admins can click the pool-tile refresh button to
+      // batch-update TH for all pool players from CoC when needed.
       setClans(data.clanNames || []);
-
-      // fetch TH levels for every player currently in the pool, in one
-      // batched call rather than one CoC request per pill
-      const tags = (data.entries || []).map(e => e.player_tag);
-      if (tags.length > 0) {
-        try {
-          const thRes = await fetch("/api/admin/th-levels", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tags }),
-          });
-          const thData = await thRes.json();
-          setThLevels(thData.thLevels || {});
-        } catch {
-          // non-fatal — pills just render without a TH icon if this fails
-        }
-      }
     } catch {
       setError("Couldn't load pool data — check your connection.");
     } finally {
@@ -506,7 +489,7 @@ export default function AdminPoolPage() {
               tag:        entryNow.player_tag,
               playerName: entryNow.player_name,
               clan,
-              townHall:   thLevels[entryNow.player_tag] || "",
+              townHall:   entryNow.town_hall_level || "",
               season,
             }),
           });
@@ -754,13 +737,9 @@ export default function AdminPoolPage() {
           tag:        entry.player_tag,
           playerName: entry.player_name,
           clan,
-          // assignPlayerToRoster has always accepted townHall and would
-          // write it correctly — the gap was purely that nothing on this
-          // page ever sent it, leaving the Sheet's Town Hall column
-          // permanently blank on every assignment. thLevels is already
-          // fetched on page load for the TH icon (item 4); reusing it
-          // here closes that gap with no new CoC API calls needed.
-          townHall:   thLevels[entry.player_tag] || "",
+          // townHall now comes from Neon (accounts.town_hall_level, item 15)
+          // rather than thLevels state fetched via CoC API on page load.
+          townHall:   entry.town_hall_level || "",
           season,
         }),
       });
@@ -868,6 +847,30 @@ export default function AdminPoolPage() {
       setFormatError(prev => ({ ...prev, [clan]: "Network error" }));
     } finally {
       setFormatBusy(null);
+    }
+  }
+
+  /* --- item 15: batch TH refresh for all pool players --- */
+  async function doRefreshThLevels() {
+    setThRefreshing(true);
+    setThRefreshResult(null);
+    try {
+      const res = await fetch("/api/admin/pool/refresh-th", {
+        method: "POST",
+        headers: { "x-officer-pin": pin },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Re-load the pool so updated TH levels are reflected in entries
+        await loadPool(pin);
+        setThRefreshResult({ ok: true, message: `Updated ${data.count ?? 0} player${data.count !== 1 ? "s" : ""}` });
+      } else {
+        setThRefreshResult({ ok: false, message: data.error || "Refresh failed" });
+      }
+    } catch {
+      setThRefreshResult({ ok: false, message: "Network error" });
+    } finally {
+      setThRefreshing(false);
     }
   }
 
@@ -995,7 +998,9 @@ export default function AdminPoolPage() {
   }
 
   /* --- derived lists --- */
-  const unassigned = entries.filter(e => !e.assigned_clan);
+  const unassigned = entries
+    .filter(e => !e.assigned_clan)
+    .sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned   = entries.filter(e =>  e.assigned_clan);
 
   /* ─── PIN gate ───────────────────────────────────────── */
@@ -1100,7 +1105,18 @@ export default function AdminPoolPage() {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 mb-6"
       >
-        <Card className="text-center py-5">
+        <Card className="text-center py-5 relative">
+          {/* TH refresh — top right corner, same circular style as the
+              per-clan rank-refresh button; batch-updates TH for all pool
+              players from CoC API and writes to Neon truth source. */}
+          <div className="absolute top-4 right-4">
+            <RankRefreshButton
+              busy={thRefreshing}
+              result={thRefreshResult}
+              onClick={doRefreshThLevels}
+            />
+          </div>
+
           <h1 className="text-2xl font-bold">Pool Manager</h1>
           {season ? (
             <p className="text-slate-400 text-sm mt-1">
@@ -1417,7 +1433,7 @@ export default function AdminPoolPage() {
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <ThIcon level={thLevels[entry.player_tag]} />
+                            <ThIcon level={entry.town_hall_level} />
                             <div className="min-w-0">
                               <p className="font-semibold text-sm text-white truncate">{entry.player_name}</p>
                               <p className="text-xs text-slate-500 font-mono mt-0.5">{entry.player_tag}</p>
@@ -1450,7 +1466,9 @@ export default function AdminPoolPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {clans.map(clan => {
-                const clanEntries = assigned.filter(e => e.assigned_clan === clan);
+                const clanEntries = assigned
+                  .filter(e => e.assigned_clan === clan)
+                  .sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
                 const isOver = overClan === clan;
                 const isClanDragging = draggingClan === clan;
                 const isClanOver = overClanTile === clan && draggingClan !== clan;
@@ -1536,7 +1554,7 @@ export default function AdminPoolPage() {
                           </div>
                           <div className="flex items-center justify-between gap-2 pr-6">
                             <div className="flex items-center gap-2 min-w-0">
-                              <ThIcon level={thLevels[e.player_tag]} size="w-6 h-6" />
+                              <ThIcon level={e.town_hall_level} size="w-6 h-6" />
                               <div className="min-w-0">
                                 <p className="text-xs font-medium text-white truncate">{e.player_name}</p>
                                 <p className="text-[10px] text-slate-600 font-mono">{e.player_tag}</p>
@@ -1569,7 +1587,7 @@ export default function AdminPoolPage() {
                   {assigned.map(e => (
                     <div key={e.player_tag} className="flex items-center justify-between gap-3 py-1">
                       <div className="flex items-center gap-2 min-w-0">
-                        <ThIcon level={thLevels[e.player_tag]} size="w-6 h-6" />
+                        <ThIcon level={e.town_hall_level} size="w-6 h-6" />
                         <div className="min-w-0">
                           <span className="text-sm font-medium text-white">{e.player_name}</span>
                           <span className="text-xs text-slate-600 font-mono ml-2">{e.player_tag}</span>

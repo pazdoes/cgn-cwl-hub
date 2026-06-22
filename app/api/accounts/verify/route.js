@@ -80,7 +80,12 @@ export async function POST(request) {
 
   const ownerSecret = await getOrCreateOwnerSecret();
 
-  await upsertAccount(normalizedTag, player.name, ownerSecret);
+  // player.townHallLevel is already in the getPlayer() response we just
+  // received — storing it here costs nothing extra (no second API call)
+  // and makes it available as a durable Neon truth source for every
+  // subsequent read (admin pool, signup page TH icons, sorting) without
+  // needing another CoC API round-trip later. Item 15.
+  await upsertAccount(normalizedTag, player.name, ownerSecret, player.townHallLevel ?? null);
   await joinPool(normalizedTag, season);
 
   const response = NextResponse.json({
