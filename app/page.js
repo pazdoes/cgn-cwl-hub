@@ -437,6 +437,7 @@ export default function Home() {
 const [selectedClan, setSelectedClan] = useState(null);
 const [search, setSearch] = useState("");
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
+const [highlightedAccount, setHighlightedAccount] = useState(null); // tag of account clicked from search
 
   useEffect(() => {
     fetch("/api/roster")
@@ -453,9 +454,11 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     if (hash === "players" || hash === "clans" || hash === "avgth") {
       setStatView(hash);
       setSelectedClan(null);
+      setHighlightedAccount(null);
     } else {
       setStatView(null);
       setSelectedClan(hash || null);
+      if (!hash) setHighlightedAccount(null);
     }
   };
 
@@ -540,6 +543,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     onClick={() => {
       window.history.pushState({}, "", window.location.pathname);
       setSelectedClan(null);
+      setHighlightedAccount(null);
     }}
     className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
   >
@@ -613,19 +617,14 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
   initial={{ opacity: 0, y: 10 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.2 }}
-  className="
-    rounded-2xl
-    border
-    border-white/10
-    bg-white/[0.04]
-    backdrop-blur-xl
-    p-4
-    shadow-lg
-    transition
-    hover:border-white/20
-    hover:bg-white/[0.06]
+  className={`
+    rounded-2xl border backdrop-blur-xl p-4 shadow-lg transition
     hover:scale-[1.01]
-  "
+    ${highlightedAccount && player.playerTag === highlightedAccount
+      ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-500/50"
+      : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"
+    }
+  `}
 >
 
             <div className="flex items-center w-full justify-between min-w-0 gap-3">
@@ -965,6 +964,7 @@ const [statView, setStatView] = useState(null); // null | "players" | "clans" | 
     key={`${player.clan}-${player.account}-${player.position}`}
     onClick={() => {
   window.history.pushState({}, "", `#${player.clan}`);
+  setHighlightedAccount(player.playerTag);
   setSelectedClan(player.clan);
 }}
     className="
