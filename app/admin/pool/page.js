@@ -1190,6 +1190,7 @@ export default function AdminPoolPage() {
             Refresh
           </button>
         </div>
+      </div>
 
       {/* title + season */}
       <motion.div
