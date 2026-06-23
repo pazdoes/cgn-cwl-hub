@@ -18,9 +18,38 @@ export async function POST(request) {
   const season = await getOpenPoolSeason();
   const normalizedTag = tag.trim().startsWith("#") ? tag.trim() : `#${tag.trim()}`;
 
-  let isValid;
+  // Token is optional — if provided, verify it against the CoC API.
+  // If omitted, skip verification and just look up the player by tag.
+  if (token) {
+    let isValid;
+    try {
+      isValid = await verifyPlayerToken(normalizedTag, token);
+    } catch (err) {
+      if (err.status === 404) {
+        return NextResponse.json(
+          { error: "No account found with that tag — double check it's correct." },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(
+        { error: "Couldn't reach Clash of Clans right now — try again in a moment." },
+        { status: 502 }
+      );
+    }
+    if (!isValid) {
+      return NextResponse.json(
+        {
+          error:
+            "That token doesn't match this account. Generate a fresh one in-game under Settings > API Token and try again.",
+        },
+        { status: 401 }
+      );
+    }
+  }
+
+  let player;
   try {
-    isValid = await verifyPlayerToken(normalizedTag, token);
+    player = await getPlayer(normalizedTag);
   } catch (err) {
     if (err.status === 404) {
       return NextResponse.json(
@@ -33,18 +62,6 @@ export async function POST(request) {
       { status: 502 }
     );
   }
-
-  if (!isValid) {
-    return NextResponse.json(
-      {
-        error:
-          "That token doesn't match this account. Generate a fresh one in-game under Settings > API Token and try again.",
-      },
-      { status: 401 }
-    );
-  }
-
-  const player = await getPlayer(normalizedTag);
   const ownerSecret = await getOrCreateOwnerSecret();
 
   await upsertAccount(normalizedTag, player.name, ownerSecret);
