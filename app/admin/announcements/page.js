@@ -144,18 +144,18 @@ function EmbedPreview({ embed, username, avatarUrl }) {
 
 /* ─── default state ───────────────────────────────────────── */
 const DEFAULT_SENDER_NAME = "Cognition {CGN}";
-const DEFAULT_AVATAR = "/cgn-skull.png";
+const DEFAULT_AVATAR = "https://cgnco.vercel.app/cgn-skull.png";
 
 const DEFAULT_EMBED = {
   color: hexToInt("#a78bfa"),
-  author: { name: "Cognition {CGN}", icon_url: "" },
+  author: { name: "", icon_url: "" },
   title: "",
   url: "",
   description: "",
   fields: [],
   thumbnail: { url: "" },
   image: { url: "" },
-  footer: { text: "Cognition Collective", icon_url: "" },
+  footer: { text: "", icon_url: "" },
   timestamp: null,
   _button: { label: "", url: "" },
 };
@@ -772,15 +772,17 @@ export default function AnnouncementsPage() {
 
           <Card>
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <button onClick={() => setScheduleMode(false)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${!scheduleMode ? "bg-[#5865f2]/30 text-[#7289da] border-[#5865f2]/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06]"}`}>
-                  Post now
-                </button>
-                <button onClick={() => setScheduleMode(true)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${scheduleMode ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06]"}`}>
-                  Schedule
-                </button>
+              <div className="flex justify-center">
+                <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
+                  <button onClick={() => setScheduleMode(false)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${!scheduleMode ? "bg-[#5865f2]/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
+                    Post now
+                  </button>
+                  <button onClick={() => setScheduleMode(true)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${scheduleMode ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
+                    Schedule
+                  </button>
+                </div>
               </div>
               {scheduleMode && (
                 <div>

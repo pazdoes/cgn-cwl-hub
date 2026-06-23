@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPendingScheduled, markScheduledSent, logAnnouncement } from "@/lib/pool";
 
-// This route is called every minute by Vercel's cron scheduler.
-// It finds all scheduled_announcements where send_at <= now() and sent = false,
-// fires each to its Discord webhook, then marks it sent.
-// Protected by CRON_SECRET so only Vercel's scheduler can trigger it.
-
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -13,10 +8,7 @@ export async function GET(request) {
   }
 
   const pending = await getPendingScheduled();
-
-  if (pending.length === 0) {
-    return NextResponse.json({ fired: 0 });
-  }
+  if (pending.length === 0) return NextResponse.json({ fired: 0 });
 
   let fired = 0;
   const errors = [];
@@ -27,7 +19,6 @@ export async function GET(request) {
         ? JSON.parse(item.embed_json)
         : item.embed_json;
 
-      // Extract button from embed if present — send as Components V2
       const { _button, ...cleanEmbed } = embed;
 
       const payload = {
@@ -37,22 +28,16 @@ export async function GET(request) {
         ...(item.avatar_url && { avatar_url: item.avatar_url }),
       };
 
-      // Add link button as Components V2 if present
+      // Standard action row — no IS_COMPONENTS_V2 flag, compatible with embeds
       if (_button?.label && _button?.url) {
         payload.components = [
           {
             type: 1,
             components: [
-              {
-                type: 2,
-                style: 5,
-                label: _button.label,
-                url: _button.url,
-              },
+              { type: 2, style: 5, label: _button.label, url: _button.url },
             ],
           },
         ];
-        payload.flags = 32768; // IS_COMPONENTS_V2
       }
 
       const discordRes = await fetch(item.webhook_url, {
@@ -63,7 +48,7 @@ export async function GET(request) {
 
       if (discordRes.ok) {
         await markScheduledSent(item.id);
-        await logAnnouncement(item.webhook_id, item.title, embed, `scheduled`);
+        await logAnnouncement(item.webhook_id, item.title, embed, "scheduled");
         fired++;
       } else {
         const err = await discordRes.text();
