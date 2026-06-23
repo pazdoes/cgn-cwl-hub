@@ -11,8 +11,8 @@ import { getOpenPoolSeason } from "@/lib/season";
 export async function POST(request) {
   const { tag, token } = await request.json().catch(() => ({}));
 
-  if (!tag || !token) {
-    return NextResponse.json({ error: "Missing tag or token" }, { status: 400 });
+  if (!tag) {
+    return NextResponse.json({ error: "Missing tag" }, { status: 400 });
   }
 
   const season = await getOpenPoolSeason();
