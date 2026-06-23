@@ -358,7 +358,21 @@ export default function AnnouncementsPage() {
   const [saveTemplateResult, setSaveTemplateResult] = useState(null);
 
   const [tab, setTab] = useState("compose");
+  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+  const [templateEditMode, setTemplateEditMode] = useState(false);
+  const templateMenuRef = useRef(null);
   const descriptionRef = useRef(null);
+
+  // Close template dropdown on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (templateMenuRef.current && !templateMenuRef.current.contains(e.target)) {
+        setTemplateMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   useEffect(() => {
     if (!authed) return;
@@ -412,6 +426,18 @@ export default function AnnouncementsPage() {
     if (t.username) setUsername(t.username);
     if (t.avatar_url) setAvatarUrl(t.avatar_url);
     if (t.webhook_id) setSelectedWebhookId(t.webhook_id);
+    // Record usage — update use_count and last_used_at, then refresh local state
+    fetch("/api/admin/announcements/templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+      body: JSON.stringify({ action: "use", id: t.id }),
+    }).then(() => {
+      setTemplates(prev => prev.map(tmpl =>
+        tmpl.id === t.id
+          ? { ...tmpl, use_count: (tmpl.use_count || 0) + 1, last_used_at: new Date().toISOString() }
+          : tmpl
+      ));
+    }).catch(() => { /* non-fatal */ });
   }
 
   function buildPayload() {
@@ -650,31 +676,86 @@ export default function AnnouncementsPage() {
                 ))}
               </div>
             )}
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Quick templates</p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {[
-                { key: "season-open", label: "Season Open" },
-                { key: "rosters-final", label: "Rosters Finalised" },
-                { key: "season-closing", label: "Season Closing" },
-              ].map(t => (
-                <button key={t.key} onClick={() => applyTemplate(t.key)}
-                  className="px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08] hover:text-white transition">
-                  {t.label}
-                </button>
-              ))}
-            </div>
+
+            {/* Saved templates section */}
             {templates.length > 0 && (
-              <>
-                <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Saved templates</p>
-                <div className="flex flex-wrap gap-2">
-                  {templates.map(t => (
-                    <div key={t.id} className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5">
-                      <button onClick={() => applySavedTemplate(t)} className="text-xs text-slate-300 hover:text-white transition">{t.name}</button>
-                      <button onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 transition text-[10px] leading-none">✕</button>
-                    </div>
-                  ))}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-xs text-slate-400 uppercase tracking-widest">Saved templates</p>
+
+                  {/* Hamburger dropdown — all templates */}
+                  <div className="relative" ref={templateMenuRef}>
+                    <button onClick={() => setTemplateMenuOpen(v => !v)}
+                      className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    </button>
+                    <AnimatePresence>
+                      {templateMenuOpen && (
+                        <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
+                          className="absolute left-0 top-full mt-1 z-50 min-w-[180px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+                          <div className="p-1.5 space-y-0.5">
+                            {templates.map(t => (
+                              <button key={t.id} onClick={() => { applySavedTemplate(t); setTemplateMenuOpen(false); }}
+                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
+                                <span className="truncate">{t.name}</span>
+                                {t.use_count > 0 && <span className="text-slate-600 shrink-0">{t.use_count}×</span>}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Cog — toggle edit/delete mode */}
+                  <button onClick={() => setTemplateEditMode(v => !v)}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center border transition ${templateEditMode ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white"}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
                 </div>
-              </>
+
+                {/* Default view: last used + most used as pills */}
+                {!templateEditMode && (
+                  <div className="flex flex-wrap gap-2">
+                    {/* Most recently used */}
+                    {[...templates].sort((a,b) => (b.last_used_at||b.created_at) > (a.last_used_at||a.created_at) ? 1 : -1).slice(0,1).map(t => (
+                      <button key={`last-${t.id}`} onClick={() => applySavedTemplate(t)}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08] hover:text-white transition">
+                        <span className="text-slate-500 text-[10px]">Last</span>
+                        {t.name}
+                      </button>
+                    ))}
+                    {/* Most frequently used (different from last used) */}
+                    {[...templates].sort((a,b) => (b.use_count||0) - (a.use_count||0)).filter(t => {
+                      const lastUsed = [...templates].sort((a,b) => (b.last_used_at||b.created_at) > (a.last_used_at||a.created_at) ? 1 : -1)[0];
+                      return !lastUsed || t.id !== lastUsed.id;
+                    }).slice(0,1).map(t => (
+                      <button key={`freq-${t.id}`} onClick={() => applySavedTemplate(t)}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08] hover:text-white transition">
+                        <span className="text-slate-500 text-[10px]">Top</span>
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Edit mode: all templates with delete buttons */}
+                {templateEditMode && (
+                  <div className="flex flex-wrap gap-2">
+                    {templates.map(t => (
+                      <div key={t.id} className="flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/5 px-2 py-0.5">
+                        <button onClick={() => applySavedTemplate(t)} className="text-xs text-slate-300 hover:text-white transition">{t.name}</button>
+                        <button onClick={() => handleDeleteTemplate(t.id)} className="text-red-500/50 hover:text-red-400 transition text-[10px] leading-none ml-0.5">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </Card>
 
@@ -695,7 +776,26 @@ export default function AnnouncementsPage() {
           </Card>
 
           <Card>
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Embed</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-slate-400 uppercase tracking-widest">Embed</p>
+              {!showSaveTemplate ? (
+                <button onClick={() => setShowSaveTemplate(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
+                  + Save Template
+                </button>
+              ) : (
+                <form onSubmit={handleSaveTemplate} className="flex gap-2 items-center">
+                  <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Template name"
+                    className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition w-32" />
+                  <button type="submit" disabled={savingTemplate || !templateName.trim()}
+                    className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition disabled:opacity-40">
+                    {savingTemplate ? "…" : "Save"}
+                  </button>
+                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }} className="text-slate-600 hover:text-white transition text-xs">✕</button>
+                </form>
+              )}
+            </div>
+            {saveTemplateResult && <p className={`text-xs mb-2 ${saveTemplateResult.ok ? "text-green-400" : "text-red-400"}`}>{saveTemplateResult.message}</p>}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <label className="text-xs text-slate-500 shrink-0">Colour</label>
@@ -803,25 +903,7 @@ export default function AnnouncementsPage() {
           </Card>
 
           <Card>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Preview</p>
-              {!showSaveTemplate ? (
-                <button onClick={() => setShowSaveTemplate(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
-                  + Save Template
-                </button>
-              ) : (
-                <form onSubmit={handleSaveTemplate} className="flex gap-2 items-center">
-                  <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Template name"
-                    className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition w-32" />
-                  <button type="submit" disabled={savingTemplate || !templateName.trim()}
-                    className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition disabled:opacity-40">
-                    {savingTemplate ? "…" : "Save"}
-                  </button>
-                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }} className="text-slate-600 hover:text-white transition text-xs">✕</button>
-                </form>
-              )}
-            </div>
+            <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Preview</p>
             {saveTemplateResult && <p className={`text-xs mb-2 ${saveTemplateResult.ok ? "text-green-400" : "text-red-400"}`}>{saveTemplateResult.message}</p>}
             <EmbedPreview embed={embed} username={username} avatarUrl={avatarUrl} />
           </Card>

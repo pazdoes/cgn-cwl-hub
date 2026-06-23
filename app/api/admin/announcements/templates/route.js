@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAnnouncementTemplates, saveAnnouncementTemplate, deleteAnnouncementTemplate } from "@/lib/pool";
+import {
+  getAnnouncementTemplates,
+  saveAnnouncementTemplate,
+  deleteAnnouncementTemplate,
+  recordTemplateUsage,
+} from "@/lib/pool";
 
 function checkPin(request) {
   return request.headers.get("x-officer-pin") === process.env.OFFICER_PIN;
@@ -13,7 +18,16 @@ export async function GET(request) {
 
 export async function POST(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  const { name, webhookId, embedJson, username, avatarUrl } = await request.json().catch(() => ({}));
+  const body = await request.json().catch(() => ({}));
+
+  // Handle use-count tracking — separate action from creating a template
+  if (body.action === "use") {
+    if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+    await recordTemplateUsage(body.id);
+    return NextResponse.json({ recorded: true });
+  }
+
+  const { name, webhookId, embedJson, username, avatarUrl } = body;
   if (!name || !embedJson) return NextResponse.json({ error: "name and embedJson required" }, { status: 400 });
   const template = await saveAnnouncementTemplate({ name, webhookId, embedJson, username, avatarUrl });
   return NextResponse.json({ template });
