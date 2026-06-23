@@ -118,7 +118,7 @@ function AdminNav() {
   }, []);
 
   return (
-    <div className="relative justify-self-end" ref={ref}>
+    <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
         className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
@@ -136,7 +136,7 @@ function AdminNav() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute right-0 top-10 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
+            className="absolute left-1/2 -translate-x-1/2 top-10 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
           >
             <div className="p-1.5 space-y-0.5">
               <Link href="/admin/pool" onClick={() => setOpen(false)}
@@ -631,7 +631,7 @@ export default function AdminPoolPage() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      {/* Top row: Hub left · Discord centre · Hamburger right */}
+      {/* Top row: Hub left · Discord centre · empty right */}
       <div className="relative z-10 grid grid-cols-3 items-center mb-6">
         <Link href="/" className="text-sm text-slate-500 hover:text-white transition flex items-center gap-1.5 justify-self-start">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -642,13 +642,16 @@ export default function AdminPoolPage() {
         <div className="flex justify-center">
           <DiscordWidget variant="center" />
         </div>
-        <AdminNav />
+        <div />
       </div>
 
       {/* Hero card */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 mb-6">
         <Card className="text-center py-5">
-          <h1 className="text-2xl font-thin tracking-widest">Pool Manager</h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-2xl font-thin tracking-widest">Pool Manager</h1>
+            <AdminNav />
+          </div>
           {season ? (
             <p className="text-slate-400 text-sm mt-1">
               <span className="text-purple-300 font-semibold">{season}</span> · {entries.length} in pool · {unassigned.length} unassigned
@@ -657,7 +660,7 @@ export default function AdminPoolPage() {
             <div className="flex justify-center mt-2"><Skeleton className="w-48 h-4" /></div>
           ) : null}
 
-          {/* Action buttons — tab-pill style matching Announcements page */}
+          {/* Action buttons — tab-pill style */}
           <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
             <button type="button" onClick={() => toggleClanForm("add")}
               className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border transition text-xs font-semibold ${activeClanForm === "add" ? "bg-purple-600/50 text-white border-purple-500/50" : "bg-purple-600/20 text-purple-300 border-purple-500/30 hover:bg-purple-600/40 hover:text-white"}`}>
