@@ -1239,7 +1239,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 </div>
 
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 relative z-10">
+    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8 relative z-10">
 
   <div
     onClick={() => { window.history.pushState({}, "", "#players"); setStatView("players"); }}
@@ -1332,6 +1332,33 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
     <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">
       Avg TH
+    </div>
+  </div>
+
+  <div
+    onClick={() => { window.history.pushState({}, "", "#leaderboard"); setStatView("leaderboard"); }}
+    className="
+    rounded-3xl
+    border
+    border-white/10
+    bg-white/[0.03]
+    backdrop-blur-xl
+    p-6
+    min-h-[120px]
+    flex
+    flex-col
+    items-center
+    justify-center
+    cursor-pointer
+    hover:bg-white/[0.06]
+    hover:border-white/20
+    transition
+  ">
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">
+      Leaderboard
     </div>
   </div>
 
