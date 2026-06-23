@@ -580,16 +580,7 @@ export default function SignupPage() {
           bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      {/* ── back nav + Discord widget ── */}
-      <div className="relative z-10 flex items-center justify-between mb-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Hub
-        </Link>
-        <DiscordWidget variant="corner" />
-      </div>
+
 
       {/* ── header card ── */}
       <motion.div
@@ -601,11 +592,9 @@ export default function SignupPage() {
         <Card className="text-center">
           <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-3xl font-thin tracking-widest">Sign Up for CWL</h1>
-          <p className="text-slate-400 mt-2 text-sm">
-            {season
-              ? <>Register your account for the <span className="text-purple-300 font-semibold">{season}</span> roster pool.</>
-              : "Register your account for the upcoming roster pool."}
-          </p>
+          <div className="mt-3 flex justify-center">
+            <DiscordWidget variant="center" />
+          </div>
         </Card>
       </motion.div>
 
