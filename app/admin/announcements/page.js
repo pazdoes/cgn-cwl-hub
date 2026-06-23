@@ -537,7 +537,7 @@ export default function AnnouncementsPage() {
           <h1 className="text-2xl font-thin tracking-widest mb-1">Announcements</h1>
           <p className="text-slate-500 text-xs mb-5">Admin access required</p>
           <form onSubmit={handlePinSubmit} className="space-y-3">
-            <input type="password" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
+            <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center tracking-widest text-lg" />
             {pinError && <p className="text-red-400 text-xs">Incorrect PIN</p>}
             <button type="submit" disabled={!pinInput}

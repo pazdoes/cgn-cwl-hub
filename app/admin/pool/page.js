@@ -604,7 +604,7 @@ export default function AdminPoolPage() {
               <p className="text-slate-500 text-sm mt-1">Enter your officer PIN to manage the pool</p>
             </div>
             <form onSubmit={handlePinSubmit} className="space-y-4">
-              <input type="password" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
+              <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
                 className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.06] transition text-center tracking-widest text-lg" />
               {pinError && <p className="text-red-400 text-xs text-center">Incorrect PIN</p>}
               <button type="submit" disabled={!pinInput}
