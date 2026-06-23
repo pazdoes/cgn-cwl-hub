@@ -266,7 +266,7 @@ function TimestampTool() {
         <div>
           <label className="text-xs text-slate-500 mb-1 block">Date & Time</label>
           <input type="datetime-local" value={date} onChange={e => setDate(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition" />
+            className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
         </div>
         <div>
           <label className="text-xs text-slate-500 mb-2 block">Display Format</label>
@@ -785,10 +785,10 @@ export default function AnnouncementsPage() {
                 </div>
               </div>
               {scheduleMode && (
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Send at (your local time)</label>
+                <div className="flex flex-col items-center">
+                  <label className="text-xs text-slate-500 mb-1 self-start">Send at (your local time)</label>
                   <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition" />
+                    className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
                 </div>
               )}
               <div className="flex flex-col items-center gap-2">
