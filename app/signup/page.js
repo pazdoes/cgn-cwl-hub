@@ -716,6 +716,11 @@ export default function SignupPage() {
                           placeholder="#ABC123"
                           value={tag}
                           onChange={e => setTag(e.target.value)}
+                          onPaste={e => {
+                            e.preventDefault();
+                            const pasted = e.clipboardData.getData("text");
+                            setTag(pasted);
+                          }}
                           autoCapitalize="characters"
                           autoCorrect="off"
                           spellCheck={false}
