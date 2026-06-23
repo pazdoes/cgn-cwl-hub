@@ -344,6 +344,14 @@ export default function AnnouncementsPage() {
   const [scheduling, setScheduling] = useState(false);
   const [scheduleResult, setScheduleResult] = useState(null);
 
+  // Recurring state
+  const [recurrence, setRecurrence] = useState(null); // null = one-time
+  const [recurStart, setRecurStart] = useState(() => {
+    const d = new Date(); d.setMinutes(d.getMinutes() + 60 - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  });
+  const [recurEnd, setRecurEnd] = useState("");
+
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -451,6 +459,35 @@ export default function AnnouncementsPage() {
       if (res.ok) {
         setScheduleResult({ ok: true, message: "Scheduled ✓" });
         setEmbed({ ...DEFAULT_EMBED }); setContent(""); setScheduleMode(false);
+        await reloadHistory();
+      } else { setScheduleResult({ ok: false, message: data.error || "Failed to schedule" }); }
+    } catch { setScheduleResult({ ok: false, message: "Network error" }); }
+    finally { setScheduling(false); }
+  }
+
+  async function handleRecurring() {
+    if (!selectedWebhookId || !recurStart) return;
+    setScheduling(true); setScheduleResult(null);
+    const { embed: finalEmbed } = buildPayload();
+    try {
+      const res = await fetch("/api/admin/announcements/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({
+          webhookId: selectedWebhookId,
+          embed: finalEmbed,
+          content: content || undefined,
+          username,
+          avatarUrl,
+          sendAt: new Date(recurStart).toISOString(),
+          recurrence,
+          recurrenceEnd: recurEnd ? new Date(recurEnd).toISOString() : null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setScheduleResult({ ok: true, message: `Recurring post scheduled ✓ (${recurrence})` });
+        setEmbed({ ...DEFAULT_EMBED }); setContent("");
         await reloadHistory();
       } else { setScheduleResult({ ok: false, message: data.error || "Failed to schedule" }); }
     } catch { setScheduleResult({ ok: false, message: "Network error" }); }
@@ -772,27 +809,63 @@ export default function AnnouncementsPage() {
 
           <Card>
             <div className="space-y-3">
+
+              {/* 3-way mode toggle */}
               <div className="flex justify-center">
                 <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
-                  <button onClick={() => setScheduleMode(false)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${!scheduleMode ? "bg-[#5865f2]/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
-                    Post now
+                  <button onClick={() => { setScheduleMode(false); setRecurrence(null); }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${!scheduleMode && recurrence === null ? "bg-[#5865f2]/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
+                    Post Now
                   </button>
-                  <button onClick={() => setScheduleMode(true)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${scheduleMode ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
+                  <button onClick={() => { setScheduleMode(true); setRecurrence(null); }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${scheduleMode && recurrence === null ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
                     Schedule
+                  </button>
+                  <button onClick={() => { setScheduleMode(false); setRecurrence(recurrence || "24hr"); }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${recurrence !== null ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
+                    Recurring
                   </button>
                 </div>
               </div>
-              {scheduleMode && (
+
+              {/* Schedule: single datetime */}
+              {scheduleMode && recurrence === null && (
                 <div className="flex flex-col items-center">
                   <label className="text-xs text-slate-500 mb-1 self-start">Send at (your local time)</label>
                   <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)}
                     className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
                 </div>
               )}
+
+              {/* Recurring: interval + start + end */}
+              {recurrence !== null && (
+                <div className="flex flex-col items-center gap-3">
+                  {/* Interval toggle bar */}
+                  <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
+                    {["24hr", "48hr", "7days", "14days", "30days"].map(opt => (
+                      <button key={opt} type="button" onClick={() => setRecurrence(opt)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition ${recurrence === opt ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Start date */}
+                  <div className="flex flex-col items-center w-full">
+                    <label className="text-xs text-slate-500 mb-1 self-start">Start date</label>
+                    <input type="datetime-local" value={recurStart} onChange={e => setRecurStart(e.target.value)}
+                      className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
+                  </div>
+                  {/* End date (optional) */}
+                  <div className="flex flex-col items-center w-full">
+                    <label className="text-xs text-slate-500 mb-1 self-start">End date <span className="text-slate-600">(optional — blank = indefinite)</span></label>
+                    <input type="datetime-local" value={recurEnd} onChange={e => setRecurEnd(e.target.value)}
+                      className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col items-center gap-2">
-                {!scheduleMode ? (
+                {recurrence === null && !scheduleMode && (
                   <button onClick={handleSend} disabled={sending || !selectedWebhookId || !embed.title}
                     className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm bg-[#5865f2]/30 text-[#7289da] border border-[#5865f2]/40 hover:bg-[#5865f2]/50 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
                     <svg className="w-4 h-4" viewBox="0 0 127.14 96.36" fill="currentColor">
@@ -800,13 +873,23 @@ export default function AnnouncementsPage() {
                     </svg>
                     {sending ? "Posting…" : "Post to Discord"}
                   </button>
-                ) : (
+                )}
+                {scheduleMode && recurrence === null && (
                   <button onClick={handleSchedule} disabled={scheduling || !selectedWebhookId || !embed.title || !scheduleAt}
                     className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm bg-purple-600/30 text-purple-200 border border-purple-500/40 hover:bg-purple-600/50 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {scheduling ? "Scheduling…" : "Schedule Post"}
+                  </button>
+                )}
+                {recurrence !== null && (
+                  <button onClick={handleRecurring} disabled={scheduling || !selectedWebhookId || !embed.title || !recurStart}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm bg-purple-600/30 text-purple-200 border border-purple-500/40 hover:bg-purple-600/50 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {scheduling ? "Scheduling…" : `Schedule Recurring (${recurrence})`}
                   </button>
                 )}
                 {(sendResult || scheduleResult) && (
@@ -910,12 +993,16 @@ export default function AnnouncementsPage() {
                         <p className="text-sm font-medium text-white truncate">{s.title || "Untitled"}</p>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {s.webhook_label && `# ${s.webhook_label} · `}
+                          {s.recurrence && <span className="text-purple-400">↻ {s.recurrence} · </span>}
                           {s.sent ? (
                             <span className="text-green-400">Sent {new Date(s.sent_at).toLocaleString()}</span>
                           ) : (
                             <span className="text-purple-300">Scheduled for {new Date(s.send_at).toLocaleString()}</span>
                           )}
                         </p>
+                        {s.recurrence_end && !s.sent && (
+                          <p className="text-[10px] text-slate-600 mt-0.5">Ends {new Date(s.recurrence_end).toLocaleDateString()}</p>
+                        )}
                         {s.created_by && <p className="text-[10px] text-slate-600 mt-0.5">by {s.created_by}</p>}
                       </div>
                       {!s.sent && (

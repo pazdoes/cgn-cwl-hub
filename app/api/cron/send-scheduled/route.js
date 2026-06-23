@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
-import { getPendingScheduled, markScheduledSent, logAnnouncement } from "@/lib/pool";
+import { getPendingScheduled, markScheduledSent, logAnnouncement, scheduleAnnouncement } from "@/lib/pool";
+
+// Interval map — recurrence value to milliseconds
+const INTERVALS = {
+  "24hr":   24 * 60 * 60 * 1000,
+  "48hr":   48 * 60 * 60 * 1000,
+  "7days":   7 * 24 * 60 * 60 * 1000,
+  "14days": 14 * 24 * 60 * 60 * 1000,
+  "30days": 30 * 24 * 60 * 60 * 1000,
+};
 
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -28,7 +37,6 @@ export async function GET(request) {
         ...(item.avatar_url && { avatar_url: item.avatar_url }),
       };
 
-      // Standard action row — no IS_COMPONENTS_V2 flag, compatible with embeds
       if (_button?.label && _button?.url) {
         payload.components = [
           {
@@ -50,6 +58,31 @@ export async function GET(request) {
         await markScheduledSent(item.id);
         await logAnnouncement(item.webhook_id, item.title, embed, "scheduled");
         fired++;
+
+        // Handle recurrence — clone next entry if interval set and not past end date
+        if (item.recurrence && INTERVALS[item.recurrence]) {
+          const nextSendAt = new Date(
+            new Date(item.send_at).getTime() + INTERVALS[item.recurrence]
+          );
+
+          const withinEnd = !item.recurrence_end ||
+            nextSendAt <= new Date(item.recurrence_end);
+
+          if (withinEnd) {
+            await scheduleAnnouncement({
+              webhookId: item.webhook_id,
+              embedJson: embed,
+              content: item.content,
+              username: item.username,
+              avatarUrl: item.avatar_url,
+              sendAt: nextSendAt.toISOString(),
+              createdBy: item.created_by,
+              title: item.title,
+              recurrence: item.recurrence,
+              recurrenceEnd: item.recurrence_end || null,
+            });
+          }
+        }
       } else {
         const err = await discordRes.text();
         errors.push({ id: item.id, error: err });

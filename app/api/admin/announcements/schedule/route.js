@@ -15,7 +15,7 @@ export async function GET(request) {
 export async function POST(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const body = await request.json().catch(() => ({}));
-  const { webhookId, embed, content, username, avatarUrl, sendAt } = body;
+  const { webhookId, embed, content, username, avatarUrl, sendAt, recurrence, recurrenceEnd } = body;
 
   if (!webhookId || !embed || !sendAt) {
     return NextResponse.json({ error: "webhookId, embed, and sendAt required" }, { status: 400 });
@@ -24,6 +24,12 @@ export async function POST(request) {
   const sendAtDate = new Date(sendAt);
   if (isNaN(sendAtDate.getTime()) || sendAtDate <= new Date()) {
     return NextResponse.json({ error: "sendAt must be a valid future datetime" }, { status: 400 });
+  }
+
+  // Validate recurrence value if provided
+  const validRecurrences = ["24hr", "48hr", "7days", "14days", "30days"];
+  if (recurrence && !validRecurrences.includes(recurrence)) {
+    return NextResponse.json({ error: "Invalid recurrence value" }, { status: 400 });
   }
 
   let createdBy = null;
@@ -41,6 +47,8 @@ export async function POST(request) {
     sendAt: sendAtDate.toISOString(),
     createdBy,
     title: embed.title || null,
+    recurrence: recurrence || null,
+    recurrenceEnd: recurrenceEnd ? new Date(recurrenceEnd).toISOString() : null,
   });
 
   return NextResponse.json({ scheduled });
