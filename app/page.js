@@ -1128,15 +1128,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 </div>
 
-  {/* top row — three-column grid matching admin page layout:
-      left empty, Discord centred, right empty for balance */}
-  <div className="relative z-10 grid grid-cols-3 items-center mb-6">
-    <div />
-    <div className="flex justify-center">
-      <DiscordWidget variant="center" />
-    </div>
-    <div />
-  </div>
+
 
     <motion.div
   initial={{ opacity: 0, y: 15 }}
@@ -1145,7 +1137,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   className="
     relative
     z-10
-    mb-10
+    mb-4
     rounded-3xl
     border
     border-white/10
@@ -1170,9 +1162,9 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
     Cognition Collective
   </p>
 
-  <p className="text-slate-500 mt-2">
-    Search • Browse • Join
-  </p>
+  <div className="mt-3 flex justify-center">
+    <DiscordWidget variant="center" />
+  </div>
 
   <div className="mt-6">
     <Link
@@ -1195,7 +1187,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 </motion.div>
 
-<div className="mb-8 relative z-10">
+<div className="mb-4 relative z-10">
 
   <div className="relative">
     <input
