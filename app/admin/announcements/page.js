@@ -803,7 +803,26 @@ export default function AnnouncementsPage() {
           </Card>
 
           <Card>
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Preview</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-slate-400 uppercase tracking-widest">Preview</p>
+              {!showSaveTemplate ? (
+                <button onClick={() => setShowSaveTemplate(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
+                  + Save Template
+                </button>
+              ) : (
+                <form onSubmit={handleSaveTemplate} className="flex gap-2 items-center">
+                  <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Template name"
+                    className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition w-32" />
+                  <button type="submit" disabled={savingTemplate || !templateName.trim()}
+                    className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition disabled:opacity-40">
+                    {savingTemplate ? "…" : "Save"}
+                  </button>
+                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }} className="text-slate-600 hover:text-white transition text-xs">✕</button>
+                </form>
+              )}
+            </div>
+            {saveTemplateResult && <p className={`text-xs mb-2 ${saveTemplateResult.ok ? "text-green-400" : "text-red-400"}`}>{saveTemplateResult.message}</p>}
             <EmbedPreview embed={embed} username={username} avatarUrl={avatarUrl} />
           </Card>
 
@@ -831,7 +850,7 @@ export default function AnnouncementsPage() {
               {/* Schedule: single datetime */}
               {scheduleMode && recurrence === null && (
                 <div className="flex flex-col items-center">
-                  <label className="text-xs text-slate-500 mb-1 self-start">Send at (your local time)</label>
+                  <label className="text-xs text-slate-500 mb-1 text-center">Send at (your local time)</label>
                   <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)}
                     className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
                 </div>
@@ -851,13 +870,13 @@ export default function AnnouncementsPage() {
                   </div>
                   {/* Start date */}
                   <div className="flex flex-col items-center w-full">
-                    <label className="text-xs text-slate-500 mb-1 self-start">Start date</label>
+                    <label className="text-xs text-slate-500 mb-1 text-center">Start date</label>
                     <input type="datetime-local" value={recurStart} onChange={e => setRecurStart(e.target.value)}
                       className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
                   </div>
                   {/* End date (optional) */}
                   <div className="flex flex-col items-center w-full">
-                    <label className="text-xs text-slate-500 mb-1 self-start">End date <span className="text-slate-600">(optional — blank = indefinite)</span></label>
+                    <label className="text-xs text-slate-500 mb-1 text-center">End date <span className="text-slate-600">(optional — blank = indefinite)</span></label>
                     <input type="datetime-local" value={recurEnd} onChange={e => setRecurEnd(e.target.value)}
                       className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
                   </div>
@@ -899,22 +918,7 @@ export default function AnnouncementsPage() {
                 )}
                 {!selectedWebhookId && <p className="text-xs text-slate-600">Add a webhook in the Webhooks tab first</p>}
               </div>
-              <div className="border-t border-white/10 pt-3">
-                {!showSaveTemplate ? (
-                  <button onClick={() => setShowSaveTemplate(true)} className="text-xs text-slate-500 hover:text-slate-300 transition">+ Save as template</button>
-                ) : (
-                  <form onSubmit={handleSaveTemplate} className="flex gap-2 items-center">
-                    <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Template name"
-                      className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                    <button type="submit" disabled={savingTemplate || !templateName.trim()}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition disabled:opacity-40">
-                      {savingTemplate ? "Saving…" : "Save"}
-                    </button>
-                    <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }} className="text-slate-600 hover:text-white transition text-xs">✕</button>
-                  </form>
-                )}
-                {saveTemplateResult && <p className={`text-xs mt-1 ${saveTemplateResult.ok ? "text-green-400" : "text-red-400"}`}>{saveTemplateResult.message}</p>}
-              </div>
+
             </div>
           </Card>
         </div>
