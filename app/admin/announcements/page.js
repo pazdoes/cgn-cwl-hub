@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import DiscordWidget from "../components/DiscordWidget";
-import { BRANDING } from "../../lib/branding";
-import { CWL_ICONS } from "../../lib/icons";
+import DiscordWidget from "../../components/DiscordWidget";
+import { BRANDING } from "../../../lib/branding";
+import { CWL_ICONS } from "../../../lib/icons";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 function Card({ children, className = "" }) {
