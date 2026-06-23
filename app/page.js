@@ -674,6 +674,142 @@ export default function Home() {
   const [players, setPlayers] = useState([]);
 const [selectedClan, setSelectedClan] = useState(null);
 const [search, setSearch] = useState("");
+
+// ─── CWL player performance leaderboard ────────────────────────────────────
+function LeaderboardView({ onBack }) {
+  const [data, setData] = useState(null);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [selectedClan, setSelectedClan] = useState("all");
+  const [sortBy, setSortBy] = useState("stars_earned");
+  const [sortDir, setSortDir] = useState("desc");
+
+  useEffect(() => {
+    fetch("/api/leaderboard")
+      .then(r => r.json())
+      .then(d => {
+        setData(d.stats || []);
+        setSeasons(d.seasons || []);
+        setSelectedSeason(d.currentSeason || null);
+      })
+      .catch(() => setData([]));
+  }, []);
+
+  function fetchSeason(season) {
+    setSelectedSeason(season);
+    setData(null);
+    fetch(`/api/leaderboard?season=${encodeURIComponent(season)}`)
+      .then(r => r.json())
+      .then(d => setData(d.stats || []))
+      .catch(() => setData([]));
+  }
+
+  const clans = data ? [...new Set(data.map(p => p.clan_name))].sort() : [];
+  const filtered = data
+    ? data.filter(p => selectedClan === "all" || p.clan_name === selectedClan)
+    : [];
+  const sorted = [...filtered].sort((a, b) => {
+    const av = parseFloat(a[sortBy]) || 0;
+    const bv = parseFloat(b[sortBy]) || 0;
+    return sortDir === "desc" ? bv - av : av - bv;
+  });
+
+  function toggleSort(col) {
+    if (sortBy === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); }
+    else { setSortBy(col); setSortDir("desc"); }
+  }
+
+  const COLS = [
+    { key: "stars_earned",    label: "Stars" },
+    { key: "destruction_pct", label: "Dest %" },
+    { key: "efficiency",      label: "Eff" },
+    { key: "attacks_used",    label: "Attacks" },
+    { key: "missed_attacks",  label: "Missed" },
+    { key: "stars_conceded",  label: "Def Stars" },
+    { key: "defence_pct",     label: "Def %" },
+  ];
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+      </div>
+      <div className="relative z-10 mb-6">
+        <button onClick={onBack} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Hub
+        </button>
+      </div>
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
+        <p className="text-slate-500 text-xs mb-4">Player attack and defence performance by season</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {seasons.length > 0 && (
+            <select value={selectedSeason || ""} onChange={e => fetchSeason(e.target.value)}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
+          {clans.length > 1 && (
+            <select value={selectedClan} onChange={e => setSelectedClan(e.target.value)}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              <option value="all">All Clans</option>
+              {clans.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+        </div>
+      </div>
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+        {data === null ? (
+          <div className="p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+        ) : sorted.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-slate-600 text-sm">No leaderboard data yet.</p>
+            <p className="text-slate-700 text-xs mt-1">Stats are captured automatically when an admin closes the season.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left px-4 py-3 text-slate-500 font-semibold uppercase tracking-widest">#</th>
+                  <th className="text-left px-4 py-3 text-slate-500 font-semibold uppercase tracking-widest">Player</th>
+                  {COLS.map(col => (
+                    <th key={col.key} onClick={() => toggleSort(col.key)}
+                      className={`px-3 py-3 font-semibold uppercase tracking-widest whitespace-nowrap cursor-pointer select-none transition text-center ${sortBy === col.key ? "text-purple-300" : "text-slate-500 hover:text-slate-300"}`}>
+                      {col.label}{sortBy === col.key ? (sortDir === "desc" ? " ↓" : " ↑") : ""}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((p, i) => (
+                  <tr key={p.player_tag} className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition ${i === 0 ? "bg-purple-500/5" : ""}`}>
+                    <td className="px-4 py-3 text-slate-500 font-mono">{i + 1}</td>
+                    <td className="px-4 py-3 min-w-[120px]">
+                      <p className="font-semibold text-white truncate max-w-[130px]">{p.player_name}</p>
+                      <p className="text-slate-600 font-mono text-[10px] truncate max-w-[130px]">{p.clan_name.split(" ")[0]}</p>
+                    </td>
+                    <td className="px-3 py-3 text-center font-bold text-green-300">{p.stars_earned}</td>
+                    <td className="px-3 py-3 text-center text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</td>
+                    <td className="px-3 py-3 text-center font-semibold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</td>
+                    <td className="px-3 py-3 text-center text-slate-300">{p.attacks_used}</td>
+                    <td className="px-3 py-3 text-center text-red-400">{p.missed_attacks}</td>
+                    <td className="px-3 py-3 text-center text-slate-400">{p.stars_conceded}</td>
+                    <td className="px-3 py-3 text-center text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
 const [highlightedAccount, setHighlightedAccount] = useState(null);
 const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth source
@@ -746,6 +882,10 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
   if (statView === "history") {
     return <HistoryView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+  }
+
+  if (statView === "leaderboard") {
+    return <LeaderboardView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (selectedClan) {
