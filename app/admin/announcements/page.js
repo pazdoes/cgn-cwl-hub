@@ -34,7 +34,7 @@ function AdminNav() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
   return (
-    <div className="relative justify-self-end" ref={ref}>
+    <div className="relative" ref={ref}>
       <button onClick={() => setOpen(v => !v)}
         className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
         title="Admin menu">
@@ -45,7 +45,7 @@ function AdminNav() {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
-            className="absolute right-0 top-10 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+            className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
             <div className="p-1.5 space-y-0.5">
               <Link href="/admin/pool" onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
@@ -189,7 +189,6 @@ function MarkdownToolbar({ textareaRef, value, onChange }) {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-      {/* Markdown formatting */}
       {[
         { label: "B", title: "Bold", before: "**", after: "**" },
         { label: "I", title: "Italic", before: "*", after: "*" },
@@ -203,7 +202,6 @@ function MarkdownToolbar({ textareaRef, value, onChange }) {
         </button>
       ))}
       <div className="w-px h-4 bg-white/10 mx-0.5" />
-      {/* Mention helpers */}
       <button type="button" onClick={() => insertMention("@everyone")}
         className="px-2 py-0.5 rounded text-xs border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] transition">
         @everyone
@@ -212,7 +210,6 @@ function MarkdownToolbar({ textareaRef, value, onChange }) {
         className="px-2 py-0.5 rounded text-xs border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] transition">
         @here
       </button>
-      {/* Role mention */}
       <div className="flex items-center gap-1">
         <input value={roleId} onChange={e => setRoleId(e.target.value.replace(/\D/g, ""))}
           placeholder="Role ID"
@@ -265,14 +262,12 @@ function TimestampTool() {
         Discord timestamps display in every user's local timezone automatically.
         Paste the generated code anywhere in your embed description or fields.
       </p>
-
       <div className="space-y-4">
         <div>
           <label className="text-xs text-slate-500 mb-1 block">Date & Time</label>
           <input type="datetime-local" value={date} onChange={e => setDate(e.target.value)}
             className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition" />
         </div>
-
         <div>
           <label className="text-xs text-slate-500 mb-2 block">Display Format</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -285,7 +280,6 @@ function TimestampTool() {
             ))}
           </div>
         </div>
-
         {output && (
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
             <div className="flex items-center justify-between gap-3">
@@ -297,7 +291,6 @@ function TimestampTool() {
             </div>
           </div>
         )}
-
         <p className="text-[11px] text-slate-600 leading-relaxed">
           Paste this code into your embed description or field values. Discord will render it as a live timestamp for every viewer.
         </p>
@@ -343,7 +336,6 @@ export default function AnnouncementsPage() {
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
 
-  // Schedule state
   const [scheduleMode, setScheduleMode] = useState(false);
   const [scheduleAt, setScheduleAt] = useState(() => {
     const d = new Date(); d.setMinutes(d.getMinutes() + 60 - d.getTimezoneOffset());
@@ -352,7 +344,6 @@ export default function AnnouncementsPage() {
   const [scheduling, setScheduling] = useState(false);
   const [scheduleResult, setScheduleResult] = useState(null);
 
-  // Save template
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -361,7 +352,6 @@ export default function AnnouncementsPage() {
   const [tab, setTab] = useState("compose");
   const descriptionRef = useRef(null);
 
-  // Load all data on auth
   useEffect(() => {
     if (!authed) return;
     setLoadingData(true);
@@ -380,7 +370,6 @@ export default function AnnouncementsPage() {
 
   async function reloadHistory() {
     try {
-      // history is part of the schedule tab data
       const res = await fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } });
       const data = await res.json();
       setScheduled(data.scheduled || []);
@@ -443,9 +432,6 @@ export default function AnnouncementsPage() {
       if (res.ok) {
         setSendResult({ ok: true, message: "Posted to Discord ✓" });
         setEmbed({ ...DEFAULT_EMBED }); setContent("");
-        // Reload history
-        const hRes = await fetch("/api/admin/announcements", { headers: { "x-officer-pin": pin } });
-        // history is tracked via schedule tab now, no separate reload needed
       } else { setSendResult({ ok: false, message: data.error || "Failed to send" }); }
     } catch { setSendResult({ ok: false, message: "Network error" }); }
     finally { setSending(false); }
@@ -572,7 +558,7 @@ export default function AnnouncementsPage() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      {/* Top row */}
+      {/* Top row: Pool left · Discord centre · empty right */}
       <div className="relative z-10 grid grid-cols-3 items-center mb-6">
         <Link href="/admin/pool" className="text-sm text-slate-500 hover:text-white transition flex items-center gap-1.5 justify-self-start">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -581,13 +567,15 @@ export default function AnnouncementsPage() {
           Pool
         </Link>
         <div className="flex justify-center"><DiscordWidget variant="center" /></div>
-        <AdminNav />
+        <div />
       </div>
 
       {/* Hero card */}
       <div className="relative z-10 mb-6">
         <Card className="text-center py-5">
-          <div className="flex items-center justify-center gap-2 mb-1">
+          {/* Hamburger left, Discord icon + title right */}
+          <div className="flex items-center justify-center gap-3 mb-1">
+            <AdminNav />
             <svg className="w-5 h-5 text-[#5865f2]" viewBox="0 0 127.14 96.36" fill="currentColor">
               <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
             </svg>
@@ -608,8 +596,6 @@ export default function AnnouncementsPage() {
       {/* ── COMPOSE TAB ── */}
       {tab === "compose" && (
         <div className="relative z-10 space-y-4">
-
-          {/* Webhook selector + templates */}
           <Card>
             <div className="flex items-center justify-between gap-3 mb-3">
               <p className="text-xs text-slate-400 uppercase tracking-widest">Post to</p>
@@ -627,7 +613,6 @@ export default function AnnouncementsPage() {
                 ))}
               </div>
             )}
-
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Quick templates</p>
             <div className="flex flex-wrap gap-2 mb-3">
               {[
@@ -641,18 +626,14 @@ export default function AnnouncementsPage() {
                 </button>
               ))}
             </div>
-
-            {/* Saved templates */}
             {templates.length > 0 && (
               <>
                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Saved templates</p>
                 <div className="flex flex-wrap gap-2">
                   {templates.map(t => (
                     <div key={t.id} className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5">
-                      <button onClick={() => applySavedTemplate(t)}
-                        className="text-xs text-slate-300 hover:text-white transition">{t.name}</button>
-                      <button onClick={() => handleDeleteTemplate(t.id)}
-                        className="text-slate-600 hover:text-red-400 transition text-[10px] leading-none">✕</button>
+                      <button onClick={() => applySavedTemplate(t)} className="text-xs text-slate-300 hover:text-white transition">{t.name}</button>
+                      <button onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 transition text-[10px] leading-none">✕</button>
                     </div>
                   ))}
                 </div>
@@ -660,7 +641,6 @@ export default function AnnouncementsPage() {
             )}
           </Card>
 
-          {/* Sender identity */}
           <Card>
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Sender</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -677,20 +657,15 @@ export default function AnnouncementsPage() {
             </div>
           </Card>
 
-          {/* Embed composer */}
           <Card>
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Embed</p>
             <div className="space-y-3">
-
-              {/* Colour */}
               <div className="flex items-center gap-3">
                 <label className="text-xs text-slate-500 shrink-0">Colour</label>
                 <input type="color" value={intToHex(embed.color)} onChange={e => setEmbedField("color", hexToInt(e.target.value))}
                   className="w-8 h-8 rounded cursor-pointer border border-white/10 bg-transparent" />
                 <span className="text-xs text-slate-500 font-mono">{intToHex(embed.color)}</span>
               </div>
-
-              {/* Author */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Author name</label>
@@ -703,8 +678,6 @@ export default function AnnouncementsPage() {
                     className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
                 </div>
               </div>
-
-              {/* Title + URL */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Title</label>
@@ -717,8 +690,6 @@ export default function AnnouncementsPage() {
                     className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
                 </div>
               </div>
-
-              {/* Description with toolbar */}
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Description</label>
                 <MarkdownToolbar textareaRef={descriptionRef} value={embed.description} onChange={v => setEmbedField("description", v)} />
@@ -726,8 +697,6 @@ export default function AnnouncementsPage() {
                   rows={4} placeholder="Main body text. Use the toolbar above for formatting."
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none" />
               </div>
-
-              {/* Fields */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs text-slate-500">Fields</label>
@@ -751,8 +720,6 @@ export default function AnnouncementsPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Images */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Thumbnail URL</label>
@@ -765,8 +732,6 @@ export default function AnnouncementsPage() {
                     className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
                 </div>
               </div>
-
-              {/* Footer */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Footer text</label>
@@ -783,8 +748,6 @@ export default function AnnouncementsPage() {
                 <input type="checkbox" id="ts-check" checked={!!embed.timestamp} onChange={e => setEmbedField("timestamp", e.target.checked ? new Date().toISOString() : null)} />
                 <label htmlFor="ts-check" className="text-xs text-slate-500">Include timestamp</label>
               </div>
-
-              {/* Link button */}
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Link button (optional)</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -794,8 +757,6 @@ export default function AnnouncementsPage() {
                     className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
                 </div>
               </div>
-
-              {/* Message content (mentions) */}
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Message content (above embed — for @mentions)</label>
                 <input value={content} onChange={e => setContent(e.target.value)} placeholder="@everyone"
@@ -804,16 +765,13 @@ export default function AnnouncementsPage() {
             </div>
           </Card>
 
-          {/* Live preview */}
           <Card>
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Preview</p>
             <EmbedPreview embed={embed} username={username} avatarUrl={avatarUrl} />
           </Card>
 
-          {/* Send / Schedule / Save template */}
           <Card>
             <div className="space-y-3">
-              {/* Send mode toggle */}
               <div className="flex items-center gap-2">
                 <button onClick={() => setScheduleMode(false)}
                   className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${!scheduleMode ? "bg-[#5865f2]/30 text-[#7289da] border-[#5865f2]/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06]"}`}>
@@ -824,7 +782,6 @@ export default function AnnouncementsPage() {
                   Schedule
                 </button>
               </div>
-
               {scheduleMode && (
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Send at (your local time)</label>
@@ -832,7 +789,6 @@ export default function AnnouncementsPage() {
                     className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition" />
                 </div>
               )}
-
               <div className="flex flex-col items-center gap-2">
                 {!scheduleMode ? (
                   <button onClick={handleSend} disabled={sending || !selectedWebhookId || !embed.title}
@@ -851,7 +807,6 @@ export default function AnnouncementsPage() {
                     {scheduling ? "Scheduling…" : "Schedule Post"}
                   </button>
                 )}
-
                 {(sendResult || scheduleResult) && (
                   <p className={`text-xs ${(sendResult || scheduleResult)?.ok ? "text-green-400" : "text-red-400"}`}>
                     {(sendResult || scheduleResult)?.message}
@@ -859,8 +814,6 @@ export default function AnnouncementsPage() {
                 )}
                 {!selectedWebhookId && <p className="text-xs text-slate-600">Add a webhook in the Webhooks tab first</p>}
               </div>
-
-              {/* Save template */}
               <div className="border-t border-white/10 pt-3">
                 {!showSaveTemplate ? (
                   <button onClick={() => setShowSaveTemplate(true)} className="text-xs text-slate-500 hover:text-slate-300 transition">+ Save as template</button>

@@ -136,11 +136,11 @@ function AdminNav() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute left-1/2 -translate-x-1/2 top-10 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
+            className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
           >
             <div className="p-1.5 space-y-0.5">
               <Link href="/admin/pool" onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white bg-white/[0.06] transition">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -247,7 +247,6 @@ export default function AdminPoolPage() {
     loadPool(pinInput);
   }
 
-  /* drag handlers */
   function onDragStart(entry) { setDragging(entry); }
   function onDragEnd() { setDragging(null); setOverClan(null); }
   function onDragOver(e, clan) { e.preventDefault(); setOverClan(clan); }
@@ -349,7 +348,6 @@ export default function AdminPoolPage() {
     if (!state.active) state.entry = null;
   }
 
-  /* clan tile reorder */
   function onClanTileDragStart(clan) { setDraggingClan(clan); }
   function onClanTileDragEnd() { setDraggingClan(null); setOverClanTile(null); }
   function onClanTileDragOver(e, clan) {
@@ -444,7 +442,6 @@ export default function AdminPoolPage() {
     if (!state.active) state.clan = null;
   }
 
-  /* assignment */
   async function doAssign(entry, clan) {
     setAssigning(entry.player_tag);
     try {
@@ -592,7 +589,7 @@ export default function AdminPoolPage() {
   const unassigned = entries.filter(e => !e.assigned_clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned = entries.filter(e => e.assigned_clan);
 
-  /* ─── PIN gate ────────────────────────────────────────────── */
+  /* ─── PIN gate ─────────────────────────────────────────── */
   if (!authed) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
@@ -624,7 +621,7 @@ export default function AdminPoolPage() {
     );
   }
 
-  /* ─── main admin UI ───────────────────────────────────────── */
+  /* ─── main admin UI ─────────────────────────────────────── */
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
       <div className="absolute inset-0 pointer-events-none">
@@ -648,9 +645,10 @@ export default function AdminPoolPage() {
       {/* Hero card */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 mb-6">
         <Card className="text-center py-5">
+          {/* Hamburger left, title right */}
           <div className="flex items-center justify-center gap-3">
-            <h1 className="text-2xl font-thin tracking-widest">Pool Manager</h1>
             <AdminNav />
+            <h1 className="text-2xl font-thin tracking-widest">Pool Manager</h1>
           </div>
           {season ? (
             <p className="text-slate-400 text-sm mt-1">
@@ -660,7 +658,7 @@ export default function AdminPoolPage() {
             <div className="flex justify-center mt-2"><Skeleton className="w-48 h-4" /></div>
           ) : null}
 
-          {/* Action buttons — tab-pill style */}
+          {/* Action buttons */}
           <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
             <button type="button" onClick={() => toggleClanForm("add")}
               className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border transition text-xs font-semibold ${activeClanForm === "add" ? "bg-purple-600/50 text-white border-purple-500/50" : "bg-purple-600/20 text-purple-300 border-purple-500/30 hover:bg-purple-600/40 hover:text-white"}`}>
@@ -689,7 +687,7 @@ export default function AdminPoolPage() {
 
           {/* Close Season form */}
           {showCloseSeasonForm && (
-            <motion.form onSubmit={doCloseSeason} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-4 max-w-xs mx-auto">
+            <motion.form onSubmit={doCloseSeason} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="overflow-hidden mt-4 max-w-xs mx-auto">
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3 text-left relative">
                 <button type="button" onClick={() => { setShowCloseSeasonForm(false); setCloseSeasonConfirm(""); }} className="absolute top-3 right-3 text-slate-500 hover:text-white transition text-xs">✕</button>
                 <p className="text-xs text-amber-300 font-semibold">Close {season}?</p>
