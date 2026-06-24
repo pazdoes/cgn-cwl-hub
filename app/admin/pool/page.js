@@ -666,12 +666,14 @@ export default function AdminPoolPage() {
         <p className="text-slate-500 text-xs mb-4">
           {season ? <><span className="text-purple-300">{season}</span> · {entries.length} in pool · {unassigned.length} unassigned</> : "Loading…"}
         </p>
-        {/* Nav arrows */}
+        <div className="flex justify-center mb-3">
+          <DiscordWidget variant="center"/>
+        </div>
         <div className="flex items-center justify-center gap-4">
           <Link href="/admin" className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </Link>
-          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">Pool Manager</span>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px] text-center">Pool Manager</span>
           <Link href="/admin/announcements" className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
           </Link>
@@ -960,10 +962,7 @@ export default function AdminPoolPage() {
             )}
           </div>
 
-          {/* Discord pill at bottom */}
-          <div className="flex justify-center pt-2">
-            <DiscordWidget variant="center"/>
-          </div>
+
         </div>
       )}
     </main>

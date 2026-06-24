@@ -316,25 +316,20 @@ export default function AdminOverviewPage() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Top nav */}
-      <div className="relative z-10 grid grid-cols-3 items-center mb-4">
-        <Link href="/" className="text-sm text-slate-500 hover:text-white transition flex items-center gap-1.5 justify-self-start">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-          Hub
-        </Link>
-        <div className="flex justify-center"><DiscordWidget variant="center"/></div>
-        <div/>
-      </div>
-
-      {/* Hero card */}
+      {/* Hero card — flush to top */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <div className="flex items-center justify-center gap-3 mb-1">
-          <AdminNav/>
-          <h1 className="text-2xl font-thin tracking-widest">Overview</h1>
+        <h1 className="text-2xl font-thin tracking-widest mb-1">Overview</h1>
+        <p className="text-slate-500 text-xs mb-4">{season} · Admin Dashboard</p>
+        <div className="flex justify-center mb-3">
+          <DiscordWidget variant="center"/>
         </div>
-        <p className="text-slate-500 text-xs">{season} · Admin Dashboard</p>
+        <div className="flex items-center justify-center gap-4">
+          <span className="w-6 h-6"/>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px] text-center">Overview</span>
+          <Link href="/admin/pool" className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </Link>
+        </div>
       </div>
 
       {loading ? (
