@@ -842,7 +842,7 @@ function ClanPerformanceChart({ history }) {
 function HistoryView({ onBack }) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("rank"); // "rank" | "player"
+  const [tab, setTab] = useState("player"); // "rank" | "player"
   const [allData, setAllData] = useState(null);
   const [seasons, setSeasons] = useState([]);
 
@@ -1619,20 +1619,7 @@ function LeaderboardView({ onBack }) {
             {sortDir === "desc" ? "↓ High–Low" : "↑ Low–High"}
           </button>
         </div>
-        {/* Tab toggle */}
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <button onClick={()=>{setLbTab("player");setSortBy("efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-          </button>
-          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">
-            {lbTab === "player" ? "Players" : "Clans"}
-          </span>
-          <button onClick={()=>{setLbTab("clan");setSortBy("attack_efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-
-        <div className="relative max-w-xs mx-auto">
+        <div className="relative max-w-xs mx-auto mb-4">
           <input type="text" placeholder={lbTab === "player" ? "Search player or tag…" : "Search clan…"} value={search} onChange={e=>setSearch(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
           {search && (
@@ -1643,6 +1630,19 @@ function LeaderboardView({ onBack }) {
               </svg>
             </button>
           )}
+        </div>
+
+        {/* Tab toggle */}
+        <div className="flex items-center justify-center gap-4">
+          <button onClick={()=>{setLbTab("player");setSortBy("efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">
+            {lbTab === "player" ? "Players" : "Clans"}
+          </span>
+          <button onClick={()=>{setLbTab("clan");setSortBy("attack_efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
         </div>
       </div>
       <div className="relative z-10 space-y-2">
