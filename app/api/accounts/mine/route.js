@@ -17,6 +17,7 @@ export async function GET() {
     accounts.map(async (account) => ({
       tag: account.player_tag,
       name: account.player_name,
+      townHallLevel: account.town_hall_level ?? null,
       inCurrentPool: await isInPool(account.player_tag, season),
     }))
   );
