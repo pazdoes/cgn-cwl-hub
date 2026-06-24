@@ -1134,24 +1134,6 @@ function LeaderboardView({ onBack }) {
 
   const displayData = selectedSeason === "all" ? allTimeData : data;
 
-  const clans = displayData ? [...new Set(displayData.map(p => p.clan_name))].sort() : [];
-  const searchLower = search.toLowerCase();
-  const filtered = displayData
-    ? displayData
-        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
-        .filter(p => !searchLower ||
-          p.player_name.toLowerCase().includes(searchLower) ||
-          p.player_tag.toLowerCase().includes(searchLower) ||
-          p.clan_name.toLowerCase().includes(searchLower)
-        )
-    : [];
-  const sorted2 = [...filtered].sort((a, b) => {
-    const av = parseFloat(a[sortBy]) || 0;
-    const bv = parseFloat(b[sortBy]) || 0;
-    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
-    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
-    return (av - bv) * dir;
-  });
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
