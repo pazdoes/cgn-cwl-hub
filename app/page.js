@@ -455,6 +455,239 @@ function AvgThView({ players, clans, onBack }) {
   );
 }
 
+
+// ── Player Performance History Chart ─────────────────────────────────────────
+const PLAYER_COLORS = ["#a78bfa", "#34d399", "#fb923c"];
+const STAT_OPTIONS = [
+  { key: "efficiency",         label: "Atk Efficiency" },
+  { key: "stars_earned",       label: "Stars Earned" },
+  { key: "destruction_pct",    label: "Destruction %" },
+  { key: "defence_efficiency", label: "Def Efficiency" },
+  { key: "stars_conceded",     label: "Stars Conceded" },
+  { key: "defence_pct",        label: "Defence %" },
+  { key: "attacks_used",       label: "Attacks Used" },
+  { key: "missed_attacks",     label: "Missed Attacks" },
+];
+
+function PlayerPerformanceChart() {
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [trackedPlayers, setTrackedPlayers] = useState([]); // [{tag, name, data:[{season,value}]}]
+  const [selectedStat, setSelectedStat] = useState("efficiency");
+  const [allData, setAllData] = useState(null); // flat array of all player_cwl_stats rows
+  const [seasons, setSeasons] = useState([]);
+
+  useEffect(() => {
+    // Fetch all seasons to build full dataset
+    fetch("/api/leaderboard")
+      .then(r => r.json())
+      .then(async d => {
+        const allSeasons = (d.seasons || []).sort((a, b) => {
+          const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+          const [am, ay] = a.split(" "); const [bm, by] = b.split(" ");
+          return parseInt(ay) - parseInt(by) || months.indexOf(am) - months.indexOf(bm);
+        });
+        setSeasons(allSeasons);
+        const rows = [];
+        for (const s of allSeasons) {
+          const r = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
+          const sd = await r.json();
+          (sd.stats || []).forEach(p => rows.push({ ...p, season: s }));
+        }
+        setAllData(rows);
+      })
+      .catch(() => setAllData([]));
+  }, []);
+
+  // Search players
+  useEffect(() => {
+    if (!playerSearch.trim() || !allData) { setSearchResults([]); return; }
+    const q = playerSearch.toLowerCase();
+    const seen = new Set();
+    const results = [];
+    for (const p of allData) {
+      if (seen.has(p.player_tag)) continue;
+      if (p.player_name.toLowerCase().includes(q) || p.player_tag.toLowerCase().includes(q)) {
+        seen.add(p.player_tag);
+        results.push({ tag: p.player_tag, name: p.player_name, clan: p.clan_name });
+        if (results.length >= 8) break;
+      }
+    }
+    setSearchResults(results);
+  }, [playerSearch, allData]);
+
+  function addPlayer(player) {
+    if (trackedPlayers.length >= 3) return;
+    if (trackedPlayers.find(p => p.tag === player.tag)) return;
+    const data = seasons.map(season => {
+      const row = allData?.find(r => r.player_tag === player.tag && r.season === season);
+      return { season, value: row ? parseFloat(row[selectedStat]) || 0 : null };
+    });
+    setTrackedPlayers(prev => [...prev, { tag: player.tag, name: player.name, clan: player.clan, data }]);
+    setPlayerSearch("");
+    setSearchResults([]);
+  }
+
+  function removePlayer(tag) {
+    setTrackedPlayers(prev => prev.filter(p => p.tag !== tag));
+  }
+
+  // When stat changes, rebuild data for tracked players
+  useEffect(() => {
+    if (!allData || trackedPlayers.length === 0) return;
+    setTrackedPlayers(prev => prev.map(p => ({
+      ...p,
+      data: seasons.map(season => {
+        const row = allData.find(r => r.player_tag === p.tag && r.season === season);
+        return { season, value: row ? parseFloat(row[selectedStat]) || 0 : null };
+      }),
+    })));
+  }, [selectedStat, allData]);
+
+  // Chart dimensions
+  const CHART_W = 320;
+  const CHART_H = 180;
+  const PAD_L = 40;
+  const PAD_R = 12;
+  const PAD_T = 12;
+  const PAD_B = 28;
+  const plotW = CHART_W - PAD_L - PAD_R;
+  const plotH = CHART_H - PAD_T - PAD_B;
+
+  const validSeasons = seasons.filter(s =>
+    trackedPlayers.some(p => p.data.find(d => d.season === s && d.value !== null))
+  );
+  const xStep = validSeasons.length > 1 ? plotW / (validSeasons.length - 1) : plotW / 2;
+
+  const allValues = trackedPlayers.flatMap(p => p.data.map(d => d.value)).filter(v => v !== null && v !== undefined);
+  const minVal = allValues.length ? Math.min(...allValues) : 0;
+  const maxVal = allValues.length ? Math.max(...allValues) : 1;
+  const valRange = maxVal - minVal || 1;
+
+  function xPos(season) {
+    const idx = validSeasons.indexOf(season);
+    return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
+  }
+  function yPos(val) {
+    return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
+  }
+
+  return (
+    <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mt-4">
+      <h2 className="text-sm font-semibold text-slate-300 mb-1">Player Performance History</h2>
+      <p className="text-slate-600 text-xs mb-4">Track up to 3 players across seasons · search to add</p>
+
+      {/* Controls row */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* Stat selector */}
+        <select value={selectedStat} onChange={e => setSelectedStat(e.target.value)}
+          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          {STAT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+        </select>
+
+        {/* Player search — only show if < 3 tracked */}
+        {trackedPlayers.length < 3 && (
+          <div className="relative flex-1 min-w-[140px]">
+            <input
+              type="text"
+              placeholder="Add player…"
+              value={playerSearch}
+              onChange={e => setPlayerSearch(e.target.value)}
+              className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+                {searchResults.map(p => (
+                  <button key={p.tag} type="button" onClick={() => addPlayer(p)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
+                    <span className="font-semibold truncate">{p.name}</span>
+                    <span className="text-slate-600 text-[10px] shrink-0">{p.clan.split(" ")[0]}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Tracked player chips */}
+      {trackedPlayers.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {trackedPlayers.map((p, i) => (
+            <div key={p.tag} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: PLAYER_COLORS[i] }} />
+              <span className="text-xs text-slate-300 max-w-[80px] truncate">{p.name}</span>
+              <button onClick={() => removePlayer(p.tag)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Chart */}
+      {trackedPlayers.length === 0 ? (
+        <div className="flex items-center justify-center h-32 text-slate-700 text-xs text-center">
+          Search for a player above to start tracking
+        </div>
+      ) : allData === null ? (
+        <div className="animate-pulse h-32 rounded-xl bg-white/[0.06]" />
+      ) : validSeasons.length === 0 ? (
+        <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data available for selected players</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
+            {/* Y gridlines */}
+            {[0, 0.25, 0.5, 0.75, 1].map(pct => {
+              const val = minVal + pct * valRange;
+              const y = PAD_T + plotH - pct * plotH;
+              return (
+                <g key={pct}>
+                  <line x1={PAD_L} y1={y} x2={PAD_L + plotW} y2={y} stroke="#1e293b" strokeWidth="1"/>
+                  <text x={PAD_L - 3} y={y + 3} textAnchor="end" fontSize="7" fill="#475569">
+                    {val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* X labels */}
+            {validSeasons.map((s, i) => (
+              <text key={s} x={xPos(s)} y={CHART_H - 6} textAnchor="middle" fontSize="7" fill="#475569">
+                {s.split(" ")[0].slice(0, 3)}
+              </text>
+            ))}
+
+            {/* Player lines */}
+            {trackedPlayers.map((p, pi) => {
+              const color = PLAYER_COLORS[pi];
+              const pts = p.data.filter(d => d.value !== null && validSeasons.includes(d.season));
+              if (pts.length === 0) return null;
+
+              // Line path
+              const d = pts.map((pt, j) =>
+                `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`
+              ).join(" ");
+
+              return (
+                <g key={p.tag}>
+                  <path d={d} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                  {pts.map(pt => (
+                    <g key={pt.season}>
+                      <circle cx={xPos(pt.season)} cy={yPos(pt.value)} r="3.5" fill={color} opacity="0.9"/>
+                      <text x={xPos(pt.season)} y={yPos(pt.value) - 6} textAnchor="middle" fontSize="7" fill={color}>
+                        {pt.value % 1 === 0 ? pt.value.toFixed(0) : pt.value.toFixed(2)}
+                      </text>
+                    </g>
+                  ))}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // CWL Rank Progression chart — one line per clan, X = season,
 // Y = CWL rank tier (Champion I at top, Bronze III at bottom).
 // Missing seasons carry the previous rank forward as a dashed line,
@@ -689,6 +922,9 @@ function HistoryView({ onBack }) {
           </>
         )}
       </div>
+
+      {/* ── Player Performance History ── */}
+      <PlayerPerformanceChart />
     </main>
   );
 }
