@@ -1032,7 +1032,7 @@ export default function AnnouncementsPage() {
                 <div key={i} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                   <div className="min-w-0">
                     <p className="text-xs text-white truncate">{h.title||"Untitled"}</p>
-                    <p className="text-[10px] text-slate-600">{h.sent_by||"Unknown"} · {new Date(h.sent_at).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-slate-600">{h.sent_by||"Unknown"}{h.sent_at ? ` · ${new Date(h.sent_at).toLocaleDateString()}` : ""}</p>
                   </div>
                 </div>
               ))}
