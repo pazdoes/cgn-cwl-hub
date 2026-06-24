@@ -766,276 +766,262 @@ function StatPill({ label, value, colour = "text-slate-300" }) {
   );
 }
 
+// Star icon row — renders n filled stars
+function StarIcons({ count, colour }) {
+  return (
+    <div className="flex items-center justify-center gap-0.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${colour}`} viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+// Large pie chart for breakdown view
+function LargePie({ three = 0, two = 0, one = 0, zero = 0, size = 80 }) {
+  const total = three + two + one + zero;
+  if (total === 0) return <div className="flex items-center justify-center" style={{width:size,height:size}}><span className="text-slate-600 text-xs">No data</span></div>;
+  const cx = size/2, cy = size/2, r = size/2 - 2;
+  const slices = [
+    { value: three, color: "#86efac" },
+    { value: two,   color: "#a78bfa" },
+    { value: one,   color: "#fbbf24" },
+    { value: zero,  color: "#475569" },
+  ].filter(s => s.value > 0);
+  let startAngle = -Math.PI/2;
+  const paths = slices.map((s, i) => {
+    const angle = (s.value/total)*2*Math.PI;
+    const endAngle = startAngle + angle;
+    const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
+    const x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
+    const d=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${angle>Math.PI?1:0} 1 ${x2} ${y2} Z`;
+    startAngle = endAngle;
+    return <path key={i} d={d} fill={s.color}/>;
+  });
+  return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{paths}</svg>;
+}
+
 function PlayerCard({ p, rank, isExpanded, onToggle }) {
+  const [cardView, setCardView] = useState("stats"); // "stats" | "breakdown"
+
   const rankBorderClass = rank === 1 ? "border-yellow-400/40 shadow-yellow-400/10"
     : rank === 2 ? "border-slate-300/30 shadow-slate-300/10"
     : rank === 3 ? "border-amber-600/40 shadow-amber-600/10"
     : "border-white/10";
 
+  // When collapsed, reset to stats view
+  const handleToggle = () => {
+    if (isExpanded) setCardView("stats");
+    onToggle();
+  };
+
   return (
-    <div
-      onClick={onToggle}
-      className={`rounded-2xl border bg-white/[0.03] transition-all cursor-pointer ${rankBorderClass} ${isExpanded ? "shadow-lg" : "hover:bg-white/[0.05]"}`}
-    >
-      {/* Collapsed row */}
-      <div className="flex items-center gap-3 px-3 py-3">
-        {/* Rank */}
+    <div className={`rounded-2xl border bg-white/[0.03] transition-all ${rankBorderClass} ${isExpanded ? "shadow-lg" : ""}`}>
+
+      {/* Header row — only this triggers expand/collapse */}
+      <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-2xl transition">
         <div className="shrink-0 w-6 flex items-center justify-center">
           <RankBadge rank={rank} />
         </div>
-
-        {/* Player info */}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
           <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
         </div>
-
-        {/* Key stats */}
         <div className="flex items-center gap-3 shrink-0">
           <StatPill label="EFF" value={parseFloat(p.efficiency).toFixed(2)} colour="text-purple-300" />
           <StatPill label="Stars" value={p.stars_earned} colour="text-green-300" />
           <StatPill label="Def EFF" value={p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300" />
           <StatPill label="Def ★" value={p.stars_conceded} colour="text-slate-400" />
         </div>
-
-        {/* Expand chevron */}
         <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
         </svg>
       </div>
 
-      {/* Expanded detail */}
+      {/* Expanded body — click-safe, not a toggle target */}
       {isExpanded && (
-        <div className="px-3 pb-4 pt-1 border-t border-white/10 space-y-4">
-          {/* Attack section */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Efficiency</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-green-300">{p.stars_earned}</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Stars</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Dest %</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center">
-                <MiniPie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
-                <p className="text-[9px] text-slate-600 mt-0.5">Breakdown</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-slate-300">{p.attacks_used}<span className="text-slate-600 text-xs">/{p.attacks_available}</span></p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Attacks Used</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className={`text-sm font-bold ${p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}`}>{p.missed_attacks}</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Missed</p>
-              </div>
-            </div>
-          </div>
+        <div className="px-3 pb-3 pt-1 border-t border-white/10">
 
-          {/* Defence section */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          {/* ── STATS VIEW ── */}
+          {cardView === "stats" && (
+            <div className="space-y-4 pt-2">
+              {/* Attack */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Efficiency</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-green-300">{p.stars_earned}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Stars</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Dest %</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center gap-0.5">
+                    <MiniPie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
+                    <p className="text-[9px] text-slate-600">Breakdown</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-slate-300">{p.attacks_used}<span className="text-slate-600 text-xs">/{p.attacks_available}</span></p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Attacks</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className={`text-sm font-bold ${p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}`}>{p.missed_attacks}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Missed</p>
+                  </div>
+                </div>
+              </div>
+              {/* Defence */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Def EFF</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-slate-400">{p.stars_conceded}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Stars Given</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                    <p className="text-sm font-bold text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center gap-0.5">
+                    <MiniPie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
+                    <p className="text-[9px] text-slate-600">Breakdown</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── BREAKDOWN VIEW ── */}
+          {cardView === "breakdown" && (
+            <div className="space-y-5 pt-2">
+
+              {/* Attack breakdown */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack Breakdown</span>
+                </div>
+                <div className="flex items-start gap-4">
+                  {/* Large pie */}
+                  <div className="shrink-0">
+                    <LargePie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0} size={80}/>
+                  </div>
+                  {/* Star counts — match pie width, one row */}
+                  <div className="flex-1 flex flex-col justify-center gap-2">
+                    {/* 3 star */}
+                    <div className="flex items-center justify-between">
+                      <StarIcons count={3} colour="text-green-300"/>
+                      <span className="text-sm font-bold text-green-300">{p.three_stars ?? "—"}</span>
+                    </div>
+                    {/* 2 star */}
+                    <div className="flex items-center justify-between">
+                      <StarIcons count={2} colour="text-purple-400"/>
+                      <span className="text-sm font-bold text-purple-400">{p.two_stars ?? "—"}</span>
+                    </div>
+                    {/* 1 star */}
+                    <div className="flex items-center justify-between">
+                      <StarIcons count={1} colour="text-amber-400"/>
+                      <span className="text-sm font-bold text-amber-400">{p.one_stars ?? "—"}</span>
+                    </div>
+                    {/* 0 star */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600">0★</span>
+                      <span className="text-sm font-bold text-slate-500">{p.zero_stars ?? "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10"/>
+
+              {/* Defence breakdown — inverse order (1★ 2★ 3★ = better to worse) */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence Breakdown</span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0">
+                    <LargePie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0} size={80}/>
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center gap-2">
+                    {/* Inverse order for defence: 0★ (best) → 3★ (worst) */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600">0★</span>
+                      <span className="text-sm font-bold text-slate-500">{p.zero_stars_conceded ?? "—"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <StarIcons count={1} colour="text-amber-400"/>
+                      <span className="text-sm font-bold text-amber-400">{p.one_stars_conceded ?? "—"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <StarIcons count={2} colour="text-purple-400"/>
+                      <span className="text-sm font-bold text-purple-400">{p.two_stars_conceded ?? "—"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <StarIcons count={3} colour="text-green-300"/>
+                      <span className="text-sm font-bold text-green-300">{p.three_stars_conceded ?? "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View toggle arrows — bottom of expanded card */}
+          <div className="flex items-center justify-center gap-6 pt-3 mt-2 border-t border-white/[0.06]">
+            <button
+              onClick={e => { e.stopPropagation(); setCardView("stats"); }}
+              className={`w-7 h-7 rounded-full flex items-center justify-center border transition ${cardView === "stats" ? "border-purple-500/40 bg-purple-600/20 text-purple-300" : "border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300"}`}
+              title="Stats view"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
               </svg>
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Def EFF</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-slate-400">{p.stars_conceded}</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Stars Given</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                <p className="text-sm font-bold text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</p>
-                <p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center">
-                <MiniPie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
-                <p className="text-[9px] text-slate-600 mt-0.5">Breakdown</p>
-              </div>
-            </div>
+            </button>
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest">
+              {cardView === "stats" ? "Stats" : "Breakdown"}
+            </span>
+            <button
+              onClick={e => { e.stopPropagation(); setCardView("breakdown"); }}
+              className={`w-7 h-7 rounded-full flex items-center justify-center border transition ${cardView === "breakdown" ? "border-purple-500/40 bg-purple-600/20 text-purple-300" : "border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300"}`}
+              title="Breakdown view"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-function LeaderboardView({ onBack }) {
-  const [data, setData] = useState(null);
-  const [seasons, setSeasons] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState(null);
-  const [clanFilter, setClanFilter] = useState("all");
-  const [statFilter, setStatFilter] = useState("default");
-  const [sortBy, setSortBy] = useState("efficiency");
-  const [sortDir, setSortDir] = useState("desc");
-  const [search, setSearch] = useState("");
-  const [expandedTag, setExpandedTag] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/leaderboard")
-      .then(r => r.json())
-      .then(d => {
-        setData(d.stats || []);
-        setSeasons(d.seasons || []);
-        setSelectedSeason(d.currentSeason || null);
-      })
-      .catch(() => setData([]));
-  }, []);
-
-  function fetchSeason(season) {
-    setSelectedSeason(season);
-    setData(null);
-    setExpandedTag(null);
-    fetch(`/api/leaderboard?season=${encodeURIComponent(season)}`)
-      .then(r => r.json())
-      .then(d => setData(d.stats || []))
-      .catch(() => setData([]));
-  }
-
-  const SORT_OPTIONS = [
-    { key: "efficiency",         label: "Atk EFF" },
-    { key: "stars_earned",       label: "Stars" },
-    { key: "defence_efficiency", label: "Def EFF" },
-    { key: "stars_conceded",     label: "Def ★" },
-    { key: "destruction_pct",    label: "Dest %" },
-    { key: "missed_attacks",     label: "Missed" },
-  ];
-
-  const clans = data ? [...new Set(data.map(p => p.clan_name))].sort() : [];
-  const searchLower = search.toLowerCase();
-
-  const filtered = data
-    ? data
-        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
-        .filter(p => !searchLower ||
-          p.player_name.toLowerCase().includes(searchLower) ||
-          p.player_tag.toLowerCase().includes(searchLower) ||
-          p.clan_name.toLowerCase().includes(searchLower)
-        )
-    : [];
-
-  const sorted = [...filtered].sort((a, b) => {
-    const av = parseFloat(a[sortBy]) || 0;
-    const bv = parseFloat(b[sortBy]) || 0;
-    // For missed_attacks and stars_conceded, lower = better when sorting "best"
-    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
-    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
-    return (av - bv) * dir;
-  });
-
-  function toggleExpand(tag) {
-    setExpandedTag(prev => prev === tag ? null : tag);
-  }
-
-  const STAT_FILTERS = [
-    { key: "default", label: "Default" },
-    { key: "attack",  label: "Attack" },
-    { key: "defence", label: "Defence" },
-    { key: "all",     label: "All" },
-  ];
-
-  return (
-    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
-      </div>
-
-      <div className="relative z-10 mb-4">
-        <button onClick={onBack} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-          Back to Hub
-        </button>
-      </div>
-
-      {/* Header card */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
-        <p className="text-slate-500 text-xs mb-4">Player performance by season</p>
-
-        {/* Season + Clan */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-          {seasons.length > 0 && (
-            <select value={selectedSeason||""} onChange={e=>fetchSeason(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              {seasons.map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
-          )}
-          {clans.length > 1 && (
-            <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              <option value="all">All Clans</option>
-              {clans.map(c=><option key={c} value={c}>{c}</option>)}
-            </select>
-          )}
-        </div>
-
-        {/* Sort by */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
-          {SORT_OPTIONS.map(o=>(
-            <button key={o.key} type="button" onClick={()=>{
-              if(sortBy===o.key) setSortDir(d=>d==="desc"?"asc":"desc");
-              else { setSortBy(o.key); setSortDir("desc"); }
-            }}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${sortBy===o.key ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
-              {o.label}{sortBy===o.key?(sortDir==="desc"?" ↓":" ↑"):""}
-            </button>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-xs mx-auto">
-          <input type="text" placeholder="Search player or tag…" value={search} onChange={e=>setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
-          {search && (
-            <button onClick={()=>setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Card list */}
-      <div className="relative z-10 space-y-2">
-        {data === null ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
-        ) : sorted.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-            <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
-          </div>
-        ) : sorted.map((p, i) => (
-          <PlayerCard
-            key={p.player_tag}
-            p={p}
-            rank={i + 1}
-            isExpanded={expandedTag === p.player_tag}
-            onToggle={() => toggleExpand(p.player_tag)}
-          />
-        ))}
-      </div>
-    </main>
   );
 }
 
