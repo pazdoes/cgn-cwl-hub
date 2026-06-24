@@ -1,0 +1,2 @@
+ALTER TABLE accounts
+  ADD COLUMN IF NOT EXISTS api_token_verified BOOLEAN DEFAULT FALSE;

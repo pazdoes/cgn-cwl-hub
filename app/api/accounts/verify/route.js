@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPlayerToken, getPlayer } from "@/lib/coc";
-import { upsertAccount, joinPool } from "@/lib/pool";
+import { upsertAccount, joinPool, setApiTokenVerified } from "@/lib/pool";
 import { getOrCreateOwnerSecret, setOwnerCookie } from "@/lib/ownerCookie";
 import { getOpenPoolSeason } from "@/lib/season";
 
@@ -66,6 +66,7 @@ export async function POST(request) {
 
   await upsertAccount(normalizedTag, player.name, ownerSecret);
   await joinPool(normalizedTag, season);
+  if (token) await setApiTokenVerified(normalizedTag);
 
   const response = NextResponse.json({
     tag: normalizedTag,
