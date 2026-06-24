@@ -612,369 +612,359 @@ export default function AdminPoolPage() {
   const unassigned = entries.filter(e => !e.assigned_clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned = entries.filter(e => e.assigned_clan);
 
+  // Mobile tap-to-assign state
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [builderTab, setBuilderTab] = useState("pool"); // "pool" | "roster"
+  const [activeClanIdx, setActiveClanIdx] = useState(0);
+  const [poolSearch, setPoolSearch] = useState("");
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  const filteredUnassigned = unassigned.filter(e =>
+    !poolSearch || e.player_name.toLowerCase().includes(poolSearch.toLowerCase()) || e.player_tag.toLowerCase().includes(poolSearch.toLowerCase())
+  );
+
   /* ─── PIN gate ─────────────────────────────────────────── */
   if (!authed) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
         </div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-sm">
-          <Card>
-            <div className="text-center mb-6">
-              <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-14 h-14 mx-auto mb-4" />
-              <h1 className="text-xl font-bold">Admin Access</h1>
-              <p className="text-slate-500 text-sm mt-1">Enter your officer PIN to manage the pool</p>
-            </div>
-            <form onSubmit={handlePinSubmit} className="space-y-4">
-              <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.06] transition text-center tracking-widest text-lg" />
-              {pinError && <p className="text-red-400 text-xs text-center">Incorrect PIN</p>}
+        <div className="relative z-10 w-full max-w-xs">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+            <h1 className="text-xl font-thin tracking-widest mb-1">Pool Manager</h1>
+            <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
+            <form onSubmit={handlePinSubmit} className="space-y-3">
+              <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
+              {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
               <button type="submit" disabled={!pinInput}
-                className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                 Enter
               </button>
             </form>
-          </Card>
-          <div className="mt-4 text-center">
-            <Link href="/" className="text-xs text-slate-600 hover:text-slate-400 transition">← Back to Hub</Link>
           </div>
+        </div>
         </motion.div>
       </main>
     );
   }
 
   /* ─── main admin UI ─────────────────────────────────────── */
+  const currentClan = clans[Math.min(activeClanIdx, clans.length - 1)] || null;
+  const currentClanEntries = currentClan ? assigned.filter(e => e.assigned_clan === currentClan).sort((a,b) => (b.town_hall_level??0)-(a.town_hall_level??0)) : [];
+  const currentFormat = currentClan ? (clanFormats[currentClan] ?? 15) : 15;
+
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Top row: Hub left · Discord centre · empty right */}
-      <div className="relative z-10 grid grid-cols-3 items-center mb-6">
-        <Link href="/" className="text-sm text-slate-500 hover:text-white transition flex items-center gap-1.5 justify-self-start">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Hub
-        </Link>
-        <div className="flex justify-center">
-          <DiscordWidget variant="center" />
+      {/* Hero card — flush to top */}
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">Pool Manager</h1>
+        <p className="text-slate-500 text-xs mb-4">
+          {season ? <><span className="text-purple-300">{season}</span> · {entries.length} in pool · {unassigned.length} unassigned</> : "Loading…"}
+        </p>
+        {/* Nav arrows */}
+        <div className="flex items-center justify-center gap-4">
+          <Link href="/admin" className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </Link>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">Pool Manager</span>
+          <Link href="/admin/announcements" className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </Link>
         </div>
-        <div />
       </div>
-
-      {/* Hero card */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 mb-6">
-        <Card className="text-center py-5">
-          {/* Hamburger left, title right */}
-          <div className="flex items-center justify-center gap-3">
-            <AdminNav />
-            <h1 className="text-2xl font-thin tracking-widest">Pool Manager</h1>
-          </div>
-          {season ? (
-            <p className="text-slate-400 text-sm mt-1">
-              <span className="text-purple-300 font-semibold">{season}</span> · {entries.length} in pool · {unassigned.length} unassigned
-            </p>
-          ) : loading ? (
-            <div className="flex justify-center mt-2"><Skeleton className="w-48 h-4" /></div>
-          ) : null}
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
-            <button type="button" onClick={() => toggleClanForm("add")}
-              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border transition text-xs font-semibold ${activeClanForm === "add" ? "bg-purple-600/50 text-white border-purple-500/50" : "bg-purple-600/20 text-purple-300 border-purple-500/30 hover:bg-purple-600/40 hover:text-white"}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Add Clan
-            </button>
-            <button type="button" onClick={() => toggleClanForm("delete")}
-              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border transition text-xs font-semibold ${activeClanForm === "delete" ? "bg-red-600/40 text-white border-red-500/50" : "bg-red-600/10 text-red-300 border-red-500/20 hover:bg-red-600/30 hover:text-white"}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete Clan
-            </button>
-            {!showCloseSeasonForm ? (
-              <>
-                <button type="button" onClick={() => { setShowCloseSeasonForm(true); setCloseSeasonResult(null); }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 hover:text-amber-200 transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Migrate Season
-                </button>
-                <button type="button" onClick={doFetchCwlData} disabled={fetchingCwl}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 text-xs font-semibold hover:bg-blue-500/20 hover:text-blue-200 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
-                </button>
-              </>
-            ) : null}
-          </div>
-
-          {/* Close Season form */}
-          {showCloseSeasonForm && (
-            <motion.form onSubmit={doCloseSeason} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="overflow-hidden mt-4 max-w-xs mx-auto">
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3 text-left relative">
-                <button type="button" onClick={() => { setShowCloseSeasonForm(false); setCloseSeasonConfirm(""); }} className="absolute top-3 right-3 text-slate-500 hover:text-white transition text-xs">✕</button>
-                <p className="text-xs text-amber-300 font-semibold">Migrate {season}?</p>
-                <p className="text-[11px] text-slate-400 leading-relaxed">Records current CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
-                <input type="text" placeholder="Type CONFIRM" value={closeSeasonConfirm} onChange={e => setCloseSeasonConfirm(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition" />
-                <button type="submit" disabled={closeSeasonConfirm !== "CONFIRM" || closeSeasonSubmitting}
-                  className="w-full px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-200 border border-amber-500/30 hover:bg-amber-500/30 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                  {closeSeasonSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
-                </button>
-              </div>
-            </motion.form>
-          )}
-          {closeSeasonResult && (
-            <p className={`text-[11px] text-center mt-2 ${closeSeasonResult.ok ? "text-green-400" : "text-red-400"}`}>{closeSeasonResult.message}</p>
-          )}
-          {fetchCwlResult && (
-            <p className={`text-[11px] text-center mt-1 ${fetchCwlResult.ok ? "text-blue-300" : "text-red-400"}`}>{fetchCwlResult.message}</p>
-          )}
-
-          {/* Add Clan form */}
-          <AnimatePresence>
-            {activeClanForm === "add" && (
-              <motion.form onSubmit={doAddClan} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-5 text-left">
-                <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
-                  <div className="absolute top-3 right-3"><XButton onClick={() => toggleClanForm("add")} title="Close" /></div>
-                  <div className="pr-6">
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Tag</label>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="#ABC123" value={addClanTag} onChange={e => setAddClanTag(e.target.value)} onBlur={doLookupClan} autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                        className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm" />
-                      <button type="button" onClick={doLookupClan} disabled={addClanLookupBusy || !addClanTag.trim()}
-                        className="px-4 py-2.5 rounded-xl text-xs font-semibold shrink-0 bg-white/[0.06] border border-white/10 text-slate-300 hover:bg-white/[0.1] transition disabled:opacity-40 disabled:cursor-not-allowed">
-                        {addClanLookupBusy ? "Looking up…" : "Lookup"}
-                      </button>
-                    </div>
-                    {addClanSuggestedName && <p className="text-xs text-purple-300 mt-1.5 ml-1">→ {addClanSuggestedName}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Link</label>
-                    <input type="text" placeholder="https://link.clashofclans.com/..." value={addClanLink} onChange={e => setAddClanLink(e.target.value)} autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">CWL Rank</label>
-                    <select value={addClanRank} onChange={e => setAddClanRank(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50 transition text-sm">
-                      <option value="">Select…</option>
-                      <option value="Unranked">Unranked</option>
-                      {Object.keys(CWL_ICONS).map(rank => <option key={rank} value={rank}>{rank}</option>)}
-                    </select>
-                  </div>
-                  <button type="submit" disabled={addClanSubmitting || !addClanTag.trim() || !addClanLink.trim()}
-                    className="w-full py-3 rounded-xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    {addClanSubmitting ? "Adding…" : "Add Clan"}
-                  </button>
-                  {addClanResult && <p className={`text-xs text-center ${addClanResult.ok ? "text-green-300" : "text-red-400"}`}>{addClanResult.message}</p>}
-                </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
-
-          {/* Delete Clan form */}
-          <AnimatePresence>
-            {activeClanForm === "delete" && (
-              <motion.form onSubmit={doDeleteClan} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-5 text-left">
-                <div className="relative rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-5 space-y-4">
-                  <div className="absolute top-3 right-3"><XButton onClick={() => toggleClanForm("delete")} title="Close" /></div>
-                  <p className="text-xs text-slate-400 pr-6">Type the exact clan name to confirm deletion. Blocked if any players are still assigned.</p>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">Clan Name</label>
-                    <input type="text" placeholder="e.g. Cognition {CGN}" value={deleteClanTag} onChange={e => setDeleteClanTag(e.target.value)} autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-xl border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition text-sm" />
-                  </div>
-                  <button type="submit" disabled={deleteClanSubmitting || !deleteClanTag.trim()}
-                    className="w-full py-3 rounded-xl font-semibold text-sm bg-red-600/40 text-red-100 border border-red-500/30 hover:bg-red-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    {deleteClanSubmitting ? "Deleting…" : "Delete Clan"}
-                  </button>
-                  {deleteClanResult && <p className={`text-xs text-center ${deleteClanResult.ok ? "text-green-300" : "text-red-400"}`}>{deleteClanResult.message}</p>}
-                </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
-        </Card>
-      </motion.div>
 
       {loading && (
-        <div className="relative z-10 space-y-6">
-          <section>
-            <Skeleton className="w-32 h-3 mb-3 ml-1" />
-            <Card>
-              <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Skeleton className="w-8 h-8 rounded-full shrink-0" />
-                      <div className="flex flex-col gap-1.5"><Skeleton className="w-24 h-3.5" /><Skeleton className="w-16 h-3" /></div>
-                    </div>
-                    <Skeleton className="w-16 h-3" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </section>
-          <section>
-            <Skeleton className="w-28 h-3 mb-3 ml-1" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="min-h-[140px] w-full rounded-3xl" />)}
-            </div>
-          </section>
+        <div className="relative z-10 space-y-3">
+          {Array.from({length:3}).map((_,i) => <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] h-20 animate-pulse"/>)}
         </div>
       )}
-
       {error && <div className="relative z-10 text-center text-red-400 text-sm py-6">{error}</div>}
 
-      {!loading && entries.length === 0 && clans.length === 0 && (
-        <div className="relative z-10 text-center text-slate-600 py-12">No players have signed up for {season} yet.</div>
-      )}
-
       {!loading && (clans.length > 0 || entries.length > 0) && (
-        <div className="relative z-10 space-y-6">
+        <div className="relative z-10 space-y-4">
 
-          {/* Pool toggle */}
-          <section>
-            <div className="flex items-center gap-2 mb-3 ml-1">
-              <button onClick={() => setPoolTab("available")}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${poolTab === "available" ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
-                Available Pool ({unassigned.length})
-              </button>
-              <button onClick={() => setPoolTab("assigned")}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${poolTab === "assigned" ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
-                Assigned ({assigned.length})
-              </button>
-              <RankRefreshButton busy={thRefreshing} result={thRefreshResult} onClick={doRefreshThLevels} />
+          {/* ── ROSTER BUILDER ── */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+            {/* Builder header */}
+            <div className="p-4 border-b border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Roster Builder</h2>
+                <div className="flex items-center gap-1.5">
+                  <RankRefreshButton busy={thRefreshing} result={thRefreshResult} onClick={doRefreshThLevels}/>
+                </div>
+              </div>
+              {/* Tab toggle — Pool / Roster */}
+              <div className="flex items-center justify-center gap-4">
+                <button onClick={() => setBuilderTab("pool")} className="text-slate-500 hover:text-slate-300 transition p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest select-none min-w-[80px] text-center">
+                  {builderTab === "pool" ? `Pool (${unassigned.length})` : `Roster`}
+                </span>
+                <button onClick={() => setBuilderTab("roster")} className="text-slate-500 hover:text-slate-300 transition p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
             </div>
 
-            {poolTab === "available" ? (
-              <Card>
-                {unassigned.length === 0 ? (
-                  <p className="text-slate-600 text-sm text-center py-4">All players have been assigned.</p>
+            {/* Pool tab */}
+            {builderTab === "pool" && (
+              <div className="p-4">
+                {/* Search */}
+                <div className="relative mb-3">
+                  <input type="text" placeholder="Search pool…" value={poolSearch} onChange={e => setPoolSearch(e.target.value)}
+                    className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  {poolSearch && <button onClick={() => setPoolSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
+                </div>
+                {/* Selected player indicator */}
+                {selectedEntry && (
+                  <div className="flex items-center gap-2 mb-3 rounded-2xl border border-purple-500/40 bg-purple-500/10 px-3 py-2">
+                    <ThIcon level={selectedEntry.town_hall_level} size="w-5 h-5"/>
+                    <span className="text-xs text-purple-200 font-semibold flex-1 truncate">{selectedEntry.player_name} selected</span>
+                    <button onClick={() => setSelectedEntry(null)} className="text-slate-500 hover:text-white transition text-xs">✕</button>
+                    <button onClick={() => { setBuilderTab("roster"); }} className="text-[10px] text-purple-300 hover:text-white transition">Assign →</button>
+                  </div>
+                )}
+                {filteredUnassigned.length === 0 ? (
+                  <p className="text-slate-600 text-xs text-center py-6">{poolSearch ? "No matches" : "All players assigned"}</p>
                 ) : (
                   <div className="space-y-2">
-                    {unassigned.map(entry => {
-                      const status = assignStatus[entry.player_tag];
+                    {filteredUnassigned.map(entry => {
+                      const isSelected = selectedEntry?.player_tag === entry.player_tag;
                       const busy = assigning === entry.player_tag;
+                      const status = assignStatus[entry.player_tag];
                       return (
-                        <motion.div key={entry.player_tag} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                          draggable onDragStart={() => onDragStart(entry)} onDragEnd={onDragEnd}
+                        <div key={entry.player_tag}
+                          draggable
+                          onDragStart={() => onDragStart(entry)} onDragEnd={onDragEnd}
                           onTouchStart={e => onTouchStartPlayer(e, entry)} onTouchMove={onTouchMovePlayer} onTouchEnd={onTouchEndPlayer}
+                          onClick={() => setSelectedEntry(isSelected ? null : entry)}
                           style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
-                          className={`rounded-2xl border p-3.5 select-none transition cursor-grab active:cursor-grabbing ${dragging?.player_tag === entry.player_tag ? "border-purple-400/50 bg-purple-500/10 opacity-50" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20"} ${busy ? "opacity-60 pointer-events-none" : ""}`}>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <ThIcon level={entry.town_hall_level} />
-                              <div className="min-w-0">
-                                <p className="font-semibold text-sm text-white truncate">{entry.player_name}</p>
-                                <p className="text-xs text-slate-500 font-mono mt-0.5">{entry.player_tag}</p>
-                              </div>
+                          className={`rounded-2xl border p-3 transition cursor-pointer select-none
+                            ${isSelected ? "border-purple-500/60 bg-purple-500/15 shadow-[0_0_12px_rgba(168,85,247,0.15)]" :
+                              dragging?.player_tag === entry.player_tag ? "border-purple-400/50 opacity-50" :
+                              "border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20"}
+                            ${busy ? "opacity-60 pointer-events-none" : ""}`}>
+                          <div className="flex items-center gap-3">
+                            <ThIcon level={entry.town_hall_level}/>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm text-white truncate">{entry.player_name}</p>
+                              <p className="text-[10px] text-slate-600 font-mono">{entry.player_tag}</p>
                             </div>
-                            <div className="shrink-0 flex items-center gap-2">
-                              {busy && <span className="text-xs text-slate-500 animate-pulse">Saving…</span>}
-                              {status && !busy && <Pill variant={status.ok ? "success" : "error"}>{status.msg}</Pill>}
-                              {!status && !busy && <span className="text-xs text-slate-600">drag to assign</span>}
-                            </div>
+                            {isSelected && <span className="text-[10px] text-purple-300 shrink-0">Selected ✓</span>}
+                            {status && !isSelected && <Pill variant={status.ok ? "success" : "error"}>{status.msg}</Pill>}
+                            {!isSelected && !status && <span className="text-[10px] text-slate-700 shrink-0 hidden sm:block">drag or tap</span>}
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </div>
                 )}
-              </Card>
-            ) : (
-              <Card>
-                {assigned.length === 0 ? (
-                  <p className="text-slate-600 text-sm text-center py-4">No players assigned yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {assigned.sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0)).map(e => (
-                      <div key={e.player_tag} className="flex items-center justify-between gap-3 py-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <ThIcon level={e.town_hall_level} size="w-6 h-6" />
-                          <div className="min-w-0">
-                            <span className="text-sm font-medium text-white truncate block">{e.player_name}</span>
-                            <span className="text-xs text-slate-600 font-mono">{e.player_tag}</span>
-                          </div>
-                        </div>
-                        <Pill variant="success">{e.assigned_clan}</Pill>
-                      </div>
-                    ))}
+              </div>
+            )}
+
+            {/* Roster tab */}
+            {builderTab === "roster" && (
+              <div className="p-4">
+                {/* Clan selector */}
+                {clans.length > 1 && (
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <button onClick={() => setActiveClanIdx(i => Math.max(0, i-1))} disabled={activeClanIdx === 0}
+                      className="text-slate-500 hover:text-slate-300 transition p-1 disabled:opacity-30">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <span className="text-sm font-semibold text-white min-w-[140px] text-center truncate">{currentClan?.split(" ")[0] || "—"}</span>
+                    <button onClick={() => setActiveClanIdx(i => Math.min(clans.length-1, i+1))} disabled={activeClanIdx === clans.length-1}
+                      className="text-slate-500 hover:text-slate-300 transition p-1 disabled:opacity-30">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </button>
                   </div>
                 )}
-              </Card>
-            )}
-          </section>
 
-          {/* Clan drop zones */}
-          <section>
-            <h2 className="text-xs uppercase tracking-widest text-slate-500 mb-3 ml-1">Clan Rosters</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {clans.map(clan => {
-                const clanEntries = assigned.filter(e => e.assigned_clan === clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
-                const isOver = overClan === clan;
-                const isClanDragging = draggingClan === clan;
-                const isClanOver = overClanTile === clan && draggingClan !== clan;
-                const format = clanFormats[clan] ?? 15;
-                return (
-                  <div key={clan} data-clan-zone={clan} data-clan-tile={clan}
-                    draggable
-                    onDragStart={() => onClanTileDragStart(clan)}
-                    onDragEnd={onClanTileDragEnd}
-                    onDragOver={e => { if (dragging) { onDragOver(e, clan); } else { onClanTileDragOver(e, clan); } }}
-                    onDragLeave={() => { if (dragging) onDragLeave(); else onClanTileDragLeave(); }}
-                    onDrop={e => { if (dragging) { onDrop(e, clan); } else { onClanTileDrop(e, clan); } }}
-                    onTouchStart={e => onClanTileTouchStart(e, clan)}
-                    onTouchMove={onClanTileTouchMove}
-                    onTouchEnd={onClanTileTouchEnd}
-                    style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
-                    className={`rounded-3xl border min-h-[140px] p-4 transition cursor-grab active:cursor-grabbing ${isClanDragging ? "opacity-50 border-purple-400/40" : ""} ${isClanOver ? "border-purple-400/60 bg-purple-500/5" : ""} ${isOver && !isClanDragging && !isClanOver ? "border-purple-400/50 bg-purple-500/5 shadow-lg shadow-purple-500/5" : !isClanDragging && !isClanOver ? "border-white/10 bg-white/[0.02]" : ""}`}>
-                    <div className="flex items-start justify-between mb-3 gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <p className="font-semibold text-sm text-white truncate">{clan}</p>
-                        <Pill variant="purple">{clanEntries.length}</Pill>
+                {currentClan && (
+                  <>
+                    {/* Clan meta */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Pill variant="purple">{currentClanEntries.length}/{currentFormat}</Pill>
+                        <FormatToggle format={currentFormat} busy={formatBusy === currentClan} error={formatError[currentClan]} onSetFormat={f => doSetFormat(currentClan, f)}/>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <FormatToggle format={format} busy={formatBusy === clan} error={formatError[clan]} onSetFormat={(f) => doSetFormat(clan, f)} />
-                        <RankRefreshButton busy={rankBusy === clan} result={rankResult[clan]} onClick={() => doRefreshRank(clan)} />
-                      </div>
+                      <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                     </div>
-                    {clanEntries.length === 0 && !isOver && <p className="text-xs text-slate-600 text-center py-3">Drop a player here</p>}
-                    {isOver && <p className="text-xs text-purple-400 text-center py-3 animate-pulse">Release to assign</p>}
-                    <div className="space-y-1.5 mt-1">
-                      {clanEntries.map(e => (
-                        <div key={e.player_tag} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 relative">
-                          <div className="absolute top-1.5 right-1.5">
-                            <XButton onClick={() => doUnassign(e)} busy={unassigning === e.player_tag} title="Unassign — return to pool" />
-                          </div>
-                          <div className="flex items-center justify-between gap-2 pr-6">
+
+                    {/* Tap to assign indicator */}
+                    {selectedEntry && (
+                      <button onClick={() => { doAssign(selectedEntry, currentClan); setSelectedEntry(null); }}
+                        className="w-full mb-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition">
+                        + Assign {selectedEntry.player_name} to {currentClan?.split(" ")[0]}
+                      </button>
+                    )}
+
+                    {/* Drop zone */}
+                    <div data-clan-zone={currentClan}
+                      onDragOver={e => onDragOver(e, currentClan)} onDragLeave={onDragLeave} onDrop={e => onDrop(e, currentClan)}
+                      className={`min-h-[60px] rounded-2xl border-2 border-dashed transition mb-3 flex items-center justify-center
+                        ${overClan === currentClan ? "border-purple-400/60 bg-purple-500/10" : "border-white/10"}`}>
+                      {overClan === currentClan
+                        ? <p className="text-xs text-purple-400 animate-pulse py-3">Release to assign</p>
+                        : currentClanEntries.length === 0 && <p className="text-xs text-slate-700 py-3">Drop a player here or use tap mode</p>
+                      }
+                    </div>
+
+                    {/* Assigned players */}
+                    <div className="space-y-1.5">
+                      {currentClanEntries.map(e => (
+                        <div key={e.player_tag} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                          <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0">
-                              <ThIcon level={e.town_hall_level} size="w-6 h-6" />
+                              <ThIcon level={e.town_hall_level} size="w-6 h-6"/>
                               <div className="min-w-0">
                                 <p className="text-xs font-medium text-white truncate">{e.player_name}</p>
                                 <p className="text-[10px] text-slate-600 font-mono">{e.player_tag}</p>
                               </div>
                             </div>
-                            <StatusToggle status={e.status} busy={statusBusy === e.player_tag} error={statusError[e.player_tag]} onSetStatus={(status) => doSetStatus(e, status)} />
+                            <div className="flex items-center gap-2 shrink-0">
+                              <StatusToggle status={e.status} busy={statusBusy === e.player_tag} error={statusError[e.player_tag]} onSetStatus={status => doSetStatus(e, status)}/>
+                              <XButton onClick={() => doUnassign(e)} busy={unassigning === e.player_tag} title="Unassign"/>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
+          {/* ── SEASON TILE ── */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+            <button onClick={() => setShowCloseSeasonForm(v => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left">
+              <div>
+                <p className="text-sm font-semibold text-slate-300">Season Management</p>
+                <p className="text-[10px] text-slate-600 mt-0.5">{season} · Migrate or fetch CWL data</p>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showCloseSeasonForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            {showCloseSeasonForm && (
+              <div className="px-5 pb-5 border-t border-white/10 space-y-3 pt-4">
+                {/* Migrate season */}
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
+                  <p className="text-xs text-amber-300 font-semibold">Migrate {season}</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">Records CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
+                  <input type="text" placeholder="Type CONFIRM" value={closeSeasonConfirm} onChange={e => setCloseSeasonConfirm(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition"/>
+                  <button onClick={doCloseSeason} disabled={closeSeasonConfirm !== "CONFIRM" || closeSeasonSubmitting}
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-amber-400 border border-amber-500/60 hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    {closeSeasonSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
+                  </button>
+                  {closeSeasonResult && <p className={`text-[11px] text-center ${closeSeasonResult.ok ? "text-green-400" : "text-red-400"}`}>{closeSeasonResult.message}</p>}
+                </div>
+                {/* Fetch CWL */}
+                <button onClick={doFetchCwlData} disabled={fetchingCwl}
+                  className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-blue-400 border border-blue-500/60 hover:border-blue-400 hover:text-blue-300 transition disabled:opacity-40 flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
+                </button>
+                {fetchCwlResult && <p className={`text-[11px] text-center ${fetchCwlResult.ok ? "text-blue-300" : "text-red-400"}`}>{fetchCwlResult.message}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* ── CLAN MANAGER ── */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+            <button onClick={() => setActiveClanForm(v => v ? null : "add")}
+              className="w-full flex items-center justify-between px-5 py-4 text-left">
+              <div>
+                <p className="text-sm font-semibold text-slate-300">Clan Manager</p>
+                <p className="text-[10px] text-slate-600 mt-0.5">Add or remove clans · {clans.length} active</p>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${activeClanForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            {activeClanForm && (
+              <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
+                {/* Tab toggle */}
+                <div className="flex items-center justify-center gap-4">
+                  <button onClick={() => toggleClanForm("add")} className="text-slate-500 hover:text-slate-300 transition p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                  </button>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest select-none min-w-[80px] text-center">
+                    {activeClanForm === "add" ? "Add Clan" : "Delete Clan"}
+                  </span>
+                  <button onClick={() => toggleClanForm("delete")} className="text-slate-500 hover:text-slate-300 transition p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
+
+                {activeClanForm === "add" && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Clan Tag</label>
+                      <div className="flex gap-2">
+                        <input type="text" placeholder="#ABC123" value={addClanTag} onChange={e => setAddClanTag(e.target.value)} onBlur={doLookupClan} autoCapitalize="characters" autoCorrect="off" spellCheck={false}
+                          className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
+                        <button type="button" onClick={doLookupClan} disabled={addClanLookupBusy || !addClanTag.trim()}
+                          className="px-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:border-white/30 hover:text-white transition disabled:opacity-40">
+                          {addClanLookupBusy ? "…" : "Lookup"}
+                        </button>
+                      </div>
+                      {addClanSuggestedName && <p className="text-xs text-purple-300 mt-1 ml-1">→ {addClanSuggestedName}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Clan Link</label>
+                      <input type="text" placeholder="https://link.clashofclans.com/…" value={addClanLink} onChange={e => setAddClanLink(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition text-sm"/>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">CWL Rank</label>
+                      <select value={addClanRank} onChange={e => setAddClanRank(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white focus:outline-none focus:border-purple-500/50 transition text-sm [color-scheme:dark]">
+                        <option value="">Select…</option>
+                        <option value="Unranked">Unranked</option>
+                        {Object.keys(CWL_ICONS).map(rank => <option key={rank} value={rank}>{rank}</option>)}
+                      </select>
+                    </div>
+                    <button type="button" onClick={doAddClan} disabled={addClanSubmitting || !addClanTag.trim() || !addClanLink.trim()}
+                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                      {addClanSubmitting ? "Adding…" : "Add Clan"}
+                    </button>
+                    {addClanResult && <p className={`text-xs text-center ${addClanResult.ok ? "text-green-300" : "text-red-400"}`}>{addClanResult.message}</p>}
+                  </div>
+                )}
+
+                {activeClanForm === "delete" && (
+                  <div className="space-y-3">
+                    <p className="text-[11px] text-slate-500">Type the exact clan name. Blocked if players are still assigned.</p>
+                    <input type="text" placeholder="e.g. Cognition {CGN}" value={deleteClanTag} onChange={e => setDeleteClanTag(e.target.value)}
+                      className="w-full rounded-2xl border border-red-500/20 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition text-sm"/>
+                    <button type="button" onClick={doDeleteClan} disabled={deleteClanSubmitting || !deleteClanTag.trim()}
+                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.12)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40">
+                      {deleteClanSubmitting ? "Deleting…" : "Delete Clan"}
+                    </button>
+                    {deleteClanResult && <p className={`text-xs text-center ${deleteClanResult.ok ? "text-green-300" : "text-red-400"}`}>{deleteClanResult.message}</p>}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Discord pill at bottom */}
+          <div className="flex justify-center pt-2">
+            <DiscordWidget variant="center"/>
+          </div>
         </div>
       )}
     </main>
