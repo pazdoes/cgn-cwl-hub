@@ -75,7 +75,6 @@ function FormatToggle({ format, busy, error, onSetFormat }) {
           className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 15 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>15v15</button>
         <button type="button" disabled={busy} onClick={() => onSetFormat(30)}
           className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 30 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>30v30</button>
-        <button type="button" disabled={busy} onClick={() => onSetFormat(11)}
           className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 11 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>11v11</button>
       </div>
       {error && <p className="text-[9px] text-red-400 text-right max-w-[180px] leading-tight">{error}</p>}
