@@ -57,17 +57,6 @@ function PlayersView({ players, onBack, rosterSeasons = [] }) {
           bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      <div className="relative z-10 mb-6">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Hub
-        </button>
-      </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
         <h1 className="text-2xl font-bold">All Players</h1>
@@ -134,17 +123,6 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
           bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      <div className="relative z-10 mb-6">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Hub
-        </button>
-      </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
         <h1 className="text-2xl font-bold">All Clans</h1>
@@ -304,17 +282,6 @@ function AvgThView({ players, clans, onBack }) {
           bg-purple-500/10 blur-3xl rounded-full" />
       </div>
 
-      <div className="relative z-10 mb-6">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Hub
-        </button>
-      </div>
 
       {/* Header tile — title, chart toggle, clan filter */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6">
@@ -1507,19 +1474,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 <div className="relative z-10 mb-6">
   <button
-    onClick={() => {
-      window.history.pushState({}, "", window.location.pathname);
-      setSelectedClan(null);
-      setHighlightedAccount(null);
-    }}
-    className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-    Back to Hub
-  </button>
-</div>
+
 
 <div className="
   rounded-3xl border border-white/10
