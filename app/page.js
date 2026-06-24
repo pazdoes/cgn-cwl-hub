@@ -2039,9 +2039,10 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       className="
         inline-flex items-center gap-2
         px-6 py-3 rounded-full
-        bg-purple-600/30 text-purple-200
-        border border-purple-500/30
-        hover:bg-purple-600/50 hover:text-white
+        bg-transparent text-purple-400
+        border border-purple-500/60
+        shadow-[0_0_10px_rgba(168,85,247,0.15)]
+        hover:shadow-[0_0_18px_rgba(168,85,247,0.28)] hover:border-purple-400 hover:text-purple-300
         transition font-semibold text-sm
       "
     >
