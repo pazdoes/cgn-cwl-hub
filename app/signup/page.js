@@ -581,350 +581,276 @@ export default function SignupPage() {
   }
 
   /* ─── render ─────────────────────────────────────────── */
+  // Determine which state we're in
+  const isNewUser = !loadingMine && myAccounts.length === 0;
+  const isReturningUser = !loadingMine && myAccounts.length > 0;
+  const [accountManagerOpen, setAccountManagerOpen] = useState(false);
+
   return (
-    <main className="
-      min-h-screen overflow-x-hidden w-full max-w-full
-      bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]
-      text-white p-6 pb-12
-    ">
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
 
       {/* ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2
-          w-[100vw] max-w-[600px] h-[100vw] max-h-[600px]
-          bg-purple-500/10 blur-3xl rounded-full" />
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
+      {/* ── Hero card — flush to top ── */}
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
+        <p className="text-slate-500 text-xs mb-4">{season ? `${season} season` : "Join the player pool"}</p>
 
+        {/* Discord section */}
+        <div className="flex flex-col items-center gap-1.5">
+          <DiscordWidget variant="center" />
+          {discordStatus !== "authenticated" && (
+            <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed">
+              Sign in with Discord to permanently bind your accounts to your profile across devices
+            </p>
+          )}
+          {discordStatus === "authenticated" && discordUser && (
+            <p className="text-[10px] text-green-500/70">
+              ✓ Accounts bound to your Discord profile
+            </p>
+          )}
+        </div>
 
-      {/* ── header card ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative z-10 mb-6"
-      >
-        <Card className="text-center">
-          <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-3xl font-thin tracking-widest">Sign Up for CWL</h1>
-          <div className="mt-3 flex justify-center">
-            <DiscordWidget variant="center" />
+        {/* Step indicator — only for new users */}
+        {(isNewUser || loadingMine) && accountsView === "accounts" && (
+          <div className="flex items-center justify-center gap-1.5 mt-4">
+            {["add", "accounts"].map((v, i) => (
+              <span key={v} className={`w-1.5 h-1.5 rounded-full transition ${accountsView === v || (i === 0) ? "bg-purple-400" : "bg-white/20"}`}/>
+            ))}
           </div>
-        </Card>
-      </motion.div>
+        )}
+      </div>
 
-      {/* ── quick-pick section (returning players) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.08 }}
-        className="relative z-10 mb-6"
-      >
-        <Card>
-          <div className="flex items-start justify-between gap-3 mb-1">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* Hamburger menu — left of title */}
-              <div className="relative shrink-0" ref={accountsMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setAccountsMenuOpen(v => !v)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
-                  title="Account options"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-                <AnimatePresence>
-                  {accountsMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                      transition={{ duration: 0.12 }}
-                      className="absolute left-0 top-full mt-1 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
-                    >
-                      <div className="p-1.5 space-y-0.5">
-                        <button
-                          type="button"
-                          onClick={() => { setAccountsView("accounts"); setAccountsMenuOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition text-left ${accountsView === "accounts" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white"}`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          Your Accounts
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setAccountsView("add"); setAccountsMenuOpen(false); setVerifyStatus(null); setTag(""); setToken(""); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition text-left ${accountsView === "add" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white"}`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                          </svg>
-                          Add Account
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setAccountsView("remove"); setAccountsMenuOpen(false); setManageTag(""); setManageResult(null); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition text-left ${accountsView === "remove" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white"}`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Remove Account
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+      {/* ── State A: Loading ── */}
+      {loadingMine && (
+        <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <Skeleton className="w-8 h-8 rounded-full shrink-0"/>
+                <div className="flex flex-col gap-1.5">
+                  <Skeleton className="w-28 h-3.5"/>
+                  <Skeleton className="w-20 h-3"/>
+                </div>
               </div>
-              <h2 className="text-lg font-semibold">Your Accounts</h2>
+              <Skeleton className="w-20 h-6 rounded-full shrink-0"/>
             </div>
-            {/* TH refresh — only when accounts exist */}
-            {myAccounts.length > 0 && (
-              <button
-                type="button"
-                onClick={handleThRefresh}
-                disabled={thRefreshing}
-                title={thRefreshResult
-                  ? (thRefreshResult.ok ? `Updated: ${thRefreshResult.message}` : thRefreshResult.message)
-                  : "Refresh Town Hall levels from game"}
-                className={`
-                  w-6 h-6 rounded-full flex items-center justify-center
-                  border transition disabled:opacity-50 shrink-0
-                  ${thRefreshResult?.ok === false
-                    ? "bg-red-500/10 border-red-500/30 text-red-300"
-                    : "bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.08] hover:text-slate-200"
-                  }
-                `}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${thRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+          ))}
+        </div>
+      )}
+
+      {/* ── State B: New user — 3-step add account form ── */}
+      {!loadingMine && isNewUser && (
+        <div className="relative z-10 space-y-4">
+          {/* Step card */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-6 h-6 rounded-full bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center shrink-0">1</span>
+              <h2 className="text-sm font-semibold text-slate-300">Link Your Account</h2>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1.5 ml-1">Player Tag</label>
+                <input type="text" placeholder="#ABC123" value={tag}
+                  onChange={e => setTag(e.target.value)}
+                  onPaste={e => { e.preventDefault(); setTag(e.clipboardData.getData("text")); }}
+                  autoCapitalize="characters" autoCorrect="off" spellCheck={false}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm"/>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1.5 ml-1">
+                  <label className="text-xs text-slate-400">API Token</label>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-600">Optional</span>
+                </div>
+                <input type="text" placeholder="Paste from in-game settings, or leave blank" value={token}
+                  onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
+                <p className="text-[10px] text-slate-600 mt-1.5 ml-1 leading-relaxed">Providing your token confirms account ownership and enables future personalisation features</p>
+              </div>
+              <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
+                className="w-full py-3 rounded-2xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                {verifying ? "Verifying…" : "Verify & Sign Up"}
               </button>
-            )}
+              {verifyStatus && (
+                <p className={`text-xs text-center ${verifyStatus.ok ? "text-green-300" : "text-red-400"}`}>{verifyStatus.message}</p>
+              )}
+            </div>
           </div>
-          {/* Add Account view */}
-          <AnimatePresence mode="wait">
-            {accountsView === "add" && (
-              <motion.div key="add" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4">
-                <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.04] p-4 space-y-3">
-                  <p className="text-xs text-slate-400">Enter a player tag to sign up. API token is optional but confirms ownership.</p>
+
+          {/* How it works */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">How it works</h2>
+            <ol className="space-y-3">
+              {[
+                ["Link your account", "Enter your player tag. API token is optional but confirms ownership and unlocks future features."],
+                ["Join the pool", "Your account enters the shared player pool for this season."],
+                ["Get assigned", "Admins assign players to clan rosters each season."],
+                ["One tap next season", "Saved accounts rejoin with a single tap — no reverification needed."],
+              ].map(([title, desc], i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                    <p className="text-xs font-semibold text-white">{title}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
+
+      {/* ── State C: Returning user — compact account dashboard ── */}
+      {!loadingMine && isReturningUser && (
+        <div className="relative z-10 space-y-3">
+
+          {/* Account cards */}
+          <div className="space-y-2">
+            {myAccounts.map(acct => {
+              const result = joinResult[acct.tag];
+              const busy   = joiningTag === acct.tag;
+              const isDragging = draggingTag === acct.tag;
+              const isDragOver  = dragOverTag === acct.tag && draggingTag !== acct.tag;
+              return (
+                <div
+                  key={acct.tag}
+                  data-account-tag={acct.tag}
+                  draggable
+                  onDragStart={() => onAccountDragStart(acct.tag)}
+                  onDragOver={e => onAccountDragOver(e, acct.tag)}
+                  onDragLeave={onAccountDragLeave}
+                  onDragEnd={onAccountDrop}
+                  onTouchStart={e => onAccountTouchStart(e, acct.tag)}
+                  onTouchMove={onAccountTouchMove}
+                  onTouchEnd={onAccountTouchEnd}
+                  style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
+                  className={`rounded-2xl border bg-white/[0.03] p-4 transition cursor-grab active:cursor-grabbing
+                    ${isDragging ? "opacity-40 border-purple-500/40" : "border-white/10 hover:bg-white/[0.05]"}
+                    ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <ThIcon level={acct.townHallLevel}/>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm truncate">{acct.name}</p>
+                      <p className="text-[10px] text-slate-600 font-mono">{acct.tag}</p>
+                    </div>
+                    {/* Join/Leave pill */}
+                    <div className="shrink-0">
+                      {acct.inCurrentPool ? (
+                        <button onClick={() => handleLeave(acct.tag)} disabled={leavingTag === acct.tag}
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30 disabled:opacity-50 transition whitespace-nowrap">
+                          {leavingTag === acct.tag ? "Leaving…" : "✓ In Pool"}
+                        </button>
+                      ) : result?.ok ? (
+                        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30">✓ Signed Up</span>
+                      ) : (
+                        <button onClick={() => handleJoin(acct.tag)} disabled={busy}
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 hover:text-white disabled:opacity-50 transition">
+                          {busy ? "…" : "Sign Up"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {leaveError[acct.tag] && (
+                    <p className="text-[10px] text-red-400 mt-2 text-center">{leaveError[acct.tag]}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Account Manager — collapsible */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+            <button type="button" onClick={() => setAccountManagerOpen(v => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span className="text-sm text-slate-400">Account Manager</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${accountManagerOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            {accountManagerOpen && (
+              <div className="px-5 pb-5 space-y-4 border-t border-white/10">
+                {/* TH refresh */}
+                <div className="flex items-center justify-between pt-4">
+                  <div>
+                    <p className="text-xs text-slate-300 font-semibold">Refresh Town Hall Levels</p>
+                    <p className="text-[10px] text-slate-600 mt-0.5">Updates TH levels from the game</p>
+                  </div>
+                  <button type="button" onClick={handleThRefresh} disabled={thRefreshing}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-50 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${thRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    {thRefreshing ? "Refreshing…" : "Refresh"}
+                  </button>
+                </div>
+                {thRefreshResult && (
+                  <p className={`text-[10px] ${thRefreshResult.ok ? "text-green-400" : "text-red-400"}`}>{thRefreshResult.message}</p>
+                )}
+
+                {/* Add account */}
+                <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                  <p className="text-xs text-slate-400 font-semibold">Add Account</p>
+                  <div>
+                    <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Player Tag</label>
                     <input type="text" placeholder="#ABC123" value={tag}
                       onChange={e => setTag(e.target.value)}
                       onPaste={e => { e.preventDefault(); setTag(e.clipboardData.getData("text")); }}
                       autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm" />
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm"/>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">In-Game API Token <span className="text-slate-600">(optional)</span></label>
-                    <input type="text" placeholder="Paste your token here, or leave blank" value={token}
+                    <div className="flex items-center gap-2 mb-1.5 ml-1">
+                      <label className="text-[10px] text-slate-500">API Token</label>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-600">Optional</span>
+                    </div>
+                    <input type="text" placeholder="From in-game settings" value={token}
                       onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm" />
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
                   </div>
                   <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                    className="w-full py-2.5 rounded-xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    {verifying ? "Signing up…" : "Sign Up"}
+                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    {verifying ? "Verifying…" : "Add Account"}
                   </button>
                   {verifyStatus && (
                     <p className={`text-xs text-center ${verifyStatus.ok ? "text-green-300" : "text-red-400"}`}>{verifyStatus.message}</p>
                   )}
                 </div>
-              </motion.div>
-            )}
-            {accountsView === "remove" && (
-              <motion.div key="remove" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4">
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-4 space-y-3">
-                  <p className="text-xs text-slate-400">Enter a player tag to remove it from this device. You can re-add it anytime.</p>
+
+                {/* Remove account */}
+                <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                  <p className="text-xs text-slate-400 font-semibold">Remove Account</p>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                    <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Player Tag</label>
                     <input type="text" placeholder="#ABC123" value={manageTag}
                       onChange={e => setManageTag(e.target.value)}
                       autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-xl border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm" />
+                      className="w-full rounded-2xl border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm"/>
                   </div>
                   <button type="button" onClick={handleManageSubmit} disabled={manageSubmitting || !manageTag.trim()}
-                    className="w-full py-2.5 rounded-xl font-semibold text-sm bg-red-600/40 text-red-100 border border-red-500/30 hover:bg-red-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-red-600/40 text-red-100 border border-red-500/30 hover:bg-red-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {manageSubmitting ? "Removing…" : "Remove Account"}
                   </button>
                   {manageResult && (
                     <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>{manageResult.message}</p>
                   )}
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
-
-          {accountsView === "accounts" && (loadingMine ? (
-            <div className="space-y-3">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Skeleton className="w-8 h-8 rounded-full shrink-0" />
-                    <div className="flex flex-col gap-1.5">
-                      <Skeleton className="w-28 h-3.5" />
-                      <Skeleton className="w-20 h-3" />
-                    </div>
-                  </div>
-                  <Skeleton className="w-20 h-6 rounded-full shrink-0" />
-                </div>
-              ))}
-            </div>
-          ) : myAccounts.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-slate-600 text-sm mb-5">
-                No verified accounts on this device yet.<br />
-                <span className="text-slate-500">Add your first account to get started.</span>
-              </p>
-              <button
-                type="button"
-                onClick={openManageAdd}
-                className="
-                  inline-flex items-center gap-2
-                  px-6 py-3 rounded-full
-                  bg-purple-600/30 text-purple-200
-                  border border-purple-500/30
-                  hover:bg-purple-600/50 hover:text-white
-                  transition font-semibold text-sm
-                "
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Account
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {myAccounts.map(acct => {
-                const result = joinResult[acct.tag];
-                const busy   = joiningTag === acct.tag;
-                const isDragging = draggingTag === acct.tag;
-                const isDragOver  = dragOverTag === acct.tag && draggingTag !== acct.tag;
-
-                return (
-                  <motion.div
-                    key={acct.tag}
-                    data-account-tag={acct.tag}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    draggable
-                    onDragStart={() => onAccountDragStart(acct.tag)}
-                    onDragOver={e => onAccountDragOver(e, acct.tag)}
-                    onDragLeave={onAccountDragLeave}
-                    onDragEnd={onAccountDrop}
-                    onTouchStart={e => onAccountTouchStart(e, acct.tag)}
-                    onTouchMove={onAccountTouchMove}
-                    onTouchEnd={onAccountTouchEnd}
-                    style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
-                    className={`
-                      rounded-2xl border bg-white/[0.03]
-                      p-4 transition hover:bg-white/[0.05] cursor-grab active:cursor-grabbing
-                      ${isDragging ? "opacity-40 border-purple-500/40" : "border-white/10"}
-                      ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
-                    `}
-                  >
-                    {/* account info row — TH icon and name flush left */}
-                    <div className="flex items-center gap-3 min-w-0 mb-3">
-                      <ThIcon level={acct.townHallLevel} />
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-semibold text-white truncate">{acct.name}</span>
-                        <span className="text-xs text-slate-500 font-mono">{acct.tag}</span>
-                      </div>
-                    </div>
-
-                    {/* unified toggle — centred below name row */}
-                    <div className="flex flex-col items-center gap-1.5">
-                      {acct.inCurrentPool ? (
-                        <button
-                          onClick={() => handleLeave(acct.tag)}
-                          disabled={leavingTag === acct.tag}
-                          className="
-                            w-full px-4 py-1.5 rounded-full text-xs font-semibold text-center
-                            bg-green-500/20 text-green-300 border border-green-500/30
-                            hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30
-                            disabled:opacity-50 disabled:cursor-not-allowed transition
-                          "
-                        >
-                          {leavingTag === acct.tag ? "Leaving…" : "✓ Signed Up — tap to leave"}
-                        </button>
-                      ) : result ? (
-                        <span className={`w-full text-center px-4 py-1.5 rounded-full text-xs font-semibold border ${
-                          result.ok
-                            ? "bg-green-500/20 text-green-300 border-green-500/30"
-                            : "bg-red-500/20 text-red-300 border-red-500/30"
-                        }`}>
-                          {result.ok ? "✓ Signed Up" : "Failed — try again"}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleJoin(acct.tag)}
-                          disabled={busy}
-                          className="
-                            w-full px-4 py-1.5 rounded-full text-xs font-semibold text-center
-                            bg-purple-600/30 text-purple-200 border border-purple-500/30
-                            hover:bg-purple-600/50 hover:text-white transition
-                            disabled:opacity-50 disabled:cursor-not-allowed
-                          "
-                        >
-                          {busy ? "Signing up…" : "Sign Up"}
-                        </button>
-                      )}
-                      {leaveError[acct.tag] && (
-                        <p className="text-[10px] text-red-400 text-center leading-tight">
-                          {leaveError[acct.tag]}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ))}
-        </Card>
-      </motion.div>
-
-      {/* ── how it works ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.24 }}
-        className="relative z-10"
-      >
-        <Card>
-          <h2 className="text-base font-semibold mb-4 text-slate-300">How it works</h2>
-          <ol className="space-y-3">
-            {[
-              ["Sign up with your tag", "Enter your player tag to join the pool. Adding your API token is optional, but confirms it's really your account."],
-              ["Join the pool", "Once verified, your account goes into the shared available-player pool for this season."],
-              ["Get assigned", "Admins review the pool and assign players to specific clan rosters each season based on clan needs."],
-              ["Repeat each season", "For future seasons, just tap Sign up on any of your saved accounts — no reverification needed."],
-            ].map(([title, desc], i) => (
-              <li key={i} className="flex gap-4">
-                <span className="
-                  shrink-0 w-7 h-7 rounded-full
-                  bg-purple-500/20 border border-purple-500/30
-                  text-purple-300 text-xs font-bold
-                  flex items-center justify-center mt-0.5
-                ">
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-white">{title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </Card>
-      </motion.div>
+          </div>
+        </div>
+      )}
 
     </main>
   );
