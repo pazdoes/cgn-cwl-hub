@@ -743,6 +743,12 @@ function ColIcon({ colKey }) {
         <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
+    star_breakdown: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+      </svg>
+    ),
   };
   return icons[colKey] || null;
 }
@@ -771,6 +777,79 @@ function ColHeader({ col, sortBy, sortDir, onClick }) {
         </div>
       )}
     </th>
+  );
+}
+
+// Mini pie chart for star breakdown
+function MiniPie({ three = 0, two = 0, one = 0, zero = 0 }) {
+  const total = three + two + one + zero;
+  if (total === 0) return <span className="text-slate-700 text-[10px]">—</span>;
+
+  const [expanded, setExpanded] = useState(false);
+
+  // SVG pie chart
+  function buildPie(size) {
+    const cx = size / 2, cy = size / 2, r = size / 2 - 1;
+    const slices = [
+      { value: three, color: "#86efac" }, // green-300
+      { value: two,   color: "#a78bfa" }, // purple-400
+      { value: one,   color: "#fbbf24" }, // amber-400
+      { value: zero,  color: "#475569" }, // slate-600
+    ].filter(s => s.value > 0);
+
+    let startAngle = -Math.PI / 2;
+    const paths = slices.map((s, i) => {
+      const angle = (s.value / total) * 2 * Math.PI;
+      const endAngle = startAngle + angle;
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+      const largeArc = angle > Math.PI ? 1 : 0;
+      const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+      startAngle = endAngle;
+      return <path key={i} d={d} fill={s.color} />;
+    });
+
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {paths}
+      </svg>
+    );
+  }
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <button type="button" onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
+        className="flex items-center justify-center rounded-full hover:opacity-80 transition">
+        {buildPie(22)}
+      </button>
+      {expanded && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl p-3 shadow-xl min-w-[120px]"
+          onClick={e => e.stopPropagation()}>
+          <div className="flex justify-center mb-2">{buildPie(64)}</div>
+          <div className="space-y-1 text-[10px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-300 inline-block" />3★</span>
+              <span className="text-white font-semibold">{three}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />2★</span>
+              <span className="text-white font-semibold">{two}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />1★</span>
+              <span className="text-white font-semibold">{one}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-600 inline-block" />0★</span>
+              <span className="text-white font-semibold">{zero}</span>
+            </div>
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white/10" />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -814,13 +893,14 @@ function LeaderboardView({ onBack }) {
     { key: "defence_pct",     label: "Defence %" },
     { key: "attacks_used",    label: "Attacks" },
     { key: "missed_attacks",  label: "Missed" },
+    { key: "star_breakdown",  label: "Star Breakdown" },
   ];
 
   const FILTER_COLS = {
-    default:  ["efficiency", "stars_earned"],
-    attack:   ["efficiency", "stars_earned", "destruction_pct", "attacks_used", "missed_attacks"],
+    default:  ["efficiency", "stars_earned", "star_breakdown"],
+    attack:   ["efficiency", "stars_earned", "destruction_pct", "attacks_used", "missed_attacks", "star_breakdown"],
     defence:  ["efficiency", "stars_conceded", "defence_pct", "attacks_used"],
-    all:      ["efficiency", "stars_earned", "destruction_pct", "stars_conceded", "defence_pct", "attacks_used", "missed_attacks"],
+    all:      ["efficiency", "stars_earned", "destruction_pct", "stars_conceded", "defence_pct", "attacks_used", "missed_attacks", "star_breakdown"],
   };
 
   const activeCols = ALL_COLS.filter(c => FILTER_COLS[statFilter].includes(c.key));
@@ -870,6 +950,7 @@ function LeaderboardView({ onBack }) {
       case "defence_pct":     return <span className="text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</span>;
       case "attacks_used":    return <span className="text-slate-300">{p.attacks_used}</span>;
       case "missed_attacks":  return <span className={p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}>{p.missed_attacks}</span>;
+      case "star_breakdown":  return <MiniPie three={p.three_stars || 0} two={p.two_stars || 0} one={p.one_stars || 0} zero={p.zero_stars || 0} />;
       default: return null;
     }
   }
