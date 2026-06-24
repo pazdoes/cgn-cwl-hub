@@ -995,26 +995,20 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
             </div>
           )}
 
-          {/* View toggle arrows — bottom of expanded card */}
-          <div className="flex items-center justify-center gap-6 pt-3 mt-2 border-t border-white/[0.06]">
-            <button
-              onClick={e => { e.stopPropagation(); setCardView("stats"); }}
-              className={`w-7 h-7 rounded-full flex items-center justify-center border transition ${cardView === "stats" ? "border-purple-500/40 bg-purple-600/20 text-purple-300" : "border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300"}`}
-              title="Stats view"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          {/* View toggle — minimal bare chevrons */}
+          <div className="flex items-center justify-center gap-4 pt-3 mt-2 border-t border-white/[0.06]">
+            <button onClick={e => { e.stopPropagation(); setCardView("stats"); }}
+              className="text-slate-500 hover:text-slate-300 transition p-1" title="Stats view">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
               </svg>
             </button>
-            <span className="text-[10px] text-slate-600 uppercase tracking-widest">
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
               {cardView === "stats" ? "Stats" : "Breakdown"}
             </span>
-            <button
-              onClick={e => { e.stopPropagation(); setCardView("breakdown"); }}
-              className={`w-7 h-7 rounded-full flex items-center justify-center border transition ${cardView === "breakdown" ? "border-purple-500/40 bg-purple-600/20 text-purple-300" : "border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300"}`}
-              title="Breakdown view"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <button onClick={e => { e.stopPropagation(); setCardView("breakdown"); }}
+              className="text-slate-500 hover:text-slate-300 transition p-1" title="Breakdown view">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
@@ -1091,29 +1085,105 @@ function LeaderboardView({ onBack }) {
     setExpandedTag(prev => prev === tag ? null : tag);
   }
 
+  // All Time: aggregate all seasons per player
+  const allTimeData = (() => {
+    if (!allSeasonData || allSeasonData.length === 0) return [];
+    const map = {};
+    for (const p of allSeasonData) {
+      const tag = p.player_tag;
+      if (!map[tag]) {
+        map[tag] = {
+          player_tag: tag,
+          player_name: p.player_name,
+          clan_name: p.clan_name,
+          stars_earned: 0,
+          stars_conceded: 0,
+          attacks_used: 0,
+          attacks_available: 0,
+          missed_attacks: 0,
+          three_stars: 0, two_stars: 0, one_stars: 0, zero_stars: 0,
+          three_stars_conceded: 0, two_stars_conceded: 0, one_stars_conceded: 0, zero_stars_conceded: 0,
+          _destSum: 0, _defSum: 0, _atkCount: 0, _defCount: 0,
+        };
+      }
+      const m = map[tag];
+      m.stars_earned += p.stars_earned || 0;
+      m.stars_conceded += p.stars_conceded || 0;
+      m.attacks_used += p.attacks_used || 0;
+      m.attacks_available += p.attacks_available || 0;
+      m.missed_attacks += p.missed_attacks || 0;
+      m.three_stars += p.three_stars || 0;
+      m.two_stars += p.two_stars || 0;
+      m.one_stars += p.one_stars || 0;
+      m.zero_stars += p.zero_stars || 0;
+      m.three_stars_conceded += p.three_stars_conceded || 0;
+      m.two_stars_conceded += p.two_stars_conceded || 0;
+      m.one_stars_conceded += p.one_stars_conceded || 0;
+      m.zero_stars_conceded += p.zero_stars_conceded || 0;
+      if (p.attacks_used > 0) { m._destSum += parseFloat(p.destruction_pct) * p.attacks_used; m._atkCount += p.attacks_used; }
+      if (p.attacks_available > 0) { m._defSum += parseFloat(p.defence_pct) * p.attacks_available; m._defCount += p.attacks_available; }
+    }
+    return Object.values(map).map(m => ({
+      ...m,
+      destruction_pct: m._atkCount > 0 ? (m._destSum / m._atkCount).toFixed(2) : "0.00",
+      defence_pct: m._defCount > 0 ? (m._defSum / m._defCount).toFixed(2) : "0.00",
+      efficiency: m.attacks_used > 0 ? (m.stars_earned / m.attacks_used).toFixed(2) : "0.00",
+      defence_efficiency: m.attacks_available > 0 ? (m.stars_conceded / m.attacks_available).toFixed(2) : "0.00",
+    }));
+  })();
+
+  const displayData = selectedSeason === "all" ? allTimeData : data;
+
+  const clans = displayData ? [...new Set(displayData.map(p => p.clan_name))].sort() : [];
+  const searchLower = search.toLowerCase();
+  const filtered = displayData
+    ? displayData
+        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
+        .filter(p => !searchLower ||
+          p.player_name.toLowerCase().includes(searchLower) ||
+          p.player_tag.toLowerCase().includes(searchLower) ||
+          p.clan_name.toLowerCase().includes(searchLower)
+        )
+    : [];
+  const sorted2 = [...filtered].sort((a, b) => {
+    const av = parseFloat(a[sortBy]) || 0;
+    const bv = parseFloat(b[sortBy]) || 0;
+    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
+    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
+    return (av - bv) * dir;
+  });
+
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
-      <div className="relative z-10 mb-4">
-        <button onClick={onBack} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-          Back to Hub
-        </button>
-      </div>
+
+      {/* Hero card — flush to top, no back button */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">Player performance by season</p>
+
+        {/* Three dropdowns in one row */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-          {seasons.length > 0 && (
-            <select value={selectedSeason||""} onChange={e=>fetchSeason(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              {seasons.map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
-          )}
+          {/* Season selector — All Time default */}
+          <select value={selectedSeason||"all"} onChange={e => {
+            const val = e.target.value;
+            setSelectedSeason(val);
+            setExpandedTag(null);
+            setClanFilter("all");
+            if (val !== "all") {
+              setData(null);
+              fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
+                .then(r=>r.json()).then(d=>setData(d.stats||[])).catch(()=>setData([]));
+            }
+          }}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+            <option value="all">All Time</option>
+            {seasons.map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+
+          {/* Clan filter */}
           {clans.length > 1 && (
             <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
               className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
@@ -1121,18 +1191,32 @@ function LeaderboardView({ onBack }) {
               {clans.map(c=><option key={c} value={c}>{c}</option>)}
             </select>
           )}
+
+          {/* Sort filter — grouped */}
+          <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+            <optgroup label="Attack">
+              <option value="efficiency">Atk Efficiency</option>
+              <option value="stars_earned">Stars Earned</option>
+              <option value="destruction_pct">Destruction %</option>
+              <option value="attacks_used">Attacks Used</option>
+              <option value="missed_attacks">Missed Attacks</option>
+            </optgroup>
+            <optgroup label="Defence">
+              <option value="defence_efficiency">Def Efficiency</option>
+              <option value="stars_conceded">Stars Conceded</option>
+              <option value="defence_pct">Defence %</option>
+            </optgroup>
+          </select>
+
+          {/* Sort direction toggle */}
+          <button type="button" onClick={()=>setSortDir(d=>d==="desc"?"asc":"desc")}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400 hover:text-white transition">
+            {sortDir === "desc" ? "↓ High–Low" : "↑ Low–High"}
+          </button>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
-          {SORT_OPTIONS.map(o=>(
-            <button key={o.key} type="button" onClick={()=>{
-              if(sortBy===o.key) setSortDir(d=>d==="desc"?"asc":"desc");
-              else { setSortBy(o.key); setSortDir("desc"); }
-            }}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${sortBy===o.key ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
-              {o.label}{sortBy===o.key?(sortDir==="desc"?" ↓":" ↑"):""}
-            </button>
-          ))}
-        </div>
+
+        {/* Search */}
         <div className="relative max-w-xs mx-auto">
           <input type="text" placeholder="Search player or tag…" value={search} onChange={e=>setSearch(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
@@ -1146,14 +1230,15 @@ function LeaderboardView({ onBack }) {
           )}
         </div>
       </div>
+
       <div className="relative z-10 space-y-2">
-        {data === null ? (
+        {displayData === null ? (
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
-        ) : sorted.length === 0 ? (
+        ) : sorted2.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
             <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
           </div>
-        ) : sorted.map((p, i) => (
+        ) : sorted2.map((p, i) => (
           <PlayerCard
             key={p.player_tag}
             p={p}
