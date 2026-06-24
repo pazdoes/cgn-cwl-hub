@@ -223,6 +223,8 @@ export default function AdminPoolPage() {
   const [closeSeasonConfirm, setCloseSeasonConfirm] = useState("");
   const [closeSeasonSubmitting, setCloseSeasonSubmitting] = useState(false);
   const [closeSeasonResult, setCloseSeasonResult] = useState(null);
+  const [fetchingCwl, setFetchingCwl] = useState(false);
+  const [fetchCwlResult, setFetchCwlResult] = useState(null);
 
   async function loadPool(savedPin) {
     setLoading(true); setError(null);
@@ -565,12 +567,26 @@ export default function AdminPoolPage() {
       const res = await fetch("/api/admin/season/close", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ confirm: "CONFIRM" }) });
       const data = await res.json();
       if (res.ok) {
-        setCloseSeasonResult({ ok: true, message: `${data.closed} closed → ${data.opened} now open` });
+        setCloseSeasonResult({ ok: true, message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived` });
         setCloseSeasonConfirm(""); setShowCloseSeasonForm(false);
         await loadPool(pin);
       } else { setCloseSeasonResult({ ok: false, message: data.error || "Failed to close season" }); }
     } catch { setCloseSeasonResult({ ok: false, message: "Network error" }); }
     finally { setCloseSeasonSubmitting(false); }
+  }
+
+  async function doFetchCwlData() {
+    setFetchingCwl(true); setFetchCwlResult(null);
+    try {
+      const res = await fetch("/api/admin/cwl-fetch", { method: "POST", headers: { "x-officer-pin": pin } });
+      const data = await res.json();
+      if (res.ok) {
+        setFetchCwlResult({ ok: true, message: `Captured ${data.playersProcessed} players across ${data.clansProcessed} clans for ${data.season}` });
+      } else {
+        setFetchCwlResult({ ok: false, message: data.error || "Fetch failed" });
+      }
+    } catch { setFetchCwlResult({ ok: false, message: "Network error" }); }
+    finally { setFetchingCwl(false); }
   }
 
   async function doDeleteClan(e) {
@@ -680,7 +696,14 @@ export default function AdminPoolPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Close Season
+                Migrate Season
+              </button>
+              <button type="button" onClick={doFetchCwlData} disabled={fetchingCwl}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 text-xs font-semibold hover:bg-blue-500/20 hover:text-blue-200 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
               </button>
             ) : null}
           </div>
@@ -690,19 +713,22 @@ export default function AdminPoolPage() {
             <motion.form onSubmit={doCloseSeason} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="overflow-hidden mt-4 max-w-xs mx-auto">
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3 text-left relative">
                 <button type="button" onClick={() => { setShowCloseSeasonForm(false); setCloseSeasonConfirm(""); }} className="absolute top-3 right-3 text-slate-500 hover:text-white transition text-xs">✕</button>
-                <p className="text-xs text-amber-300 font-semibold">Close {season}?</p>
+                <p className="text-xs text-amber-300 font-semibold">Migrate {season}?</p>
                 <p className="text-[11px] text-slate-400 leading-relaxed">Records current CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
                 <input type="text" placeholder="Type CONFIRM" value={closeSeasonConfirm} onChange={e => setCloseSeasonConfirm(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition" />
                 <button type="submit" disabled={closeSeasonConfirm !== "CONFIRM" || closeSeasonSubmitting}
                   className="w-full px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-200 border border-amber-500/30 hover:bg-amber-500/30 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                  {closeSeasonSubmitting ? "Closing…" : `Close ${season} & Open Next`}
+                  {closeSeasonSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
                 </button>
               </div>
             </motion.form>
           )}
           {closeSeasonResult && (
             <p className={`text-[11px] text-center mt-2 ${closeSeasonResult.ok ? "text-green-400" : "text-red-400"}`}>{closeSeasonResult.message}</p>
+          )}
+          {fetchCwlResult && (
+            <p className={`text-[11px] text-center mt-1 ${fetchCwlResult.ok ? "text-blue-300" : "text-red-400"}`}>{fetchCwlResult.message}</p>
           )}
 
           {/* Add Clan form */}

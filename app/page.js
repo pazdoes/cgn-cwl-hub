@@ -27,7 +27,24 @@ function rankSortIndex(rank) {
 // the confirmed scope. Visually modeled on the admin pool page's card
 // style, but with every admin control (drag-and-drop, X buttons, status
 // toggles) stripped out — this is a public, read-only view.
-function PlayersView({ players, onBack }) {
+function PlayersView({ players, onBack, rosterSeasons = [] }) {
+  const [histSeason, setHistSeason] = useState(null);
+  const [histPlayers, setHistPlayers] = useState(null);
+  const [loadingHist, setLoadingHist] = useState(false);
+
+  function loadHistSeason(season) {
+    if (!season) { setHistSeason(null); setHistPlayers(null); return; }
+    setHistSeason(season);
+    setLoadingHist(true);
+    fetch(`/api/roster-history?season=${encodeURIComponent(season)}`)
+      .then(r => r.json())
+      .then(d => setHistPlayers(d.players || []))
+      .catch(() => setHistPlayers([]))
+      .finally(() => setLoadingHist(false));
+  }
+
+  const displayPlayers = histPlayers || players;
+  const isHistorical = !!histSeason;
   return (
     <main className="
       min-h-screen overflow-x-hidden w-full max-w-full
@@ -54,16 +71,25 @@ function PlayersView({ players, onBack }) {
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
         <h1 className="text-2xl font-bold">All Players</h1>
-        <p className="text-slate-400 text-sm mt-1">{players.length} rostered this season</p>
+        <p className="text-slate-400 text-sm mt-1">{displayPlayers.length} {isHistorical ? `in ${histSeason}` : "rostered this season"}</p>
+        {rosterSeasons.length > 0 && (
+          <div className="mt-3 flex justify-center">
+            <select value={histSeason || ""} onChange={e => loadHistSeason(e.target.value || null)}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              <option value="">Current Season</option>
+              {rosterSeasons.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
         <div className="space-y-2">
-          {[...players]
-            .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
+          {loadingHist ? <div className="text-slate-500 text-sm text-center py-6 animate-pulse">Loading…</div> : [...displayPlayers]
+            .sort((a, b) => Number(b.townHall || b.town_hall_level || 0) - Number(a.townHall || a.town_hall_level || 0))
             .map(player => (
             <div
-              key={`${player.clan}-${player.account}-${player.position}`}
+              key={player.player_tag || `${player.clan}-${player.account}-${player.position}`}
               className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5"
             >
               <div className="flex items-center justify-between gap-3">
@@ -810,7 +836,16 @@ function LeaderboardView({ onBack }) {
   );
 }
 
-const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth"
+const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
+const [rosterSeasons, setRosterSeasons] = useState([]);
+
+// Load roster history seasons on mount for historical filters
+useEffect(() => {
+  fetch("/api/roster-history")
+    .then(r => r.json())
+    .then(d => setRosterSeasons(d.seasons || []))
+    .catch(() => {});
+}, []);
 const [highlightedAccount, setHighlightedAccount] = useState(null);
 const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth source
 
@@ -869,7 +904,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   : [];
 
   if (statView === "players") {
-    return <PlayersView players={players} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+    return <PlayersView players={players} rosterSeasons={rosterSeasons} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (statView === "clans") {
