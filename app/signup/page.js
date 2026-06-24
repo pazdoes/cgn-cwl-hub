@@ -128,6 +128,11 @@ export default function SignupPage() {
   const [leavingTag, setLeavingTag]   = useState(null);
   const [leaveError, setLeaveError]   = useState({}); // { [tag]: message }
 
+  // Hamburger menu state for Your Accounts card
+  const [accountsMenuOpen, setAccountsMenuOpen] = useState(false);
+  const [accountsView, setAccountsView] = useState("accounts"); // "accounts" | "add" | "remove"
+  const accountsMenuRef = useRef(null);
+
   // Manage panel (item 9)
   const [manageOpen,        setManageOpen]        = useState(false);
   const [manageTab,         setManageTab]         = useState("add"); // "add" | "remove"
@@ -157,9 +162,20 @@ export default function SignupPage() {
       .finally(() => setLoadingMine(false));
   }, []);
 
+  // Close accounts menu on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (accountsMenuRef.current && !accountsMenuRef.current.contains(e.target)) {
+        setAccountsMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   /* --- register a new account (token optional — item 8) --- */
   async function handleVerify(e) {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     const normTag = normaliseTag(tag);
     if (!normTag) return;
 
@@ -306,7 +322,7 @@ export default function SignupPage() {
   }
 
   async function handleManageSubmit(e) {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     const normTag = normaliseTag(manageTag);
     if (!normTag) return;
 
@@ -607,210 +623,137 @@ export default function SignupPage() {
       >
         <Card>
           <div className="flex items-start justify-between gap-3 mb-1">
-            <h2 className="text-lg font-semibold">Your Accounts</h2>
-            {myAccounts.length > 0 && (
-              <div className="flex items-center gap-2 shrink-0">
-                {/* TH refresh — same circular style as the clan card
-                    rank-refresh button; only shown once at least one
-                    account is linked, since there's nothing to refresh
-                    before then. */}
+            <div className="flex items-center gap-2 min-w-0">
+              {/* Hamburger menu — left of title */}
+              <div className="relative shrink-0" ref={accountsMenuRef}>
                 <button
                   type="button"
-                  onClick={handleThRefresh}
-                  disabled={thRefreshing}
-                  title={thRefreshResult
-                    ? (thRefreshResult.ok ? `Updated: ${thRefreshResult.message}` : thRefreshResult.message)
-                    : "Refresh Town Hall levels from game"}
-                  className={`
-                    w-6 h-6 rounded-full flex items-center justify-center
-                    border transition disabled:opacity-50
-                    ${thRefreshResult?.ok === false
-                      ? "bg-red-500/10 border-red-500/30 text-red-300"
-                      : "bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.08] hover:text-slate-200"
-                    }
-                  `}
+                  onClick={() => setAccountsMenuOpen(v => !v)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
+                  title="Account options"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${thRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => toggleManage(manageTab)}
-                  className={`
-                    shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition
-                    ${manageOpen
-                      ? "bg-slate-500/30 text-white border-slate-500/40"
-                      : "bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30 hover:text-white"
-                    }
-                  `}
-                >
-                  Manage
-                </button>
+                <AnimatePresence>
+                  {accountsMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute left-0 top-full mt-1 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
+                    >
+                      <div className="p-1.5 space-y-0.5">
+                        <button
+                          type="button"
+                          onClick={() => { setAccountsView("accounts"); setAccountsMenuOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition text-left ${accountsView === "accounts" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white"}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          Your Accounts
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAccountsView("add"); setAccountsMenuOpen(false); setVerifyStatus(null); setTag(""); setToken(""); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition text-left ${accountsView === "add" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white"}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                          Add Account
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAccountsView("remove"); setAccountsMenuOpen(false); setManageTag(""); setManageResult(null); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition text-left ${accountsView === "remove" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white"}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Remove Account
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+              <h2 className="text-lg font-semibold">Your Accounts</h2>
+            </div>
+            {/* TH refresh — only when accounts exist */}
+            {myAccounts.length > 0 && (
+              <button
+                type="button"
+                onClick={handleThRefresh}
+                disabled={thRefreshing}
+                title={thRefreshResult
+                  ? (thRefreshResult.ok ? `Updated: ${thRefreshResult.message}` : thRefreshResult.message)
+                  : "Refresh Town Hall levels from game"}
+                className={`
+                  w-6 h-6 rounded-full flex items-center justify-center
+                  border transition disabled:opacity-50 shrink-0
+                  ${thRefreshResult?.ok === false
+                    ? "bg-red-500/10 border-red-500/30 text-red-300"
+                    : "bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.08] hover:text-slate-200"
+                  }
+                `}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${thRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
             )}
           </div>
-          <p className="text-slate-500 text-xs mb-4">
-            Accounts you've already verified on this device. Tap to sign up for this season — no token needed.
-          </p>
-
-          {/* Manage panel — Add Account and Remove Account, toggleable */}
-          <AnimatePresence>
-            {manageOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden mb-4"
-              >
-                <div className={`
-                  relative rounded-2xl border p-4 space-y-3
-                  ${manageTab === "remove"
-                    ? "border-red-500/20 bg-red-500/[0.04]"
-                    : "border-purple-500/20 bg-purple-500/[0.04]"
-                  }
-                `}>
-                  <div className="absolute top-3 right-3">
-                    <XButton onClick={() => toggleManage(manageTab)} title="Close" />
+          {/* Add Account view */}
+          <AnimatePresence mode="wait">
+            {accountsView === "add" && (
+              <motion.div key="add" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4">
+                <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.04] p-4 space-y-3">
+                  <p className="text-xs text-slate-400">Enter a player tag to sign up. API token is optional but confirms ownership.</p>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                    <input type="text" placeholder="#ABC123" value={tag}
+                      onChange={e => setTag(e.target.value)}
+                      onPaste={e => { e.preventDefault(); setTag(e.clipboardData.getData("text")); }}
+                      autoCapitalize="characters" autoCorrect="off" spellCheck={false}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm" />
                   </div>
-
-                  {/* tab toggle — only relevant once there's something to
-                      remove; with zero accounts, Add is the only option
-                      so the toggle would be pointless clutter */}
-                  {myAccounts.length > 0 && (
-                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-0.5 w-fit text-xs mb-1">
-                      <button
-                        type="button"
-                        onClick={() => { setManageTab("add"); setManageResult(null); setVerifyStatus(null); }}
-                        className={`
-                          px-3 py-1 rounded-full transition font-semibold
-                          ${manageTab === "add" ? "bg-purple-500/30 text-purple-200" : "text-slate-500 hover:text-slate-300"}
-                        `}
-                      >
-                        Add Account
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setManageTab("remove"); setManageResult(null); }}
-                        className={`
-                          px-3 py-1 rounded-full transition font-semibold
-                          ${manageTab === "remove" ? "bg-red-500/30 text-red-200" : "text-slate-500 hover:text-slate-300"}
-                        `}
-                      >
-                        Remove Account
-                      </button>
-                    </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">In-Game API Token <span className="text-slate-600">(optional)</span></label>
+                    <input type="text" placeholder="Paste your token here, or leave blank" value={token}
+                      onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm" />
+                  </div>
+                  <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
+                    className="w-full py-2.5 rounded-xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    {verifying ? "Signing up…" : "Sign Up"}
+                  </button>
+                  {verifyStatus && (
+                    <p className={`text-xs text-center ${verifyStatus.ok ? "text-green-300" : "text-red-400"}`}>{verifyStatus.message}</p>
                   )}
-
-                  {manageTab === "add" ? (
-                    <form onSubmit={handleVerify} className="space-y-3 pr-6">
-                      <p className="text-xs text-slate-400">
-                        Enter a player tag to sign up. Adding your API token
-                        (Settings → API Token) is optional, but confirms it's
-                        really your account.
-                      </p>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
-                        <input
-                          type="text"
-                          placeholder="#ABC123"
-                          value={tag}
-                          onChange={e => setTag(e.target.value)}
-                          onPaste={e => {
-                            e.preventDefault();
-                            const pasted = e.clipboardData.getData("text");
-                            setTag(pasted);
-                          }}
-                          autoCapitalize="characters"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          className="
-                            w-full rounded-xl border border-white/10 bg-white/[0.04]
-                            px-4 py-2.5 text-white placeholder:text-slate-600
-                            focus:outline-none focus:border-purple-500/50 transition
-                            font-mono tracking-wide text-sm
-                          "
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1 ml-1">
-                          In-Game API Token <span className="text-slate-600">(optional)</span>
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Paste your token here, or leave blank"
-                          value={token}
-                          onChange={e => setToken(e.target.value)}
-                          autoCorrect="off"
-                          spellCheck={false}
-                          className="
-                            w-full rounded-xl border border-white/10 bg-white/[0.04]
-                            px-4 py-2.5 text-white placeholder:text-slate-600
-                            focus:outline-none focus:border-purple-500/50 transition
-                            font-mono text-sm
-                          "
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={verifying || !tag.trim()}
-                        className="
-                          w-full py-2.5 rounded-xl font-semibold text-sm
-                          bg-purple-600/40 text-purple-100 border border-purple-500/30
-                          hover:bg-purple-600/60 hover:text-white transition
-                          disabled:opacity-40 disabled:cursor-not-allowed
-                        "
-                      >
-                        {verifying ? "Signing up…" : "Sign Up"}
-                      </button>
-                      {verifyStatus && (
-                        <p className={`text-xs text-center ${verifyStatus.ok ? "text-green-300" : "text-red-400"}`}>
-                          {verifyStatus.message}
-                        </p>
-                      )}
-                    </form>
-                  ) : (
-                    <form onSubmit={handleManageSubmit} className="space-y-3 pr-6">
-                      <p className="text-xs text-slate-400">
-                        Enter a player tag to remove that account from this device.
-                        You can always add it back later by verifying again.
-                      </p>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
-                        <input
-                          type="text"
-                          placeholder="#ABC123"
-                          value={manageTag}
-                          onChange={e => setManageTag(e.target.value)}
-                          autoCapitalize="characters"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          className="
-                            w-full rounded-xl border border-red-500/20 bg-white/[0.04]
-                            px-4 py-2.5 text-white placeholder:text-slate-600
-                            focus:outline-none focus:border-red-500/50 transition
-                            font-mono tracking-wide text-sm
-                          "
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={manageSubmitting || !manageTag.trim()}
-                        className="
-                          w-full py-2.5 rounded-xl font-semibold text-sm
-                          bg-red-600/40 text-red-100 border border-red-500/30
-                          hover:bg-red-600/60 hover:text-white transition
-                          disabled:opacity-40 disabled:cursor-not-allowed
-                        "
-                      >
-                        {manageSubmitting ? "Removing…" : "Remove Account"}
-                      </button>
-                      {manageResult && (
-                        <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>
-                          {manageResult.message}
-                        </p>
-                      )}
-                    </form>
+                </div>
+              </motion.div>
+            )}
+            {accountsView === "remove" && (
+              <motion.div key="remove" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4">
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-4 space-y-3">
+                  <p className="text-xs text-slate-400">Enter a player tag to remove it from this device. You can re-add it anytime.</p>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 ml-1">Player Tag</label>
+                    <input type="text" placeholder="#ABC123" value={manageTag}
+                      onChange={e => setManageTag(e.target.value)}
+                      autoCapitalize="characters" autoCorrect="off" spellCheck={false}
+                      className="w-full rounded-xl border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm" />
+                  </div>
+                  <button type="button" onClick={handleManageSubmit} disabled={manageSubmitting || !manageTag.trim()}
+                    className="w-full py-2.5 rounded-xl font-semibold text-sm bg-red-600/40 text-red-100 border border-red-500/30 hover:bg-red-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    {manageSubmitting ? "Removing…" : "Remove Account"}
+                  </button>
+                  {manageResult && (
+                    <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>{manageResult.message}</p>
                   )}
                 </div>
               </motion.div>
