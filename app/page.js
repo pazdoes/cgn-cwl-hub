@@ -1022,8 +1022,9 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
 
 function LeaderboardView({ onBack }) {
   const [data, setData] = useState(null);
+  const [allSeasonData, setAllSeasonData] = useState([]);
   const [seasons, setSeasons] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [selectedSeason, setSelectedSeason] = useState("all");
   const [clanFilter, setClanFilter] = useState("all");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortDir, setSortDir] = useState("desc");
@@ -1033,74 +1034,36 @@ function LeaderboardView({ onBack }) {
   useEffect(() => {
     fetch("/api/leaderboard")
       .then(r => r.json())
-      .then(d => {
-        setData(d.stats || []);
-        setSeasons(d.seasons || []);
-        setSelectedSeason(d.currentSeason || null);
+      .then(async d => {
+        const allSeasons = d.seasons || [];
+        setSeasons(allSeasons);
+        const allData = [];
+        for (const s of allSeasons) {
+          try {
+            const r2 = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
+            const d2 = await r2.json();
+            allData.push(...(d2.stats || []));
+          } catch {}
+        }
+        setAllSeasonData(allData);
       })
-      .catch(() => setData([]));
+      .catch(() => {});
   }, []);
-
-  function fetchSeason(season) {
-    setSelectedSeason(season);
-    setData(null);
-    setExpandedTag(null);
-    fetch(`/api/leaderboard?season=${encodeURIComponent(season)}`)
-      .then(r => r.json())
-      .then(d => setData(d.stats || []))
-      .catch(() => setData([]));
-  }
-
-  const SORT_OPTIONS = [
-    { key: "efficiency",         label: "Atk EFF" },
-    { key: "stars_earned",       label: "Stars" },
-    { key: "defence_efficiency", label: "Def EFF" },
-    { key: "stars_conceded",     label: "Def ★" },
-    { key: "destruction_pct",    label: "Dest %" },
-    { key: "missed_attacks",     label: "Missed" },
-  ];
-
-  const clans = data ? [...new Set(data.map(p => p.clan_name))].sort() : [];
-  const searchLower = search.toLowerCase();
-
-  const filtered = data
-    ? data
-        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
-        .filter(p => !searchLower ||
-          p.player_name.toLowerCase().includes(searchLower) ||
-          p.player_tag.toLowerCase().includes(searchLower) ||
-          p.clan_name.toLowerCase().includes(searchLower)
-        )
-    : [];
-
-  const sorted = [...filtered].sort((a, b) => {
-    const av = parseFloat(a[sortBy]) || 0;
-    const bv = parseFloat(b[sortBy]) || 0;
-    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
-    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
-    return (av - bv) * dir;
-  });
 
   function toggleExpand(tag) {
     setExpandedTag(prev => prev === tag ? null : tag);
   }
 
-  // All Time: aggregate all seasons per player
+  // All Time aggregate
   const allTimeData = (() => {
-    if (!allSeasonData || allSeasonData.length === 0) return [];
+    if (!allSeasonData.length) return [];
     const map = {};
     for (const p of allSeasonData) {
       const tag = p.player_tag;
       if (!map[tag]) {
         map[tag] = {
-          player_tag: tag,
-          player_name: p.player_name,
-          clan_name: p.clan_name,
-          stars_earned: 0,
-          stars_conceded: 0,
-          attacks_used: 0,
-          attacks_available: 0,
-          missed_attacks: 0,
+          player_tag: tag, player_name: p.player_name, clan_name: p.clan_name,
+          stars_earned: 0, stars_conceded: 0, attacks_used: 0, attacks_available: 0, missed_attacks: 0,
           three_stars: 0, two_stars: 0, one_stars: 0, zero_stars: 0,
           three_stars_conceded: 0, two_stars_conceded: 0, one_stars_conceded: 0, zero_stars_conceded: 0,
           _destSum: 0, _defSum: 0, _atkCount: 0, _defCount: 0,
@@ -1120,8 +1083,8 @@ function LeaderboardView({ onBack }) {
       m.two_stars_conceded += p.two_stars_conceded || 0;
       m.one_stars_conceded += p.one_stars_conceded || 0;
       m.zero_stars_conceded += p.zero_stars_conceded || 0;
-      if (p.attacks_used > 0) { m._destSum += parseFloat(p.destruction_pct) * p.attacks_used; m._atkCount += p.attacks_used; }
-      if (p.attacks_available > 0) { m._defSum += parseFloat(p.defence_pct) * p.attacks_available; m._defCount += p.attacks_available; }
+      if (p.attacks_used > 0) { m._destSum += parseFloat(p.destruction_pct||0) * p.attacks_used; m._atkCount += p.attacks_used; }
+      if (p.attacks_available > 0) { m._defSum += parseFloat(p.defence_pct||0) * p.attacks_available; m._defCount += p.attacks_available; }
     }
     return Object.values(map).map(m => ({
       ...m,
@@ -1133,23 +1096,34 @@ function LeaderboardView({ onBack }) {
   })();
 
   const displayData = selectedSeason === "all" ? allTimeData : data;
-
+  const clans = displayData ? [...new Set(displayData.map(p => p.clan_name))].sort() : [];
+  const searchLower = search.toLowerCase();
+  const filtered = displayData
+    ? displayData
+        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
+        .filter(p => !searchLower ||
+          p.player_name.toLowerCase().includes(searchLower) ||
+          p.player_tag.toLowerCase().includes(searchLower) ||
+          p.clan_name.toLowerCase().includes(searchLower))
+    : [];
+  const sorted = [...filtered].sort((a, b) => {
+    const av = parseFloat(a[sortBy]) || 0;
+    const bv = parseFloat(b[sortBy]) || 0;
+    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
+    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
+    return (av - bv) * dir;
+  });
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
-
-      {/* Hero card — flush to top, no back button */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">Player performance by season</p>
-
-        {/* Three dropdowns in one row */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-          {/* Season selector — All Time default */}
-          <select value={selectedSeason||"all"} onChange={e => {
+          <select value={selectedSeason} onChange={e => {
             const val = e.target.value;
             setSelectedSeason(val);
             setExpandedTag(null);
@@ -1159,13 +1133,10 @@ function LeaderboardView({ onBack }) {
               fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
                 .then(r=>r.json()).then(d=>setData(d.stats||[])).catch(()=>setData([]));
             }
-          }}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          }} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             <option value="all">All Time</option>
             {seasons.map(s=><option key={s} value={s}>{s}</option>)}
           </select>
-
-          {/* Clan filter */}
           {clans.length > 1 && (
             <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
               className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
@@ -1173,8 +1144,6 @@ function LeaderboardView({ onBack }) {
               {clans.map(c=><option key={c} value={c}>{c}</option>)}
             </select>
           )}
-
-          {/* Sort filter — grouped */}
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             <optgroup label="Attack">
@@ -1190,15 +1159,11 @@ function LeaderboardView({ onBack }) {
               <option value="defence_pct">Defence %</option>
             </optgroup>
           </select>
-
-          {/* Sort direction toggle */}
           <button type="button" onClick={()=>setSortDir(d=>d==="desc"?"asc":"desc")}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400 hover:text-white transition">
             {sortDir === "desc" ? "↓ High–Low" : "↑ Low–High"}
           </button>
         </div>
-
-        {/* Search */}
         <div className="relative max-w-xs mx-auto">
           <input type="text" placeholder="Search player or tag…" value={search} onChange={e=>setSearch(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
@@ -1212,28 +1177,22 @@ function LeaderboardView({ onBack }) {
           )}
         </div>
       </div>
-
       <div className="relative z-10 space-y-2">
         {displayData === null ? (
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
-        ) : sorted2.length === 0 ? (
+        ) : sorted.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
             <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
           </div>
-        ) : sorted2.map((p, i) => (
-          <PlayerCard
-            key={p.player_tag}
-            p={p}
-            rank={i + 1}
+        ) : sorted.map((p, i) => (
+          <PlayerCard key={p.player_tag} p={p} rank={i+1}
             isExpanded={expandedTag === p.player_tag}
-            onToggle={() => toggleExpand(p.player_tag)}
-          />
+            onToggle={() => toggleExpand(p.player_tag)}/>
         ))}
       </div>
     </main>
   );
 }
-
 
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
 const [rosterSeasons, setRosterSeasons] = useState([]);
