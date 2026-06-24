@@ -703,150 +703,175 @@ const [search, setSearch] = useState("");
 
 // ─── CWL player performance leaderboard ────────────────────────────────────
 
-// Column icon SVGs — feather stroke style
-function ColIcon({ colKey }) {
-  const icons = {
-    efficiency: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    stars_earned: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-      </svg>
-    ),
-    destruction_pct: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-      </svg>
-    ),
-    stars_conceded: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    defence_pct: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-    attacks_used: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    missed_attacks: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    star_breakdown: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-      </svg>
-    ),
-  };
-  return icons[colKey] || null;
-}
-
-// Tooltip wrapper for column headers
-function ColHeader({ col, sortBy, sortDir, onClick }) {
-  const [show, setShow] = useState(false);
-  const isActive = sortBy === col.key;
-  return (
-    <th className="px-2 py-3 text-center relative">
-      <button
-        type="button"
-        onClick={() => { onClick(col.key); setShow(false); }}
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
-        onTouchStart={() => setShow(v => !v)}
-        className={`inline-flex flex-col items-center gap-0.5 transition ${isActive ? "text-purple-300" : "text-slate-500 hover:text-slate-300"}`}
-      >
-        <ColIcon colKey={col.key} />
-        {isActive && <span className="text-[8px]">{sortDir === "desc" ? "↓" : "↑"}</span>}
-      </button>
-      {show && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl px-2.5 py-1.5 text-[10px] text-white shadow-xl pointer-events-none">
-          {col.label}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white/10" />
-        </div>
-      )}
-    </th>
-  );
-}
-
-// Mini pie chart for star breakdown
 function MiniPie({ three = 0, two = 0, one = 0, zero = 0 }) {
   const total = three + two + one + zero;
   if (total === 0) return <span className="text-slate-700 text-[10px]">—</span>;
-
   const [expanded, setExpanded] = useState(false);
-
-  // SVG pie chart
   function buildPie(size) {
-    const cx = size / 2, cy = size / 2, r = size / 2 - 1;
+    const cx = size/2, cy = size/2, r = size/2-1;
     const slices = [
-      { value: three, color: "#86efac" }, // green-300
-      { value: two,   color: "#a78bfa" }, // purple-400
-      { value: one,   color: "#fbbf24" }, // amber-400
-      { value: zero,  color: "#475569" }, // slate-600
+      { value: three, color: "#86efac" },
+      { value: two,   color: "#a78bfa" },
+      { value: one,   color: "#fbbf24" },
+      { value: zero,  color: "#475569" },
     ].filter(s => s.value > 0);
-
-    let startAngle = -Math.PI / 2;
-    const paths = slices.map((s, i) => {
-      const angle = (s.value / total) * 2 * Math.PI;
-      const endAngle = startAngle + angle;
-      const x1 = cx + r * Math.cos(startAngle);
-      const y1 = cy + r * Math.sin(startAngle);
-      const x2 = cx + r * Math.cos(endAngle);
-      const y2 = cy + r * Math.sin(endAngle);
-      const largeArc = angle > Math.PI ? 1 : 0;
-      const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-      startAngle = endAngle;
-      return <path key={i} d={d} fill={s.color} />;
+    let startAngle = -Math.PI/2;
+    const paths = slices.map((s,i) => {
+      const angle = (s.value/total)*2*Math.PI;
+      const endAngle = startAngle+angle;
+      const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
+      const x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
+      const d=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${angle>Math.PI?1:0} 1 ${x2} ${y2} Z`;
+      startAngle=endAngle;
+      return <path key={i} d={d} fill={s.color}/>;
     });
-
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {paths}
-      </svg>
-    );
+    return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{paths}</svg>;
   }
-
   return (
     <div className="relative inline-flex items-center justify-center">
-      <button type="button" onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
-        className="flex items-center justify-center rounded-full hover:opacity-80 transition">
-        {buildPie(22)}
+      <button type="button" onClick={e=>{e.stopPropagation();setExpanded(v=>!v)}} className="flex items-center justify-center rounded-full hover:opacity-80 transition">
+        {buildPie(20)}
       </button>
       {expanded && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl p-3 shadow-xl min-w-[120px]"
-          onClick={e => e.stopPropagation()}>
-          <div className="flex justify-center mb-2">{buildPie(64)}</div>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl p-3 shadow-xl min-w-[110px]" onClick={e=>e.stopPropagation()}>
+          <div className="flex justify-center mb-2">{buildPie(56)}</div>
           <div className="space-y-1 text-[10px]">
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-300 inline-block" />3★</span>
-              <span className="text-white font-semibold">{three}</span>
+            {[["#86efac","3★",three],["#a78bfa","2★",two],["#fbbf24","1★",one],["#475569","0★",zero]].map(([col,lbl,val])=>(
+              <div key={lbl} className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background:col}}/>{lbl}</span>
+                <span className="text-white font-semibold">{val}</span>
+              </div>
+            ))}
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white/10"/>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RankBadge({ rank }) {
+  if (rank === 1) return <span className="text-base">🥇</span>;
+  if (rank === 2) return <span className="text-base">🥈</span>;
+  if (rank === 3) return <span className="text-base">🥉</span>;
+  return <span className="text-xs text-slate-500 font-mono w-5 text-center">{rank}</span>;
+}
+
+function StatPill({ label, value, colour = "text-slate-300" }) {
+  return (
+    <div className="flex flex-col items-center min-w-[36px]">
+      <span className={`text-sm font-semibold ${colour}`}>{value}</span>
+      <span className="text-[9px] text-slate-600 uppercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+function PlayerCard({ p, rank, isExpanded, onToggle }) {
+  const rankBorderClass = rank === 1 ? "border-yellow-400/40 shadow-yellow-400/10"
+    : rank === 2 ? "border-slate-300/30 shadow-slate-300/10"
+    : rank === 3 ? "border-amber-600/40 shadow-amber-600/10"
+    : "border-white/10";
+
+  return (
+    <div
+      onClick={onToggle}
+      className={`rounded-2xl border bg-white/[0.03] transition-all cursor-pointer ${rankBorderClass} ${isExpanded ? "shadow-lg" : "hover:bg-white/[0.05]"}`}
+    >
+      {/* Collapsed row */}
+      <div className="flex items-center gap-3 px-3 py-3">
+        {/* Rank */}
+        <div className="shrink-0 w-6 flex items-center justify-center">
+          <RankBadge rank={rank} />
+        </div>
+
+        {/* Player info */}
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
+          <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
+        </div>
+
+        {/* Key stats */}
+        <div className="flex items-center gap-3 shrink-0">
+          <StatPill label="EFF" value={parseFloat(p.efficiency).toFixed(2)} colour="text-purple-300" />
+          <StatPill label="Stars" value={p.stars_earned} colour="text-green-300" />
+          <StatPill label="Def EFF" value={p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300" />
+          <StatPill label="Def ★" value={p.stars_conceded} colour="text-slate-400" />
+        </div>
+
+        {/* Expand chevron */}
+        <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      {/* Expanded detail */}
+      {isExpanded && (
+        <div className="px-3 pb-4 pt-1 border-t border-white/10 space-y-4">
+          {/* Attack section */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack</span>
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />2★</span>
-              <span className="text-white font-semibold">{two}</span>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Efficiency</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-green-300">{p.stars_earned}</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Stars</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Dest %</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center">
+                <MiniPie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
+                <p className="text-[9px] text-slate-600 mt-0.5">Breakdown</p>
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />1★</span>
-              <span className="text-white font-semibold">{one}</span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-600 inline-block" />0★</span>
-              <span className="text-white font-semibold">{zero}</span>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-slate-300">{p.attacks_used}<span className="text-slate-600 text-xs">/{p.attacks_available}</span></p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Attacks Used</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className={`text-sm font-bold ${p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}`}>{p.missed_attacks}</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Missed</p>
+              </div>
             </div>
           </div>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white/10" />
+
+          {/* Defence section */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Def EFF</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-slate-400">{p.stars_conceded}</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Stars Given</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                <p className="text-sm font-bold text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</p>
+                <p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center">
+                <MiniPie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
+                <p className="text-[9px] text-slate-600 mt-0.5">Breakdown</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -858,11 +883,11 @@ function LeaderboardView({ onBack }) {
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState(null);
   const [clanFilter, setClanFilter] = useState("all");
-  const [statFilter, setStatFilter] = useState("default"); // default | attack | defence | all
+  const [statFilter, setStatFilter] = useState("default");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
-  const [highlightTag, setHighlightTag] = useState(null);
+  const [expandedTag, setExpandedTag] = useState(null);
 
   useEffect(() => {
     fetch("/api/leaderboard")
@@ -878,83 +903,46 @@ function LeaderboardView({ onBack }) {
   function fetchSeason(season) {
     setSelectedSeason(season);
     setData(null);
+    setExpandedTag(null);
     fetch(`/api/leaderboard?season=${encodeURIComponent(season)}`)
       .then(r => r.json())
       .then(d => setData(d.stats || []))
       .catch(() => setData([]));
   }
 
-  // Column definitions — full ordered set
-  const ALL_COLS = [
-    { key: "efficiency",      label: "Efficiency" },
-    { key: "stars_earned",    label: "Stars" },
-    { key: "destruction_pct", label: "Destruction %" },
-    { key: "stars_conceded",  label: "Defence Stars" },
-    { key: "defence_pct",     label: "Defence %" },
-    { key: "attacks_used",    label: "Attacks" },
-    { key: "missed_attacks",  label: "Missed" },
-    { key: "star_breakdown",  label: "Star Breakdown" },
-    { key: "def_breakdown",   label: "Defence Breakdown" },
+  const SORT_OPTIONS = [
+    { key: "efficiency",         label: "Atk EFF" },
+    { key: "stars_earned",       label: "Stars" },
+    { key: "defence_efficiency", label: "Def EFF" },
+    { key: "stars_conceded",     label: "Def ★" },
+    { key: "destruction_pct",    label: "Dest %" },
+    { key: "missed_attacks",     label: "Missed" },
   ];
 
-  const FILTER_COLS = {
-    default:  ["efficiency", "stars_earned", "star_breakdown", "def_breakdown"],
-    attack:   ["efficiency", "stars_earned", "destruction_pct", "attacks_used", "missed_attacks", "star_breakdown"],
-    defence:  ["efficiency", "stars_conceded", "defence_pct", "attacks_used", "def_breakdown"],
-    all:      ["efficiency", "stars_earned", "destruction_pct", "stars_conceded", "defence_pct", "attacks_used", "missed_attacks", "star_breakdown"],
-  };
-
-  const activeCols = ALL_COLS.filter(c => FILTER_COLS[statFilter].includes(c.key));
-
   const clans = data ? [...new Set(data.map(p => p.clan_name))].sort() : [];
-
-  // Search filter
   const searchLower = search.toLowerCase();
-  const searched = data
-    ? data.filter(p =>
-        clanFilter === "all" || p.clan_name === clanFilter
-      ).filter(p =>
-        !searchLower ||
-        p.player_name.toLowerCase().includes(searchLower) ||
-        p.player_tag.toLowerCase().includes(searchLower) ||
-        p.clan_name.toLowerCase().includes(searchLower)
-      )
+
+  const filtered = data
+    ? data
+        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
+        .filter(p => !searchLower ||
+          p.player_name.toLowerCase().includes(searchLower) ||
+          p.player_tag.toLowerCase().includes(searchLower) ||
+          p.clan_name.toLowerCase().includes(searchLower)
+        )
     : [];
 
-  const sorted = [...searched].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     const av = parseFloat(a[sortBy]) || 0;
     const bv = parseFloat(b[sortBy]) || 0;
-    return sortDir === "desc" ? bv - av : av - bv;
+    // For missed_attacks and stars_conceded, lower = better when sorting "best"
+    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
+    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
+    return (av - bv) * dir;
   });
 
-  function toggleSort(col) {
-    if (sortBy === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); }
-    else { setSortBy(col); setSortDir("desc"); }
-  }
-
-  function handleSearch(val) {
-    setSearch(val);
-    if (!val) { setHighlightTag(null); return; }
-    const match = data?.find(p =>
-      p.player_name.toLowerCase().includes(val.toLowerCase()) ||
-      p.player_tag.toLowerCase().includes(val.toLowerCase())
-    );
-    setHighlightTag(match?.player_tag || null);
-  }
-
-  function cellValue(p, key) {
-    switch(key) {
-      case "efficiency":      return <span className="font-semibold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</span>;
-      case "stars_earned":    return <span className="font-bold text-green-300">{p.stars_earned}</span>;
-      case "destruction_pct": return <span className="text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</span>;
-      case "stars_conceded":  return <span className="text-slate-400">{p.stars_conceded}</span>;
-      case "defence_pct":     return <span className="text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</span>;
-      case "attacks_used":    return <span className="text-slate-300">{p.attacks_used}</span>;
-      case "missed_attacks":  return <span className={p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}>{p.missed_attacks}</span>;
-      case "star_breakdown":  return <MiniPie three={p.three_stars || 0} two={p.two_stars || 0} one={p.one_stars || 0} zero={p.zero_stars || 0} />;
-      case "def_breakdown":   return <MiniPie three={p.three_stars_conceded || 0} two={p.two_stars_conceded || 0} one={p.one_stars_conceded || 0} zero={p.zero_stars_conceded || 0} />;
-      default: return null;
-    }
+  function toggleExpand(tag) {
+    setExpandedTag(prev => prev === tag ? null : tag);
   }
 
   const STAT_FILTERS = [
@@ -967,14 +955,13 @@ function LeaderboardView({ onBack }) {
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Back */}
       <div className="relative z-10 mb-4">
         <button onClick={onBack} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
           </svg>
           Back to Hub
         </button>
@@ -985,98 +972,73 @@ function LeaderboardView({ onBack }) {
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">Player performance by season</p>
 
-        {/* Season + Clan selectors */}
+        {/* Season + Clan */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
           {seasons.length > 0 && (
-            <select value={selectedSeason || ""} onChange={e => fetchSeason(e.target.value)}
+            <select value={selectedSeason||""} onChange={e=>fetchSeason(e.target.value)}
               className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+              {seasons.map(s=><option key={s} value={s}>{s}</option>)}
             </select>
           )}
           {clans.length > 1 && (
-            <select value={clanFilter} onChange={e => setClanFilter(e.target.value)}
+            <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
               className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
               <option value="all">All Clans</option>
-              {clans.map(c => <option key={c} value={c}>{c}</option>)}
+              {clans.map(c=><option key={c} value={c}>{c}</option>)}
             </select>
           )}
         </div>
 
-        {/* Stat filter tabs */}
-        <div className="flex items-center justify-center gap-1.5 flex-wrap mb-4">
-          {STAT_FILTERS.map(f => (
-            <button key={f.key} type="button" onClick={() => setStatFilter(f.key)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${statFilter === f.key ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
-              {f.label}
+        {/* Sort by */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
+          {SORT_OPTIONS.map(o=>(
+            <button key={o.key} type="button" onClick={()=>{
+              if(sortBy===o.key) setSortDir(d=>d==="desc"?"asc":"desc");
+              else { setSortBy(o.key); setSortDir("desc"); }
+            }}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${sortBy===o.key ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
+              {o.label}{sortBy===o.key?(sortDir==="desc"?" ↓":" ↑"):""}
             </button>
           ))}
         </div>
 
-        {/* Search bar */}
+        {/* Search */}
         <div className="relative max-w-xs mx-auto">
-          <input
-            type="text"
-            placeholder="Search player or tag…"
-            value={search}
-            onChange={e => handleSearch(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"
-          />
+          <input type="text" placeholder="Search player or tag…" value={search} onChange={e=>setSearch(e.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
           {search && (
-            <button onClick={() => { setSearch(""); setHighlightTag(null); }}
+            <button onClick={()=>setSearch("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           )}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+      {/* Card list */}
+      <div className="relative z-10 space-y-2">
         {data === null ? (
-          <div className="p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
         ) : sorted.length === 0 ? (
-          <div className="p-8 text-center">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
             <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left px-3 py-3 text-slate-500 font-semibold uppercase tracking-widest text-[10px]">#</th>
-                  <th className="text-left px-3 py-3 text-slate-500 font-semibold uppercase tracking-widest text-[10px]">Player</th>
-                  {activeCols.map(col => (
-                    <ColHeader key={col.key} col={col} sortBy={sortBy} sortDir={sortDir} onClick={toggleSort} />
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((p, i) => {
-                  const isHighlighted = highlightTag === p.player_tag;
-                  return (
-                    <tr key={p.player_tag}
-                      className={`border-b border-white/[0.06] transition ${isHighlighted ? "bg-purple-500/20 border-purple-500/30" : i === 0 && !search ? "bg-purple-500/5" : "hover:bg-white/[0.03]"}`}>
-                      <td className="px-3 py-3 text-slate-500 font-mono text-[11px]">{i + 1}</td>
-                      <td className="px-3 py-2.5 min-w-[110px]">
-                        <p className={`font-semibold text-xs truncate max-w-[110px] ${isHighlighted ? "text-purple-200" : "text-white"}`}>{p.player_name}</p>
-                        <p className="text-slate-600 font-mono text-[9px] truncate max-w-[110px]">{p.clan_name.split(" ")[0]}</p>
-                      </td>
-                      {activeCols.map(col => (
-                        <td key={col.key} className="px-2 py-3 text-center">{cellValue(p, col.key)}</td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        ) : sorted.map((p, i) => (
+          <PlayerCard
+            key={p.player_tag}
+            p={p}
+            rank={i + 1}
+            isExpanded={expandedTag === p.player_tag}
+            onToggle={() => toggleExpand(p.player_tag)}
+          />
+        ))}
       </div>
     </main>
   );
 }
+
 
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
 const [rosterSeasons, setRosterSeasons] = useState([]);
