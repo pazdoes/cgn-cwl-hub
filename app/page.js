@@ -1263,7 +1263,149 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
 }
 
 
+
+// ── Clan Leaderboard ──────────────────────────────────────────────────────────
+function ClanCard({ c, rank, isExpanded, onToggle }) {
+  const [cardView, setCardView] = useState("stats");
+
+  const rankBorderClass = rank === 1 ? "border-yellow-400/40"
+    : rank === 2 ? "border-slate-300/30"
+    : rank === 3 ? "border-amber-600/40"
+    : "border-white/10";
+
+  const handleToggle = () => { if (isExpanded) setCardView("stats"); onToggle(); };
+
+  const rankPill = c.cwl_rank ? (
+    <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500 shrink-0">{c.cwl_rank}</span>
+  ) : null;
+
+  return (
+    <div className={`rounded-2xl border bg-white/[0.03] transition-all ${rankBorderClass}`}>
+      {/* Header row */}
+      <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-2xl transition">
+        <div className="shrink-0 w-6 flex items-center justify-center">
+          <RankBadge rank={rank}/>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-white truncate">{c.clan_name?.split(" ")[0] || c.clan_name}</p>
+          {rankPill}
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <StatPill label="Atk EFF" value={c.attack_efficiency ? parseFloat(c.attack_efficiency).toFixed(2) : "—"} colour="text-purple-300"/>
+          <StatPill label="Won" value={c.wars_won ?? "—"} colour="text-green-300"/>
+          <StatPill label="Def EFF" value={c.defence_efficiency ? parseFloat(c.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300"/>
+          <StatPill label="Stars" value={c.total_stars ?? "—"} colour="text-slate-300"/>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+
+      {isExpanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-white/10">
+          {cardView === "stats" && (
+            <div className="space-y-4 pt-2">
+              {/* Attack */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-purple-300">{c.attack_efficiency ? parseFloat(c.attack_efficiency).toFixed(2) : "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Efficiency</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-green-300">{c.total_stars ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Stars</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-300">{c.avg_destruction_pct ? parseFloat(c.avg_destruction_pct).toFixed(1)+"%" : "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Dest %</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-amber-400">{c.three_star_rate ? parseFloat(c.three_star_rate).toFixed(1)+"%" : "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">3★ Rate</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-300">{c.total_attacks_used ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Attacks</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className={`text-sm font-bold ${(c.total_attacks_missed || 0) > 0 ? "text-red-400" : "text-slate-500"}`}>{c.total_attacks_missed ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Missed</p></div>
+                </div>
+              </div>
+              {/* Defence */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-blue-300">{c.defence_efficiency ? parseFloat(c.defence_efficiency).toFixed(2) : "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Def EFF</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-400">{c.total_stars_conceded ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Stars Given</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-400">{c.avg_defence_pct ? parseFloat(c.avg_defence_pct).toFixed(1)+"%" : "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p></div>
+                </div>
+              </div>
+              {/* Record */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Record</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-green-300">{c.wars_won ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Won</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-red-400">{c.wars_lost ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Lost</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-500">{c.wars_drawn ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Drawn</p></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {cardView === "breakdown" && (
+            <div className="space-y-5 pt-2">
+              {/* Attack breakdown */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack Breakdown</span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0"><LargePie three={c.three_stars_clan||0} two={c.two_stars_clan||0} one={c.one_stars_clan||0} zero={c.zero_stars_clan||0} size={80}/></div>
+                  <div className="flex-1 flex flex-col justify-center gap-2">
+                    {[["#86efac","3★",c.three_stars_clan],["#a78bfa","2★",c.two_stars_clan],["#fbbf24","1★",c.one_stars_clan],["#475569","0★",c.zero_stars_clan]].map(([col,lbl,val])=>(
+                      <div key={lbl} className="flex items-center justify-between">
+                        <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full inline-block" style={{background:col}}/>{lbl}</span>
+                        <span className="text-sm font-bold" style={{color:col}}>{val ?? "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-white/10"/>
+              {/* Defence breakdown — using stars conceded distribution if available */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence Summary</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-3 text-center">
+                    <p className="text-lg font-bold text-blue-300">{c.defence_efficiency ? parseFloat(c.defence_efficiency).toFixed(2) : "—"}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Defence EFF</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] p-3 text-center">
+                    <p className="text-lg font-bold text-slate-400">{c.total_stars_conceded ?? "—"}</p>
+                    <p className="text-[9px] text-slate-600 mt-0.5">Stars Conceded</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Toggle arrows */}
+          <div className="flex items-center justify-center gap-4 pt-3 mt-2 border-t border-white/[0.06]">
+            <button onClick={e=>{e.stopPropagation();setCardView("stats")}} className="text-slate-500 hover:text-slate-300 transition p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">{cardView === "stats" ? "Stats" : "Breakdown"}</span>
+            <button onClick={e=>{e.stopPropagation();setCardView("breakdown")}} className="text-slate-500 hover:text-slate-300 transition p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LeaderboardView({ onBack }) {
+  const [lbTab, setLbTab] = useState("player"); // "player" | "clan"
   const [data, setData] = useState(null);
   const [allSeasonData, setAllSeasonData] = useState([]);
   const [seasons, setSeasons] = useState([]);
@@ -1273,6 +1415,9 @@ function LeaderboardView({ onBack }) {
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
   const [expandedTag, setExpandedTag] = useState(null);
+  // Clan leaderboard data
+  const [clanHistory, setClanHistory] = useState(null);
+  const [expandedClan, setExpandedClan] = useState(null);
 
   useEffect(() => {
     fetch("/api/leaderboard")
@@ -1296,6 +1441,63 @@ function LeaderboardView({ onBack }) {
   function toggleExpand(tag) {
     setExpandedTag(prev => prev === tag ? null : tag);
   }
+  function toggleExpandClan(name) {
+    setExpandedClan(prev => prev === name ? null : name);
+  }
+
+  const CLAN_SORT_OPTIONS = [
+    { key: "attack_efficiency",    label: "Atk Efficiency", group: "Attack" },
+    { key: "total_stars",          label: "Total Stars",    group: "Attack" },
+    { key: "avg_destruction_pct",  label: "Destruction %",  group: "Attack" },
+    { key: "three_star_rate",      label: "Three Star Rate",group: "Attack" },
+    { key: "total_attacks_used",   label: "Attacks Used",   group: "Attack" },
+    { key: "total_attacks_missed", label: "Missed",         group: "Attack" },
+    { key: "defence_efficiency",   label: "Def Efficiency", group: "Defence" },
+    { key: "total_stars_conceded", label: "Stars Conceded", group: "Defence" },
+    { key: "avg_defence_pct",      label: "Defence %",      group: "Defence" },
+    { key: "wars_won",             label: "Wars Won",       group: "Record" },
+    { key: "wars_lost",            label: "Wars Lost",      group: "Record" },
+    { key: "wars_drawn",           label: "Wars Drawn",     group: "Record" },
+  ];
+
+  // Aggregate clan history for All Time or filter by season
+  const clanDisplayData = (() => {
+    if (!clanHistory) return [];
+    const rows = selectedSeason === "all" ? clanHistory : clanHistory.filter(r => r.season === selectedSeason);
+    if (selectedSeason !== "all") return rows;
+    // Aggregate across seasons
+    const map = {};
+    for (const r of rows) {
+      if (!map[r.clan_name]) map[r.clan_name] = { clan_name: r.clan_name, cwl_rank: r.cwl_rank, wars_won:0,wars_lost:0,wars_drawn:0, total_stars:0,total_stars_conceded:0,total_attacks_used:0,total_attacks_available:0,total_attacks_missed:0, three_stars_clan:0,two_stars_clan:0,one_stars_clan:0,zero_stars_clan:0, _destSum:0,_defSum:0,_atkCount:0,_defCount:0,_threeStar:0,_totalAtk:0 };
+      const m = map[r.clan_name];
+      m.wars_won += r.wars_won||0; m.wars_lost += r.wars_lost||0; m.wars_drawn += r.wars_drawn||0;
+      m.total_stars += r.total_stars||0; m.total_stars_conceded += r.total_stars_conceded||0;
+      m.total_attacks_used += r.total_attacks_used||0; m.total_attacks_available += r.total_attacks_available||0; m.total_attacks_missed += r.total_attacks_missed||0;
+      m.three_stars_clan += r.three_stars_clan||0; m.two_stars_clan += r.two_stars_clan||0; m.one_stars_clan += r.one_stars_clan||0; m.zero_stars_clan += r.zero_stars_clan||0;
+      if (r.total_attacks_used > 0) { m._destSum += parseFloat(r.avg_destruction_pct||0)*r.total_attacks_used; m._atkCount += r.total_attacks_used; }
+      if (r.total_attacks_available > 0) { m._defSum += parseFloat(r.avg_defence_pct||0)*r.total_attacks_available; m._defCount += r.total_attacks_available; }
+      m._threeStar += r.three_stars_clan||0; m._totalAtk += r.total_attacks_used||0;
+    }
+    return Object.values(map).map(m => ({
+      ...m,
+      avg_destruction_pct: m._atkCount > 0 ? (m._destSum/m._atkCount).toFixed(2) : null,
+      avg_defence_pct: m._defCount > 0 ? (m._defSum/m._defCount).toFixed(2) : null,
+      attack_efficiency: m.total_attacks_used > 0 ? (m.total_stars/m.total_attacks_used).toFixed(2) : null,
+      defence_efficiency: m.total_attacks_available > 0 ? (m.total_stars_conceded/m.total_attacks_available).toFixed(2) : null,
+      three_star_rate: m._totalAtk > 0 ? ((m._threeStar/m._totalAtk)*100).toFixed(2) : null,
+    }));
+  })();
+
+  const clanSortKey = lbTab === "clan" ? (CLAN_SORT_OPTIONS.find(o=>o.key===sortBy) ? sortBy : "attack_efficiency") : sortBy;
+  const clanSearchLower = search.toLowerCase();
+  const filteredClans = clanDisplayData
+    .filter(c => !clanSearchLower || c.clan_name.toLowerCase().includes(clanSearchLower))
+    .sort((a,b) => {
+      const av = parseFloat(a[clanSortKey])||0, bv = parseFloat(b[clanSortKey])||0;
+      const invert = clanSortKey === "total_stars_conceded" || clanSortKey === "defence_efficiency" || clanSortKey === "total_attacks_missed" || clanSortKey === "wars_lost";
+      const dir = invert ? (sortDir==="desc"?1:-1) : (sortDir==="desc"?-1:1);
+      return (av-bv)*dir;
+    });
 
   // All Time aggregate
   const allTimeData = (() => {
@@ -1364,7 +1566,7 @@ function LeaderboardView({ onBack }) {
       </div>
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
-        <p className="text-slate-500 text-xs mb-4">Player performance by season</p>
+        <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
           <select value={selectedSeason} onChange={e => {
             const val = e.target.value;
@@ -1389,26 +1591,49 @@ function LeaderboardView({ onBack }) {
           )}
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-            <optgroup label="Attack">
-              <option value="efficiency">Atk Efficiency</option>
-              <option value="stars_earned">Stars Earned</option>
-              <option value="destruction_pct">Destruction %</option>
-              <option value="attacks_used">Attacks Used</option>
-              <option value="missed_attacks">Missed Attacks</option>
-            </optgroup>
-            <optgroup label="Defence">
-              <option value="defence_efficiency">Def Efficiency</option>
-              <option value="stars_conceded">Stars Conceded</option>
-              <option value="defence_pct">Defence %</option>
-            </optgroup>
+            {lbTab === "player" ? (<>
+              <optgroup label="Attack">
+                <option value="efficiency">Atk Efficiency</option>
+                <option value="stars_earned">Stars Earned</option>
+                <option value="destruction_pct">Destruction %</option>
+                <option value="attacks_used">Attacks Used</option>
+                <option value="missed_attacks">Missed Attacks</option>
+              </optgroup>
+              <optgroup label="Defence">
+                <option value="defence_efficiency">Def Efficiency</option>
+                <option value="stars_conceded">Stars Conceded</option>
+                <option value="defence_pct">Defence %</option>
+              </optgroup>
+            </>) : (<>
+              {["Attack","Defence","Record"].map(g=>(
+                <optgroup key={g} label={g}>
+                  {CLAN_SORT_OPTIONS.filter(o=>o.group===g).map(o=>(
+                    <option key={o.key} value={o.key}>{o.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </>)}
           </select>
           <button type="button" onClick={()=>setSortDir(d=>d==="desc"?"asc":"desc")}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400 hover:text-white transition">
             {sortDir === "desc" ? "↓ High–Low" : "↑ Low–High"}
           </button>
         </div>
+        {/* Tab toggle */}
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <button onClick={()=>{setLbTab("player");setSortBy("efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">
+            {lbTab === "player" ? "Players" : "Clans"}
+          </span>
+          <button onClick={()=>{setLbTab("clan");setSortBy("attack_efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
         <div className="relative max-w-xs mx-auto">
-          <input type="text" placeholder="Search player or tag…" value={search} onChange={e=>setSearch(e.target.value)}
+          <input type="text" placeholder={lbTab === "player" ? "Search player or tag…" : "Search clan…"} value={search} onChange={e=>setSearch(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
           {search && (
             <button onClick={()=>setSearch("")}
@@ -1427,11 +1652,26 @@ function LeaderboardView({ onBack }) {
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
             <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
           </div>
-        ) : sorted.map((p, i) => (
+        ) : lbTab === "player" ? sorted.map((p, i) => (
           <PlayerCard key={p.player_tag} p={p} rank={i+1}
             isExpanded={expandedTag === p.player_tag}
             onToggle={() => toggleExpand(p.player_tag)}/>
-        ))}
+        )) : null}
+
+        {/* Clan leaderboard cards */}
+        {lbTab === "clan" && (
+          clanHistory === null ? (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+          ) : filteredClans.length === 0 ? (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+              <p className="text-slate-600 text-sm">{search ? "No clans match your search." : "No clan data yet."}</p>
+            </div>
+          ) : filteredClans.map((c, i) => (
+            <ClanCard key={c.clan_name} c={c} rank={i+1}
+              isExpanded={expandedClan === c.clan_name}
+              onToggle={() => toggleExpandClan(c.clan_name)}/>
+          ))
+        )}
       </div>
     </main>
   );
