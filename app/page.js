@@ -630,29 +630,232 @@ function PlayerPerformanceChart({ allData, seasons }) {
   );
 }
 
-// CWL Rank Progression chart — one line per clan
-const RANK_ORDER = [
+// ── Clan Performance History Chart ────────────────────────────────────────────
+const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
+const CLAN_STAT_OPTIONS = [
+  { group: "Rank",    key: "cwl_rank",               label: "CWL Rank" },
+  { group: "Attack",  key: "total_stars",             label: "Total Stars" },
+  { group: "Attack",  key: "attack_efficiency",       label: "Attack Efficiency" },
+  { group: "Attack",  key: "avg_destruction_pct",     label: "Destruction %" },
+  { group: "Attack",  key: "three_star_rate",         label: "Three Star Rate %" },
+  { group: "Attack",  key: "total_attacks_used",      label: "Attacks Used" },
+  { group: "Attack",  key: "total_attacks_missed",    label: "Missed Attacks" },
+  { group: "Defence", key: "total_stars_conceded",    label: "Stars Conceded" },
+  { group: "Defence", key: "defence_efficiency",      label: "Defence Efficiency" },
+  { group: "Defence", key: "avg_defence_pct",         label: "Defence %" },
+  { group: "Record",  key: "wars_won",                label: "Wars Won" },
+  { group: "Record",  key: "wars_lost",               label: "Wars Lost" },
+  { group: "Record",  key: "wars_drawn",              label: "Wars Drawn" },
+];
+
+const CWL_RANK_LIST = [
   "Champion I","Champion II","Champion III",
   "Master I","Master II","Master III",
   "Crystal I","Crystal II","Crystal III",
   "Gold I","Gold II","Gold III",
   "Silver I","Silver II","Silver III",
-  "Bronze I","Bronze II","Bronze III",
+  "Bronze I","Bronze II","Bronze III","Unranked",
 ];
-const CLAN_COLORS = [
-  "#a78bfa","#60a5fa","#34d399","#fb923c","#f472b6","#38bdf8","#facc15",
-];
-function rankY(rank, chartH) {
-  const idx = RANK_ORDER.indexOf(rank);
-  const total = RANK_ORDER.length - 1;
-  const pos = idx === -1 ? total : idx;
-  return Math.round((pos / total) * chartH);
+
+function ClanPerformanceChart({ history }) {
+  const [clanSearch, setClanSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [trackedClans, setTrackedClans] = useState([]);
+  const [selectedStat, setSelectedStat] = useState("cwl_rank");
+  const isRankStat = selectedStat === "cwl_rank";
+
+  // All unique clan names from history
+  const allClans = history ? [...new Set(history.map(r => r.clan_name))].sort() : [];
+
+  // All seasons sorted chronologically
+  const allSeasons = history ? [...new Set(history.map(r => r.season))].sort((a, b) => {
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const [am, ay] = a.split(" "); const [bm, by] = b.split(" ");
+    return parseInt(ay) - parseInt(by) || months.indexOf(am) - months.indexOf(bm);
+  }) : [];
+
+  // Search
+  useEffect(() => {
+    if (!clanSearch.trim()) { setSearchResults([]); return; }
+    const q = clanSearch.toLowerCase();
+    setSearchResults(allClans.filter(c =>
+      c.toLowerCase().includes(q) && !trackedClans.find(t => t.name === c)
+    ).slice(0, 6));
+  }, [clanSearch, allClans, trackedClans]);
+
+  function buildClanData(clanName) {
+    return allSeasons.map(season => {
+      const row = history?.find(r => r.clan_name === clanName && r.season === season);
+      if (!row) return { season, value: null, displayValue: null };
+      if (isRankStat || selectedStat === "cwl_rank") {
+        const rank = row.cwl_rank;
+        const idx = CWL_RANK_LIST.indexOf(rank);
+        return { season, value: idx === -1 ? null : idx, displayValue: rank || null };
+      }
+      const v = parseFloat(row[selectedStat]);
+      return { season, value: isNaN(v) ? null : v, displayValue: isNaN(v) ? null : v };
+    });
+  }
+
+  function addClan(clanName) {
+    if (trackedClans.length >= 3) return;
+    if (trackedClans.find(c => c.name === clanName)) return;
+    setTrackedClans(prev => [...prev, { name: clanName, data: buildClanData(clanName) }]);
+    setClanSearch(""); setSearchResults([]);
+  }
+
+  function removeClan(name) {
+    setTrackedClans(prev => prev.filter(c => c.name !== name));
+  }
+
+  useEffect(() => {
+    if (!history || trackedClans.length === 0) return;
+    setTrackedClans(prev => prev.map(c => ({
+      ...c,
+      data: buildClanData(c.name),
+    })));
+  }, [selectedStat, history]);
+
+  // Chart
+  const CHART_W = 320, CHART_H = 180;
+  const PAD_L = 52, PAD_R = 12, PAD_T = 12, PAD_B = 28;
+  const plotW = CHART_W - PAD_L - PAD_R;
+  const plotH = CHART_H - PAD_T - PAD_B;
+
+  const validSeasons = allSeasons.filter(s =>
+    trackedClans.some(c => c.data.find(d => d.season === s && d.value !== null))
+  );
+  const xStep = validSeasons.length > 1 ? plotW / (validSeasons.length - 1) : plotW / 2;
+
+  const allVals = trackedClans.flatMap(c => c.data.map(d => d.value)).filter(v => v !== null);
+  const minVal = allVals.length ? Math.min(...allVals) : 0;
+  const maxVal = allVals.length ? Math.max(...allVals) : 1;
+  const valRange = maxVal - minVal || 1;
+
+  function xPos(season) {
+    const idx = validSeasons.indexOf(season);
+    return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
+  }
+  function yPos(val) {
+    if (selectedStat === "cwl_rank") {
+      return PAD_T + (val / (CWL_RANK_LIST.length - 1)) * plotH;
+    }
+    return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
+  }
+
+  // Group stat options for select
+  const groups = [...new Set(CLAN_STAT_OPTIONS.map(o => o.group))];
+
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+      <h2 className="text-sm font-semibold text-slate-300 mb-0.5">Clan Performance History</h2>
+      <p className="text-slate-600 text-xs mb-4">Track up to 3 clans across seasons</p>
+
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <select value={selectedStat} onChange={e => setSelectedStat(e.target.value)}
+          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          {groups.map(g => (
+            <optgroup key={g} label={g}>
+              {CLAN_STAT_OPTIONS.filter(o => o.group === g).map(o => (
+                <option key={o.key} value={o.key}>{o.label}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+
+        {trackedClans.length < 3 && (
+          <div className="relative flex-1 min-w-[140px]">
+            <input type="text" placeholder="Add clan…" value={clanSearch}
+              onChange={e => setClanSearch(e.target.value)}
+              className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+            {searchResults.length > 0 && (
+              <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+                {searchResults.map(c => (
+                  <button key={c} type="button" onClick={() => addClan(c)}
+                    className="w-full px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {trackedClans.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {trackedClans.map((c, i) => (
+            <div key={c.name} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CLAN_COLORS_CHART[i] }}/>
+              <span className="text-xs text-slate-300 max-w-[100px] truncate">{c.name.split(" ")[0]}</span>
+              <button onClick={() => removeClan(c.name)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {trackedClans.length === 0 ? (
+        <div className="flex items-center justify-center h-32 text-slate-700 text-xs text-center">
+          Search for a clan above to begin tracking
+        </div>
+      ) : validSeasons.length === 0 ? (
+        <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected clans</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
+            {[0, 0.25, 0.5, 0.75, 1].map(pct => {
+              const y = PAD_T + pct * plotH;
+              let label;
+              if (selectedStat === "cwl_rank") {
+                const idx = Math.round(pct * (CWL_RANK_LIST.length - 1));
+                label = CWL_RANK_LIST[idx]?.replace(" I"," I").replace(" II"," II").replace(" III"," III") || "";
+                // Shorten
+                label = label.replace("Champion","Champ").replace("Crystal","Cryst").replace("Silver","Silv").replace("Bronze","Brnz").replace("Master","Mastr");
+              } else {
+                const val = maxVal - pct * valRange;
+                label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
+              }
+              return (
+                <g key={pct}>
+                  <line x1={PAD_L} y1={y} x2={PAD_L + plotW} y2={y} stroke="#1e293b" strokeWidth="1"/>
+                  <text x={PAD_L - 3} y={y + 3} textAnchor="end" fontSize="6" fill="#475569">{label}</text>
+                </g>
+              );
+            })}
+            {validSeasons.map(s => (
+              <text key={s} x={xPos(s)} y={CHART_H - 6} textAnchor="middle" fontSize="7" fill="#475569">
+                {s.split(" ")[0].slice(0, 3)}
+              </text>
+            ))}
+            {trackedClans.map((c, ci) => {
+              const color = CLAN_COLORS_CHART[ci];
+              const pts = c.data.filter(d => d.value !== null && validSeasons.includes(d.season));
+              if (!pts.length) return null;
+              const d = pts.map((pt, j) => `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`).join(" ");
+              return (
+                <g key={c.name}>
+                  <path d={d} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                  {pts.map(pt => (
+                    <g key={pt.season}>
+                      <circle cx={xPos(pt.season)} cy={yPos(pt.value)} r="3.5" fill={color} opacity="0.9"/>
+                      <text x={xPos(pt.season)} y={yPos(pt.value) - 6} textAnchor="middle" fontSize="6.5" fill={color}>
+                        {selectedStat === "cwl_rank" ? (pt.displayValue?.split(" ")[0]?.slice(0,5) || "") : (typeof pt.value === "number" ? (pt.value % 1 === 0 ? pt.value.toFixed(0) : pt.value.toFixed(2)) : "")}
+                      </text>
+                    </g>
+                  ))}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function HistoryView({ onBack }) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [clanFilter, setClanFilter] = useState("all");
   const [tab, setTab] = useState("rank"); // "rank" | "player"
   const [allData, setAllData] = useState(null);
   const [seasons, setSeasons] = useState([]);
@@ -751,84 +954,15 @@ function HistoryView({ onBack }) {
         </div>
       </div>
 
-      {/* Clan CWL Rank tab */}
+      {/* Clan Performance tab */}
       {tab === "rank" && (
-        <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-          <h2 className="text-sm font-semibold text-slate-300 mb-0.5">Clan CWL Rank History</h2>
-          <p className="text-slate-600 text-xs mb-4">Recorded each season · dashed = carried forward</p>
-          {clans.length > 0 && (
-            <div className="mb-4">
-              <select value={clanFilter} onChange={e => setClanFilter(e.target.value)}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-                <option value="all">All Clans</option>
-                {clans.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          )}
+        <div className="relative z-10">
           {loading ? (
-            <div className="animate-pulse h-48 rounded-xl bg-white/[0.06]"/>
-          ) : allSeasons.length === 0 ? (
-            <p className="text-slate-600 text-sm text-center py-8">No history recorded yet. Admins can use the Fetch CWL Data button on the admin page.</p>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 animate-pulse">
+              <div className="h-48 rounded-xl bg-white/[0.06]"/>
+            </div>
           ) : (
-            <>
-              <div className="overflow-x-auto">
-                <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
-                  {RANK_ORDER.filter((_, i) => i % 3 === 0).map(rank => {
-                    const y = PAD_T + rankY(rank, plotH);
-                    return (
-                      <g key={rank}>
-                        <line x1={PAD_L} y1={y} x2={PAD_L + plotW} y2={y} stroke="#1e293b" strokeWidth="1"/>
-                        <text x={PAD_L - 4} y={y + 4} textAnchor="end" fontSize="7" fill="#475569">{rank}</text>
-                      </g>
-                    );
-                  })}
-                  {allSeasons.map((season, i) => {
-                    const x = PAD_L + (allSeasons.length > 1 ? i * xStep : plotW / 2);
-                    return <text key={season} x={x} y={CHART_H - 6} textAnchor="middle" fontSize="7" fill="#475569">{season.split(" ")[0].slice(0, 3)}</text>;
-                  })}
-                  {filteredSeries.map(({ clan, points, color }) => {
-                    const validPoints = points.filter(p => p.rank);
-                    if (!validPoints.length) return null;
-                    const segments = [];
-                    let segStart = null, segInterp = null;
-                    const ptX = i => PAD_L + (allSeasons.length > 1 ? i * xStep : plotW / 2);
-                    const ptY = rank => PAD_T + rankY(rank, plotH);
-                    points.forEach((pt, i) => {
-                      if (!pt.rank) { segStart = null; return; }
-                      if (segStart === null) { segStart = i; segInterp = pt.interpolated; return; }
-                      if (pt.interpolated !== segInterp) {
-                        segments.push({ from: segStart, to: i - 1, interpolated: segInterp });
-                        segStart = i - 1; segInterp = pt.interpolated;
-                      }
-                    });
-                    if (segStart !== null) segments.push({ from: segStart, to: points.length - 1, interpolated: segInterp });
-                    return (
-                      <g key={clan}>
-                        {segments.map((seg, si) => {
-                          const d = points.slice(seg.from, seg.to + 1).filter(p => p.rank).map((p, j) => {
-                            const idx = allSeasons.indexOf(p.season);
-                            return `${j === 0 ? "M" : "L"} ${ptX(idx)} ${ptY(p.rank)}`;
-                          }).join(" ");
-                          return <path key={si} d={d} fill="none" stroke={color} strokeWidth="1.5" strokeDasharray={seg.interpolated ? "4 3" : "none"} opacity="0.85"/>;
-                        })}
-                        {points.filter(p => p.rank && !p.interpolated).map(p => {
-                          const idx = allSeasons.indexOf(p.season);
-                          return <circle key={p.season} cx={ptX(idx)} cy={ptY(p.rank)} r="2.5" fill={color}/>;
-                        })}
-                      </g>
-                    );
-                  })}
-                </svg>
-              </div>
-              <div className="flex flex-wrap gap-3 mt-4">
-                {filteredSeries.map(({ clan, color }) => (
-                  <div key={clan} className="flex items-center gap-1.5 text-xs">
-                    <span className="w-4 h-0.5 rounded-full inline-block" style={{ backgroundColor: color }}/>
-                    <span className="text-slate-400">{clan}</span>
-                  </div>
-                ))}
-              </div>
-            </>
+            <ClanPerformanceChart history={history}/>
           )}
         </div>
       )}
