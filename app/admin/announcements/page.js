@@ -365,6 +365,9 @@ export default function AnnouncementsPage() {
   const [saveTemplateResult, setSaveTemplateResult] = useState(null);
 
   const [tab, setTab] = useState("compose");
+  const [composeMode, setComposeMode] = useState("quick");
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [showRecurring, setShowRecurring] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [templateEditMode, setTemplateEditMode] = useState(false);
   const templateMenuRef = useRef(null);
@@ -620,15 +623,26 @@ export default function AnnouncementsPage() {
     );
   }
 
-  const TABS = ["compose", "webhooks", "scheduled", "timestamp"];
+  const pendingScheduled = scheduled.filter(s => !s.sent);
+  const previewEmbed = {
+    color: embed.color || 0x5865f2,
+    title: embed.title || "",
+    description: embed.description || "",
+    author: embed.author?.name ? embed.author : null,
+    thumbnail: embed.thumbnail?.url ? embed.thumbnail : null,
+    image: embed.image?.url ? embed.image : null,
+    footer: embed.footer?.text ? embed.footer : null,
+    fields: embed.fields?.filter(f => f.name && f.value) || [],
+  };
+  const hexColor = "#" + (embed.color || 0x5865f2).toString(16).padStart(6, "0");
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Hero card — flush to top */}
+      {/* ── HERO TILE ── */}
       <div className="relative z-10 mb-4">
         <Card className="text-center py-5">
           <h1 className="text-2xl font-thin tracking-widest mb-1">Announcements</h1>
@@ -636,477 +650,410 @@ export default function AnnouncementsPage() {
           <div className="flex justify-center mb-3">
             <DiscordWidget variant="center"/>
           </div>
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex items-center justify-center gap-4">
             <Link href="/admin/pool" className="text-slate-500 hover:text-slate-300 transition p-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </Link>
             <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px] text-center">Announcements</span>
             <span className="w-6 h-6"/>
           </div>
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            {TABS.map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition capitalize ${tab === t ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
-                {t === "scheduled" ? `Scheduled (${scheduled.filter(s => !s.sent).length})` : t}
-              </button>
-            ))}
-          </div>
         </Card>
       </div>
 
-      {/* ── COMPOSE TAB ── */}
-      {tab === "compose" && (
-        <div className="relative z-10 space-y-4">
-          <Card>
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Post to</p>
-              {webhooks.length === 0 && (
-                <button onClick={() => setTab("webhooks")} className="text-xs text-purple-400 hover:text-purple-200 transition">Add a webhook first →</button>
-              )}
+      <div className="relative z-10 space-y-4">
+
+        {/* ── COMPOSE TILE ── */}
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Compose</h2>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setComposeMode("quick")} className="text-slate-500 hover:text-slate-300 transition p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[60px] text-center">
+                {composeMode === "quick" ? "Quick" : "Full"}
+              </span>
+              <button onClick={() => setComposeMode("full")} className="text-slate-500 hover:text-slate-300 transition p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
             </div>
-            {webhooks.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {webhooks.map(w => (
-                  <button key={w.id} onClick={() => setSelectedWebhookId(w.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${selectedWebhookId === w.id ? "bg-[#5865f2]/30 text-[#7289da] border-[#5865f2]/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06]"}`}>
-                    # {w.label}
-                  </button>
-                ))}
-              </div>
+          </div>
+
+          {/* Webhook selector */}
+          <div className="mb-4">
+            <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Post to</label>
+            {webhooks.length === 0 ? (
+              <p className="text-xs text-slate-600">No webhooks configured — add one below</p>
+            ) : (
+              <select value={selectedWebhookId || ""} onChange={e => setSelectedWebhookId(e.target.value)}
+                className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none [color-scheme:dark]">
+                {webhooks.map(w => <option key={w.id} value={w.id}>{w.label}{w.channel ? ` · #${w.channel}` : ""}</option>)}
+              </select>
             )}
+          </div>
 
-            {/* Saved templates section */}
-            {templates.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-xs text-slate-400 uppercase tracking-widest">Saved templates</p>
-
-                  {/* Hamburger dropdown — all templates */}
-                  <div className="relative" ref={templateMenuRef}>
-                    <button onClick={() => setTemplateMenuOpen(v => !v)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                      </svg>
-                    </button>
-                    <AnimatePresence>
-                      {templateMenuOpen && (
-                        <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
-                          className="absolute left-0 top-full mt-1 z-50 min-w-[180px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
-                          <div className="p-1.5 space-y-0.5">
-                            {templates.map(t => (
-                              <button key={t.id} onClick={() => { applySavedTemplate(t); setTemplateMenuOpen(false); }}
-                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
-                                <span className="truncate">{t.name}</span>
-                                {t.use_count > 0 && <span className="text-slate-600 shrink-0">{t.use_count}×</span>}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Cog — toggle edit/delete mode */}
-                  <button onClick={() => setTemplateEditMode(v => !v)}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center border transition ${templateEditMode ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white"}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </button>
+          {/* Quick fields */}
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Title</label>
+              <input type="text" value={embed.title || ""} onChange={e => setEmbedField("title", e.target.value)} placeholder="Announcement title"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Description</label>
+              <MdToolbar textareaRef={descriptionRef} value={embed.description || ""} onChange={v => setEmbedField("description", v)}/>
+              <textarea ref={descriptionRef} value={embed.description || ""} onChange={e => setEmbedField("description", e.target.value)}
+                placeholder="Main message content. Supports **bold**, *italic*, `code`" rows={4}
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none mt-1"/>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Colour</label>
+              <div className="flex items-center gap-3 flex-wrap">
+                <input type="color" value={hexColor} onChange={e => setEmbedField("color", hexToInt(e.target.value))}
+                  className="w-10 h-8 rounded-lg border border-white/10 bg-transparent cursor-pointer"/>
+                <input type="text" value={hexColor} onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) setEmbedField("color", hexToInt(e.target.value.padEnd(7, "0"))); }}
+                  className="w-24 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white font-mono focus:outline-none focus:border-white/20 transition"/>
+                <div className="flex gap-1.5">
+                  {["#a78bfa","#34d399","#fb923c","#60a5fa","#f472b6","#5865f2"].map(c => (
+                    <button key={c} type="button" onClick={() => setEmbedField("color", hexToInt(c))}
+                      className="w-5 h-5 rounded-full border border-white/20 hover:scale-110 transition" style={{background:c}}/>
+                  ))}
                 </div>
-
-                {/* Default view: last used + most used as pills */}
-                {!templateEditMode && (
-                  <div className="flex flex-wrap gap-2">
-                    {/* Most recently used */}
-                    {[...templates].sort((a,b) => (b.last_used_at||b.created_at) > (a.last_used_at||a.created_at) ? 1 : -1).slice(0,1).map(t => (
-                      <button key={`last-${t.id}`} onClick={() => applySavedTemplate(t)}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08] hover:text-white transition">
-                        <span className="text-slate-500 text-[10px]">Last</span>
-                        {t.name}
-                      </button>
-                    ))}
-                    {/* Most frequently used (different from last used) */}
-                    {[...templates].sort((a,b) => (b.use_count||0) - (a.use_count||0)).filter(t => {
-                      const lastUsed = [...templates].sort((a,b) => (b.last_used_at||b.created_at) > (a.last_used_at||a.created_at) ? 1 : -1)[0];
-                      return !lastUsed || t.id !== lastUsed.id;
-                    }).slice(0,1).map(t => (
-                      <button key={`freq-${t.id}`} onClick={() => applySavedTemplate(t)}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08] hover:text-white transition">
-                        <span className="text-slate-500 text-[10px]">Top</span>
-                        {t.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Edit mode: all templates with delete buttons */}
-                {templateEditMode && (
-                  <div className="flex flex-wrap gap-2">
-                    {templates.map(t => (
-                      <div key={t.id} className="flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/5 px-2 py-0.5">
-                        <button onClick={() => applySavedTemplate(t)} className="text-xs text-slate-300 hover:text-white transition">{t.name}</button>
-                        <button onClick={() => handleDeleteTemplate(t.id)} className="text-red-500/50 hover:text-red-400 transition text-[10px] leading-none ml-0.5">✕</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-
-          <Card>
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Sender</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-slate-500 mb-1 block">Display name</label>
-                <input value={username} onChange={e => setUsername(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-              </div>
-              <div>
-                <label className="text-xs text-slate-500 mb-1 block">Avatar URL</label>
-                <input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://... or /cgn-skull.png"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
               </div>
             </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Embed</p>
-              {!showSaveTemplate ? (
-                <button onClick={() => setShowSaveTemplate(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
-                  + Save Template
-                </button>
-              ) : (
-                <form onSubmit={handleSaveTemplate} className="flex gap-2 items-center">
-                  <input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Template name"
-                    className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition w-32" />
-                  <button type="submit" disabled={savingTemplate || !templateName.trim()}
-                    className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition disabled:opacity-40">
-                    {savingTemplate ? "…" : "Save"}
-                  </button>
-                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }} className="text-slate-600 hover:text-white transition text-xs">✕</button>
-                </form>
-              )}
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Ping / Content <span className="text-slate-700 normal-case">(outside embed)</span></label>
+              <input type="text" value={content} onChange={e => setContent(e.target.value)} placeholder="@everyone or leave blank"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             </div>
-            {saveTemplateResult && <p className={`text-xs mb-2 ${saveTemplateResult.ok ? "text-green-400" : "text-red-400"}`}>{saveTemplateResult.message}</p>}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <label className="text-xs text-slate-500 shrink-0">Colour</label>
-                <input type="color" value={intToHex(embed.color)} onChange={e => setEmbedField("color", hexToInt(e.target.value))}
-                  className="w-8 h-8 rounded cursor-pointer border border-white/10 bg-transparent" />
-                <span className="text-xs text-slate-500 font-mono">{intToHex(embed.color)}</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Author name</label>
-                  <input value={embed.author?.name || ""} onChange={e => setNestedField("author", "name", e.target.value)} placeholder="Cognition {CGN}"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Author icon URL</label>
-                  <input value={embed.author?.icon_url || ""} onChange={e => setNestedField("author", "icon_url", e.target.value)} placeholder="https://..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Title</label>
-                  <input value={embed.title} onChange={e => setEmbedField("title", e.target.value)} placeholder="Announcement title"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Title URL (optional)</label>
-                  <input value={embed.url} onChange={e => setEmbedField("url", e.target.value)} placeholder="https://..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
+          </div>
+
+          {/* Full mode fields */}
+          {composeMode === "full" && (
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Author</label>
+                <div className="space-y-2">
+                  <input type="text" value={embed.author?.name || ""} onChange={e => setNestedField("author", "name", e.target.value)} placeholder="Author name"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  <input type="text" value={embed.author?.icon_url || ""} onChange={e => setNestedField("author", "icon_url", e.target.value)} placeholder="Author icon URL (optional)"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 </div>
               </div>
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">Description</label>
-                <MarkdownToolbar textareaRef={descriptionRef} value={embed.description} onChange={v => setEmbedField("description", v)} />
-                <textarea ref={descriptionRef} value={embed.description} onChange={e => setEmbedField("description", e.target.value)}
-                  rows={4} placeholder="Main body text. Use the toolbar above for formatting."
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none" />
+                <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Thumbnail URL</label>
+                <input type="text" value={embed.thumbnail?.url || ""} onChange={e => setNestedField("thumbnail", "url", e.target.value)} placeholder="https://…"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Image URL</label>
+                <input type="text" value={embed.image?.url || ""} onChange={e => setNestedField("image", "url", e.target.value)} placeholder="https://…"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs text-slate-500">Fields</label>
-                  <button onClick={addField} className="text-xs text-purple-400 hover:text-purple-200 transition">+ Add field</button>
+                  <label className="text-[10px] text-slate-500 uppercase tracking-widest">Fields</label>
+                  <button type="button" onClick={addField}
+                    className="text-[10px] text-purple-400 border border-purple-500/40 px-2 py-0.5 rounded-full hover:border-purple-400 transition">+ Add</button>
                 </div>
                 <div className="space-y-2">
                   {embed.fields.map((f, i) => (
-                    <div key={i} className="flex gap-2 items-start">
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <input value={f.name} onChange={e => updateField(i, "name", e.target.value)} placeholder="Label"
-                          className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                        <input value={f.value} onChange={e => updateField(i, "value", e.target.value)} placeholder="Value"
-                          className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
+                    <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={f.name} onChange={e => updateField(i, "name", e.target.value)} placeholder="Field name"
+                          className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                        <button type="button" onClick={() => removeField(i)} className="text-slate-600 hover:text-red-400 transition text-xs">✕</button>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <label className="text-[10px] text-slate-500">inline</label>
-                        <input type="checkbox" checked={f.inline} onChange={e => updateField(i, "inline", e.target.checked)} />
-                        <button onClick={() => removeField(i)} className="text-slate-600 hover:text-red-400 transition text-xs">✕</button>
-                      </div>
+                      <textarea value={f.value} onChange={e => updateField(i, "value", e.target.value)} placeholder="Field value" rows={2}
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none"/>
+                      <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                        <input type="checkbox" checked={f.inline} onChange={e => updateField(i, "inline", e.target.checked)} className="accent-purple-500"/>
+                        Inline
+                      </label>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Thumbnail URL</label>
-                  <input value={embed.thumbnail?.url || ""} onChange={e => setNestedField("thumbnail", "url", e.target.value)} placeholder="https://..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Image URL</label>
-                  <input value={embed.image?.url || ""} onChange={e => setNestedField("image", "url", e.target.value)} placeholder="https://..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Footer text</label>
-                  <input value={embed.footer?.text || ""} onChange={e => setNestedField("footer", "text", e.target.value)} placeholder="Cognition Collective"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Footer icon URL</label>
-                  <input value={embed.footer?.icon_url || ""} onChange={e => setNestedField("footer", "icon_url", e.target.value)} placeholder="https://..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="ts-check" checked={!!embed.timestamp} onChange={e => setEmbedField("timestamp", e.target.checked ? new Date().toISOString() : null)} />
-                <label htmlFor="ts-check" className="text-xs text-slate-500">Include timestamp</label>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Footer</label>
+                <input type="text" value={embed.footer?.text || ""} onChange={e => setNestedField("footer", "text", e.target.value)} placeholder="Footer text"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">Link button (optional)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={embed._button?.label || ""} onChange={e => setNestedField("_button", "label", e.target.value)} placeholder="Sign Up Now →"
-                    className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
-                  <input value={embed._button?.url || ""} onChange={e => setNestedField("_button", "url", e.target.value)} placeholder="https://..."
-                    className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
+                <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Link Button <span className="text-slate-700 normal-case">(optional)</span></label>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input type="text" value={embed._button?.emoji || ""} onChange={e => setNestedField("_button", "emoji", e.target.value)} placeholder="🔔"
+                      className="w-14 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center"/>
+                    <input type="text" value={embed._button?.label || ""} onChange={e => setNestedField("_button", "label", e.target.value)} placeholder="Button label"
+                      className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  </div>
+                  <input type="text" value={embed._button?.url || ""} onChange={e => setNestedField("_button", "url", e.target.value)} placeholder="https://…"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  <p className="text-[10px] text-slate-700">Link buttons post as Discord components alongside the embed</p>
                 </div>
               </div>
-              <div>
-                <label className="text-xs text-slate-500 mb-1 block">Message content (above embed — for @mentions)</label>
-                <input value={content} onChange={e => setContent(e.target.value)} placeholder="@everyone"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition" />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Bot Name</label>
+                  <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition"/>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Avatar URL</label>
+                  <input type="text" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://…"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                </div>
               </div>
             </div>
-          </Card>
+          )}
 
-          <Card>
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Preview</p>
-            {saveTemplateResult && <p className={`text-xs mb-2 ${saveTemplateResult.ok ? "text-green-400" : "text-red-400"}`}>{saveTemplateResult.message}</p>}
-            <EmbedPreview embed={embed} username={username} avatarUrl={avatarUrl} />
-          </Card>
-
-          <Card>
-            <div className="space-y-3">
-
-              {/* 3-way mode toggle */}
-              <div className="flex justify-center">
-                <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
-                  <button onClick={() => { setScheduleMode(false); setRecurrence(null); }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${!scheduleMode && recurrence === null ? "bg-[#5865f2]/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
-                    Post Now
-                  </button>
-                  <button onClick={() => { setScheduleMode(true); setRecurrence(null); }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${scheduleMode && recurrence === null ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
-                    Schedule
-                  </button>
-                  <button onClick={() => { setScheduleMode(false); setRecurrence(recurrence || "24hr"); }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${recurrence !== null ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
-                    Recurring
-                  </button>
-                </div>
-              </div>
-
-              {/* Schedule: single datetime */}
-              {scheduleMode && recurrence === null && (
-                <div className="flex flex-col items-center">
-                  <label className="text-xs text-slate-500 mb-1 text-center">Send at (your local time)</label>
-                  <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)}
-                    className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
-                </div>
-              )}
-
-              {/* Recurring: interval + start + end */}
-              {recurrence !== null && (
-                <div className="flex flex-col items-center gap-3">
-                  {/* Interval toggle bar */}
-                  <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
-                    {["24hr", "48hr", "7days", "14days", "30days"].map(opt => (
-                      <button key={opt} type="button" onClick={() => setRecurrence(opt)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold transition ${recurrence === opt ? "bg-purple-600/40 text-white" : "text-slate-400 hover:text-slate-200"}`}>
-                        {opt}
-                      </button>
-                    ))}
+          {/* Send section */}
+          <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
+            <button type="button" onClick={handleSend} disabled={sending || !selectedWebhookId}
+              className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
+              {sending ? "Sending…" : "Post to Discord"}
+            </button>
+            {sendResult && <p className={`text-xs text-center ${sendResult.ok ? "text-green-400" : "text-red-400"}`}>{sendResult.message}</p>}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+              <button type="button" onClick={() => setShowSchedule(v => !v)}
+                className="w-full flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs text-slate-400 font-semibold">Schedule</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showSchedule ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              {showSchedule && (
+                <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
+                  <div>
+                    <label className="text-[10px] text-slate-500 mb-1 block">Send at</label>
+                    <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]"/>
                   </div>
-                  {/* Start date */}
-                  <div className="flex flex-col items-center w-full">
-                    <label className="text-xs text-slate-500 mb-1 text-center">Start date</label>
-                    <input type="datetime-local" value={recurStart} onChange={e => setRecurStart(e.target.value)}
-                      className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
-                  </div>
-                  {/* End date (optional) */}
-                  <div className="flex flex-col items-center w-full">
-                    <label className="text-xs text-slate-500 mb-1 text-center">End date <span className="text-slate-600">(optional — blank = indefinite)</span></label>
-                    <input type="datetime-local" value={recurEnd} onChange={e => setRecurEnd(e.target.value)}
-                      className="w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]" />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col items-center gap-2">
-                {recurrence === null && !scheduleMode && (
-                  <button onClick={handleSend} disabled={sending || !selectedWebhookId || !embed.title}
-                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm bg-[#5865f2]/30 text-[#7289da] border border-[#5865f2]/40 hover:bg-[#5865f2]/50 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    <svg className="w-4 h-4" viewBox="0 0 127.14 96.36" fill="currentColor">
-                      <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
-                    </svg>
-                    {sending ? "Posting…" : "Post to Discord"}
-                  </button>
-                )}
-                {scheduleMode && recurrence === null && (
-                  <button onClick={handleSchedule} disabled={scheduling || !selectedWebhookId || !embed.title || !scheduleAt}
-                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm bg-purple-600/30 text-purple-200 border border-purple-500/40 hover:bg-purple-600/50 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <button type="button" onClick={handleSchedule} disabled={scheduling || !selectedWebhookId}
+                    className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                     {scheduling ? "Scheduling…" : "Schedule Post"}
                   </button>
-                )}
-                {recurrence !== null && (
-                  <button onClick={handleRecurring} disabled={scheduling || !selectedWebhookId || !embed.title || !recurStart}
-                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm bg-purple-600/30 text-purple-200 border border-purple-500/40 hover:bg-purple-600/50 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    {scheduling ? "Scheduling…" : `Schedule Recurring (${recurrence})`}
-                  </button>
-                )}
-                {(sendResult || scheduleResult) && (
-                  <p className={`text-xs ${(sendResult || scheduleResult)?.ok ? "text-green-400" : "text-red-400"}`}>
-                    {(sendResult || scheduleResult)?.message}
-                  </p>
-                )}
-                {!selectedWebhookId && <p className="text-xs text-slate-600">Add a webhook in the Webhooks tab first</p>}
-              </div>
-
+                  {scheduleResult && !showRecurring && <p className={`text-xs text-center ${scheduleResult.ok ? "text-green-400" : "text-red-400"}`}>{scheduleResult.message}</p>}
+                </div>
+              )}
             </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ── WEBHOOKS TAB ── */}
-      {tab === "webhooks" && (
-        <div className="relative z-10 space-y-4">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Webhook channels</p>
-              <button onClick={() => setShowAddWebhook(v => !v)} className="text-xs text-purple-400 hover:text-purple-200 transition">
-                {showAddWebhook ? "Cancel" : "+ Add webhook"}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+              <button type="button" onClick={() => setShowRecurring(v => !v)}
+                className="w-full flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs text-slate-400 font-semibold">Recurring</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showRecurring ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </button>
+              {showRecurring && (
+                <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
+                  <div>
+                    <label className="text-[10px] text-slate-500 mb-1 block">First send at</label>
+                    <input type="datetime-local" value={recurStart} onChange={e => setRecurStart(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]"/>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 mb-1.5 block">Repeat every</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[["24hr","Daily"],["48hr","48 hrs"],["7days","Weekly"],["14days","2 weeks"],["30days","Monthly"]].map(([val,label]) => (
+                        <button key={val} type="button" onClick={() => setRecurrence(recurrence === val ? null : val)}
+                          className={`px-2.5 py-1 rounded-full text-xs border transition font-semibold ${recurrence === val ? "text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.12)]" : "text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 mb-1 block">End date <span className="text-slate-700">(optional)</span></label>
+                    <input type="datetime-local" value={recurEnd} onChange={e => setRecurEnd(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]"/>
+                  </div>
+                  <button type="button" onClick={handleRecurring} disabled={scheduling || !selectedWebhookId || !recurStart || !recurrence}
+                    className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                    {scheduling ? "Scheduling…" : `Set Recurring (${recurrence || "choose interval"})`}
+                  </button>
+                  {scheduleResult && <p className={`text-xs text-center ${scheduleResult.ok ? "text-green-400" : "text-red-400"}`}>{scheduleResult.message}</p>}
+                </div>
+              )}
             </div>
-            {showAddWebhook && (
-              <form onSubmit={handleAddWebhook} className="space-y-3 mb-5 p-4 rounded-2xl border border-white/10 bg-white/[0.03]">
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Label (e.g. "Announcements")</label>
-                  <input value={newLabel} onChange={e => setNewLabel(e.target.value)} required
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none transition" />
+          </div>
+        </Card>
+
+        {/* Live Preview */}
+        <Card>
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Live Preview</h2>
+          <div className="rounded-xl bg-[#313338] p-3">
+            <div className="flex items-center gap-2 mb-2">
+              {avatarUrl ? <img src={avatarUrl} className="w-8 h-8 rounded-full object-cover" alt=""/> : <div className="w-8 h-8 rounded-full bg-purple-600/40 flex items-center justify-center text-xs text-white font-bold">{username?.charAt(0)||"C"}</div>}
+              <span className="text-white text-sm font-semibold">{username||"CGN CWL Hub"}</span>
+              <span className="text-[10px] bg-[#5865f2] text-white px-1 py-0.5 rounded">APP</span>
+            </div>
+            {content && <p className="text-[#dbdee1] text-sm mb-2">{content}</p>}
+            <div className="rounded border-l-4 bg-[#2b2d31] p-3" style={{borderLeftColor: hexColor}}>
+              {previewEmbed.author && <div className="flex items-center gap-1.5 mb-1">{previewEmbed.author.icon_url && <img src={previewEmbed.author.icon_url} className="w-5 h-5 rounded-full" alt=""/>}<span className="text-[#dbdee1] text-xs font-semibold">{previewEmbed.author.name}</span></div>}
+              {previewEmbed.title && <p className="text-white font-bold text-sm mb-1">{previewEmbed.title}</p>}
+              {previewEmbed.description && <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{previewEmbed.description}</p>}
+              {previewEmbed.fields.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {previewEmbed.fields.map((f,i) => <div key={i} className={f.inline?"":"col-span-2"}><p className="text-white text-xs font-semibold">{f.name}</p><p className="text-[#dbdee1] text-xs">{f.value}</p></div>)}
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Webhook URL</label>
-                  <input value={newUrl} onChange={e => setNewUrl(e.target.value)} required placeholder="https://discord.com/api/webhooks/..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none transition" />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Channel name (optional)</label>
-                  <input value={newChannel} onChange={e => setNewChannel(e.target.value)} placeholder="#announcements"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none transition" />
-                </div>
-                <button type="submit" disabled={addingWebhook}
-                  className="w-full py-2 rounded-xl bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition text-sm font-semibold disabled:opacity-40">
-                  {addingWebhook ? "Adding…" : "Add webhook"}
-                </button>
-                {webhookResult && <p className={`text-xs text-center ${webhookResult.ok ? "text-green-400" : "text-red-400"}`}>{webhookResult.message}</p>}
-              </form>
-            )}
-            {loadingData ? (
-              <div className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
-            ) : webhooks.length === 0 ? (
-              <p className="text-slate-600 text-sm text-center py-6">No webhooks yet. Add one to start posting announcements.</p>
-            ) : (
-              <div className="space-y-2">
-                {webhooks.map(w => (
-                  <div key={w.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium text-white">{w.label}</p>
-                      {w.channel && <p className="text-xs text-slate-500">{w.channel}</p>}
-                    </div>
-                    <button onClick={() => handleDeleteWebhook(w.id)} className="text-slate-600 hover:text-red-400 transition text-xs shrink-0">Remove</button>
-                  </div>
-                ))}
+              )}
+              {previewEmbed.image?.url && <img src={previewEmbed.image.url} className="w-full rounded mt-2 max-h-40 object-cover" alt=""/>}
+              {previewEmbed.footer?.text && <p className="text-[#87898c] text-[10px] mt-2">{previewEmbed.footer.text}</p>}
+            </div>
+            {embed._button?.label && embed._button?.url && (
+              <div className="mt-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#4e5058] text-[#dbdee1] text-xs font-semibold">
+                  {embed._button.emoji && <span>{embed._button.emoji}</span>}
+                  {embed._button.label}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </span>
               </div>
             )}
-          </Card>
-        </div>
-      )}
+          </div>
+        </Card>
 
-      {/* ── SCHEDULED TAB ── */}
-      {tab === "scheduled" && (
-        <div className="relative z-10 space-y-4">
-          <Card>
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-4">Scheduled & sent posts</p>
-            {loadingData ? (
-              <div className="space-y-2"><Skeleton className="h-14 w-full" /><Skeleton className="h-14 w-full" /></div>
-            ) : scheduled.length === 0 ? (
-              <p className="text-slate-600 text-sm text-center py-6">No scheduled posts yet. Use the Compose tab to schedule an embed.</p>
-            ) : (
-              <div className="space-y-2">
-                {scheduled.map(s => (
-                  <div key={s.id} className={`rounded-2xl border px-4 py-3 ${s.sent ? "border-white/[0.06] bg-white/[0.02]" : "border-purple-500/20 bg-purple-500/5"}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{s.title || "Untitled"}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {s.webhook_label && `# ${s.webhook_label} · `}
-                          {s.recurrence && <span className="text-purple-400">↻ {s.recurrence} · </span>}
-                          {s.sent ? (
-                            <span className="text-green-400">Sent {new Date(s.sent_at).toLocaleString()}</span>
-                          ) : (
-                            <span className="text-purple-300">Scheduled for {new Date(s.send_at).toLocaleString()}</span>
-                          )}
-                        </p>
-                        {s.recurrence_end && !s.sent && (
-                          <p className="text-[10px] text-slate-600 mt-0.5">Ends {new Date(s.recurrence_end).toLocaleDateString()}</p>
-                        )}
-                        {s.created_by && <p className="text-[10px] text-slate-600 mt-0.5">by {s.created_by}</p>}
+        {/* Templates */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setTemplateMenuOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-4">
+            <div><p className="text-sm font-semibold text-slate-300">Templates</p><p className="text-[10px] text-slate-600 mt-0.5">{templates.length} saved</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${templateMenuOpen?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {templateMenuOpen && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
+              <div>
+                <p className="text-[10px] text-slate-600 mb-2">Quick templates</p>
+                <div className="flex flex-wrap gap-2">
+                  {[["season-open","Season Open"],["rosters-final","Rosters Final"],["season-closing","Season Closing"]].map(([type,label]) => (
+                    <button key={type} type="button" onClick={() => applyTemplate(type)}
+                      className="px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">{label}</button>
+                  ))}
+                </div>
+              </div>
+              {templates.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] text-slate-600">Saved</p>
+                    <button onClick={() => setTemplateEditMode(v => !v)} className="text-[10px] text-slate-600 hover:text-slate-400">{templateEditMode?"Done":"Edit"}</button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {templates.map(t => (
+                      <div key={t.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                        <button type="button" onClick={() => {applySavedTemplate(t);setTemplateMenuOpen(false);}} className="flex-1 text-left text-xs text-slate-300 hover:text-white truncate">{t.name}</button>
+                        {t.use_count > 0 && <span className="text-[9px] text-slate-700">{t.use_count}×</span>}
+                        {templateEditMode && <button type="button" onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>}
                       </div>
-                      {!s.sent && (
-                        <button onClick={() => handleCancelScheduled(s.id)} className="shrink-0 text-xs text-slate-600 hover:text-red-400 transition">Cancel</button>
-                      )}
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="pt-2 border-t border-white/[0.06]">
+                {showSaveTemplate ? (
+                  <div className="space-y-2">
+                    <input type="text" placeholder="Template name" value={templateName} onChange={e => setTemplateName(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleSaveTemplate} disabled={savingTemplate||!templateName.trim()}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{savingTemplate?"Saving…":"Save"}</button>
+                      <button type="button" onClick={() => {setShowSaveTemplate(false);setTemplateName("");}} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
+                    </div>
+                    {saveTemplateResult && <p className={`text-xs text-center ${saveTemplateResult.ok?"text-green-400":"text-red-400"}`}>{saveTemplateResult.message}</p>}
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setShowSaveTemplate(true)}
+                    className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">+ Save current as template</button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Webhooks */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setShowAddWebhook(v => !v)} className="w-full flex items-center justify-between px-5 py-4">
+            <div><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showAddWebhook?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {showAddWebhook && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
+              {webhooks.map(w => (
+                <div key={w.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <div className="min-w-0"><p className="text-xs font-semibold text-white truncate">{w.label}</p>{w.channel && <p className="text-[10px] text-slate-600">#{w.channel}</p>}</div>
+                  <button type="button" onClick={() => handleDeleteWebhook(w.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>
+                </div>
+              ))}
+              <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                <input type="text" placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <input type="text" placeholder="Webhook URL" value={newUrl} onChange={e => setNewUrl(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <input type="text" placeholder="Channel name (optional)" value={newChannel} onChange={e => setNewChannel(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <button type="button" onClick={handleAddWebhook} disabled={addingWebhook||!newLabel||!newUrl}
+                  className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{addingWebhook?"Adding…":"Add Webhook"}</button>
+                {webhookResult && <p className={`text-xs text-center ${webhookResult.ok?"text-green-400":"text-red-400"}`}>{webhookResult.message}</p>}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Scheduled */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setTab(tab==="scheduled"?"":"scheduled")} className="w-full flex items-center justify-between px-5 py-4">
+            <div><p className="text-sm font-semibold text-slate-300">Scheduled</p><p className="text-[10px] text-slate-600 mt-0.5">{pendingScheduled.length} pending</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="scheduled"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {tab === "scheduled" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
+              {scheduled.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No scheduled posts</p> : scheduled.map(s => {
+                const t = new Date(s.send_at);
+                return (
+                  <div key={s.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-white truncate">{s.title||"Untitled"}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{t.toLocaleDateString()} {t.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}{s.recurrence && <span className="ml-1.5 text-purple-400">↻ {s.recurrence}</span>}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {s.sent ? <span className="text-[9px] text-green-500">Sent</span> : <button type="button" onClick={() => handleCancelScheduled(s.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* ── TIMESTAMP TAB ── */}
-      {tab === "timestamp" && (
-        <div className="relative z-10">
-          <TimestampTool />
+        {/* History */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setTab(tab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
+            <div><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {tab === "history" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
+              {history.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No history yet</p> : history.slice(0,10).map((h,i) => (
+                <div key={i} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs text-white truncate">{h.title||"Untitled"}</p>
+                    <p className="text-[10px] text-slate-600">{h.sent_by||"Unknown"} · {new Date(h.sent_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Timestamp Generator */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setTab(tab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
+            <div><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {tab === "timestamp" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4">
+              <TimestampTool/>
+            </div>
+          )}
+        </div>
+
+      </div>
     </main>
   );
 }
