@@ -8,7 +8,7 @@ import { captureCwlData } from "@/lib/cwlCapture";
 // Authorization: Bearer {CRON_SECRET}
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${process.env.CWL_CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
