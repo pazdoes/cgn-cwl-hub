@@ -1472,8 +1472,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
 </div>
 
-<div className="relative z-10 mb-6">
-  <button
 
 
 <div className="
