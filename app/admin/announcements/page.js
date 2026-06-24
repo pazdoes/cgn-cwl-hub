@@ -701,7 +701,7 @@ export default function AnnouncementsPage() {
             </div>
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Description</label>
-              <MdToolbar textareaRef={descriptionRef} value={embed.description || ""} onChange={v => setEmbedField("description", v)}/>
+              <MarkdownToolbar textareaRef={descriptionRef} value={embed.description || ""} onChange={v => setEmbedField("description", v)}/>
               <textarea ref={descriptionRef} value={embed.description || ""} onChange={e => setEmbedField("description", e.target.value)}
                 placeholder="Main message content. Supports **bold**, *italic*, `code`" rows={4}
                 className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none mt-1"/>
