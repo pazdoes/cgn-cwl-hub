@@ -691,20 +691,22 @@ export default function AdminPoolPage() {
               Delete Clan
             </button>
             {!showCloseSeasonForm ? (
-              <button type="button" onClick={() => { setShowCloseSeasonForm(true); setCloseSeasonResult(null); }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 hover:text-amber-200 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Migrate Season
-              </button>
-              <button type="button" onClick={doFetchCwlData} disabled={fetchingCwl}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 text-xs font-semibold hover:bg-blue-500/20 hover:text-blue-200 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
-              </button>
+              <>
+                <button type="button" onClick={() => { setShowCloseSeasonForm(true); setCloseSeasonResult(null); }}
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 hover:text-amber-200 transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Migrate Season
+                </button>
+                <button type="button" onClick={doFetchCwlData} disabled={fetchingCwl}
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 text-xs font-semibold hover:bg-blue-500/20 hover:text-blue-200 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
+                </button>
+              </>
             ) : null}
           </div>
 
