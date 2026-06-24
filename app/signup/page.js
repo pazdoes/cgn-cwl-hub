@@ -671,7 +671,7 @@ export default function SignupPage() {
                 <p className="text-[10px] text-slate-600 mt-1.5 ml-1 leading-relaxed">Providing your token confirms account ownership and enables future personalisation features</p>
               </div>
               <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                className="w-full py-3 rounded-2xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="w-full py-3 rounded-2xl font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {verifying ? "Verifying…" : "Verify & Sign Up"}
               </button>
               {verifyStatus && (
@@ -742,14 +742,14 @@ export default function SignupPage() {
                     <div className="shrink-0">
                       {acct.inCurrentPool ? (
                         <button onClick={() => handleLeave(acct.tag)} disabled={leavingTag === acct.tag}
-                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30 disabled:opacity-50 transition whitespace-nowrap">
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50 hover:shadow-[0_0_8px_rgba(239,68,68,0.15)] disabled:opacity-50 transition whitespace-nowrap">
                           {leavingTag === acct.tag ? "Leaving…" : "✓ In Pool"}
                         </button>
                       ) : result?.ok ? (
-                        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30">✓ Signed Up</span>
+                        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)]">✓ Signed Up</span>
                       ) : (
                         <button onClick={() => handleJoin(acct.tag)} disabled={busy}
-                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 hover:text-white disabled:opacity-50 transition">
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.15)] hover:shadow-[0_0_14px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 disabled:opacity-50 transition">
                           {busy ? "…" : "Sign Up"}
                         </button>
                       )}
@@ -820,7 +820,7 @@ export default function SignupPage() {
                       className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
                   </div>
                   <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-purple-600/40 text-purple-100 border border-purple-500/30 hover:bg-purple-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {verifying ? "Verifying…" : "Add Account"}
                   </button>
                   {verifyStatus && (
@@ -839,7 +839,7 @@ export default function SignupPage() {
                       className="w-full rounded-2xl border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm"/>
                   </div>
                   <button type="button" onClick={handleManageSubmit} disabled={manageSubmitting || !manageTag.trim()}
-                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-red-600/40 text-red-100 border border-red-500/30 hover:bg-red-600/60 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_16px_rgba(239,68,68,0.25)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {manageSubmitting ? "Removing…" : "Remove Account"}
                   </button>
                   {manageResult && (
