@@ -816,7 +816,8 @@ function LeaderboardView({ onBack }) {
                     <td className="px-4 py-3 text-slate-500 font-mono">{i + 1}</td>
                     <td className="px-4 py-3 min-w-[120px]">
                       <p className="font-semibold text-white truncate max-w-[130px]">{p.player_name}</p>
-                      <p className="text-slate-600 font-mono text-[10px] truncate max-w-[130px]">{p.clan_name.split(" ")[0]}</p>
+                      <p className="text-slate-600 font-mono text-[10px] truncate max-w-[130px]">{p.player_tag}</p>
+                      <p className="text-slate-700 text-[9px] truncate max-w-[130px]">{p.clan_name.split(" ")[0]}</p>
                     </td>
                     <td className="px-3 py-3 text-center font-bold text-green-300">{p.stars_earned}</td>
                     <td className="px-3 py-3 text-center text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</td>
