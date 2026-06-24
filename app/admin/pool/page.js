@@ -645,7 +645,6 @@ export default function AdminPoolPage() {
             </form>
           </div>
         </div>
-        </motion.div>
       </main>
     );
   }
