@@ -1437,6 +1437,11 @@ function LeaderboardView({ onBack }) {
       })
       .catch(() => {});
   }, []);
+    // Fetch clan history for clan leaderboard
+    fetch("/api/history")
+      .then(r => r.json())
+      .then(d => setClanHistory(d.history || []))
+      .catch(() => setClanHistory([]));
 
   function toggleExpand(tag) {
     setExpandedTag(prev => prev === tag ? null : tag);
