@@ -1026,6 +1026,148 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
 }
 
 
+function LeaderboardView({ onBack }) {
+  const [data, setData] = useState(null);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [clanFilter, setClanFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("efficiency");
+  const [sortDir, setSortDir] = useState("desc");
+  const [search, setSearch] = useState("");
+  const [expandedTag, setExpandedTag] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/leaderboard")
+      .then(r => r.json())
+      .then(d => {
+        setData(d.stats || []);
+        setSeasons(d.seasons || []);
+        setSelectedSeason(d.currentSeason || null);
+      })
+      .catch(() => setData([]));
+  }, []);
+
+  function fetchSeason(season) {
+    setSelectedSeason(season);
+    setData(null);
+    setExpandedTag(null);
+    fetch(`/api/leaderboard?season=${encodeURIComponent(season)}`)
+      .then(r => r.json())
+      .then(d => setData(d.stats || []))
+      .catch(() => setData([]));
+  }
+
+  const SORT_OPTIONS = [
+    { key: "efficiency",         label: "Atk EFF" },
+    { key: "stars_earned",       label: "Stars" },
+    { key: "defence_efficiency", label: "Def EFF" },
+    { key: "stars_conceded",     label: "Def ★" },
+    { key: "destruction_pct",    label: "Dest %" },
+    { key: "missed_attacks",     label: "Missed" },
+  ];
+
+  const clans = data ? [...new Set(data.map(p => p.clan_name))].sort() : [];
+  const searchLower = search.toLowerCase();
+
+  const filtered = data
+    ? data
+        .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
+        .filter(p => !searchLower ||
+          p.player_name.toLowerCase().includes(searchLower) ||
+          p.player_tag.toLowerCase().includes(searchLower) ||
+          p.clan_name.toLowerCase().includes(searchLower)
+        )
+    : [];
+
+  const sorted = [...filtered].sort((a, b) => {
+    const av = parseFloat(a[sortBy]) || 0;
+    const bv = parseFloat(b[sortBy]) || 0;
+    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
+    const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
+    return (av - bv) * dir;
+  });
+
+  function toggleExpand(tag) {
+    setExpandedTag(prev => prev === tag ? null : tag);
+  }
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+      <div className="relative z-10 mb-4">
+        <button onClick={onBack} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Back to Hub
+        </button>
+      </div>
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
+        <p className="text-slate-500 text-xs mb-4">Player performance by season</p>
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+          {seasons.length > 0 && (
+            <select value={selectedSeason||""} onChange={e=>fetchSeason(e.target.value)}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              {seasons.map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
+          {clans.length > 1 && (
+            <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              <option value="all">All Clans</option>
+              {clans.map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
+          {SORT_OPTIONS.map(o=>(
+            <button key={o.key} type="button" onClick={()=>{
+              if(sortBy===o.key) setSortDir(d=>d==="desc"?"asc":"desc");
+              else { setSortBy(o.key); setSortDir("desc"); }
+            }}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${sortBy===o.key ? "bg-purple-600/30 text-purple-200 border-purple-500/40" : "bg-white/[0.03] text-slate-400 border-white/10 hover:bg-white/[0.06] hover:text-slate-200"}`}>
+              {o.label}{sortBy===o.key?(sortDir==="desc"?" ↓":" ↑"):""}
+            </button>
+          ))}
+        </div>
+        <div className="relative max-w-xs mx-auto">
+          <input type="text" placeholder="Search player or tag…" value={search} onChange={e=>setSearch(e.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
+          {search && (
+            <button onClick={()=>setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="relative z-10 space-y-2">
+        {data === null ? (
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+        ) : sorted.length === 0 ? (
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+            <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
+          </div>
+        ) : sorted.map((p, i) => (
+          <PlayerCard
+            key={p.player_tag}
+            p={p}
+            rank={i + 1}
+            isExpanded={expandedTag === p.player_tag}
+            onToggle={() => toggleExpand(p.player_tag)}
+          />
+        ))}
+      </div>
+    </main>
+  );
+}
+
+
 const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
 const [rosterSeasons, setRosterSeasons] = useState([]);
 
