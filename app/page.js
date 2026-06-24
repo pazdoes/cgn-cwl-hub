@@ -894,12 +894,13 @@ function LeaderboardView({ onBack }) {
     { key: "attacks_used",    label: "Attacks" },
     { key: "missed_attacks",  label: "Missed" },
     { key: "star_breakdown",  label: "Star Breakdown" },
+    { key: "def_breakdown",   label: "Defence Breakdown" },
   ];
 
   const FILTER_COLS = {
-    default:  ["efficiency", "stars_earned", "star_breakdown"],
+    default:  ["efficiency", "stars_earned", "star_breakdown", "def_breakdown"],
     attack:   ["efficiency", "stars_earned", "destruction_pct", "attacks_used", "missed_attacks", "star_breakdown"],
-    defence:  ["efficiency", "stars_conceded", "defence_pct", "attacks_used"],
+    defence:  ["efficiency", "stars_conceded", "defence_pct", "attacks_used", "def_breakdown"],
     all:      ["efficiency", "stars_earned", "destruction_pct", "stars_conceded", "defence_pct", "attacks_used", "missed_attacks", "star_breakdown"],
   };
 
@@ -951,6 +952,7 @@ function LeaderboardView({ onBack }) {
       case "attacks_used":    return <span className="text-slate-300">{p.attacks_used}</span>;
       case "missed_attacks":  return <span className={p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}>{p.missed_attacks}</span>;
       case "star_breakdown":  return <MiniPie three={p.three_stars || 0} two={p.two_stars || 0} one={p.one_stars || 0} zero={p.zero_stars || 0} />;
+      case "def_breakdown":   return <MiniPie three={p.three_stars_conceded || 0} two={p.two_stars_conceded || 0} one={p.one_stars_conceded || 0} zero={p.zero_stars_conceded || 0} />;
       default: return null;
     }
   }
