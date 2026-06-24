@@ -891,33 +891,7 @@ function HistoryView({ onBack }) {
       .catch(() => setAllData([]));
   }, []);
 
-  const byClan = {};
-  (history || []).forEach(row => {
-    if (!byClan[row.clan_name]) byClan[row.clan_name] = [];
-    byClan[row.clan_name].push({ season: row.season, rank: row.cwl_rank });
-  });
-  const clans = Object.keys(byClan);
-  const allSeasons = [...new Set((history || []).map(r => r.season))].sort((a, b) => {
-    const ia = (history || []).findIndex(r => r.season === a);
-    const ib = (history || []).findIndex(r => r.season === b);
-    return ia - ib;
-  });
-  const series = clans.map((clan, ci) => {
-    const recorded = byClan[clan];
-    let lastRank = null;
-    const points = allSeasons.map(season => {
-      const found = recorded.find(r => r.season === season);
-      if (found) { lastRank = found.rank; return { season, rank: found.rank, interpolated: false }; }
-      return { season, rank: lastRank, interpolated: true };
-    });
-    return { clan, points, color: CLAN_COLORS[ci % CLAN_COLORS.length] };
-  });
-  const filteredSeries = clanFilter === "all" ? series : series.filter(s => s.clan === clanFilter);
-  const CHART_W = 320, CHART_H = 200;
-  const PAD_L = 72, PAD_R = 12, PAD_T = 12, PAD_B = 28;
-  const plotW = CHART_W - PAD_L - PAD_R;
-  const plotH = CHART_H - PAD_T - PAD_B;
-  const xStep = allSeasons.length > 1 ? plotW / (allSeasons.length - 1) : plotW;
+
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
