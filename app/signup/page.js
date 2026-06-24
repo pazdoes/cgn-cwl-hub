@@ -315,8 +315,7 @@ export default function SignupPage() {
   // open the panel (never close it, since it's the first interaction)
   // on the "add" tab specifically.
   function openManageAdd() {
-    setManageOpen(true);
-    setManageTab("add");
+    setAccountsView("add");
     setManageResult(null);
     setVerifyStatus(null);
   }
@@ -760,7 +759,7 @@ export default function SignupPage() {
             )}
           </AnimatePresence>
 
-          {loadingMine ? (
+          {accountsView === "accounts" && (loadingMine ? (
             <div className="space-y-3">
               {Array.from({ length: 2 }).map((_, i) => (
                 <div
@@ -888,7 +887,7 @@ export default function SignupPage() {
                 );
               })}
             </div>
-          )}
+          ))}
         </Card>
       </motion.div>
 
