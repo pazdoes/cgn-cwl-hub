@@ -69,15 +69,15 @@ function StatusToggle({ status, busy, error, onSetStatus }) {
 /* ─── Format toggle ───────────────────────────────────────── */
 function FormatToggle({ format, busy, error, onSetFormat }) {
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] text-slate-400 font-mono">{format}v{format}</span>
-        <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
-          <button type="button" disabled={busy} onClick={() => onSetFormat(15)}
-            className={`px-2 py-0.5 rounded-full transition disabled:opacity-50 ${format === 15 ? "bg-purple-500/30 text-purple-200" : "text-slate-500 hover:text-slate-300"}`}>15</button>
-          <button type="button" disabled={busy} onClick={() => onSetFormat(30)}
-            className={`px-2 py-0.5 rounded-full transition disabled:opacity-50 ${format === 30 ? "bg-purple-500/30 text-purple-200" : "text-slate-500 hover:text-slate-300"}`}>30</button>
-        </div>
+    <div className="flex flex-col items-start gap-1">
+      <div className="flex items-center gap-1.5 text-[10px]">
+        <button type="button" disabled={busy} onClick={() => onSetFormat(15)}
+          className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 15 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>15v15</button>
+        <button type="button" disabled={busy} onClick={() => onSetFormat(30)}
+          className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 30 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>30v30</button>
+        <button type="button" disabled={busy} onClick={() => onSetFormat(11)}
+          className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 11 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>11v11</button>
+      </div>
       </div>
       {error && <p className="text-[9px] text-red-400 text-right max-w-[180px] leading-tight">{error}</p>}
     </div>
@@ -790,12 +790,9 @@ export default function AdminPoolPage() {
 
                 {currentClan && (
                   <>
-                    {/* Clan meta */}
+                    {/* Clan meta — format toggle left, rank refresh right */}
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Pill variant="purple">{currentClanEntries.length}/{currentFormat}</Pill>
-                        <FormatToggle format={currentFormat} busy={formatBusy === currentClan} error={formatError[currentClan]} onSetFormat={f => doSetFormat(currentClan, f)}/>
-                      </div>
+                      <FormatToggle format={currentFormat} busy={formatBusy === currentClan} error={formatError[currentClan]} onSetFormat={f => doSetFormat(currentClan, f)}/>
                       <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                     </div>
 
@@ -837,6 +834,12 @@ export default function AdminPoolPage() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                    {/* Counter pill — centred below roster */}
+                    <div className="flex justify-center mt-3">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
+                        {currentClanEntries.length}<span className="text-slate-600">/</span>{currentFormat}
+                      </span>
                     </div>
                   </>
                 )}
