@@ -653,7 +653,6 @@ export default function AnnouncementsPage() {
           </div>
         </Card>
       </div>
-      </div>
 
       {/* ── COMPOSE TAB ── */}
       {tab === "compose" && (
