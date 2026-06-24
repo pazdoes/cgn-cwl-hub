@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/pool";
+import { getDb } from "@/lib/db";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const season = searchParams.get("season");
   const sql = getDb();
 
-  // Get all available seasons
   const seasonRows = await sql`
     SELECT DISTINCT season FROM player_cwl_stats
     ORDER BY season DESC
@@ -19,7 +18,6 @@ export async function GET(request) {
 
   const targetSeason = season || seasons[0];
 
-  // Join player stats with clan_season_history to get cwl_rank per player
   const stats = await sql`
     SELECT
       ps.*,
