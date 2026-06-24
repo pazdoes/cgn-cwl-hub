@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { TH_ICONS } from "../../../lib/icons";
-import DiscordWidget from "../../components/DiscordWidget";
+import { TH_ICONS } from "../../lib/icons";
+import DiscordWidget from "../components/DiscordWidget";
 
 function ThIcon({ level }) {
   const src = level ? TH_ICONS[String(level)] : null;
