@@ -59,8 +59,8 @@ function PlayersView({ players, onBack, rosterSeasons = [] }) {
 
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
-        <h1 className="text-2xl font-bold">All Players</h1>
-        <p className="text-slate-400 text-sm mt-1">{displayPlayers.length} {isHistorical ? `in ${histSeason}` : "rostered this season"}</p>
+        <h1 className="text-2xl font-thin tracking-widest">All Players</h1>
+        <p className="text-slate-500 text-xs mt-1">{displayPlayers.length} {isHistorical ? `in ${histSeason}` : "rostered this season"}</p>
         {rosterSeasons.length > 0 && (
           <div className="mt-3 flex justify-center">
             <select value={histSeason || ""} onChange={e => loadHistSeason(e.target.value || null)}
@@ -125,8 +125,8 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
 
 
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
-        <h1 className="text-2xl font-bold">All Clans</h1>
-        <p className="text-slate-400 text-sm mt-1">{clans.length} clans rostered this season</p>
+        <h1 className="text-2xl font-thin tracking-widest">All Clans</h1>
+        <p className="text-slate-500 text-xs mt-1">{clans.length} clans rostered this season</p>
       </div>
 
       <div className="relative z-10 space-y-6">
@@ -284,57 +284,43 @@ function AvgThView({ players, clans, onBack }) {
 
 
       {/* Header tile — title, chart toggle, clan filter */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6">
-        <h1 className="text-2xl font-bold text-center mb-4">Town Hall Breakdown</h1>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-6 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">Town Hall Breakdown</h1>
+        <p className="text-slate-500 text-xs mb-4">
+          {total} player{total !== 1 ? "s" : ""}{selectedClanFilter !== "all" ? ` · ${selectedClanFilter}` : " · all clans"}
+        </p>
 
-          {/* Chart type toggle */}
-          <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5">
-            <button
-              onClick={() => setChartType("pie")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                chartType === "pie"
-                  ? "bg-purple-600/40 text-purple-200"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              Pie
-            </button>
-            <button
-              onClick={() => setChartType("bar")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                chartType === "bar"
-                  ? "bg-purple-600/40 text-purple-200"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              Bar
-            </button>
-          </div>
-
-          {/* Clan filter dropdown */}
+        {/* Controls row */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+          {/* Clan filter — pill dropdown */}
           <select
             value={selectedClanFilter}
             onChange={e => setSelectedClanFilter(e.target.value)}
-            className="
-              px-3 py-1.5 rounded-full text-xs font-semibold
-              border border-white/10 bg-white/[0.06] text-slate-300
-              focus:outline-none focus:border-purple-500/40
-              transition cursor-pointer
-            "
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]"
           >
             <option value="all">All Clans ({players.length})</option>
             {rostered.map(c => (
-              <option key={c} value={c}>
-                {c} ({players.filter(p => p.clan === c).length})
-              </option>
+              <option key={c} value={c}>{c} ({players.filter(p => p.clan === c).length})</option>
             ))}
           </select>
-
         </div>
-        <p className="text-slate-500 text-xs text-center mt-3">
-          {total} player{total !== 1 ? "s" : ""}{selectedClanFilter !== "all" ? ` · ${selectedClanFilter}` : " · all clans"}
-        </p>
+
+        {/* Chart type toggle — minimal arrows */}
+        <div className="flex items-center justify-center gap-4">
+          <button onClick={() => setChartType("pie")} className="text-slate-500 hover:text-slate-300 transition p-1" title="Pie chart">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[60px]">
+            {chartType === "pie" ? "Pie" : "Bar"}
+          </span>
+          <button onClick={() => setChartType("bar")} className="text-slate-500 hover:text-slate-300 transition p-1" title="Bar chart">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Chart tile */}
