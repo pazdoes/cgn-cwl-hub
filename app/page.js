@@ -871,7 +871,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
     // Stat tile views use reserved hash names; anything else is treated
     // as a clan name (the original selectedClan behaviour).
-    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history") {
+    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard") {
       setStatView(hash);
       setSelectedClan(null);
       setHighlightedAccount(null);
