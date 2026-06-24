@@ -85,6 +85,152 @@ function CwlCountdown({ season }) {
   );
 }
 
+
+// ── Scheduled Events Calendar ─────────────────────────────────────────────────
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAY_NAMES = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+const RECURRENCE_LABELS = { "24hr":"Daily","48hr":"Every 2 days","7days":"Weekly","14days":"Fortnightly","30days":"Monthly" };
+
+function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate }) {
+  const { year, month } = calMonth;
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Build set of dates with events
+  const eventsByDate = {};
+  for (const s of scheduled) {
+    const d = new Date(s.send_at);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const key = d.getDate();
+      if (!eventsByDate[key]) eventsByDate[key] = [];
+      eventsByDate[key].push(s);
+    }
+  }
+
+  // Selected date events
+  const selectedEvents = selectedDate ? (eventsByDate[selectedDate] || []) : [];
+
+  const today = new Date();
+  const isToday = (d) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+
+  function prevMonth() {
+    setSelectedDate(null);
+    setCalMonth(({ year, month }) => month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 });
+  }
+  function nextMonth() {
+    setSelectedDate(null);
+    setCalMonth(({ year, month }) => month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 });
+  }
+
+  // Build calendar grid
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Scheduled Events</h2>
+        <div className="flex items-center gap-2">
+          <button onClick={prevMonth} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span className="text-xs text-slate-300 font-semibold min-w-[110px] text-center">{MONTH_NAMES[month]} {year}</span>
+          <button onClick={nextMonth} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {DAY_NAMES.map(d => (
+          <div key={d} className="text-center text-[9px] text-slate-600 uppercase tracking-widest py-1">{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {cells.map((day, i) => {
+          if (!day) return <div key={i}/>;
+          const hasEvents = !!eventsByDate[day];
+          const isSelected = selectedDate === day;
+          const isTodayDay = isToday(day);
+          return (
+            <button key={i} onClick={() => setSelectedDate(isSelected ? null : day)}
+              className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition text-xs
+                ${isSelected ? "bg-purple-600/30 border border-purple-500/40 text-purple-200" :
+                  isTodayDay ? "border border-white/20 text-white" :
+                  "text-slate-400 hover:bg-white/[0.05] hover:text-white"}
+              `}>
+              <span className={`font-semibold ${isTodayDay && !isSelected ? "text-purple-300" : ""}`}>{day}</span>
+              {hasEvents && (
+                <span className={`w-1 h-1 rounded-full mt-0.5 ${isSelected ? "bg-purple-300" : "bg-purple-500"}`}/>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected date events */}
+      {selectedDate && (
+        <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest">
+            {MONTH_NAMES[month]} {selectedDate} · {selectedEvents.length} event{selectedEvents.length !== 1 ? "s" : ""}
+          </p>
+          {selectedEvents.length === 0 ? (
+            <p className="text-slate-700 text-xs">No events on this day</p>
+          ) : selectedEvents.map(s => {
+            const t = new Date(s.send_at);
+            const timeStr = t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            return (
+              <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-white truncate">{s.title || "Untitled"}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{timeStr}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {s.recurrence && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 text-purple-400">
+                        {RECURRENCE_LABELS[s.recurrence] || s.recurrence}
+                      </span>
+                    )}
+                    {s.sent && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-full border border-green-500/30 text-green-400">Sent</span>
+                    )}
+                  </div>
+                </div>
+                {s.created_by && (
+                  <p className="text-[9px] text-slate-700 mt-1">by {s.created_by}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-white/[0.06]">
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block"/>
+          Has events
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
+          <span className="w-3 h-3 rounded-full border border-white/20 inline-block"/>
+          Today
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminOverviewPage() {
   const [pin, setPin] = useState("");
   const [pinInput, setPinInput] = useState("");
@@ -93,6 +239,9 @@ export default function AdminOverviewPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [scheduled, setScheduled] = useState([]);
+  const [calMonth, setCalMonth] = useState(() => { const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() }; });
+  const [selectedDate, setSelectedDate] = useState(null);
   const [filterPool, setFilterPool] = useState("all"); // all | in | out
   const [filterDiscord, setFilterDiscord] = useState("all"); // all | yes | no
   const [filterToken, setFilterToken] = useState("all"); // all | yes | no
@@ -119,6 +268,10 @@ export default function AdminOverviewPage() {
       .then(d => setData(d))
       .catch(() => {})
       .finally(() => setLoading(false));
+    fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } })
+      .then(r => r.json())
+      .then(d => setScheduled(d.scheduled || []))
+      .catch(() => setScheduled([]));
   }, [authed, pin]);
 
   if (!authed) {
@@ -218,6 +371,15 @@ export default function AdminOverviewPage() {
               </Link>
             </div>
           </div>
+
+          {/* Scheduled Events Calendar */}
+          <ScheduledCalendar
+            scheduled={scheduled}
+            calMonth={calMonth}
+            setCalMonth={setCalMonth}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+          />
 
           {/* Member Directory */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
