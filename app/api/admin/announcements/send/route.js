@@ -40,7 +40,7 @@ export async function POST(request) {
           {
             type: 2,  // Button
             style: 5, // Link style
-            label: _button.label,
+            label: _button.emoji ? `${_button.emoji} ${_button.label}` : _button.label,
             url: _button.url,
           },
         ],
@@ -49,7 +49,13 @@ export async function POST(request) {
     // No flags — standard components work alongside embeds without any special flag
   }
 
-  const discordRes = await fetch(webhook.webhook_url, {
+  // Add with_components=true so Discord renders button components alongside embeds
+  const webhookUrl = new URL(webhook.webhook_url);
+  if (payload.components?.length) {
+    webhookUrl.searchParams.set('with_components', 'true');
+  }
+  webhookUrl.searchParams.set('wait', 'true');
+  const discordRes = await fetch(webhookUrl.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

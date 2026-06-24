@@ -48,7 +48,10 @@ export async function GET(request) {
         ];
       }
 
-      const discordRes = await fetch(item.webhook_url, {
+      const scheduledUrl = new URL(item.webhook_url);
+      if (payload.components?.length) scheduledUrl.searchParams.set('with_components', 'true');
+      scheduledUrl.searchParams.set('wait', 'true');
+      const discordRes = await fetch(scheduledUrl.toString(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
