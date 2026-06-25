@@ -130,19 +130,15 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
   const announcementEvents = scheduled.map(s => ({ ...s, type: "announcement", colour: "#a78bfa" }));
   const allEvents = [...cwlEvents, ...announcementEvents];
 
-  // Apply filter
-  const filteredEvents = allEvents.filter(e =>
-    eventFilter === "all" ? true :
-    eventFilter === "cwl" ? e.type === "cwl" :
-    e.type === "announcement"
-  );
+  // Apply filter — show all types in the active filter array
+  const filteredEvents = allEvents.filter(e => eventFilter.includes(e.type));
 
-  // Build set of dates with events
+  // Build set of dates with events (use UTC to match CWL event dates)
   const eventsByDate = {};
   for (const s of filteredEvents) {
     const d = new Date(s.send_at);
-    if (d.getFullYear() === year && d.getMonth() === month) {
-      const key = d.getDate();
+    if (d.getUTCFullYear() === year && d.getUTCMonth() === month) {
+      const key = d.getUTCDate();
       if (!eventsByDate[key]) eventsByDate[key] = [];
       eventsByDate[key].push(s);
     }
@@ -189,14 +185,14 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
         </div>
       </div>
 
-      {/* Event type filter pills */}
-      <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-        {[["all","All"],["cwl","CWL"],["announcements","Announcements"]].map(([val,label]) => (
-          <button key={val} type="button" onClick={() => { setEventFilter(val); setSelectedDate(null); }}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition ${eventFilter === val ? "text-purple-400 border-purple-500/60 bg-purple-500/10" : "text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>
-            {label}
-          </button>
-        ))}
+      {/* Event type filter dropdown */}
+      <div className="mb-4">
+        <select multiple value={eventFilter} onChange={e => { setSelectedDate(null); setEventFilter([...e.target.selectedOptions].map(o => o.value)); }}
+          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none [color-scheme:dark]" size="3">
+          <option value="cwl">⚔️ CWL Events</option>
+          <option value="announcement">📢 Announcements</option>
+        </select>
+        <p className="text-[9px] text-slate-700 mt-1">Hold Cmd/Ctrl to select multiple</p>
       </div>
 
       {/* Day headers */}
@@ -300,7 +296,7 @@ export default function AdminOverviewPage() {
   const [scheduled, setScheduled] = useState([]);
   const [calMonth, setCalMonth] = useState(() => { const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() }; });
   const [selectedDate, setSelectedDate] = useState(null);
-  const [eventFilter, setEventFilter] = useState("all"); // all | cwl | announcements
+  const [eventFilter, setEventFilter] = useState(["cwl","announcement"]); // array of active types
   const [filterPool, setFilterPool] = useState("all"); // all | in | out
   const [filterDiscord, setFilterDiscord] = useState("all"); // all | yes | no
   const [filterToken, setFilterToken] = useState("all"); // all | yes | no
