@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { TH_ICONS } from "../../lib/icons";
@@ -247,17 +246,17 @@ export default function AdminOverviewPage() {
   const [filterDiscord, setFilterDiscord] = useState("all"); // all | yes | no
   const [filterToken, setFilterToken] = useState("all"); // all | yes | no
 
+  const SESSION_KEY = "cwl_admin_pin_confirmed";
+
   function handlePin(e) {
     e.preventDefault();
-    const stored = sessionStorage.getItem("admin_pin");
-    if (stored) { setPin(stored); setAuthed(true); return; }
     fetch("/api/admin/members", { headers: { "x-officer-pin": pinInput } })
-      .then(r => { if (r.ok) { sessionStorage.setItem("admin_pin", pinInput); setPin(pinInput); setAuthed(true); setPinError(false); } else { setPinError(true); } })
+      .then(r => { if (r.ok) { sessionStorage.setItem(SESSION_KEY, pinInput); setPin(pinInput); setAuthed(true); setPinError(false); } else { setPinError(true); } })
       .catch(() => setPinError(true));
   }
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("admin_pin");
+    const stored = sessionStorage.getItem("cwl_admin_pin_confirmed");
     if (stored) { setPin(stored); setAuthed(true); }
   }, []);
 
@@ -310,33 +309,6 @@ export default function AdminOverviewPage() {
   });
 
   const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
-
-  function handlePinSubmit(e) {
-    e.preventDefault();
-    setPin(pinInput); setAuthed(true); setPinError(false);
-    if (discordStatus === "authenticated") sessionStorage.setItem(SESSION_KEY, pinInput);
-  }
-
-  if (!authed) {
-    return (
-      <main className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6 flex flex-col items-center justify-center">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 w-full max-w-sm text-center">
-          <img src="/cgn-skull.png" alt="" className="w-14 h-14 mx-auto mb-4"/>
-          <h1 className="text-2xl font-thin tracking-widest mb-1">Admin Overview</h1>
-          <p className="text-slate-500 text-xs mb-5">Officer access required</p>
-          <form onSubmit={handlePinSubmit} className="space-y-3">
-            <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center tracking-widest text-lg"/>
-            {pinError && <p className="text-red-400 text-xs">Incorrect PIN</p>}
-            <button type="submit" disabled={!pinInput}
-              className="w-full py-2.5 rounded-2xl bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition font-semibold text-sm disabled:opacity-40">
-              Enter
-            </button>
-          </form>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
