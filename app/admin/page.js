@@ -216,7 +216,7 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
         <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("cwl") ? prev.filter(v=>v!=="cwl") : [...prev,"cwl"]); }}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("cwl") ? "text-green-400 border-green-500/60 bg-green-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-7-7l7-7-7 7M5 5l7 7M5 11V5h6M19 19v-6h-6"/>
           </svg>
           CWL
         </button>
@@ -464,6 +464,8 @@ export default function AdminOverviewPage() {
             setCalMonth={setCalMonth}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            eventFilter={eventFilter}
+            setEventFilter={setEventFilter}
           />
 
           {/* Member Directory */}
