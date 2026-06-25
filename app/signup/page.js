@@ -100,7 +100,7 @@ export default function SignupPage() {
   // already exists.
   useEffect(() => {
     if (discordStatus === "authenticated" && discordUser?.discordId) {
-      fetch("/api/accounts/link-discord", { method: "POST" })
+      fetch("/api/accounts/link-discord", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ discordId: discordUser?.discordId }) })
         .catch(() => {}); // non-fatal — accounts still work via cookie
     }
   }, [discordStatus, discordUser?.discordId]);
@@ -196,7 +196,7 @@ export default function SignupPage() {
         // accounts/mine response from Neon, no separate CoC API call needed
         // Re-run discord link to ensure newly added account gets discord_id
         if (discordStatus === "authenticated") {
-          await fetch("/api/accounts/link-discord", { method: "POST" }).catch(() => {});
+          await fetch("/api/accounts/link-discord", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ discordId: discordUser?.discordId }) }).catch(() => {});
         }
         const mine = await fetch("/api/accounts/mine").then(r => r.json());
         setMyAccounts(mine.accounts || []);
