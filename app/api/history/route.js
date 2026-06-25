@@ -11,7 +11,8 @@ export async function GET() {
       total_attacks_used, total_attacks_available, total_attacks_missed,
       avg_destruction_pct, avg_defence_pct,
       attack_efficiency, defence_efficiency,
-      three_star_rate
+      three_star_rate,
+      three_stars_clan, two_stars_clan, one_stars_clan, zero_stars_clan
     FROM clan_season_history
     ORDER BY clan_name, season
   `;
