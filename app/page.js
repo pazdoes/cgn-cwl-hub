@@ -926,7 +926,13 @@ function HistoryView({ onBack }) {
           try {
             const r = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
             const sd = await r.json();
-            (sd.stats || []).forEach(p => rows.push({ ...p, season: s }));
+            (sd.stats || []).forEach(p => rows.push({
+              ...p,
+              season: s,
+              overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
+                : null,
+            }));
           } catch {}
         }
         setAllData(rows);
