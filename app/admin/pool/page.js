@@ -523,6 +523,19 @@ export default function AdminPoolPage() {
     finally { setAbsentBusy(null); }
   }
 
+  async function doSetAbsent(clan, absent) {
+    setAbsentBusy(clan);
+    try {
+      const res = await fetch("/api/admin/absent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clanName: clan, absent }),
+      });
+      if (res.ok) setClanAbsent(prev => ({ ...prev, [clan]: absent }));
+    } catch {}
+    finally { setAbsentBusy(null); }
+  }
+
   async function doRefreshThLevels() {
     setThRefreshing(true); setThRefreshResult(null);
     try {
