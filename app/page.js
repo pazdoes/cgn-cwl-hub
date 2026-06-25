@@ -538,8 +538,9 @@ function PlayerPerformanceChart({ allData, seasons }) {
   const xStep = validSeasons.length > 1 ? plotW / (validSeasons.length - 1) : plotW / 2;
 
   const allVals = trackedPlayers.flatMap(p => p.data.map(d => d.value)).filter(v => v !== null);
-  const minVal = allVals.length ? Math.min(...allVals) : 0;
-  const maxVal = allVals.length ? Math.max(...allVals) : 1;
+  const isOverallStat = selectedStat === "overall";
+  const minVal = isOverallStat ? 0 : (allVals.length ? Math.min(...allVals) : 0);
+  const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
   const valRange = maxVal - minVal || 1;
 
   function xPos(season) {
@@ -771,8 +772,9 @@ function ClanPerformanceChart({ history }) {
   const xStep = validSeasons.length > 1 ? plotW / (validSeasons.length - 1) : plotW / 2;
 
   const allVals = trackedClans.flatMap(c => c.data.map(d => d.value)).filter(v => v !== null);
-  const minVal = allVals.length ? Math.min(...allVals) : 0;
-  const maxVal = allVals.length ? Math.max(...allVals) : 1;
+  const isOverallStat = selectedStat === "overall";
+  const minVal = isOverallStat ? 0 : (allVals.length ? Math.min(...allVals) : 0);
+  const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
   const valRange = maxVal - minVal || 1;
 
   function xPos(season) {
