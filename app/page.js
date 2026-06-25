@@ -1435,55 +1435,48 @@ function ClanCard({ c, rank, isExpanded, onToggle }) {
 }
 
 
-function FaqFooter() {
+function FaqButton() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null);
 
   const faqs = [
-    { section: "Getting Started", items: [
-      { q: "What is CGN CWL Hub?", a: "A roster and stats tracking app for the Cognition Collective CWL alliance. Track player performance, manage rosters, and view clan leaderboards." },
-      { q: "Who can use it?", a: "Any player in a Cognition Collective clan — Cognition, Cognitive, Cognitron, or Gems." },
-    ]},
     { section: "Sign Up & Accounts", items: [
       { q: "How do I sign up?", a: "Enter your player tag and API token from in-game: Settings → More Settings → API Token. The token verifies you own the account." },
       { q: "Can I add multiple accounts?", a: "Yes — add as many CoC accounts as you own. Each one is linked to your profile." },
-      { q: "How do I remove an account?", a: "Go to My Accounts, tap Manage, then remove the account. Your CWL stats history is preserved." },
+      { q: "How do I remove an account?", a: "Go to My Accounts, tap Manage, then remove. Your CWL stats history is always preserved." },
     ]},
     { section: "Discord", items: [
-      { q: "Why link Discord?", a: "Linking Discord keeps your accounts accessible across devices and browsers without needing your API token again." },
+      { q: "Why link Discord?", a: "Keeps your accounts accessible across devices and browsers without needing your API token again." },
       { q: "How do I disconnect Discord?", a: "Tap your Discord name pill at the top of the page and select Disconnect." },
     ]},
     { section: "Leaderboard", items: [
-      { q: "What is Attack Efficiency?", a: "Average stars earned per attack. Maximum is 3.00 — a perfect score means every attack was a 3-star." },
-      { q: "What is Defence Efficiency?", a: "Average stars conceded per defence. Lower is better — it means opponents struggled to 3-star your base." },
-      { q: "What is Three Star Rate?", a: "The percentage of your attacks that achieved full 3-star destruction." },
-    ]},
-    { section: "CWL", items: [
-      { q: "When does CWL sign-up open?", a: "Day 1 of every month at 08:00 UTC. The sign-up window lasts 2 days before wars begin." },
-      { q: "How are rosters decided?", a: "Admins assign signed-up players to clans in the Pool Manager before CWL begins." },
-      { q: "What is the Pool?", a: "The list of players who have signed up and are available for CWL roster selection each season." },
+      { q: "What is Attack Efficiency?", a: "Average stars earned per attack. Maximum is 3.00 — every attack was a 3-star." },
+      { q: "What is Defence Efficiency?", a: "Average stars conceded per defence. Lower is better." },
+      { q: "What is Three Star Rate?", a: "Percentage of attacks that achieved full 3-star destruction." },
     ]},
   ];
 
   return (
-    <div className="relative flex justify-end px-4 pb-1">
+    <div className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
-        className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-xs font-semibold">
+        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
         ?
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="absolute bottom-full right-0 mb-2 z-50 w-[min(360px,92vw)] rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-[min(360px,92vw)] rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+            {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <p className="text-xs font-semibold text-slate-300 uppercase tracking-widest">Help & FAQ</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-300 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
-            <div className="overflow-y-auto max-h-[60vh] p-3 space-y-3">
+            {/* FAQ content — no scroll */}
+            <div className="p-3 space-y-3">
               {faqs.map((section, si) => (
                 <div key={si}>
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest px-1 mb-1.5">{section.section}</p>
@@ -1492,16 +1485,16 @@ function FaqFooter() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
-                            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left">
-                            <span className="text-xs text-slate-300 font-medium">{item.q}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 text-slate-600 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
+                            <span className="text-xs text-slate-300">{item.q}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 text-slate-600 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
                             </svg>
                           </button>
                           {isOpen && (
-                            <div className="px-3 pb-3">
+                            <div className="px-3 pb-2.5">
                               <p className="text-[11px] text-slate-500 leading-relaxed">{item.a}</p>
                             </div>
                           )}
@@ -2465,14 +2458,14 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
     )}
 
-    <FaqFooter />
-    <footer className="w-full py-4 flex items-center justify-center gap-2">
+    <div className="relative w-full py-4 flex items-center justify-center gap-3">
       <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
         className="flex items-center gap-2 no-underline">
         <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5 opacity-60"/>
         <span className="text-[11px] text-slate-600 tracking-widest">Cognition {"{CGN}"}</span>
       </a>
-    </footer>
+      <FaqButton />
+    </div>
   </main>
 );
 }
