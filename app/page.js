@@ -1565,7 +1565,7 @@ function LeaderboardView({ onBack }) {
   const [selectedSeason, setSelectedSeason] = useState("all");
   const [clanFilter, setClanFilter] = useState("all");
   const [thFilter, setThFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("efficiency");
+  const [sortBy, setSortBy] = useState("overall");
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
   const [expandedTag, setExpandedTag] = useState(null);
@@ -1605,6 +1605,7 @@ function LeaderboardView({ onBack }) {
   }
 
   const CLAN_SORT_OPTIONS = [
+    { key: "overall",              label: "Overall Rating", group: "Overall" },
     { key: "attack_efficiency",    label: "Atk Efficiency", group: "Attack" },
     { key: "total_stars",          label: "Total Stars",    group: "Attack" },
     { key: "avg_destruction_pct",  label: "Destruction %",  group: "Attack" },
@@ -1644,6 +1645,11 @@ function LeaderboardView({ onBack }) {
       attack_efficiency: m.total_attacks_used > 0 ? (m.total_stars/m.total_attacks_used).toFixed(2) : null,
       defence_efficiency: m.total_attacks_available > 0 ? (m.total_stars_conceded/m.total_attacks_available).toFixed(2) : null,
       three_star_rate: m._totalAtk > 0 ? ((m._threeStar/m._totalAtk)*100).toFixed(2) : null,
+    })).map(c => ({
+      ...c,
+      overall: (c.total_attacks_used > 0 && c.total_attacks_available > 0)
+        ? ((parseFloat(c.attack_efficiency||0)*0.5) + ((3-parseFloat(c.defence_efficiency||0))*0.3) + ((c.wars_won||0)/7*3*0.2)).toFixed(2)
+        : null,
     }));
   })();
 
@@ -1697,6 +1703,11 @@ function LeaderboardView({ onBack }) {
       defence_pct: m._defCount > 0 ? (m._defSum / m._defCount).toFixed(2) : "0.00",
       efficiency: m.attacks_used > 0 ? (m.stars_earned / m.attacks_used).toFixed(2) : "0.00",
       defence_efficiency: m.attacks_available > 0 ? (m.stars_conceded / m.attacks_available).toFixed(2) : "0.00",
+    })).map(p => ({
+      ...p,
+      overall: (p.attacks_used > 0 && p.attacks_available > 0)
+        ? ((parseFloat(p.efficiency) * 0.6) + ((3 - parseFloat(p.defence_efficiency)) * 0.4)).toFixed(2)
+        : null,
     }));
   })();
 
@@ -1737,7 +1748,12 @@ function LeaderboardView({ onBack }) {
             if (val !== "all") {
               setData(null);
               fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
-                .then(r=>r.json()).then(d=>setData(d.stats||[])).catch(()=>setData([]));
+                .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
+                ...p,
+                overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                  ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
+                  : null,
+              })))).catch(()=>setData([]));
             }
           }} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             <option value="all">All Time</option>
@@ -1762,6 +1778,9 @@ function LeaderboardView({ onBack }) {
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             {lbTab === "player" ? (<>
+              <optgroup label="Overall">
+                <option value="overall">Overall Rating</option>
+              </optgroup>
               <optgroup label="Attack">
                 <option value="efficiency">Atk Efficiency</option>
                 <option value="stars_earned">Stars Earned</option>
@@ -1810,7 +1829,7 @@ function LeaderboardView({ onBack }) {
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">
             {lbTab === "player" ? "Players" : "Clans"}
           </span>
-          <button onClick={()=>{setLbTab("clan");setSortBy("attack_efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
+          <button onClick={()=>{setLbTab("clan");setSortBy("overall");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
           </button>
         </div>
