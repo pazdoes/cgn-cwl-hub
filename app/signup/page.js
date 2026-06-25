@@ -186,7 +186,7 @@ export default function SignupPage() {
       const res = await fetch("/api/accounts/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tag: normTag, token: token.trim() || undefined }),
+        body: JSON.stringify({ tag: normTag, token: token.trim() || undefined, discordId: discordUser?.discordId || undefined }),
       });
       const data = await res.json();
 

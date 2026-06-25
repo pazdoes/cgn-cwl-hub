@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPlayerToken, getPlayer } from "@/lib/coc";
 import { upsertAccount, joinPool, setApiTokenVerified } from "@/lib/pool";
-import { auth } from "@/auth";
 import { getDb } from "@/lib/db";
 import { getOrCreateOwnerSecret, setOwnerCookie } from "@/lib/ownerCookie";
 import { getOpenPoolSeason } from "@/lib/season";
@@ -11,8 +10,7 @@ import { getOpenPoolSeason } from "@/lib/season";
 // pool season — deliberately paired so the first thing a person does is
 // also the last thing they need to do.
 export async function POST(request) {
-  const session = await auth(request);
-  const { tag, token } = await request.json().catch(() => ({}));
+  const { tag, token, discordId } = await request.json().catch(() => ({}));
 
   if (!tag) {
     return NextResponse.json({ error: "Missing tag" }, { status: 400 });
