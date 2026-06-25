@@ -507,22 +507,25 @@ function PlayerPerformanceChart({ allData, seasons }) {
     setTrackedPlayers(prev => prev.map(p => ({ ...p, data: buildPlayerData(p.tag) })));
   }, [selectedStat, allData]);
 
-  // Auto-populate top 3 players by efficiency on first data load
+  // Auto-populate top 3 players by overall rating from most recent season
   useEffect(() => {
     if (!allData || allData.length === 0 || trackedPlayers.length > 0) return;
-    const seen = new Set();
-    const top3 = [];
-    const sorted = [...allData].sort((a,b) => {
-      const oa = (a.attacks_used>0&&a.attacks_available>0) ? (parseFloat(a.efficiency||0)*0.6)+((3-parseFloat(a.defence_efficiency||0))*0.4) : 0;
-      const ob = (b.attacks_used>0&&b.attacks_available>0) ? (parseFloat(b.efficiency||0)*0.6)+((3-parseFloat(b.defence_efficiency||0))*0.4) : 0;
-      return ob - oa;
-    });
-    for (const p of sorted) {
-      if (seen.has(p.player_tag)) continue;
-      seen.add(p.player_tag);
-      top3.push({ tag: p.player_tag, name: p.player_name, clan: p.clan_name });
-      if (top3.length >= 3) break;
+    // Get most recent season entry per player
+    const latestBySeason = {};
+    for (const p of allData) {
+      if (!latestBySeason[p.player_tag] || p.season > latestBySeason[p.player_tag].season) {
+        latestBySeason[p.player_tag] = p;
+      }
     }
+    const top3 = Object.values(latestBySeason)
+      .filter(p => p.attacks_used > 0 && p.attacks_available > 0)
+      .sort((a,b) => {
+        const oa = (parseFloat(a.efficiency||0)*0.6)+((3-parseFloat(a.defence_efficiency||0))*0.4);
+        const ob = (parseFloat(b.efficiency||0)*0.6)+((3-parseFloat(b.defence_efficiency||0))*0.4);
+        return ob - oa;
+      })
+      .slice(0, 3);
+    for (const p of top3) {
     setTrackedPlayers(top3.map(p => ({ ...p, data: buildPlayerData(p.tag) })));
   }, [allData]);
 
