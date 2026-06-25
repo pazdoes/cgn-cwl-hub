@@ -239,6 +239,7 @@ export default function AdminPoolPage() {
       setSeason(data.season);
       setEntries(data.entries || []);
       setClanFormats(data.clanFormats || {});
+      setClanAbsent(data.clanAbsent || {});
       setClans(data.clanNames || []);
     } catch { setError("Couldn't load pool data — check your connection."); }
     finally { setLoading(false); }
@@ -507,6 +508,19 @@ export default function AdminPoolPage() {
       else { setFormatError(prev => ({ ...prev, [clan]: data.error || "Format update failed" })); }
     } catch { setFormatError(prev => ({ ...prev, [clan]: "Network error" })); }
     finally { setFormatBusy(null); }
+  }
+
+  async function doSetAbsent(clan, absent) {
+    setAbsentBusy(clan);
+    try {
+      const res = await fetch("/api/admin/absent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clanName: clan, absent }),
+      });
+      if (res.ok) setClanAbsent(prev => ({ ...prev, [clan]: absent }));
+    } catch {}
+    finally { setAbsentBusy(null); }
   }
 
   async function doRefreshThLevels() {
@@ -790,6 +804,14 @@ export default function AdminPoolPage() {
                     {/* Clan meta — format toggle left, rank refresh right */}
                     <div className="flex items-center justify-between mb-3">
                       <FormatToggle format={currentFormat} busy={formatBusy === currentClan} error={formatError[currentClan]} onSetFormat={f => doSetFormat(currentClan, f)}/>
+                      <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
+                        disabled={absentBusy === currentClan}
+                        onClick={() => doSetAbsent(currentClan, !clanAbsent[currentClan])}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-transparent text-red-400 border-red-500/60 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      </button>
                       <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                     </div>
 

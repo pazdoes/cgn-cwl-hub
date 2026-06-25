@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
-import { getPoolEntries, getAllClanFormats, getAllClanNames } from "@/lib/pool";
+import { getPoolEntries, getAllClanFormats, getAllClanNames, getAllClanAbsent } from "@/lib/pool";
 
 export async function GET(request) {
   const pin = request.headers.get("x-officer-pin");
