@@ -194,6 +194,10 @@ export default function SignupPage() {
         setVerifyStatus({ ok: true, message: `${data.name} (${data.tag}) signed up for ${data.season}.` });
         // refresh quick-pick list — TH level is now included in the
         // accounts/mine response from Neon, no separate CoC API call needed
+        // Re-run discord link to ensure newly added account gets discord_id
+        if (discordStatus === "authenticated") {
+          await fetch("/api/accounts/link-discord", { method: "POST" }).catch(() => {});
+        }
         const mine = await fetch("/api/accounts/mine").then(r => r.json());
         setMyAccounts(mine.accounts || []);
         setSeason(mine.season || season);

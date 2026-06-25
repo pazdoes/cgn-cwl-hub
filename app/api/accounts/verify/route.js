@@ -10,9 +10,7 @@ import { getOpenPoolSeason } from "@/lib/season";
 // pool season — deliberately paired so the first thing a person does is
 // also the last thing they need to do.
 export async function POST(request) {
-  const body = await request.json().catch(() => ({}));
-  const { tag, token, discordId } = body;
-  console.log("[verify] discordId received:", discordId, "tag:", tag);
+  const { tag, token, discordId } = await request.json().catch(() => ({}));
 
   if (!tag) {
     return NextResponse.json({ error: "Missing tag" }, { status: 400 });
