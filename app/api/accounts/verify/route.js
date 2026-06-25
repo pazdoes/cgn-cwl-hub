@@ -65,7 +65,7 @@ export async function POST(request) {
   }
   const ownerSecret = await getOrCreateOwnerSecret();
 
-  await upsertAccount(normalizedTag, player.name, ownerSecret);
+  await upsertAccount(normalizedTag, player.name, ownerSecret, player.townHallLevel ?? null);
   await joinPool(normalizedTag, season);
   if (token) await setApiTokenVerified(normalizedTag);
 
