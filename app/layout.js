@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           {children}
-          <footer className="w-full py-4 flex items-center justify-center gap-2 bg-transparent mt-auto">
+          <footer className="w-full py-4 flex items-center justify-center gap-2 bg-[#05070f] mt-auto">
             <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5 opacity-60"/>
             <span className="text-[11px] text-slate-600 tracking-widest">Cognition {"{CGN}"}</span>
           </footer>
