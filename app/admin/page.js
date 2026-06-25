@@ -114,14 +114,32 @@ const MONTH_NAMES = ["January","February","March","April","May","June","July","A
 const DAY_NAMES = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 const RECURRENCE_LABELS = { "24hr":"Daily","48hr":"Every 2 days","7days":"Weekly","14days":"Fortnightly","30days":"Monthly" };
 
-function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate }) {
+function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate, eventFilter, setEventFilter }) {
   const { year, month } = calMonth;
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  // Generate CWL events for this month
+  const cwlEvents = [
+    { id: `cwl-signup-${year}-${month}`, title: "CWL Sign-Up Opens", send_at: new Date(Date.UTC(year, month, 1, 8, 0, 0)).toISOString(), type: "cwl", colour: "#34d399" },
+    { id: `cwl-wars-${year}-${month}`,   title: "CWL Wars Begin",    send_at: new Date(Date.UTC(year, month, 3, 8, 0, 0)).toISOString(), type: "cwl", colour: "#34d399" },
+    { id: `cwl-end-${year}-${month}`,    title: "CWL Season Ends",   send_at: new Date(Date.UTC(year, month, 10, 8, 0, 0)).toISOString(), type: "cwl", colour: "#34d399" },
+  ];
+
+  // Merge CWL + scheduled announcements with type tags
+  const announcementEvents = scheduled.map(s => ({ ...s, type: "announcement", colour: "#a78bfa" }));
+  const allEvents = [...cwlEvents, ...announcementEvents];
+
+  // Apply filter
+  const filteredEvents = allEvents.filter(e =>
+    eventFilter === "all" ? true :
+    eventFilter === "cwl" ? e.type === "cwl" :
+    e.type === "announcement"
+  );
+
   // Build set of dates with events
   const eventsByDate = {};
-  for (const s of scheduled) {
+  for (const s of filteredEvents) {
     const d = new Date(s.send_at);
     if (d.getFullYear() === year && d.getMonth() === month) {
       const key = d.getDate();
@@ -171,6 +189,16 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
         </div>
       </div>
 
+      {/* Event type filter pills */}
+      <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+        {[["all","All"],["cwl","CWL"],["announcements","Announcements"]].map(([val,label]) => (
+          <button key={val} type="button" onClick={() => { setEventFilter(val); setSelectedDate(null); }}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition ${eventFilter === val ? "text-purple-400 border-purple-500/60 bg-purple-500/10" : "text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_NAMES.map(d => (
@@ -194,7 +222,11 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
               `}>
               <span className={`font-semibold ${isTodayDay && !isSelected ? "text-purple-300" : ""}`}>{day}</span>
               {hasEvents && (
-                <span className={`w-1 h-1 rounded-full mt-0.5 ${isSelected ? "bg-purple-300" : "bg-purple-500"}`}/>
+                <div className="flex gap-0.5 mt-0.5">
+                  {[...new Set(eventsByDate[day].map(e => e.colour||"#a78bfa"))].map((col,ci) => (
+                    <span key={ci} className="w-1 h-1 rounded-full" style={{background: isSelected ? "#e2e8f0" : col}}/>
+                  ))}
+                </div>
               )}
             </button>
           );
@@ -216,8 +248,11 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
               <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">{s.title || "Untitled"}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{timeStr}</p>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{background: s.colour||"#a78bfa"}}/>
+                      <p className="text-xs font-semibold text-white truncate">{s.title || "Untitled"}</p>
+                    </div>
+                    <p className="text-[10px] text-slate-500">{timeStr} UTC{s.type === "cwl" ? " · CWL" : " · Announcement"}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {s.recurrence && (
@@ -265,6 +300,7 @@ export default function AdminOverviewPage() {
   const [scheduled, setScheduled] = useState([]);
   const [calMonth, setCalMonth] = useState(() => { const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() }; });
   const [selectedDate, setSelectedDate] = useState(null);
+  const [eventFilter, setEventFilter] = useState("all"); // all | cwl | announcements
   const [filterPool, setFilterPool] = useState("all"); // all | in | out
   const [filterDiscord, setFilterDiscord] = useState("all"); // all | yes | no
   const [filterToken, setFilterToken] = useState("all"); // all | yes | no
