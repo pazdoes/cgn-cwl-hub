@@ -362,7 +362,7 @@ export default function AnnouncementsPage() {
   const [discordMeta, setDiscordMeta] = useState({ roles: [], channels: [], emojis: [] });
   const [showServerConfig, setShowServerConfig] = useState(false);
   const [newRole, setNewRole] = useState({ id: "", name: "", colour: "#a78bfa" });
-  const [newChannel, setNewChannel] = useState({ id: "", name: "" });
+  const [newDiscordChannel, setNewDiscordChannel] = useState({ id: "", name: "" });
   const [newEmoji, setNewEmoji] = useState({ id: "", name: "" });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
