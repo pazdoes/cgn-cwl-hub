@@ -151,7 +151,7 @@ function EmbedPreview({ embed, username, avatarUrl }) {
 
 /* ─── default state ───────────────────────────────────────── */
 const DEFAULT_SENDER_NAME = "Cognition {CGN}";
-const DEFAULT_AVATAR = "https://cgnco.vercel.app/cgn-skull.png";
+const DEFAULT_AVATAR = "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a3d9415&is=6a3c4295&hm=ca84aa004c423227a9f22fa2aa2786f8205f5d023eae742fc28d292343818164&";
 
 const DEFAULT_EMBED = {
   color: hexToInt("#a78bfa"),
