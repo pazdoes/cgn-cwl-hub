@@ -471,7 +471,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
       }
       if (selectedStat === "overall") {
         const eff = parseFloat(row.efficiency||0);
-        const def = parseFloat(row.defence_efficiency||0);
+        const def = row.defence_efficiency != null ? parseFloat(row.defence_efficiency) : 3;
         const v = (row.attacks_used > 0 && row.attacks_available > 0)
           ? parseFloat(((eff * 0.6) + ((3 - def) * 0.4)).toFixed(2))
           : null;
@@ -520,8 +520,8 @@ function PlayerPerformanceChart({ allData, seasons }) {
     const top3 = Object.values(latestBySeason)
       .filter(p => p.attacks_used > 0 && p.attacks_available > 0)
       .sort((a,b) => {
-        const oa = (parseFloat(a.efficiency||0)*0.6)+((3-parseFloat(a.defence_efficiency||0))*0.4);
-        const ob = (parseFloat(b.efficiency||0)*0.6)+((3-parseFloat(b.defence_efficiency||0))*0.4);
+        const oa = (parseFloat(a.efficiency||0)*0.6)+((3-parseFloat(a.defence_efficiency??3))*0.4);
+        const ob = (parseFloat(b.efficiency||0)*0.6)+((3-parseFloat(b.defence_efficiency??3))*0.4);
         return ob - oa;
       })
       .slice(0, 3);
