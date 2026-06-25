@@ -63,23 +63,46 @@ function StatTile({ label, value, colour = "text-white", sub }) {
 }
 
 function CwlCountdown({ season }) {
-  // CWL runs first ~10 days of each month
-  // Estimate end of season as 10th of current month
+  // CWL registration opens day 1 of each month at 08:00 UTC
+  // CWL war week runs approximately days 3-10
   const now = new Date();
-  const cwlEnd = new Date(now.getFullYear(), now.getMonth(), 10, 23, 0, 0);
-  if (now > cwlEnd) cwlEnd.setMonth(cwlEnd.getMonth() + 1);
-  const diff = cwlEnd - now;
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const d = now.getUTCDate();
+  const h = now.getUTCHours();
+
+  // Registration window: day 1 08:00 UTC to day 3 08:00 UTC
+  const regOpen  = new Date(Date.UTC(y, m, 1, 8, 0, 0));
+  const warStart = new Date(Date.UTC(y, m, 3, 8, 0, 0));
+  const warEnd   = new Date(Date.UTC(y, m, 10, 8, 0, 0));
+
+  let target, label, active;
+  if (now < regOpen) {
+    // Before registration — count down to sign-up opening
+    target = regOpen; label = "CWL Sign-Up Opens"; active = false;
+  } else if (now < warStart) {
+    // Registration window open
+    target = warStart; label = "CWL Wars Begin"; active = true;
+  } else if (now < warEnd) {
+    // War week active
+    target = warEnd; label = "CWL Season Ends"; active = true;
+  } else {
+    // After CWL — count down to next month's sign-up
+    const nextReg = new Date(Date.UTC(y, m + 1, 1, 8, 0, 0));
+    target = nextReg; label = "CWL Sign-Up Opens"; active = false;
+  }
+
+  const diff = target - now;
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const isActive = now.getDate() <= 10;
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
-      <p className={`text-2xl font-thin tracking-widest ${isActive ? "text-purple-300" : "text-slate-400"}`}>
-        {days}d {hours}h
+      <p className={`text-2xl font-thin tracking-widest ${active ? "text-purple-300" : "text-slate-400"}`}>
+        {days > 0 ? `${days}d ${hours}h` : `${hours}h ${mins}m`}
       </p>
-      <p className="text-[10px] text-slate-600 uppercase tracking-widest mt-0.5">
-        {isActive ? "CWL Season Ends" : "Next CWL Starts"}
-      </p>
+      <p className="text-[10px] text-slate-600 uppercase tracking-widest mt-0.5">{label}</p>
       <p className="text-[9px] text-slate-700 mt-0.5">{season || "—"}</p>
     </div>
   );
