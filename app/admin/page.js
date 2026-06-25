@@ -216,7 +216,7 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
         <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("cwl") ? prev.filter(v=>v!=="cwl") : [...prev,"cwl"]); }}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("cwl") ? "text-green-400 border-green-500/60 bg-green-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14.5 17.5L3 6V3h3l11.5 11.5m0 0l1.5 1.5a2.121 2.121 0 01-3 3l-1.5-1.5m3-3L18 19l3-3-1.5-1.5M3 3l7 7"/>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
           </svg>
           CWL
         </button>
