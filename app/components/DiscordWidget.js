@@ -26,7 +26,7 @@ export default function DiscordWidget({ variant = "corner" }) {
   if (status === "authenticated" && session?.user) {
     const user = session.user;
     return (
-      <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto w-fit" : "ml-auto w-fit"}`}>
+      <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto" : "ml-auto w-fit"}`}>
         <button type="button" onClick={() => setShowInfo(v => !v)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-black/40 transition">
           {user.image && (
@@ -56,7 +56,7 @@ export default function DiscordWidget({ variant = "corner" }) {
   }
 
   return (
-    <div className={`relative flex items-center gap-1.5 ${isCenter ? "mx-auto w-fit" : "ml-auto w-fit"}`}>
+    <div className={`relative flex items-center gap-1.5 ${isCenter ? "mx-auto justify-center" : "ml-auto w-fit"}`}>
       <button onClick={() => signIn("discord")}
         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#5865F2]/20 backdrop-blur-md border border-[#5865F2]/30 text-[#7289da] text-xs font-semibold hover:bg-[#5865F2]/35 hover:text-white transition">
         <DiscordLogo />
