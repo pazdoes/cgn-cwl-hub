@@ -210,6 +210,7 @@ export default function AdminPoolPage() {
   const [formatError, setFormatError] = useState({});
   const [rankBusy, setRankBusy] = useState(null);
   const [absentBusy, setAbsentBusy] = useState(null);
+  const [clanAbsent, setClanAbsent] = useState({});
   const [rankResult, setRankResult] = useState({});
 
   const [activeClanForm, setActiveClanForm] = useState(null);
