@@ -27,35 +27,30 @@ export default function DiscordWidget({ variant = "corner" }) {
     const user = session.user;
     return (
       <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto w-fit" : "ml-auto w-fit"}`}>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-xs text-slate-300">
+        <button type="button" onClick={() => setShowInfo(v => !v)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-black/40 transition">
           {user.image && (
             <img src={user.image} alt={user.name}
               className="w-5 h-5 rounded-full border border-white/20 shrink-0" />
           )}
           <span className="font-medium max-w-[120px] truncate">{user.name}</span>
-          <button onClick={() => signOut()} className="text-slate-500 hover:text-slate-300 transition ml-1 shrink-0" title="Sign out of Discord">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        {/* Info icon */}
-        <div className="relative">
-          <button type="button" onClick={() => setShowInfo(v => !v)}
-            className="w-5 h-5 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-300 transition border border-white/10 bg-white/[0.03] shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </button>
-          {showInfo && (
-            <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                Your Discord account keeps your CoC accounts linked across devices. Sign in once and your accounts are always accessible, even on a new browser.
-              </p>
-              <div className="absolute -top-1.5 right-2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
+        </button>
+        {showInfo && (
+          <div className="absolute right-0 top-full mt-2 z-50 w-52 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3 space-y-2">
+            <p className="text-[11px] text-slate-400 leading-relaxed">Disconnect your Discord account?</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => { signOut(); setShowInfo(false); }}
+                className="flex-1 py-1.5 rounded-xl text-[10px] font-semibold bg-transparent text-red-400 border border-red-500/40 hover:border-red-400 transition">
+                Disconnect
+              </button>
+              <button type="button" onClick={() => setShowInfo(false)}
+                className="flex-1 py-1.5 rounded-xl text-[10px] font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/20 transition">
+                Cancel
+              </button>
             </div>
-          )}
-        </div>
+            <div className="absolute -top-1.5 right-6 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
+          </div>
+        )}
       </div>
     );
   }
