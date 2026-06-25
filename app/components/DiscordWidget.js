@@ -24,46 +24,63 @@ export default function DiscordWidget({ variant = "corner" }) {
   if (status === "authenticated" && session?.user) {
     const user = session.user;
     return (
-      <div className={`
-        flex items-center gap-2
-        px-3 py-1.5 rounded-full
-        bg-black/30 backdrop-blur-md border border-white/10
-        text-xs text-slate-300
-        ${isCenter ? "justify-center w-fit mx-auto" : "ml-auto w-fit"}
-      `}>
-        {user.image && (
-          <img src={user.image} alt={user.name}
-            className="w-5 h-5 rounded-full border border-white/20 shrink-0" />
-        )}
-        <span className="font-medium max-w-[120px] truncate">{user.name}</span>
-        <button
-          onClick={() => signOut()}
-          className="text-slate-500 hover:text-slate-300 transition ml-1 shrink-0"
-          title="Sign out of Discord"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+      <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto w-fit" : "ml-auto w-fit"}`}>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-xs text-slate-300">
+          {user.image && (
+            <img src={user.image} alt={user.name}
+              className="w-5 h-5 rounded-full border border-white/20 shrink-0" />
+          )}
+          <span className="font-medium max-w-[120px] truncate">{user.name}</span>
+          <button onClick={() => signOut()} className="text-slate-500 hover:text-slate-300 transition ml-1 shrink-0" title="Sign out of Discord">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        {/* Info icon */}
+        <div className="relative">
+          <button type="button" onClick={() => setShowInfo(v => !v)}
+            className="w-5 h-5 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-300 transition border border-white/10 bg-white/[0.03] shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </button>
+          {showInfo && (
+            <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Your Discord account keeps your CoC accounts linked across devices. Sign in once and your accounts are always accessible, even on a new browser.
+              </p>
+              <div className="absolute -top-1.5 right-2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <button
-      onClick={() => signIn("discord")}
-      title="Sign in with Discord to keep your accounts linked across devices"
-      className={`
-        flex items-center gap-2
-        px-3 py-1.5 rounded-full
-        bg-[#5865F2]/20 backdrop-blur-md border border-[#5865F2]/30
-        text-[#7289da] text-xs font-semibold
-        hover:bg-[#5865F2]/35 hover:text-white transition
-        ${isCenter ? "mx-auto" : "ml-auto"}
-      `}
-    >
-      <DiscordLogo />
-      Discord
-    </button>
+    <div className={`relative flex items-center gap-1.5 ${isCenter ? "mx-auto w-fit" : "ml-auto w-fit"}`}>
+      <button onClick={() => signIn("discord")}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#5865F2]/20 backdrop-blur-md border border-[#5865F2]/30 text-[#7289da] text-xs font-semibold hover:bg-[#5865F2]/35 hover:text-white transition">
+        <DiscordLogo />
+        Discord
+      </button>
+      <div className="relative">
+        <button type="button" onClick={() => setShowInfo(v => !v)}
+          className="w-5 h-5 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-300 transition border border-white/10 bg-white/[0.03] shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </button>
+        {showInfo && (
+          <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Sign in with Discord to keep your CoC accounts linked across devices. Your accounts are always accessible, even on a new browser or device.
+            </p>
+            <div className="absolute -top-1.5 right-2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
