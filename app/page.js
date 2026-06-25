@@ -2498,7 +2498,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
     )}
 
     <div className="relative w-full py-4 flex items-center px-4">
-      <div className="w-6 shrink-0"/>
+      <div className="w-16 shrink-0"/>
       <div className="flex-1 flex justify-center">
         <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 no-underline">
