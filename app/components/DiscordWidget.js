@@ -70,7 +70,7 @@ export default function DiscordWidget({ variant = "corner" }) {
           </svg>
         </button>
         {showInfo && (
-          <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
+          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-56 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
             <p className="text-[11px] text-slate-300 leading-relaxed">
               Sign in with Discord to keep your CoC accounts linked across devices. Your accounts are always accessible, even on a new browser or device.
             </p>
