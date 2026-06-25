@@ -68,6 +68,12 @@ export async function POST(request) {
   await upsertAccount(normalizedTag, player.name, ownerSecret, player.townHallLevel ?? null);
   await joinPool(normalizedTag, season);
   if (token) await setApiTokenVerified(normalizedTag);
+  if (discordId) {
+    try {
+      const sql = getDb();
+      await sql`UPDATE accounts SET discord_id = ${discordId} WHERE player_tag = ${normalizedTag}`;
+    } catch {}
+  }
 
   const response = NextResponse.json({
     tag: normalizedTag,
