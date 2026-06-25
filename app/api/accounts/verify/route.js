@@ -11,6 +11,7 @@ import { getOpenPoolSeason } from "@/lib/season";
 // pool season — deliberately paired so the first thing a person does is
 // also the last thing they need to do.
 export async function POST(request) {
+  const session = await auth(request);
   const { tag, token } = await request.json().catch(() => ({}));
 
   if (!tag) {
