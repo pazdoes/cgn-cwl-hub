@@ -350,18 +350,22 @@ export default function AdminOverviewPage() {
     if (stored) { setPin(stored); setAuthed(true); }
   }, []);
 
-  useEffect(() => {
-    if (!authed || !pin) return;
+  function loadData(p) {
     setLoading(true);
-    fetch("/api/admin/members", { headers: { "x-officer-pin": pin } })
+    fetch("/api/admin/members", { headers: { "x-officer-pin": p || pin } })
       .then(r => r.json())
       .then(d => setData(d))
       .catch(() => {})
       .finally(() => setLoading(false));
-    fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } })
+    fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": p || pin } })
       .then(r => r.json())
       .then(d => setScheduled(d.scheduled || []))
       .catch(() => setScheduled([]));
+  }
+
+  useEffect(() => {
+    if (!authed || !pin) return;
+    loadData(pin);
   }, [authed, pin]);
 
   if (!authed) {
