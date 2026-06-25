@@ -412,6 +412,7 @@ function AvgThView({ players, clans, onBack }) {
 // ── Player Performance History Chart ─────────────────────────────────────────
 const PLAYER_COLORS = ["#a78bfa", "#34d399", "#fb923c"];
 const STAT_OPTIONS = [
+  { key: "overall",            label: "Overall Rating" },
   { key: "efficiency",         label: "Atk Efficiency" },
   { key: "stars_earned",       label: "Stars Earned" },
   { key: "destruction_pct",    label: "Destruction %" },
@@ -442,7 +443,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
   const [playerSearch, setPlayerSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [trackedPlayers, setTrackedPlayers] = useState([]);
-  const [selectedStat, setSelectedStat] = useState("efficiency");
+  const [selectedStat, setSelectedStat] = useState("overall");
   const isRankStat = selectedStat === "cwl_rank";
 
   useEffect(() => {
@@ -467,6 +468,23 @@ function PlayerPerformanceChart({ allData, seasons }) {
       if (!row) return { season, value: null, displayValue: null };
       if (selectedStat === "cwl_rank") {
         return { season, value: row.cwl_rank ? rankToNum(row.cwl_rank) : null, displayValue: row.cwl_rank || null };
+      }
+      if (selectedStat === "overall") {
+        const eff = parseFloat(row.efficiency||0);
+        const def = parseFloat(row.defence_efficiency||0);
+        const v = (row.attacks_used > 0 && row.attacks_available > 0)
+          ? parseFloat(((eff * 0.6) + ((3 - def) * 0.4)).toFixed(2))
+          : null;
+        return { season, value: v, displayValue: v };
+      }
+      if (selectedStat === "overall") {
+        const atk = parseFloat(row.attack_efficiency||0);
+        const def = parseFloat(row.defence_efficiency||0);
+        const wins = row.wars_won||0;
+        const v = (row.total_attacks_used > 0 && row.total_attacks_available > 0)
+          ? parseFloat(((atk*0.5) + ((3-def)*0.3) + (wins/7*3*0.2)).toFixed(2))
+          : null;
+        return { season, value: v, displayValue: v };
       }
       const v = parseFloat(row[selectedStat]);
       return { season, value: isNaN(v) ? null : v, displayValue: isNaN(v) ? null : v };
@@ -634,6 +652,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
 // ── Clan Performance History Chart ────────────────────────────────────────────
 const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
 const CLAN_STAT_OPTIONS = [
+  { group: "Overall", key: "overall",                label: "Overall Rating" },
   { group: "Rank",    key: "cwl_rank",               label: "CWL Rank" },
   { group: "Attack",  key: "total_stars",             label: "Total Stars" },
   { group: "Attack",  key: "attack_efficiency",       label: "Attack Efficiency" },
@@ -662,7 +681,7 @@ function ClanPerformanceChart({ history }) {
   const [clanSearch, setClanSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [trackedClans, setTrackedClans] = useState([]);
-  const [selectedStat, setSelectedStat] = useState("cwl_rank");
+  const [selectedStat, setSelectedStat] = useState("overall");
   const isRankStat = selectedStat === "cwl_rank";
 
   // All unique clan names from history
@@ -760,7 +779,7 @@ function ClanPerformanceChart({ history }) {
   }
 
   // Group stat options for select
-  const groups = [...new Set(CLAN_STAT_OPTIONS.map(o => o.group))];
+  const groups = ["Overall", ...new Set(CLAN_STAT_OPTIONS.filter(o=>o.group!=="Overall").map(o => o.group))];
 
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
