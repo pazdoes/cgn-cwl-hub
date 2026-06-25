@@ -1794,7 +1794,7 @@ function LeaderboardView({ onBack }) {
                 <option value="defence_pct">Defence %</option>
               </optgroup>
             </>) : (<>
-              {["Attack","Defence","Record"].map(g=>(
+              {["Overall","Attack","Defence","Record"].map(g=>(
                 <optgroup key={g} label={g}>
                   {CLAN_SORT_OPTIONS.filter(o=>o.group===g).map(o=>(
                     <option key={o.key} value={o.key}>{o.label}</option>
