@@ -114,7 +114,7 @@ const MONTH_NAMES = ["January","February","March","April","May","June","July","A
 const DAY_NAMES = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 const RECURRENCE_LABELS = { "24hr":"Daily","48hr":"Every 2 days","7days":"Weekly","14days":"Fortnightly","30days":"Monthly" };
 
-function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate, eventFilter, setEventFilter }) {
+function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate, eventFilter = ["cwl","announcement"], setEventFilter }) {
   const { year, month } = calMonth;
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
