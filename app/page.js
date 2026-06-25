@@ -892,8 +892,8 @@ function HistoryView({ onBack }) {
 
         {/* Tab indicator dots */}
         <div className="flex items-center justify-center gap-1.5 mb-3">
-          <span className={`w-1.5 h-1.5 rounded-full transition ${tab === "rank" ? "bg-purple-400" : "bg-white/20"}`}/>
           <span className={`w-1.5 h-1.5 rounded-full transition ${tab === "player" ? "bg-purple-400" : "bg-white/20"}`}/>
+          <span className={`w-1.5 h-1.5 rounded-full transition ${tab === "rank" ? "bg-purple-400" : "bg-white/20"}`}/>
         </div>
 
         {/* Arrow toggles */}
