@@ -10,6 +10,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 // Both are static inline DOM elements — no position:fixed anywhere.
 export default function DiscordWidget({ variant = "corner" }) {
   const { data: session, status } = useSession();
+  const [showInfo, setShowInfo] = useState(false);
 
   if (status === "loading") return null;
 
