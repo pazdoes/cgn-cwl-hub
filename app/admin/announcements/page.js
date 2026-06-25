@@ -359,6 +359,11 @@ export default function AnnouncementsPage() {
   });
   const [recurEnd, setRecurEnd] = useState("");
 
+  const [discordMeta, setDiscordMeta] = useState({ roles: [], channels: [], emojis: [] });
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [newRole, setNewRole] = useState({ id: "", name: "", colour: "#a78bfa" });
+  const [newChannel, setNewChannel] = useState({ id: "", name: "" });
+  const [newEmoji, setNewEmoji] = useState({ id: "", name: "" });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -391,7 +396,9 @@ export default function AnnouncementsPage() {
       fetch("/api/admin/announcements", { headers: { "x-officer-pin": pin } }).then(r => r.json()),
       fetch("/api/admin/announcements/templates", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ templates: [] })),
       fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ scheduled: [] })),
-    ]).then(([wData, tData, sData]) => {
+    fetch("/api/admin/discord-meta").then(r => r.json()).catch(() => ({ roles: [], channels: [], emojis: [] })),
+    ]).then(([wData, tData, sData, metaData]) => {
+      setDiscordMeta({ roles: metaData.roles || [], channels: metaData.channels || [], emojis: metaData.emojis || [] });
       const wh = wData.webhooks || [];
       setWebhooks(wh);
       if (wh.length > 0 && !selectedWebhookId) setSelectedWebhookId(wh[0].id);
@@ -621,6 +628,74 @@ export default function AnnouncementsPage() {
         </Card>
       </main>
     );
+  }
+
+  // Render Discord markdown to JSX for live preview
+  function renderDiscordMarkdown(text) {
+    if (!text) return null;
+    const roleMap = Object.fromEntries(discordMeta.roles.map(r => [r.id, r]));
+    const channelMap = Object.fromEntries(discordMeta.channels.map(c => [c.id, c]));
+    const emojiMap = Object.fromEntries(discordMeta.emojis.map(e => [e.id, e]));
+    const parts = [];
+    let remaining = text;
+    let key = 0;
+    while (remaining.length > 0) {
+      // Role mention
+      const roleMatch = remaining.match(/^([\s\S]*?)<@&(\d+)>/);
+      // Channel mention
+      const chanMatch = remaining.match(/^([\s\S]*?)<#(\d+)>/);
+      // Custom emoji
+      const emojiMatch = remaining.match(/^([\s\S]*?)<:(\w+):(\d+)>/);
+      // Timestamp
+      const tsMatch = remaining.match(/^([\s\S]*?)<t:(\d+)(?::[tTdDfFR])?>/);
+      // @everyone @here
+      const everyoneMatch = remaining.match(/^([\s\S]*?)(@everyone|@here)/);
+      // Bold
+      const boldMatch = remaining.match(/^([\s\S]*?)\*\*(.+?)\*\*/);
+      // Italic
+      const italicMatch = remaining.match(/^([\s\S]*?)\*(.+?)\*/);
+      // Code
+      const codeMatch = remaining.match(/^([\s\S]*?)`(.+?)`/);
+
+      const candidates = [
+        roleMatch && { idx: roleMatch[1].length, len: roleMatch[0].length, type: 'role', id: roleMatch[2] },
+        chanMatch && { idx: chanMatch[1].length, len: chanMatch[0].length, type: 'channel', id: chanMatch[2] },
+        emojiMatch && { idx: emojiMatch[1].length, len: emojiMatch[0].length, type: 'emoji', name: emojiMatch[2], id: emojiMatch[3] },
+        tsMatch && { idx: tsMatch[1].length, len: tsMatch[0].length, type: 'ts', unix: tsMatch[2] },
+        everyoneMatch && { idx: everyoneMatch[1].length, len: everyoneMatch[0].length, type: 'everyone', val: everyoneMatch[2] },
+        boldMatch && { idx: boldMatch[1].length, len: boldMatch[0].length, type: 'bold', val: boldMatch[2] },
+        italicMatch && { idx: italicMatch[1].length, len: italicMatch[0].length, type: 'italic', val: italicMatch[2] },
+        codeMatch && { idx: codeMatch[1].length, len: codeMatch[0].length, type: 'code', val: codeMatch[2] },
+      ].filter(Boolean).sort((a, b) => a.idx - b.idx);
+
+      if (candidates.length === 0) { parts.push(<span key={key++}>{remaining}</span>); break; }
+      const hit = candidates[0];
+      if (hit.idx > 0) parts.push(<span key={key++}>{remaining.slice(0, hit.idx)}</span>);
+      if (hit.type === 'role') {
+        const role = roleMap[hit.id];
+        parts.push(<span key={key++} style={{background: (role?.colour||'#a78bfa')+'33', color: role?.colour||'#a78bfa'}} className="rounded px-1 text-xs font-semibold">@{role?.name||hit.id}</span>);
+      } else if (hit.type === 'channel') {
+        const ch = channelMap[hit.id];
+        parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#8ab4f8]">#{ch?.name||hit.id}</span>);
+      } else if (hit.type === 'emoji') {
+        const em = emojiMap[hit.id];
+        if (em) parts.push(<img key={key++} src={`https://cdn.discordapp.com/emojis/${hit.id}.png`} alt={hit.name} className="inline w-4 h-4 mx-0.5"/>);
+        else parts.push(<span key={key++} className="text-xs text-slate-400">:{hit.name}:</span>);
+      } else if (hit.type === 'ts') {
+        const d = new Date(parseInt(hit.unix) * 1000);
+        parts.push(<span key={key++} className="rounded px-1 text-xs bg-white/10 text-[#dbdee1]">{d.toLocaleString()}</span>);
+      } else if (hit.type === 'everyone') {
+        parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#c9cdfb]">{hit.val}</span>);
+      } else if (hit.type === 'bold') {
+        parts.push(<strong key={key++} className="text-white font-bold">{hit.val}</strong>);
+      } else if (hit.type === 'italic') {
+        parts.push(<em key={key++}>{hit.val}</em>);
+      } else if (hit.type === 'code') {
+        parts.push(<code key={key++} className="bg-black/30 rounded px-1 text-xs font-mono text-[#dbdee1]">{hit.val}</code>);
+      }
+      remaining = remaining.slice(hit.idx + hit.len);
+    }
+    return <>{parts}</>;
   }
 
   const pendingScheduled = scheduled.filter(s => !s.sent);
@@ -885,11 +960,11 @@ export default function AnnouncementsPage() {
               <span className="text-white text-sm font-semibold">{username||"CGN CWL Hub"}</span>
               <span className="text-[10px] bg-[#5865f2] text-white px-1 py-0.5 rounded">APP</span>
             </div>
-            {content && <p className="text-[#dbdee1] text-sm mb-2">{content}</p>}
+            {content && <p className="text-[#dbdee1] text-sm mb-2">{renderDiscordMarkdown(content)}</p>}
             <div className="rounded border-l-4 bg-[#2b2d31] p-3" style={{borderLeftColor: hexColor}}>
               {previewEmbed.author && <div className="flex items-center gap-1.5 mb-1">{previewEmbed.author.icon_url && <img src={previewEmbed.author.icon_url} className="w-5 h-5 rounded-full" alt=""/>}<span className="text-[#dbdee1] text-xs font-semibold">{previewEmbed.author.name}</span></div>}
               {previewEmbed.title && <p className="text-white font-bold text-sm mb-1">{previewEmbed.title}</p>}
-              {previewEmbed.description && <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{previewEmbed.description}</p>}
+              {previewEmbed.description && <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{renderDiscordMarkdown(previewEmbed.description)}</p>}
               {previewEmbed.fields.length > 0 && (
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {previewEmbed.fields.map((f,i) => <div key={i} className={f.inline?"":"col-span-2"}><p className="text-white text-xs font-semibold">{f.name}</p><p className="text-[#dbdee1] text-xs">{f.value}</p></div>)}
