@@ -36,7 +36,7 @@ export default function DiscordWidget({ variant = "corner" }) {
           <span className="font-medium max-w-[120px] truncate">{user.name}</span>
         </button>
         {showInfo && (
-          <div className="absolute right-0 top-full mt-2 z-50 w-52 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3 space-y-2">
+          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-52 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3 space-y-2">
             <p className="text-[11px] text-slate-400 leading-relaxed">Disconnect your Discord account?</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => { signOut(); setShowInfo(false); }}
@@ -48,7 +48,7 @@ export default function DiscordWidget({ variant = "corner" }) {
                 Cancel
               </button>
             </div>
-            <div className="absolute -top-1.5 right-6 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
+            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
           </div>
         )}
       </div>
