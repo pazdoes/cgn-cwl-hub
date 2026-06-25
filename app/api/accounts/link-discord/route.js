@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { linkDiscordId } from "@/lib/pool";
+import { linkDiscordId, getOwnerSecretByDiscordId } from "@/lib/pool";
 import { cookies } from "next/headers";
 
 export async function POST(request) {
@@ -16,7 +16,11 @@ export async function POST(request) {
     return NextResponse.json({ linked: false, merged: false });
   }
 
-  // Always link — update all accounts under this cookie secret with discordId
-  await linkDiscordId(cookieSecret, discordId);
-  return NextResponse.json({ linked: true, merged: true });
+  // Only link if this cookie secret isn't already linked to a different Discord ID
+  const existing = await getOwnerSecretByDiscordId(discordId);
+  if (!existing) {
+    await linkDiscordId(cookieSecret, discordId);
+  }
+
+  return NextResponse.json({ linked: true, merged: !!existing });
 }
