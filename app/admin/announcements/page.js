@@ -647,7 +647,7 @@ export default function AnnouncementsPage() {
       // Custom emoji
       const emojiMatch = remaining.match(/^([\s\S]*?)<:(\w+):(\d+)>/);
       // Timestamp
-      const tsMatch = remaining.match(/^([\s\S]*?)<t:(\d+)(?::[tTdDfFR])?>/);
+      const tsMatch = remaining.match(/^([\s\S]*?)<t:(\d+)(?::([tTdDfFR]))?>/);
       // @everyone @here
       const everyoneMatch = remaining.match(/^([\s\S]*?)(@everyone|@here)/);
       // Bold
@@ -661,7 +661,7 @@ export default function AnnouncementsPage() {
         roleMatch && { idx: roleMatch[1].length, len: roleMatch[0].length, type: 'role', id: roleMatch[2] },
         chanMatch && { idx: chanMatch[1].length, len: chanMatch[0].length, type: 'channel', id: chanMatch[2] },
         emojiMatch && { idx: emojiMatch[1].length, len: emojiMatch[0].length, type: 'emoji', name: emojiMatch[2], id: emojiMatch[3] },
-        tsMatch && { idx: tsMatch[1].length, len: tsMatch[0].length, type: 'ts', unix: tsMatch[2] },
+        tsMatch && { idx: tsMatch[1].length, len: tsMatch[0].length, type: 'ts', unix: tsMatch[2], fmt: tsMatch[3]||'f' },
         everyoneMatch && { idx: everyoneMatch[1].length, len: everyoneMatch[0].length, type: 'everyone', val: everyoneMatch[2] },
         boldMatch && { idx: boldMatch[1].length, len: boldMatch[0].length, type: 'bold', val: boldMatch[2] },
         italicMatch && { idx: italicMatch[1].length, len: italicMatch[0].length, type: 'italic', val: italicMatch[2] },
@@ -683,7 +683,24 @@ export default function AnnouncementsPage() {
         else parts.push(<span key={key++} className="text-xs text-slate-400">:{hit.name}:</span>);
       } else if (hit.type === 'ts') {
         const d = new Date(parseInt(hit.unix) * 1000);
-        parts.push(<span key={key++} className="rounded px-1 text-xs bg-white/10 text-[#dbdee1]">{d.toLocaleString()}</span>);
+        const fmt = hit.fmt || 'f';
+        let display;
+        if (fmt === 't') display = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        else if (fmt === 'T') display = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        else if (fmt === 'd') display = d.toLocaleDateString([], {day:'2-digit',month:'2-digit',year:'numeric'});
+        else if (fmt === 'D') display = d.toLocaleDateString([], {day:'numeric',month:'long',year:'numeric'});
+        else if (fmt === 'F') display = d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        else if (fmt === 'R') {
+          const diff = Math.round((d - Date.now()) / 1000);
+          const abs = Math.abs(diff);
+          const past = diff < 0;
+          if (abs < 60) display = past ? 'just now' : 'in a few seconds';
+          else if (abs < 3600) display = past ? `${Math.floor(abs/60)} minutes ago` : `in ${Math.floor(abs/60)} minutes`;
+          else if (abs < 86400) display = past ? `${Math.floor(abs/3600)} hours ago` : `in ${Math.floor(abs/3600)} hours`;
+          else display = past ? `${Math.floor(abs/86400)} days ago` : `in ${Math.floor(abs/86400)} days`;
+        }
+        else display = d.toLocaleDateString([], {day:'numeric',month:'long',year:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        parts.push(<span key={key++} className="rounded px-1 text-xs bg-white/10 text-[#dbdee1]">{display}</span>);
       } else if (hit.type === 'everyone') {
         parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#c9cdfb]">{hit.val}</span>);
       } else if (hit.type === 'bold') {
@@ -955,24 +972,74 @@ export default function AnnouncementsPage() {
         <Card>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Live Preview</h2>
           <div className="rounded-xl bg-[#313338] p-3">
+            {/* Bot name + avatar row */}
             <div className="flex items-center gap-2 mb-2">
-              {avatarUrl ? <img src={avatarUrl} className="w-8 h-8 rounded-full object-cover" alt=""/> : <div className="w-8 h-8 rounded-full bg-purple-600/40 flex items-center justify-center text-xs text-white font-bold">{username?.charAt(0)||"C"}</div>}
+              {avatarUrl ? <img src={avatarUrl} className="w-8 h-8 rounded-full object-cover" alt="" onError={e=>{e.target.style.display="none"}}/> : <div className="w-8 h-8 rounded-full bg-purple-600/40 flex items-center justify-center text-xs text-white font-bold">{username?.charAt(0)||"C"}</div>}
               <span className="text-white text-sm font-semibold">{username||"CGN CWL Hub"}</span>
               <span className="text-[10px] bg-[#5865f2] text-white px-1 py-0.5 rounded">APP</span>
             </div>
-            {content && <p className="text-[#dbdee1] text-sm mb-2">{renderDiscordMarkdown(content)}</p>}
-            <div className="rounded border-l-4 bg-[#2b2d31] p-3" style={{borderLeftColor: hexColor}}>
-              {previewEmbed.author && <div className="flex items-center gap-1.5 mb-1">{previewEmbed.author.icon_url && <img src={previewEmbed.author.icon_url} className="w-5 h-5 rounded-full" alt=""/>}<span className="text-[#dbdee1] text-xs font-semibold">{previewEmbed.author.name}</span></div>}
-              {previewEmbed.title && <p className="text-white font-bold text-sm mb-1">{previewEmbed.title}</p>}
-              {previewEmbed.description && <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{renderDiscordMarkdown(previewEmbed.description)}</p>}
-              {previewEmbed.fields.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {previewEmbed.fields.map((f,i) => <div key={i} className={f.inline?"":"col-span-2"}><p className="text-white text-xs font-semibold">{f.name}</p><p className="text-[#dbdee1] text-xs">{f.value}</p></div>)}
+            {/* Ping/content outside embed */}
+            {content && <p className="text-[#dbdee1] text-sm mb-2 whitespace-pre-wrap">{renderDiscordMarkdown(content)}</p>}
+            {/* Embed card */}
+            <div className="rounded overflow-hidden border-l-4 bg-[#2b2d31]" style={{borderLeftColor: hexColor}}>
+              <div className="p-3">
+                {/* Inner layout: left column + thumbnail float-right */}
+                <div className="flex gap-3">
+                  <div className="flex-1 min-w-0">
+                    {/* Author row */}
+                    {previewEmbed.author?.name && (
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {previewEmbed.author.icon_url && <img src={previewEmbed.author.icon_url} className="w-6 h-6 rounded-full object-cover shrink-0" alt="" onError={e=>{e.target.style.display="none"}}/>}
+                        <span className="text-[#dbdee1] text-xs font-semibold">{previewEmbed.author.name}</span>
+                      </div>
+                    )}
+                    {/* Title */}
+                    {previewEmbed.title && (
+                      <p className="text-white font-bold text-sm mb-1 leading-snug">
+                        {previewEmbed.url ? <a href={previewEmbed.url} className="text-[#00a8fc] hover:underline">{previewEmbed.title}</a> : previewEmbed.title}
+                      </p>
+                    )}
+                    {/* Description */}
+                    {previewEmbed.description && (
+                      <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{renderDiscordMarkdown(previewEmbed.description)}</p>
+                    )}
+                  </div>
+                  {/* Thumbnail — top right, 80x80 */}
+                  {previewEmbed.thumbnail?.url && (
+                    <div className="shrink-0 ml-2">
+                      <img src={previewEmbed.thumbnail.url} className="w-20 h-20 rounded object-cover" alt="" onError={e=>{e.target.style.display="none"}}/>
+                    </div>
+                  )}
                 </div>
-              )}
-              {previewEmbed.image?.url && <img src={previewEmbed.image.url} className="w-full rounded mt-2 max-h-40 object-cover" alt=""/>}
-              {previewEmbed.footer?.text && <p className="text-[#87898c] text-[10px] mt-2">{previewEmbed.footer.text}</p>}
+                {/* Fields grid */}
+                {previewEmbed.fields.length > 0 && (
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-2 mt-2">
+                    {previewEmbed.fields.map((f,i) => (
+                      <div key={i} className={f.inline ? "" : "col-span-3"}>
+                        <p className="text-white text-xs font-semibold mb-0.5">{f.name}</p>
+                        <p className="text-[#dbdee1] text-xs whitespace-pre-wrap">{renderDiscordMarkdown(f.value)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Large image — full width below fields */}
+                {previewEmbed.image?.url && (
+                  <img src={previewEmbed.image.url} className="w-full rounded mt-3 max-h-64 object-contain" alt="" onError={e=>{e.target.style.display="none"}}/>
+                )}
+                {/* Footer */}
+                {(previewEmbed.footer?.text || previewEmbed.timestamp) && (
+                  <div className="flex items-center gap-1.5 mt-2 pt-1">
+                    {previewEmbed.footer?.icon_url && <img src={previewEmbed.footer.icon_url} className="w-5 h-5 rounded-full object-cover shrink-0" alt="" onError={e=>{e.target.style.display="none"}}/>}
+                    <span className="text-[#87898c] text-[10px]">
+                      {previewEmbed.footer?.text}
+                      {previewEmbed.footer?.text && previewEmbed.timestamp && " · "}
+                      {previewEmbed.timestamp && new Date(previewEmbed.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
+            {/* Link button */}
             {embed._button?.label && embed._button?.url && (
               <div className="mt-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#4e5058] text-[#dbdee1] text-xs font-semibold">
