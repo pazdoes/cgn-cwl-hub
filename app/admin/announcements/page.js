@@ -913,7 +913,7 @@ export default function AnnouncementsPage() {
         {/* Templates */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setTemplateMenuOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-4">
-            <div><p className="text-sm font-semibold text-slate-300">Templates</p><p className="text-[10px] text-slate-600 mt-0.5">{templates.length} saved</p></div>
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Templates</p><p className="text-[10px] text-slate-600 mt-0.5">{templates.length} saved</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${templateMenuOpen?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           {templateMenuOpen && (
@@ -968,7 +968,7 @@ export default function AnnouncementsPage() {
         {/* Webhooks */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setShowAddWebhook(v => !v)} className="w-full flex items-center justify-between px-5 py-4">
-            <div><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showAddWebhook?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           {showAddWebhook && (
@@ -997,7 +997,7 @@ export default function AnnouncementsPage() {
         {/* Scheduled */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setTab(tab==="scheduled"?"":"scheduled")} className="w-full flex items-center justify-between px-5 py-4">
-            <div><p className="text-sm font-semibold text-slate-300">Scheduled</p><p className="text-[10px] text-slate-600 mt-0.5">{pendingScheduled.length} pending</p></div>
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Scheduled</p><p className="text-[10px] text-slate-600 mt-0.5">{pendingScheduled.length} pending</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="scheduled"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           {tab === "scheduled" && (
@@ -1023,7 +1023,7 @@ export default function AnnouncementsPage() {
         {/* History */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setTab(tab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
-            <div><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           {tab === "history" && (
@@ -1043,7 +1043,7 @@ export default function AnnouncementsPage() {
         {/* Timestamp Generator */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setTab(tab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
-            <div><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           {tab === "timestamp" && (
