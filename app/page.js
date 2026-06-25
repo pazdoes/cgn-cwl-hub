@@ -938,11 +938,6 @@ function HistoryView({ onBack }) {
 }
 
 
-export default function Home() {
-
-  const [players, setPlayers] = useState([]);
-const [selectedClan, setSelectedClan] = useState(null);
-const [search, setSearch] = useState("");
 
 // ─── CWL player performance leaderboard ────────────────────────────────────
 
@@ -1403,6 +1398,12 @@ function ClanCard({ c, rank, isExpanded, onToggle }) {
     </div>
   );
 }
+
+export default function Home() {
+
+  const [players, setPlayers] = useState([]);
+const [selectedClan, setSelectedClan] = useState(null);
+const [search, setSearch] = useState("");
 
 function LeaderboardView({ onBack }) {
   const [lbTab, setLbTab] = useState("player"); // "player" | "clan"
