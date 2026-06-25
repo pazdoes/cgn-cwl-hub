@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyPlayerToken, getPlayer } from "@/lib/coc";
 import { upsertAccount, joinPool, setApiTokenVerified } from "@/lib/pool";
+import { auth } from "@/auth";
+import { getDb } from "@/lib/db";
 import { getOrCreateOwnerSecret, setOwnerCookie } from "@/lib/ownerCookie";
 import { getOpenPoolSeason } from "@/lib/season";
 
