@@ -21,11 +21,14 @@ export async function GET(request) {
   const stats = await sql`
     SELECT
       ps.*,
-      csh.cwl_rank
+      csh.cwl_rank,
+      a.town_hall_level
     FROM player_cwl_stats ps
     LEFT JOIN clan_season_history csh
       ON csh.clan_name = ps.clan_name
       AND csh.season = ps.season
+    LEFT JOIN accounts a
+      ON a.player_tag = ps.player_tag
     WHERE ps.season = ${targetSeason}
     ORDER BY ps.stars_earned DESC, ps.destruction_pct DESC
   `;
