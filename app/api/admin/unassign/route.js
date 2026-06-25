@@ -27,7 +27,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing tag" }, { status: 400 });
   }
 
-  const season = getOpenPoolSeason();
+  const season = await getOpenPoolSeason();
   const clan = await getAssignedClan(tag, season);
 
   if (!clan) {
