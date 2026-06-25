@@ -28,8 +28,11 @@ export default function RootLayout({ children }) {
         <SessionProvider>
           {children}
           <footer className="w-full py-4 flex items-center justify-center gap-2 bg-[#05070f] mt-auto">
-            <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5 opacity-60"/>
-            <span className="text-[11px] text-slate-600 tracking-widest">Cognition {"{CGN}"}</span>
+            <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 no-underline">
+              <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5 opacity-60"/>
+              <span className="text-[11px] text-slate-600 tracking-widest">Cognition {"{CGN}"}</span>
+            </a>
           </footer>
         </SessionProvider>
       </body>
