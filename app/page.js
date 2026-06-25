@@ -1095,7 +1095,7 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
         </div>
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {p.town_hall_level && TH_ICONS[String(p.town_hall_level)] && (
-            <img src={TH_ICONS[String(p.town_hall_level)]} alt={`TH${p.town_hall_level}`} className="w-7 h-7 shrink-0"/>
+            <img src={TH_ICONS[String(p.town_hall_level)]} alt={`TH${p.town_hall_level}`} className="hidden sm:block w-7 h-7 shrink-0"/>
           )}
           <div className="min-w-0">
             <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
@@ -1550,6 +1550,7 @@ function LeaderboardView({ onBack }) {
       if (!map[tag]) {
         map[tag] = {
           player_tag: tag, player_name: p.player_name, clan_name: p.clan_name,
+          town_hall_level: p.town_hall_level ?? null,
           stars_earned: 0, stars_conceded: 0, attacks_used: 0, attacks_available: 0, missed_attacks: 0,
           three_stars: 0, two_stars: 0, one_stars: 0, zero_stars: 0,
           three_stars_conceded: 0, two_stars_conceded: 0, one_stars_conceded: 0, zero_stars_conceded: 0,
@@ -1686,7 +1687,7 @@ function LeaderboardView({ onBack }) {
 
         {/* Tab toggle */}
         <div className="flex items-center justify-center gap-4">
-          <button onClick={()=>{setLbTab("player");setSortBy("efficiency");setSearch("");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
+          <button onClick={()=>{setLbTab("player");setSortBy("efficiency");setSearch("");setThFilter("all");setExpandedTag(null);setExpandedClan(null);}} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </button>
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">
