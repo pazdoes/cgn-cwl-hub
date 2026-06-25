@@ -185,14 +185,16 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
         </div>
       </div>
 
-      {/* Event type filter dropdown */}
-      <div className="mb-4">
-        <select multiple value={eventFilter} onChange={e => { setSelectedDate(null); setEventFilter([...e.target.selectedOptions].map(o => o.value)); }}
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none [color-scheme:dark]" size="3">
-          <option value="cwl">⚔️ CWL Events</option>
-          <option value="announcement">📢 Announcements</option>
-        </select>
-        <p className="text-[9px] text-slate-700 mt-1">Hold Cmd/Ctrl to select multiple</p>
+      {/* Event type filter checkboxes */}
+      <div className="flex items-center gap-3 mb-4">
+        {[["cwl","⚔️ CWL","#34d399"],["announcement","📢 Posts","#a78bfa"]].map(([val,label,col]) => (
+          <label key={val} className="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" checked={eventFilter.includes(val)}
+              onChange={e => { setSelectedDate(null); setEventFilter(prev => e.target.checked ? [...prev,val] : prev.filter(v=>v!==val)); }}
+              className="accent-purple-500 w-3 h-3"/>
+            <span className="text-[10px] text-slate-400" style={{color:col}}>{label}</span>
+          </label>
+        ))}
       </div>
 
       {/* Day headers */}
