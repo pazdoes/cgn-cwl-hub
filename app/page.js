@@ -717,6 +717,15 @@ function ClanPerformanceChart({ history }) {
         const idx = CWL_RANK_LIST.indexOf(rank);
         return { season, value: idx === -1 ? null : idx, displayValue: rank || null };
       }
+      if (selectedStat === "overall") {
+        const atk = parseFloat(row.attack_efficiency||0);
+        const def = parseFloat(row.defence_efficiency||0);
+        const wins = row.wars_won||0;
+        const v = (row.total_attacks_used > 0 && row.total_attacks_available > 0)
+          ? parseFloat(((atk*0.5)+((3-def)*0.3)+(wins/7*3*0.2)).toFixed(2))
+          : null;
+        return { season, value: v, displayValue: v };
+      }
       const v = parseFloat(row[selectedStat]);
       return { season, value: isNaN(v) ? null : v, displayValue: isNaN(v) ? null : v };
     });
