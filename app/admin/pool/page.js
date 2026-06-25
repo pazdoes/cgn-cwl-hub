@@ -209,6 +209,7 @@ export default function AdminPoolPage() {
   const [formatBusy, setFormatBusy] = useState(null);
   const [formatError, setFormatError] = useState({});
   const [rankBusy, setRankBusy] = useState(null);
+  const [absentBusy, setAbsentBusy] = useState(null);
   const [rankResult, setRankResult] = useState({});
 
   const [activeClanForm, setActiveClanForm] = useState(null);
@@ -510,18 +511,7 @@ export default function AdminPoolPage() {
     finally { setFormatBusy(null); }
   }
 
-  async function doSetAbsent(clan, absent) {
-    setAbsentBusy(clan);
-    try {
-      const res = await fetch("/api/admin/absent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-        body: JSON.stringify({ clanName: clan, absent }),
-      });
-      if (res.ok) setClanAbsent(prev => ({ ...prev, [clan]: absent }));
-    } catch {}
-    finally { setAbsentBusy(null); }
-  }
+
 
   async function doSetAbsent(clan, absent) {
     setAbsentBusy(clan);
@@ -535,7 +525,6 @@ export default function AdminPoolPage() {
     } catch {}
     finally { setAbsentBusy(null); }
   }
-
   async function doRefreshThLevels() {
     setThRefreshing(true); setThRefreshResult(null);
     try {
