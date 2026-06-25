@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { linkDiscordId, getOwnerSecretByDiscordId } from "@/lib/pool";
+import { linkDiscordId } from "@/lib/pool";
 import { cookies } from "next/headers";
 
 export async function POST(request) {
@@ -9,13 +9,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "No discordId provided" }, { status: 401 });
   }
 
-  // Check if this Discord ID already has linked accounts
-  const existing = await getOwnerSecretByDiscordId(discordId);
-  if (existing) {
-    return NextResponse.json({ linked: true, merged: false });
-  }
-
-  // Read the cookie-based owner_secret
   const cookieStore = await cookies();
   const cookieSecret = cookieStore.get("cwl_owner")?.value;
 
@@ -23,6 +16,7 @@ export async function POST(request) {
     return NextResponse.json({ linked: false, merged: false });
   }
 
+  // Always link — update all accounts under this cookie secret with discordId
   await linkDiscordId(cookieSecret, discordId);
   return NextResponse.json({ linked: true, merged: true });
 }
