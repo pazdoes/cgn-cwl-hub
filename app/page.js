@@ -1093,9 +1093,14 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
         <div className="shrink-0 w-6 flex items-center justify-center">
           <RankBadge rank={rank} />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
-          <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {p.town_hall_level && TH_ICONS[String(p.town_hall_level)] && (
+            <img src={TH_ICONS[String(p.town_hall_level)]} alt={`TH${p.town_hall_level}`} className="w-7 h-7 shrink-0"/>
+          )}
+          <div className="min-w-0">
+            <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
+            <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <StatPill label="EFF" value={parseFloat(p.efficiency).toFixed(2)} colour="text-purple-300" />
@@ -1442,6 +1447,7 @@ function LeaderboardView({ onBack }) {
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState("all");
   const [clanFilter, setClanFilter] = useState("all");
+  const [thFilter, setThFilter] = useState("all");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
@@ -1582,6 +1588,7 @@ function LeaderboardView({ onBack }) {
   const filtered = displayData
     ? displayData
         .filter(p => clanFilter === "all" || p.clan_name === clanFilter)
+        .filter(p => thFilter === "all" || String(p.town_hall_level) === thFilter)
         .filter(p => !searchLower ||
           p.player_name.toLowerCase().includes(searchLower) ||
           p.player_tag.toLowerCase().includes(searchLower) ||
@@ -1623,6 +1630,15 @@ function LeaderboardView({ onBack }) {
               className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
               <option value="all">All Clans</option>
               {clans.map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+          {lbTab === "player" && (
+            <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              <option value="all">All TH</option>
+              {[17,16,15,14,13,12,11,10,9,8].map(th=>(
+                <option key={th} value={String(th)}>TH{th}</option>
+              ))}
             </select>
           )}
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
