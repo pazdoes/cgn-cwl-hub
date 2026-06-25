@@ -512,7 +512,11 @@ function PlayerPerformanceChart({ allData, seasons }) {
     if (!allData || allData.length === 0 || trackedPlayers.length > 0) return;
     const seen = new Set();
     const top3 = [];
-    const sorted = [...allData].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0));
+    const sorted = [...allData].sort((a,b) => {
+      const oa = (a.attacks_used>0&&a.attacks_available>0) ? (parseFloat(a.efficiency||0)*0.6)+((3-parseFloat(a.defence_efficiency||0))*0.4) : 0;
+      const ob = (b.attacks_used>0&&b.attacks_available>0) ? (parseFloat(b.efficiency||0)*0.6)+((3-parseFloat(b.defence_efficiency||0))*0.4) : 0;
+      return ob - oa;
+    });
     for (const p of sorted) {
       if (seen.has(p.player_tag)) continue;
       seen.add(p.player_tag);
@@ -741,7 +745,11 @@ function ClanPerformanceChart({ history }) {
     if (!history || history.length === 0 || trackedClans.length > 0) return;
     const seen = new Set();
     const top3 = [];
-    const sorted = [...history].sort((a,b) => parseFloat(b.attack_efficiency||0) - parseFloat(a.attack_efficiency||0));
+    const sorted = [...history].sort((a,b) => {
+      const oa = (a.total_attacks_used>0&&a.total_attacks_available>0) ? (parseFloat(a.attack_efficiency||0)*0.5)+((3-parseFloat(a.defence_efficiency||0))*0.3)+((a.wars_won||0)/7*3*0.2) : 0;
+      const ob = (b.total_attacks_used>0&&b.total_attacks_available>0) ? (parseFloat(b.attack_efficiency||0)*0.5)+((3-parseFloat(b.defence_efficiency||0))*0.3)+((b.wars_won||0)/7*3*0.2) : 0;
+      return ob - oa;
+    });
     for (const r of sorted) {
       if (seen.has(r.clan_name)) continue;
       seen.add(r.clan_name);
