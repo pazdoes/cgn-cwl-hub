@@ -527,7 +527,6 @@ function PlayerPerformanceChart({ allData, seasons }) {
       .slice(0, 3);
     setTrackedPlayers(top3.map(p => ({ tag: p.player_tag, name: p.player_name, clan: p.clan_name, data: buildPlayerData(p.player_tag) })));
   }, [allData]);
-  }, [allData]);
 
   // Chart
   const CHART_W = 320, CHART_H = 180;
