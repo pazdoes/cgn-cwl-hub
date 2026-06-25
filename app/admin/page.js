@@ -117,6 +117,7 @@ const RECURRENCE_LABELS = { "24hr":"Daily","48hr":"Every 2 days","7days":"Weekly
 function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate, eventFilter = ["cwl","announcement"], setEventFilter }) {
   const { year, month } = calMonth;
   const firstDay = new Date(year, month, 1).getDay();
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   // Generate CWL events for this month
@@ -176,7 +177,31 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
-          <span className="text-xs text-slate-300 font-semibold min-w-[110px] text-center">{MONTH_NAMES[month]} {year}</span>
+          <div className="relative">
+            <button type="button" onClick={() => setShowMonthPicker(v => !v)}
+              className="text-xs text-slate-300 font-semibold min-w-[110px] text-center hover:text-white transition px-2 py-1 rounded-lg hover:bg-white/[0.05]">
+              {MONTH_NAMES[month]} {year}
+            </button>
+            {showMonthPicker && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden w-48">
+                <div className="p-2 max-h-64 overflow-y-auto space-y-0.5">
+                  {Array.from({length: 24}, (_, i) => {
+                    const d = new Date(); d.setDate(1);
+                    d.setMonth(d.getMonth() - 6 + i);
+                    const y = d.getFullYear(); const m = d.getMonth();
+                    const isActive = y === year && m === month;
+                    return (
+                      <button key={i} type="button"
+                        onClick={() => { setCalMonth({year:y,month:m}); setShowMonthPicker(false); setSelectedDate(null); }}
+                        className={`w-full text-left px-3 py-1.5 rounded-xl text-xs transition ${isActive ? "bg-purple-600/30 text-purple-200" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"}`}>
+                        {MONTH_NAMES[m]} {y}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
           <button onClick={nextMonth} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
@@ -185,16 +210,24 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
         </div>
       </div>
 
-      {/* Event type filter checkboxes */}
-      <div className="flex items-center gap-3 mb-4">
-        {[["cwl","⚔️ CWL","#34d399"],["announcement","📢 Posts","#a78bfa"]].map(([val,label,col]) => (
-          <label key={val} className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={eventFilter.includes(val)}
-              onChange={e => { setSelectedDate(null); setEventFilter(prev => e.target.checked ? [...prev,val] : prev.filter(v=>v!==val)); }}
-              className="accent-purple-500 w-3 h-3"/>
-            <span className="text-[10px] text-slate-400" style={{color:col}}>{label}</span>
-          </label>
-        ))}
+      {/* Event type filter — icon toggle pills */}
+      <div className="flex items-center gap-2 mb-4">
+        {/* CWL toggle */}
+        <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("cwl") ? prev.filter(v=>v!=="cwl") : [...prev,"cwl"]); }}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("cwl") ? "text-green-400 border-green-500/60 bg-green-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          CWL
+        </button>
+        {/* Announcements toggle */}
+        <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("announcement") ? prev.filter(v=>v!=="announcement") : [...prev,"announcement"]); }}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("announcement") ? "text-purple-400 border-purple-500/60 bg-purple-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+          </svg>
+          Posts
+        </button>
       </div>
 
       {/* Day headers */}
