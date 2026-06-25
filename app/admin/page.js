@@ -351,13 +351,15 @@ export default function AdminOverviewPage() {
   }, []);
 
   function loadData(p) {
+    const activePin = p || pin;
+    if (!activePin) return;
     setLoading(true);
-    fetch("/api/admin/members", { headers: { "x-officer-pin": p || pin } })
+    fetch("/api/admin/members", { headers: { "x-officer-pin": activePin } })
       .then(r => r.json())
       .then(d => setData(d))
       .catch(() => {})
       .finally(() => setLoading(false));
-    fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": p || pin } })
+    fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": activePin } })
       .then(r => r.json())
       .then(d => setScheduled(d.scheduled || []))
       .catch(() => setScheduled([]));
@@ -476,7 +478,7 @@ export default function AdminOverviewPage() {
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Member Directory</h2>
-              <button type="button" onClick={() => loadData()} title="Refresh"
+              <button type="button" onClick={() => loadData(pin)} title="Refresh"
                 className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-500 hover:text-white hover:border-white/20 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
