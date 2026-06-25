@@ -489,6 +489,21 @@ function PlayerPerformanceChart({ allData, seasons }) {
     setTrackedPlayers(prev => prev.map(p => ({ ...p, data: buildPlayerData(p.tag) })));
   }, [selectedStat, allData]);
 
+  // Auto-populate top 3 players by efficiency on first data load
+  useEffect(() => {
+    if (!allData || allData.length === 0 || trackedPlayers.length > 0) return;
+    const seen = new Set();
+    const top3 = [];
+    const sorted = [...allData].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0));
+    for (const p of sorted) {
+      if (seen.has(p.player_tag)) continue;
+      seen.add(p.player_tag);
+      top3.push({ tag: p.player_tag, name: p.player_name, clan: p.clan_name });
+      if (top3.length >= 3) break;
+    }
+    setTrackedPlayers(top3.map(p => ({ ...p, data: buildPlayerData(p.tag) })));
+  }, [allData]);
+
   // Chart
   const CHART_W = 320, CHART_H = 180;
   const PAD_L = 52, PAD_R = 12, PAD_T = 12, PAD_B = 28;
@@ -701,6 +716,21 @@ function ClanPerformanceChart({ history }) {
       data: buildClanData(c.name),
     })));
   }, [selectedStat, history]);
+
+  // Auto-populate top 3 clans by attack_efficiency on first data load
+  useEffect(() => {
+    if (!history || history.length === 0 || trackedClans.length > 0) return;
+    const seen = new Set();
+    const top3 = [];
+    const sorted = [...history].sort((a,b) => parseFloat(b.attack_efficiency||0) - parseFloat(a.attack_efficiency||0));
+    for (const r of sorted) {
+      if (seen.has(r.clan_name)) continue;
+      seen.add(r.clan_name);
+      top3.push(r.clan_name);
+      if (top3.length >= 3) break;
+    }
+    setTrackedClans(top3.map(name => ({ name, data: buildClanData(name) })));
+  }, [history]);
 
   // Chart
   const CHART_W = 320, CHART_H = 180;
