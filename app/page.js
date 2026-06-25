@@ -1637,7 +1637,7 @@ function LeaderboardView({ onBack }) {
             <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
               className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
               <option value="all">All TH</option>
-              {[17,16,15,14,13,12,11,10,9,8].map(th=>(
+              {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
                 <option key={th} value={String(th)}>TH{th}</option>
               ))}
             </select>
