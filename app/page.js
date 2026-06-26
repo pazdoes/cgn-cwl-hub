@@ -2008,7 +2008,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
         <h1 className="text-2xl font-thin tracking-widest">{selectedClan}</h1>
         <p className="text-xs text-slate-400">{format}</p>
-        {season && <p className="text-[10px] text-purple-400/70 tracking-widest">{season}</p>}
         {clanLink && (
           <a href={clanLink} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition mt-1">
