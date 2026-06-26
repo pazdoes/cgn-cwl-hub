@@ -2274,49 +2274,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       </div>
 
     </div>
-
-        <div className="w-7 h-7 shrink-0" />
-      )}
-      <span className="font-medium text-white truncate">
-        {player.account}
-      </span>
-    </div>
-
-    {/* Right: status circle + Open clan button */}
-    <div className="flex items-center gap-2 shrink-0 ml-2">
-      {player.status?.toLowerCase() === "confirmed" && (
-        <span className="w-2.5 h-2.5 rounded-full bg-green-400 shrink-0" title="Confirmed" />
-      )}
-      {player.status?.toLowerCase() === "substitute" && (
-        <span className="w-2.5 h-2.5 rounded-full bg-orange-400 shrink-0" title="Substitute" />
-      )}
-      {player.clanLink && (
-        <a
-          href={player.clanLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="
-            inline-flex items-center gap-1 shrink-0
-            px-2 py-0.5 rounded-full text-[10px] font-semibold
-            bg-purple-600/20 text-purple-300 border border-purple-500/20
-            hover:bg-purple-600/40 hover:text-white transition
-          "
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-          Open
-        </a>
-      )}
-    </div>
-  </div>
-))}
-
-      </div>
-
-    ) : (
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {clans.map(clan => {
