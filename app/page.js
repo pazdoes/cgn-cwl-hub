@@ -1064,15 +1064,6 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
-              {isExpanded && (
-                <a href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_8px_rgba(168,85,247,0.2)] transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                  </svg>
-                </a>
-              )}
             </div>
             <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
           </div>
@@ -1202,23 +1193,32 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
             </div>
           )}
 
-          {/* View toggle — minimal bare chevrons */}
-          <div className="flex items-center justify-center gap-4 pt-3 mt-2 border-t border-white/[0.06]">
-            <button onClick={e => { e.stopPropagation(); setCardView("stats"); }}
-              className="text-slate-500 hover:text-slate-300 transition p-1" title="Stats view">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+          {/* View toggle — minimal bare chevrons + profile link flush right */}
+          <div className="flex items-center pt-3 mt-2 border-t border-white/[0.06]">
+            <div className="flex-1 flex items-center justify-center gap-4">
+              <button onClick={e => { e.stopPropagation(); setCardView("stats"); }}
+                className="text-slate-500 hover:text-slate-300 transition p-1" title="Stats view">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
+                {cardView === "stats" ? "Stats" : "Breakdown"}
+              </span>
+              <button onClick={e => { e.stopPropagation(); setCardView("breakdown"); }}
+                className="text-slate-500 hover:text-slate-300 transition p-1" title="Breakdown view">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+            <a href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_8px_rgba(168,85,247,0.2)] transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
-            </button>
-            <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
-              {cardView === "stats" ? "Stats" : "Breakdown"}
-            </span>
-            <button onClick={e => { e.stopPropagation(); setCardView("breakdown"); }}
-              className="text-slate-500 hover:text-slate-300 transition p-1" title="Breakdown view">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-              </svg>
-            </button>
+            </a>
           </div>
         </div>
       )}
