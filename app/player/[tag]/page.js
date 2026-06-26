@@ -5,20 +5,20 @@ import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
 import { LargePie } from "@/lib/components";
 
-const RANK_COLOURS = {
-  1: { colour: "#F59E0B", ring: "#D97706" },
-  2: { colour: "#94A3B8", ring: "#64748B" },
-  3: { colour: "#B45309", ring: "#92400E" },
-};
-
 function MedalIcon({ rank }) {
-  const r = RANK_COLOURS[rank];
-  if (!r) return null;
+  const colours = {
+    1: { stroke: "#FBBF24", border: "border-yellow-400/40", bg: "bg-yellow-400/10" },
+    2: { stroke: "#94A3B8", border: "border-slate-300/30",  bg: "bg-slate-300/10"  },
+    3: { stroke: "#B45309", border: "border-amber-600/40",  bg: "bg-amber-600/10"  },
+  };
+  const c = colours[rank];
+  if (!c) return null;
   return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="14" cy="14" r="12" fill={r.colour} stroke={r.ring} strokeWidth="2"/>
-      <text x="14" y="19" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#fff">{rank}</text>
-    </svg>
+    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full border ${c.border} ${c.bg}`}>
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke={c.stroke} strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+    </span>
   );
 }
 
