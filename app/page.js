@@ -141,7 +141,7 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
               <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <h2 className="text-lg font-bold truncate">{clan}</h2>
-                  <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  <span className="shrink-0 inline-block text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">
                     {clanPlayers.length}
                   </span>
                 </div>
@@ -150,15 +150,10 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
                     href={clanLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="
-                      shrink-0 inline-flex items-center gap-1.5
-                      px-3 py-1.5 rounded-full text-xs font-semibold
-                      bg-purple-600/30 text-purple-200 border border-purple-500/30
-                      hover:bg-purple-600/50 hover:text-white transition
-                    "
+                    className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                     </svg>
                     Open
                   </a>
