@@ -6,6 +6,24 @@ import Link from "next/link";
 import { getLeagueStyles } from "../lib/leagueColors";
 import { CWL_ICONS, TH_ICONS } from "../lib/icons";
 import { MiniPie, LargePie, StarIcons, StatPill, RankBadge } from "../lib/components";
+
+function StarBars({ three, two, one, zero }) {
+  const total = (three||0)+(two||0)+(one||0)+(zero||0);
+  if (!total) return null;
+  return (
+    <div className="flex-1 flex flex-col justify-center gap-1.5">
+      {[["3★",three,"#86efac"],["2★",two,"#a78bfa"],["1★",one,"#fbbf24"],["0★",zero,"#475569"]].map(([lbl,val,col]) => (
+        <div key={lbl} className="flex items-center gap-2">
+          <span className="text-[9px] text-slate-500 w-5 text-right shrink-0">{lbl}</span>
+          <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-full rounded-full" style={{width: total > 0 ? `${((val||0)/total*100).toFixed(0)}%` : "0%", background: col}}/>
+          </div>
+          <span className="text-[9px] text-slate-500 w-4 text-right shrink-0">{val||0}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 import { BRANDING } from "../lib/branding";
 import DiscordWidget from "./components/DiscordWidget";
 
@@ -1156,34 +1174,11 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
                   </svg>
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack Breakdown</span>
                 </div>
-                <div className="flex items-start gap-4">
-                  {/* Large pie */}
+                <div className="flex items-center gap-4">
                   <div className="shrink-0">
                     <LargePie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0} size={80}/>
                   </div>
-                  {/* Star counts — match pie width, one row */}
-                  <div className="flex-1 flex flex-col justify-center gap-2">
-                    {/* 3 star */}
-                    <div className="flex items-center justify-between">
-                      <StarIcons count={3} colour="text-green-300"/>
-                      <span className="text-sm font-bold text-green-300">{p.three_stars ?? "—"}</span>
-                    </div>
-                    {/* 2 star */}
-                    <div className="flex items-center justify-between">
-                      <StarIcons count={2} colour="text-purple-400"/>
-                      <span className="text-sm font-bold text-purple-400">{p.two_stars ?? "—"}</span>
-                    </div>
-                    {/* 1 star */}
-                    <div className="flex items-center justify-between">
-                      <StarIcons count={1} colour="text-amber-400"/>
-                      <span className="text-sm font-bold text-amber-400">{p.one_stars ?? "—"}</span>
-                    </div>
-                    {/* 0 star */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-600">0★</span>
-                      <span className="text-sm font-bold text-slate-500">{p.zero_stars ?? "—"}</span>
-                    </div>
-                  </div>
+                  <StarBars three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
                 </div>
               </div>
 
@@ -1197,29 +1192,11 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
                   </svg>
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence Breakdown</span>
                 </div>
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-4">
                   <div className="shrink-0">
                     <LargePie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0} size={80}/>
                   </div>
-                  <div className="flex-1 flex flex-col justify-center gap-2">
-                    {/* Inverse order for defence: 0★ (best) → 3★ (worst) */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-600">0★</span>
-                      <span className="text-sm font-bold text-slate-500">{p.zero_stars_conceded ?? "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <StarIcons count={1} colour="text-amber-400"/>
-                      <span className="text-sm font-bold text-amber-400">{p.one_stars_conceded ?? "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <StarIcons count={2} colour="text-purple-400"/>
-                      <span className="text-sm font-bold text-purple-400">{p.two_stars_conceded ?? "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <StarIcons count={3} colour="text-green-300"/>
-                      <span className="text-sm font-bold text-green-300">{p.three_stars_conceded ?? "—"}</span>
-                    </div>
-                  </div>
+                  <StarBars three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
                 </div>
               </div>
             </div>
