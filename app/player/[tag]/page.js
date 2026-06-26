@@ -46,7 +46,15 @@ function StarBars({ three, two, one, zero }) {
 
 function OverallChart({ seasons }) {
   const valid = [...seasons].filter(s => s != null && s.overall != null).reverse();
-  if (valid.length < 1) return null;
+  if (valid.length === 0) return null;
+  if (valid.length === 1) {
+    return (
+      <div className="flex flex-col items-center justify-center py-4">
+        <span className="text-2xl font-thin text-purple-300">{parseFloat(valid[0].overall).toFixed(2)}</span>
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-1">{valid[0].season}</p>
+      </div>
+    );
+  }
   const W = 280, H = 80, PAD_L = 8, PAD_R = 8, PAD_T = 8, PAD_B = 20;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
