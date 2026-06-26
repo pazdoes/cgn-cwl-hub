@@ -6,19 +6,13 @@ import { BRANDING } from "@/lib/branding";
 import { LargePie } from "@/lib/components";
 
 function MedalIcon({ rank }) {
-  const colours = {
-    1: { stroke: "#D4AF37",   bg: "rgba(212,175,55,0.12)",  border: "rgba(212,175,55,0.4)"  },
-    2: { stroke: "#A7A7AD", bg: "rgba(167,167,173,0.12)", border: "rgba(167,167,173,0.4)" },
-    3: { stroke: "#CD7F32", bg: "rgba(205,127,50,0.12)",  border: "rgba(205,127,50,0.4)"  },
-  };
-  const c = colours[rank];
-  if (!c) return null;
+  const colours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
+  const col = colours[rank];
+  if (!col) return null;
   return (
-    <span style={{background: c.bg, border: `1px solid ${c.border}`}} className="inline-flex items-center justify-center w-8 h-8 rounded-full">
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke={c.stroke} strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-      </svg>
-    </span>
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={col} strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+    </svg>
   );
 }
 
@@ -189,28 +183,28 @@ export default function PlayerProfilePage() {
             {TH_ICONS[String(data.town_hall_level)] && (
               <img src={TH_ICONS[String(data.town_hall_level)]} alt={`TH${data.town_hall_level}`} className="w-10 h-10 shrink-0"/>
             )}
-            <h1 className="text-2xl font-thin tracking-widest">{data.player_name}</h1>
+            {rank <= 3 && <MedalIcon rank={rank}/>}
+            <h1 className="text-2xl font-thin tracking-widest" style={{color: rankColour || "white"}}>{data.player_name}</h1>
           </div>
 
           {latestOverall != null && (
-            <div className="flex items-center gap-2 justify-center mt-1">
-              {rank <= 3 && <MedalIcon rank={rank}/>}
-              <div className="flex flex-col items-center">
-                <span className="text-3xl font-thin" style={{color: rankColour || "#c4b5fd"}}>
-                  {parseFloat(latestOverall).toFixed(2)}
-                </span>
+            <div className="flex flex-col items-center mt-1">
+              <span className="text-3xl font-thin text-purple-300">
+                {parseFloat(latestOverall).toFixed(2)}
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">Overall Rating</p>
+                {trend === "up" && (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
+                  </svg>
+                )}
+                {trend === "down" && (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                )}
               </div>
-              {trend === "up" && (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
-                </svg>
-              )}
-              {trend === "down" && (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                </svg>
-              )}
             </div>
           )}
 
