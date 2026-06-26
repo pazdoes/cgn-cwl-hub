@@ -2338,7 +2338,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 </div>
 
     <div className="space-y-2 mb-8 relative z-10">
-    <div className="space-y-2 mb-8 relative z-10">
       {/* Row 1: Leaderboard — full width */}
       <div
         onClick={() => { window.history.pushState({}, "", "#leaderboard"); setStatView("leaderboard"); }}
@@ -2393,25 +2392,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
           <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Avg TH</div>
         </div>
       </div>
-    </div>
-
-        <div
-          onClick={() => { window.history.pushState({}, "", "#clans"); setStatView("clans"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-          <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{clans.length}</div>
-          <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Clans</div>
-        </div>
-
-        <div
-          onClick={() => { window.history.pushState({}, "", "#avgth"); setStatView("avgth"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-          <div className="text-3xl font-thin tracking-widest text-white tabular-nums">
-            {players.length ? (players.reduce((sum, p) => sum + Number(p.townHall || 0), 0) / players.length).toFixed(1) : "-"}
-          </div>
-          <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Avg TH</div>
-        </div>
-      </div>
-
     </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
