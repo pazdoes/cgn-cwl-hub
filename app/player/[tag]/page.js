@@ -7,14 +7,14 @@ import { LargePie } from "@/lib/components";
 
 function MedalIcon({ rank }) {
   const colours = {
-    1: { stroke: "#FBBF24", border: "border-yellow-400/40", bg: "bg-yellow-400/10" },
-    2: { stroke: "#94A3B8", border: "border-slate-300/30",  bg: "bg-slate-300/10"  },
-    3: { stroke: "#B45309", border: "border-amber-600/40",  bg: "bg-amber-600/10"  },
+    1: { stroke: "#D4AF37",   bg: "rgba(212,175,55,0.12)",  border: "rgba(212,175,55,0.4)"  },
+    2: { stroke: "#A7A7AD", bg: "rgba(167,167,173,0.12)", border: "rgba(167,167,173,0.4)" },
+    3: { stroke: "#CD7F32", bg: "rgba(205,127,50,0.12)",  border: "rgba(205,127,50,0.4)"  },
   };
   const c = colours[rank];
   if (!c) return null;
   return (
-    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full border ${c.border} ${c.bg}`}>
+    <span style={{background: c.bg, border: `1px solid ${c.border}`}} className="inline-flex items-center justify-center w-8 h-8 rounded-full">
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke={c.stroke} strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
       </svg>
@@ -137,7 +137,7 @@ export default function PlayerProfilePage() {
   const prev = data.seasons[1] || null;
   const latestOverall = latest?.overall;
   const rank = data.currentRank;
-  const rankColour = rank === 1 ? "#F59E0B" : rank === 2 ? "#94A3B8" : rank === 3 ? "#B45309" : null;
+  const rankColour = rank === 1 ? "#D4AF37" : rank === 2 ? "#A7A7AD" : rank === 3 ? "#CD7F32" : null;
 
   const totalStars   = data.seasons.reduce((s,r)=>s+(r.stars_earned||0),0);
   const totalMissed  = data.seasons.reduce((s,r)=>s+(r.missed_attacks||0),0);
@@ -174,7 +174,7 @@ export default function PlayerProfilePage() {
   const careerZeroC  = data.seasons.reduce((s,r)=>s+(r.zero_stars_conceded||0),0);
 
   // Hero border for top 3
-  const heroBorder = rank === 1 ? "border-yellow-400/40" : rank === 2 ? "border-slate-300/30" : rank === 3 ? "border-amber-600/40" : "border-white/10";
+  const heroBorderStyle = rank === 1 ? `1px solid rgba(212,175,55,0.4)` : rank === 2 ? `1px solid rgba(167,167,173,0.4)` : rank === 3 ? `1px solid rgba(205,127,50,0.4)` : null;
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
@@ -183,7 +183,7 @@ export default function PlayerProfilePage() {
       </div>
 
       {/* Hero tile */}
-      <div className={`relative z-10 rounded-3xl border bg-white/[0.04] backdrop-blur-xl p-5 mb-4 ${heroBorder}`}>
+      <div className="relative z-10 rounded-3xl bg-white/[0.04] backdrop-blur-xl p-5 mb-4" style={{border: heroBorderStyle || "1px solid rgba(255,255,255,0.1)"}}>
         <div className="flex flex-col items-center text-center gap-2">
           <div className="flex items-center justify-center gap-3">
             {TH_ICONS[String(data.town_hall_level)] && (
@@ -218,7 +218,6 @@ export default function PlayerProfilePage() {
             <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{latest?.clan_name?.split(" ")[0] || "—"}</span>
             <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">TH{data.town_hall_level}</span>
             <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
-            {rank && <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">#{rank} overall</span>}
           </div>
         </div>
 
