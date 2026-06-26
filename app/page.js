@@ -1834,7 +1834,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
     // Stat tile views use reserved hash names; anything else is treated
     // as a clan name (the original selectedClan behaviour).
-    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard") {
+    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard" || hash === "recap") {
       setStatView(hash);
       setSelectedClan(null);
       setHighlightedAccount(null);
@@ -1885,6 +1885,9 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
   if (statView === "leaderboard") {
     return <LeaderboardView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+  }
+  if (statView === "recap") {
+    return <RecapView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
 
   if (selectedClan) {
