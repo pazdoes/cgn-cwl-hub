@@ -2000,188 +2000,69 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   }
 
   if (selectedClan) {
-
   const rank = clanPlayers?.[0]?.cwlRank ?? "unranked";
-
-  const season =
-    clanPlayers[0]?.season || "";
-
-  const clanLink =
-    clanPlayers[0]?.clanLink || "";
-
-  // CWL Format now comes from the Sheet's own CWL Format column (item 5),
-  // not inferred from row count — row count alone became unreliable once
-  // Substitutes could push a clan's total assigned players past 15/30
-  // without that meaning the clan's actual format changed. Falls back to
-  // the old row-count guess only if no clan tab row has a format value
-  // set yet (e.g. before any admin has touched the format toggle).
-  const format =
-    clanPlayers[0]?.cwlFormat ||
-    (clanPlayers.length >= 30 ? "30v30" : "15v15");
-
+  const season = clanPlayers[0]?.season || "";
+  const clanLink = clanPlayers[0]?.clanLink || "";
+  const format = clanPlayers[0]?.cwlFormat || (clanPlayers.length >= 30 ? "30v30" : "15v15");
   return (
-
-    <main
-  className="
-    min-h-screen
-    overflow-x-hidden
-    w-full
-    max-w-full
-    bg-gradient-to-b
-    from-[#0b1020]
-    via-[#070b17]
-    to-[#05070f]
-    text-white
-    p-6
-    pb-6
-  "
->
-
-  <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
-</div>
-
-
-
-<div className="
-  rounded-3xl border border-white/10
-  bg-white/[0.04] backdrop-blur-xl
-  p-6 mb-6 shadow-xl
-  flex flex-col items-center text-center
-">
-  {/* Rank label */}
-  <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">
-    {rank}
-  </div>
-
-  {/* CWL icon */}
-  <img
-    src={CWL_ICONS[rank] || CWL_ICONS["unranked"]}
-    alt={rank}
-    className="w-24 h-24 mx-auto mb-4"
-  />
-
-  {/* Clan name */}
-  <h1 className="text-2xl font-bold">{selectedClan}</h1>
-
-  {/* Format + season */}
-  <div className="text-lg text-slate-300 mt-4">{format}</div>
-  <div className="text-sm text-slate-500 mt-2">{season}</div>
-
-  {/* Open Clan button */}
-  {clanLink && (
-    <div className="mt-5">
-      <a
-        href={clanLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="
-          inline-flex items-center gap-2
-          px-6 py-3 rounded-full
-          bg-purple-600/30 text-purple-200
-          border border-purple-500/30
-          hover:bg-purple-600/50 hover:text-white
-          transition font-semibold text-sm
-        "
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-        Open Clan
-      </a>
-    </div>
-  )}
-</div>
-
-      <div className="space-y-3">
-
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center">
+        <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12 mb-3"/>
+        <h1 className="text-2xl font-thin tracking-widest mb-3">{selectedClan}</h1>
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400">{rank}</span>
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400">{format}</span>
+          {season && <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">{season}</span>}
+          {clanLink && (
+            <a href={clanLink} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+              Open
+            </a>
+          )}
+        </div>
+      </div>
+      <div className="relative z-10 space-y-2">
         {[...clanPlayers]
           .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
           .map((player, index) => (
-
-          <motion.div
-  key={`${player.clan}-${player.account}-${player.position}`}
-  initial={{ opacity: 0, y: 10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.2 }}
-  className={`
-    rounded-2xl border backdrop-blur-xl p-4 shadow-lg transition
-    hover:scale-[1.01]
-    ${highlightedAccount && player.playerTag === highlightedAccount
-      ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-500/50"
-      : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"
-    }
-  `}
->
-
-            <div className="flex items-center w-full justify-between min-w-0 gap-3">
-
-  {/* LEFT SIDE */}
-  <div className="flex items-center min-w-0 overflow-hidden">
-
-  <div className="text-lg font-bold w-8">
-    {index + 1}
-  </div>
-
-  <img
-    src={TH_ICONS[player.townHall]}
-    alt={player.townHall}
-    className="w-10 h-10 ml-1"
-  />
-
-  <div className="flex flex-col min-w-0 ml-3">
-      <span className="font-semibold text-white truncate block max-w-[140px]">
-  {player.account}
-</span>
-
-      <span className="text-xs text-slate-500 truncate block max-w-[120px]">
-  {player.clan}
-</span>
-    </div>
-
-  </div>
-
-  {/* RIGHT SIDE */}
-<div className="flex flex-col items-end gap-2 text-sm text-slate-300">
-
-  {/* Row 1 — Status */}
-  <span
-    className={`
-      px-2
-      py-1
-      rounded-full
-      text-xs
-      font-semibold
-      ${
-        player.status?.toLowerCase() === "confirmed"
-          ? "bg-green-500/20 text-green-300 border border-green-500/30"
-          : player.status?.toLowerCase() === "substitute"
-          ? "bg-orange-500/20 text-orange-300 border border-orange-500/30"
-          : player.status?.toLowerCase() === "active"
-          ? "bg-green-500/20 text-green-300 border border-green-500/30"
-          : player.status?.toLowerCase() === "benched"
-          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-          : player.status?.toLowerCase() === "inactive"
-          ? "bg-red-500/20 text-red-300 border border-red-500/30"
-          : "bg-slate-500/20 text-slate-300 border border-slate-500/30"
-      }
-    `}
-  >
-    {player.status}
-  </span>
-
-  </div>
-
-</div>
-
-          </motion.div>
-
+          <div key={`${player.clan}-${player.account}-${player.position}`}
+            className={`rounded-2xl border backdrop-blur-xl p-3 transition
+              ${highlightedAccount && player.playerTag === highlightedAccount
+                ? "border-purple-500/40 bg-purple-500/10"
+                : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"
+              }`}>
+            <div className="flex items-center w-full justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-xs text-slate-600 w-5 text-right shrink-0">{index + 1}</span>
+                {TH_ICONS[player.townHall] && (
+                  <img src={TH_ICONS[player.townHall]} alt={`TH${player.townHall}`} className="w-8 h-8 shrink-0"/>
+                )}
+                <span className="text-sm font-semibold text-white truncate">{player.account}</span>
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold shrink-0
+                ${player.status?.toLowerCase() === "confirmed" || player.status?.toLowerCase() === "active"
+                  ? "bg-green-500/10 text-green-400 border-green-500/30"
+                  : player.status?.toLowerCase() === "substitute"
+                  ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                  : player.status?.toLowerCase() === "benched"
+                  ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
+                  : player.status?.toLowerCase() === "inactive"
+                  ? "bg-red-500/10 text-red-400 border-red-500/30"
+                  : "bg-white/[0.04] text-slate-500 border-white/10"
+                }`}>
+                {player.status}
+              </span>
+            </div>
+          </div>
         ))}
-
       </div>
-
     </main>
-
   );
 }
   return (
