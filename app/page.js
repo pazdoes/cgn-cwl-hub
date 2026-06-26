@@ -95,7 +95,7 @@ function PlayersView({ players, onBack, rosterSeasons = [] }) {
                     <p className="text-xs text-slate-500 font-mono mt-0.5">{player.playerTag}</p>
                   </div>
                 </div>
-                <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span className="shrink-0 inline-block text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">
                   {player.clan}
                 </span>
               </div>
@@ -141,7 +141,7 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
               <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <h2 className="text-lg font-bold truncate">{clan}</h2>
-                  <span className="shrink-0 inline-block text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">
+                  <span className="shrink-0 inline-block text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">
                     {clanPlayers.length}
                   </span>
                 </div>
