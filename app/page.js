@@ -2020,6 +2020,8 @@ function LeaderboardView({ onBack }) {
 
 export default function Home() {
   const [players, setPlayers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [selectedClan, setSelectedClan] = useState(null);
   const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
 const [rosterSeasons, setRosterSeasons] = useState([]);
 
