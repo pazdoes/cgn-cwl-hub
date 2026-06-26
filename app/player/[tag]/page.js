@@ -216,11 +216,7 @@ export default function PlayerProfilePage() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{latest?.clan_name?.split(" ")[0] || "—"}</span>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">TH{data.town_hall_level}</span>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
-          </div>
+
         </div>
 
         <div className="flex items-center justify-center gap-4 pt-4 mt-3">
@@ -263,7 +259,10 @@ export default function PlayerProfilePage() {
               <StarBars three={careerThree} two={careerTwo} one={careerOne} zero={careerZero}/>
             </div>
           </div>
-          <OverallChart seasons={data.seasons}/>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
+            <OverallChart seasons={data.seasons}/>
+          </div>
         </div>
       )}
 
