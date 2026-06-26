@@ -1139,7 +1139,18 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
             <img src={TH_ICONS[String(p.town_hall_level)]} alt={`TH${p.town_hall_level}`} className="hidden sm:block w-7 h-7 shrink-0"/>
           )}
           <div className="min-w-0">
-            <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="font-semibold text-sm text-white truncate">{p.player_name}</p>
+              {isExpanded && (
+                <a href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="shrink-0 text-slate-600 hover:text-purple-400 transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                </a>
+              )}
+            </div>
             <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
           </div>
         </div>
