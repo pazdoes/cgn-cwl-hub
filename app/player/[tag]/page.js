@@ -45,7 +45,7 @@ function StarBars({ three, two, one, zero }) {
 }
 
 function OverallChart({ seasons }) {
-  const valid = [...seasons].reverse().filter(s => s.overall != null);
+  const valid = [...seasons].filter(s => s != null && s.overall != null).reverse();
   if (valid.length < 1) return null;
   const W = 280, H = 80, PAD_L = 8, PAD_R = 8, PAD_T = 8, PAD_B = 20;
   const plotW = W - PAD_L - PAD_R;
