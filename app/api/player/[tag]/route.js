@@ -26,7 +26,6 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: "Player not found" }, { status: 404 });
   }
 
-  // Compute overall per season
   const seasons = rows.map(r => ({
     ...r,
     overall: (r.attacks_used > 0 && r.attacks_available > 0)
@@ -34,7 +33,25 @@ export async function GET(request, { params }) {
       : null,
   }));
 
-  // Career bests
+  // Get rank among all players for latest season
+  const latestSeason = seasons[0]?.season;
+  let currentRank = null;
+  if (latestSeason) {
+    const allLatest = await sql`
+      SELECT player_tag, efficiency, defence_efficiency, attacks_used, attacks_available
+      FROM player_cwl_stats
+      WHERE season = ${latestSeason} AND attacks_used > 0 AND attacks_available > 0
+    `;
+    const ranked = allLatest
+      .map(r => ({
+        tag: r.player_tag,
+        overall: (parseFloat(r.efficiency||0)*0.6)+((3-parseFloat(r.defence_efficiency||0))*0.4)
+      }))
+      .sort((a,b) => b.overall - a.overall);
+    const idx = ranked.findIndex(r => r.tag === playerTag);
+    if (idx !== -1) currentRank = idx + 1;
+  }
+
   const withOverall = seasons.filter(s => s.overall !== null);
   const bestOverall = withOverall.reduce((best, s) => s.overall > (best?.overall||0) ? s : best, null);
   const bestEfficiency = seasons.reduce((best, s) => parseFloat(s.efficiency||0) > parseFloat(best?.efficiency||0) ? s : best, null);
@@ -47,5 +64,6 @@ export async function GET(request, { params }) {
     bestOverall,
     bestEfficiency,
     totalSeasons: seasons.length,
+    currentRank,
   });
 }
