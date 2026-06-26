@@ -46,7 +46,7 @@ function StarBars({ three, two, one, zero }) {
 
 function OverallChart({ seasons }) {
   const valid = [...seasons].reverse().filter(s => s.overall != null);
-  if (valid.length < 2) return null;
+  if (valid.length < 1) return null;
   const W = 280, H = 80, PAD_L = 8, PAD_R = 8, PAD_T = 8, PAD_B = 20;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
@@ -245,7 +245,7 @@ export default function PlayerProfilePage() {
               {data.bestEfficiency && <StatBox label="Best Atk EFF" value={parseFloat(data.bestEfficiency.efficiency).toFixed(2)} colour="text-green-400"/>}
               <StatBox label="Missed" value={totalMissed} colour={totalMissed > 0 ? "text-red-400" : "text-slate-500"}/>
             </div>
-            <OverallChart seasons={data.seasons}/>
+
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
@@ -324,6 +324,12 @@ export default function PlayerProfilePage() {
               <LargePie three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0} size={64}/>
               <StarBars three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0}/>
             </div>
+          </div>
+
+          {/* Overall rating trend chart */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
+            <OverallChart seasons={data.seasons}/>
           </div>
 
           {/* Season history table — best season highlighted, CWL rank included */}
