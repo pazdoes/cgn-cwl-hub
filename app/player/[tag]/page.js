@@ -3,29 +3,35 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
-import { LargePie, StarIcons } from "@/lib/components";
+import { LargePie } from "@/lib/components";
 
 function StatBox({ label, value, colour = "text-white" }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 text-center">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 flex flex-col items-center justify-center text-center h-full">
       <p className={`text-sm font-bold ${colour}`}>{value}</p>
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">{label}</p>
     </div>
   );
 }
 
-function StarBar({ three, two, one, zero }) {
+function StarBars({ three, two, one, zero }) {
   const total = (three||0)+(two||0)+(one||0)+(zero||0);
   if (!total) return null;
+  const bars = [
+    ["3★", three, "#86efac"],
+    ["2★", two,   "#a78bfa"],
+    ["1★", one,   "#fbbf24"],
+    ["0★", zero,  "#475569"],
+  ];
   return (
-    <div className="space-y-1.5">
-      {[["3★", three, "#86efac"],["2★", two, "#a78bfa"],["1★", one, "#fbbf24"],["0★", zero, "#475569"]].map(([lbl,val,col]) => (
+    <div className="flex-1 flex flex-col justify-center gap-1.5">
+      {bars.map(([lbl, val, col]) => (
         <div key={lbl} className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-500 w-5 text-right">{lbl}</span>
+          <span className="text-[9px] text-slate-500 w-5 text-right shrink-0">{lbl}</span>
           <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <div className="h-full rounded-full" style={{width:`${total>0?((val||0)/total*100).toFixed(0):0}%`, background:col}}/>
+            <div className="h-full rounded-full transition-all" style={{width: total > 0 ? `${((val||0)/total*100).toFixed(0)}%` : "0%", background: col}}/>
           </div>
-          <span className="text-[10px] text-slate-500 w-6 text-right">{val||0}</span>
+          <span className="text-[9px] text-slate-500 w-4 text-right shrink-0">{val||0}</span>
         </div>
       ))}
     </div>
@@ -51,7 +57,7 @@ export default function PlayerProfilePage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [view, setView] = useState("overview"); // "overview" | "stats"
+  const [view, setView] = useState("overview");
 
   useEffect(() => {
     if (!tag) return;
@@ -87,7 +93,6 @@ export default function PlayerProfilePage() {
     ? (data.seasons.reduce((s, r) => s + parseFloat(r.defence_efficiency||0), 0) / data.seasons.length).toFixed(2)
     : "—";
 
-  // Career totals for pie charts
   const careerThree = data.seasons.reduce((s,r)=>s+(r.three_stars||0),0);
   const careerTwo   = data.seasons.reduce((s,r)=>s+(r.two_stars||0),0);
   const careerOne   = data.seasons.reduce((s,r)=>s+(r.one_stars||0),0);
@@ -112,21 +117,21 @@ export default function PlayerProfilePage() {
             )}
             <h1 className="text-2xl font-thin tracking-widest">{data.player_name}</h1>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{latest?.clan_name?.split(" ")[0] || "—"}</span>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">TH{data.town_hall_level}</span>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
-          </div>
           {latestOverall != null && (
             <div className="mt-1">
               <span className="text-3xl font-thin text-purple-300">{parseFloat(latestOverall).toFixed(2)}</span>
               <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Overall Rating</p>
             </div>
           )}
+          <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{latest?.clan_name?.split(" ")[0] || "—"}</span>
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">TH{data.town_hall_level}</span>
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
+          </div>
         </div>
 
-        {/* Tab toggle */}
-        <div className="flex items-center justify-center gap-4 pt-4 mt-3 border-t border-white/[0.06]">
+        {/* Tab toggle — no separator */}
+        <div className="flex items-center justify-center gap-4 pt-4 mt-3">
           <button onClick={() => setView("overview")}
             className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -148,7 +153,6 @@ export default function PlayerProfilePage() {
       {/* ── OVERVIEW VIEW ── */}
       {view === "overview" && (
         <div className="relative z-10 space-y-4">
-          {/* Career stats */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career</p>
             <div className="grid grid-cols-3 gap-2">
@@ -161,10 +165,13 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
-          {/* Career attack breakdown */}
+          {/* Career attack breakdown — pie + bars */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Attack Breakdown</p>
-            <StarBar three={careerThree} two={careerTwo} one={careerOne} zero={careerZero}/>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career Attack Breakdown</p>
+            <div className="flex items-center gap-4">
+              <LargePie three={careerThree} two={careerTwo} one={careerOne} zero={careerZero} size={72}/>
+              <StarBars three={careerThree} two={careerTwo} one={careerOne} zero={careerZero}/>
+            </div>
           </div>
         </div>
       )}
@@ -173,7 +180,7 @@ export default function PlayerProfilePage() {
       {view === "stats" && (
         <div className="relative z-10 space-y-4">
 
-          {/* Latest season — attack */}
+          {/* Latest season attack */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <div className="flex items-center gap-1.5 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -181,6 +188,7 @@ export default function PlayerProfilePage() {
               </svg>
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack · {latest?.season}</span>
             </div>
+            {/* Top row: 3 stat boxes + pie */}
             <div className="grid grid-cols-4 gap-2 mb-2">
               <StatBox label="Efficiency" value={parseFloat(latest?.efficiency||0).toFixed(2)} colour="text-purple-300"/>
               <StatBox label="Stars" value={latest?.stars_earned ?? "—"} colour="text-green-300"/>
@@ -190,13 +198,17 @@ export default function PlayerProfilePage() {
                 <p className="text-[9px] text-slate-600">Breakdown</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            {/* Bar chart below */}
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
+              <StarBars three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0}/>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
               <StatBox label="Attacks" value={`${latest?.attacks_used ?? "—"}/${latest?.attacks_available ?? "—"}`} colour="text-slate-300"/>
               <StatBox label="Missed" value={latest?.missed_attacks ?? "—"} colour={(latest?.missed_attacks||0) > 0 ? "text-red-400" : "text-slate-500"}/>
             </div>
           </div>
 
-          {/* Latest season — defence */}
+          {/* Latest season defence */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <div className="flex items-center gap-1.5 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -204,7 +216,7 @@ export default function PlayerProfilePage() {
               </svg>
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence · {latest?.season}</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2 mb-2">
               <StatBox label="Def EFF" value={latest?.defence_efficiency != null ? parseFloat(latest.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300"/>
               <StatBox label="Stars Given" value={latest?.stars_conceded ?? "—"} colour="text-slate-400"/>
               <StatBox label="Dest Given" value={latest?.defence_pct != null ? parseFloat(latest.defence_pct).toFixed(1)+"%" : "—"} colour="text-slate-400"/>
@@ -213,38 +225,33 @@ export default function PlayerProfilePage() {
                 <p className="text-[9px] text-slate-600">Breakdown</p>
               </div>
             </div>
+            {/* Defence bar chart — inverted order (0★ best → 3★ worst) */}
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
+              <StarBars
+                three={latest?.three_stars_conceded||0}
+                two={latest?.two_stars_conceded||0}
+                one={latest?.one_stars_conceded||0}
+                zero={latest?.zero_stars_conceded||0}
+              />
+            </div>
           </div>
 
-          {/* Career pie charts */}
+          {/* Career breakdown — attack + defence pie+bars side by side */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career Breakdown</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2 text-center">Attack</p>
-                <div className="flex items-start gap-3">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Attack</p>
+                <div className="flex items-center gap-3">
                   <LargePie three={careerThree} two={careerTwo} one={careerOne} zero={careerZero} size={64}/>
-                  <div className="flex-1 space-y-1">
-                    {[["3★",careerThree,"#86efac"],["2★",careerTwo,"#a78bfa"],["1★",careerOne,"#fbbf24"],["0★",careerZero,"#475569"]].map(([lbl,val,col])=>(
-                      <div key={lbl} className="flex items-center justify-between">
-                        <span className="text-[9px]" style={{color:col}}>{lbl}</span>
-                        <span className="text-[10px] font-semibold text-white">{val}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <StarBars three={careerThree} two={careerTwo} one={careerOne} zero={careerZero}/>
                 </div>
               </div>
               <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2 text-center">Defence</p>
-                <div className="flex items-start gap-3">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Defence</p>
+                <div className="flex items-center gap-3">
                   <LargePie three={careerThreeC} two={careerTwoC} one={careerOneC} zero={careerZeroC} size={64}/>
-                  <div className="flex-1 space-y-1">
-                    {[["0★",careerZeroC,"#475569"],["1★",careerOneC,"#fbbf24"],["2★",careerTwoC,"#a78bfa"],["3★",careerThreeC,"#86efac"]].map(([lbl,val,col])=>(
-                      <div key={lbl} className="flex items-center justify-between">
-                        <span className="text-[9px]" style={{color:col}}>{lbl}</span>
-                        <span className="text-[10px] font-semibold text-white">{val}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <StarBars three={careerThreeC} two={careerTwoC} one={careerOneC} zero={careerZeroC}/>
                 </div>
               </div>
             </div>
