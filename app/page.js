@@ -2018,7 +2018,11 @@ function LeaderboardView({ onBack }) {
   );
 }
 
-const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
+export default function Home() {
+  const [players, setPlayers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [selectedClan, setSelectedClan] = useState(null);
+  const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
 const [rosterSeasons, setRosterSeasons] = useState([]);
 
 // Load roster history seasons on mount for historical filters
@@ -2513,5 +2517,4 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       </div>
     </div>
   </main>
-);
-}
+);}
