@@ -1593,18 +1593,18 @@ function RecapView({ onBack }) {
                     <p className="text-[10px] text-slate-500">{topClan.cwl_rank}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <div className="text-center">
-                    <p className="font-bold text-green-300">{topClan.wars_won}</p>
-                    <p className="text-[9px] text-slate-600">Wins</p>
+                <div className="flex items-center gap-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center min-w-[48px]">
+                    <p className="text-lg font-thin text-green-300">{topClan.wars_won}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Wins</p>
                   </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600">Atk EFF</p>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center min-w-[48px]">
+                    <p className="text-lg font-thin text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Atk EFF</p>
                   </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-300">{topClan.overall.toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600">Overall</p>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center min-w-[48px]">
+                    <p className="text-lg font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Overall</p>
                   </div>
                 </div>
               </div>
@@ -2020,8 +2020,6 @@ function LeaderboardView({ onBack }) {
 
 export default function Home() {
   const [players, setPlayers] = useState([]);
-  const [search, setSearch] = useState("");
-  const [selectedClan, setSelectedClan] = useState(null);
   const [statView, setStatView] = useState(null); // null | "players" | "clans" | "avgth" | "leaderboard"
 const [rosterSeasons, setRosterSeasons] = useState([]);
 
