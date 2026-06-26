@@ -79,7 +79,8 @@ function PlayersView({ players, onBack, rosterSeasons = [] }) {
             .map(player => (
             <div
               key={player.player_tag || `${player.clan}-${player.account}-${player.position}`}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5"
+              onClick={() => window.open(`/player/${(player.player_tag||"").replace("#","")}`, "_blank")}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 cursor-pointer hover:border-white/20 hover:bg-white/[0.05] transition"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -167,7 +168,8 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
                   .map(player => (
                   <div
                     key={`${player.clan}-${player.account}-${player.position}`}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
+                    onClick={() => window.open(`/player/${(player.playerTag||"").replace("#","")}`, "_blank")}
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 cursor-pointer hover:border-white/20 hover:bg-white/[0.05] transition"
                   >
                     {TH_ICONS[String(player.townHall)] && (
                       <img
@@ -1144,8 +1146,8 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
               {isExpanded && (
                 <a href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
                   onClick={e => e.stopPropagation()}
-                  className="shrink-0 text-slate-600 hover:text-purple-400 transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_8px_rgba(168,85,247,0.2)] transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                   </svg>
                 </a>
@@ -2034,7 +2036,8 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
           .sort((a, b) => Number(b.townHall || 0) - Number(a.townHall || 0))
           .map((player, index) => (
           <div key={`${player.clan}-${player.account}-${player.position}`}
-            className={`rounded-2xl border backdrop-blur-xl p-3 transition
+            onClick={() => window.open(`/player/${(player.playerTag||"").replace("#","")}`, "_blank")}
+            className={`rounded-2xl border backdrop-blur-xl p-3 transition cursor-pointer
               ${highlightedAccount && player.playerTag === highlightedAccount
                 ? "border-purple-500/40 bg-purple-500/10"
                 : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"

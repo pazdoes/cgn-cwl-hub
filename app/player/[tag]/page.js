@@ -90,14 +90,16 @@ export default function PlayerProfilePage() {
 
       {/* Header tile */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
-        {TH_ICONS[String(data.town_hall_level)] && (
-          <img src={TH_ICONS[String(data.town_hall_level)]} alt={`TH${data.town_hall_level}`} className="w-12 h-12"/>
-        )}
-        <h1 className="text-2xl font-thin tracking-widest">{data.player_name}</h1>
+        <div className="flex items-center justify-center gap-3">
+          {TH_ICONS[String(data.town_hall_level)] && (
+            <img src={TH_ICONS[String(data.town_hall_level)]} alt={`TH${data.town_hall_level}`} className="w-10 h-10 shrink-0"/>
+          )}
+          <h1 className="text-2xl font-thin tracking-widest">{data.player_name}</h1>
+        </div>
         <div className="flex items-center gap-2 flex-wrap justify-center">
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">{latest?.clan_name?.split(" ")[0] || "—"}</span>
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">TH{data.town_hall_level}</span>
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{latest?.clan_name?.split(" ")[0] || "—"}</span>
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">TH{data.town_hall_level}</span>
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
         </div>
         {latestOverall != null && (
           <div className="mt-1">
