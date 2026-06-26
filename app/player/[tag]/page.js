@@ -263,6 +263,7 @@ export default function PlayerProfilePage() {
               <StarBars three={careerThree} two={careerTwo} one={careerOne} zero={careerZero}/>
             </div>
           </div>
+          <OverallChart seasons={data.seasons}/>
         </div>
       )}
 
