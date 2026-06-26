@@ -2163,48 +2163,64 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 </motion.div>
 
-<div className="mb-4 relative z-10">
-
+<div className="mb-4 relative z-20">
   <div className="relative">
     <input
       type="text"
       placeholder="Search players..."
       value={search}
       onChange={(e) => setSearch(e.target.value)}
-      className="
-    w-full
-    rounded-3xl
-    border
-    border-white/10
-    bg-white/[0.04]
-    backdrop-blur-xl
-    px-5
-    py-4
-    text-white
-    placeholder:text-slate-500
-    focus:outline-none
-    focus:border-white/20
-    focus:bg-white/[0.06]
-    transition
-  "
+      className="w-full rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"
     />
     {search && (
-      <button
-        onClick={() => setSearch("")}
-        className="
-          absolute right-4 top-1/2 -translate-y-1/2
-          w-6 h-6 rounded-full flex items-center justify-center
-          bg-white/[0.08] text-slate-400
-          hover:bg-white/[0.15] hover:text-white transition
-        "
-      >
+      <button onClick={() => setSearch("")}
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:bg-white/[0.15] hover:text-white transition">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>
     )}
+    {search && searchResults.length > 0 && (
+      <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+        {searchResults.map(player => (
+          <div key={`${player.clan}-${player.account}-${player.position}`}
+            onClick={() => { window.history.pushState({}, "", `#${player.clan}`); setHighlightedAccount(player.playerTag); setSelectedClan(player.clan); setSearch(""); }}
+            className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.05] transition border-b border-white/[0.04] last:border-0">
+            {TH_ICONS[String(player.townHall)] && (
+              <img src={TH_ICONS[String(player.townHall)]} alt={`TH${player.townHall}`} className="w-7 h-7 shrink-0"/>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{player.account}</p>
+              <p className="text-[10px] text-slate-500 truncate">{player.clan}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {player.status?.toLowerCase() === "confirmed" && (
+                <span className="w-2 h-2 rounded-full bg-green-400 shrink-0"/>
+              )}
+              {player.status?.toLowerCase() === "substitute" && (
+                <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0"/>
+              )}
+              {player.clanLink && (
+                <a href={player.clanLink} target="_blank" rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/20 hover:bg-purple-600/40 hover:text-white transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                  Open
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+    {search && searchResults.length === 0 && (
+      <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
+        <p className="text-xs text-slate-600">No players found</p>
+      </div>
+    )}
   </div>
-
 </div>
 
     <div className="space-y-2 mb-8 relative z-10">
@@ -2259,34 +2275,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
     </div>
 
-    {search ? (
-
-      <div className="space-y-4 mt-2">
-
-        {searchResults.map(player => (
-  <div
-    key={`${player.clan}-${player.account}-${player.position}`}
-    onClick={() => {
-  window.history.pushState({}, "", `#${player.clan}`);
-  setHighlightedAccount(player.playerTag);
-  setSelectedClan(player.clan);
-}}
-    className="
-      flex items-center justify-between
-      py-3 px-1
-      border-b border-white/5
-      cursor-pointer hover:bg-white/[0.03] transition
-    "
-  >
-    {/* Left: TH icon + account name */}
-    <div className="flex items-center gap-2.5 min-w-0">
-      {TH_ICONS[String(player.townHall)] ? (
-        <img
-          src={TH_ICONS[String(player.townHall)]}
-          alt={`TH${player.townHall}`}
-          className="w-7 h-7 shrink-0"
-        />
-      ) : (
         <div className="w-7 h-7 shrink-0" />
       )}
       <span className="font-medium text-white truncate">
@@ -2438,7 +2426,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
       </div>
 
-    )}
 
     <div className="relative w-full py-4 flex items-center px-4">
       <div className="w-16 shrink-0"/>
