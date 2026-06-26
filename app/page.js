@@ -1581,31 +1581,27 @@ function RecapView({ onBack }) {
 
           {/* Top clan */}
           {topClan && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Clan</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-                  </svg>
-                  <div>
-                    <p className="text-sm font-semibold" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
-                    <p className="text-[10px] text-slate-500">{topClan.cwl_rank}</p>
-                  </div>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest">Top Clan</p>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+              </svg>
+              <div>
+                <p className="text-2xl font-thin tracking-widest" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">{topClan.cwl_rank}</p>
+              </div>
+              <div className="flex items-center justify-center gap-6 w-full pt-2 border-t border-white/[0.06]">
+                <div className="text-center">
+                  <p className="text-xl font-thin text-green-300">{topClan.wars_won}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Wins</p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center min-w-[48px]">
-                    <p className="text-lg font-thin text-green-300">{topClan.wars_won}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Wins</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center min-w-[48px]">
-                    <p className="text-lg font-thin text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Atk EFF</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center min-w-[48px]">
-                    <p className="text-lg font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Overall</p>
-                  </div>
+                <div className="text-center">
+                  <p className="text-xl font-thin text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Overall</p>
                 </div>
               </div>
             </div>
