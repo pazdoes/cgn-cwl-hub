@@ -1579,42 +1579,37 @@ function RecapView({ onBack }) {
       ) : (
         <div className="relative z-10 space-y-4">
 
-          {/* Alliance war record */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance War Record</p>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
-                <p className="text-2xl font-thin text-green-300">{totalWins}</p>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Won</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
-                <p className="text-2xl font-thin text-red-400">{totalLosses}</p>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Lost</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
-                <p className="text-2xl font-thin text-slate-500">{totalDraws}</p>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Drawn</p>
-              </div>
-            </div>
-            {/* Clan breakdown */}
-            <div className="mt-3 space-y-1.5">
-              {clanWithOverall.map((c, i) => (
-                <div key={c.clan_name} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-                    </svg>
-                    <span className="text-xs text-white">{c.clan_name.split(" ")[0]}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px]">
-                    <span className="text-green-300">{c.wars_won}W</span>
-                    <span className="text-red-400">{c.wars_lost}L</span>
-                    <span className="text-purple-300">{parseFloat(c.attack_efficiency).toFixed(2)} EFF</span>
+          {/* Top clan */}
+          {topClan && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Clan</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
+                    <p className="text-[10px] text-slate-500">{topClan.cwl_rank}</p>
                   </div>
                 </div>
-              ))}
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="text-center">
+                    <p className="font-bold text-green-300">{topClan.wars_won}</p>
+                    <p className="text-[9px] text-slate-600">Wins</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600">Atk EFF</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-purple-300">{topClan.overall.toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600">Overall</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Top 3 players */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
@@ -1671,137 +1666,6 @@ function RecapView({ onBack }) {
             </div>
           </div>
 
-          {/* Top clan */}
-          {topClan && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Clan</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-                  </svg>
-                  <div>
-                    <p className="text-sm font-semibold" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
-                    <p className="text-[10px] text-slate-500">{topClan.cwl_rank}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <div className="text-center">
-                    <p className="font-bold text-green-300">{topClan.wars_won}</p>
-                    <p className="text-[9px] text-slate-600">Wins</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600">Atk EFF</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-300">{topClan.overall.toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600">Overall</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </main>
-  );
-}
-
-
-function RecapView({ onBack }) {
-  const [seasons, setSeasons] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState(null);
-  const [stats, setStats] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/leaderboard").then(r => r.json()),
-      fetch("/api/history").then(r => r.json()),
-    ]).then(([lb, hist]) => {
-      setSeasons(lb.seasons || []);
-      setSelectedSeason(lb.currentSeason || lb.seasons?.[0] || null);
-      setHistory(hist.history || []);
-      const withOverall = (lb.stats || []).map(p => ({
-        ...p,
-        overall: (p.attacks_used > 0 && p.attacks_available > 0)
-          ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
-          : null,
-      }));
-      setStats(withOverall);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSeason) return;
-    setLoading(true);
-    Promise.all([
-      fetch(`/api/leaderboard?season=${encodeURIComponent(selectedSeason)}`).then(r => r.json()),
-      fetch("/api/history").then(r => r.json()),
-    ]).then(([lb, hist]) => {
-      const withOverall = (lb.stats || []).map(p => ({
-        ...p,
-        overall: (p.attacks_used > 0 && p.attacks_available > 0)
-          ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
-          : null,
-      }));
-      setStats(withOverall);
-      setHistory(hist.history || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [selectedSeason]);
-
-  // Derived data
-  const seasonHistory = history.filter(r => r.season === selectedSeason);
-  const totalWars = seasonHistory.reduce((s,r) => s + (r.wars_won||0) + (r.wars_lost||0) + (r.wars_drawn||0), 0);
-  const totalWins = seasonHistory.reduce((s,r) => s + (r.wars_won||0), 0);
-  const totalLosses = seasonHistory.reduce((s,r) => s + (r.wars_lost||0), 0);
-  const totalDraws = seasonHistory.reduce((s,r) => s + (r.wars_drawn||0), 0);
-
-  const validPlayers = stats.filter(p => p.overall != null).sort((a,b) => b.overall - a.overall);
-  const top3 = validPlayers.slice(0, 3);
-
-  const bestAttacker = [...stats].filter(p => p.attacks_used > 0).sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0];
-  const bestDefender = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||0) - parseFloat(b.defence_efficiency||0))[0];
-
-  const clanWithOverall = seasonHistory.map(c => ({
-    ...c,
-    overall: parseFloat(((parseFloat(c.attack_efficiency||0)*0.5)+((3-parseFloat(c.defence_efficiency||0))*0.3)+((c.wars_won||0)/7*3*0.2)).toFixed(2))
-  })).sort((a,b) => b.overall - a.overall);
-  const topClan = clanWithOverall[0];
-
-  const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
-  const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
-
-  return (
-    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
-      </div>
-
-      {/* Header */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Season Recap</h1>
-        {seasons.length > 1 ? (
-          <select value={selectedSeason||""} onChange={e => setSelectedSeason(e.target.value)}
-            className="mt-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-            {seasons.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        ) : (
-          <p className="text-slate-500 text-xs mt-1">{selectedSeason}</p>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-slate-600 text-xs tracking-widest uppercase animate-pulse">Loading…</p>
-        </div>
-      ) : (
-        <div className="relative z-10 space-y-4">
-
           {/* Alliance war record */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance War Record</p>
@@ -1838,104 +1702,12 @@ function RecapView({ onBack }) {
               ))}
             </div>
           </div>
-
-          {/* Top 3 players */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Players · Overall Rating</p>
-            <div className="space-y-2">
-              {top3.map((p, i) => (
-                <a key={p.player_tag} href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-                    </svg>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white truncate" style={{color: medalColours[i+1]}}>{p.player_name}</p>
-                      <p className="text-[10px] text-slate-500">{p.clan_name.split(" ")[0]}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold text-purple-300 shrink-0">{p.overall.toFixed(2)}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Standout performers */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Standout Performers</p>
-            <div className="grid grid-cols-2 gap-2">
-              {bestAttacker && (
-                <a href={`/player/${bestAttacker.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    <p className="text-[9px] text-slate-500 uppercase tracking-widest">Best Attack</p>
-                  </div>
-                  <p className="text-xs font-semibold text-white truncate">{bestAttacker.player_name}</p>
-                  <p className="text-sm font-bold text-purple-300">{parseFloat(bestAttacker.efficiency).toFixed(2)}</p>
-                </a>
-              )}
-              {bestDefender && (
-                <a href={`/player/${bestDefender.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                    </svg>
-                    <p className="text-[9px] text-slate-500 uppercase tracking-widest">Best Defence</p>
-                  </div>
-                  <p className="text-xs font-semibold text-white truncate">{bestDefender.player_name}</p>
-                  <p className="text-sm font-bold text-blue-300">{parseFloat(bestDefender.defence_efficiency).toFixed(2)}</p>
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* Top clan */}
-          {topClan && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Clan</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-                  </svg>
-                  <div>
-                    <p className="text-sm font-semibold" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
-                    <p className="text-[10px] text-slate-500">{topClan.cwl_rank}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <div className="text-center">
-                    <p className="font-bold text-green-300">{topClan.wars_won}</p>
-                    <p className="text-[9px] text-slate-600">Wins</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600">Atk EFF</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-300">{topClan.overall.toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600">Overall</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </main>
   );
 }
 
-export default function Home() {
-
-  const [players, setPlayers] = useState([]);
-const [selectedClan, setSelectedClan] = useState(null);
-const [search, setSearch] = useState("");
 
 function LeaderboardView({ onBack }) {
   const [lbTab, setLbTab] = useState("player"); // "player" | "clan"
