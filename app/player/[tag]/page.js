@@ -5,10 +5,11 @@ import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
 import { LargePie } from "@/lib/components";
 
-function StatBox({ label, value, colour = "text-white" }) {
+function StatBox({ label, value, colour = "text-white", sub = null }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 flex flex-col items-center justify-center text-center h-full">
       <p className={`text-sm font-bold ${colour}`}>{value}</p>
+      {sub && <p className="text-[9px] text-slate-600 mt-0.5">{sub}</p>}
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">{label}</p>
     </div>
   );
@@ -17,19 +18,13 @@ function StatBox({ label, value, colour = "text-white" }) {
 function StarBars({ three, two, one, zero }) {
   const total = (three||0)+(two||0)+(one||0)+(zero||0);
   if (!total) return null;
-  const bars = [
-    ["3★", three, "#86efac"],
-    ["2★", two,   "#a78bfa"],
-    ["1★", one,   "#fbbf24"],
-    ["0★", zero,  "#475569"],
-  ];
   return (
     <div className="flex-1 flex flex-col justify-center gap-1.5">
-      {bars.map(([lbl, val, col]) => (
+      {[["3★",three,"#86efac"],["2★",two,"#a78bfa"],["1★",one,"#fbbf24"],["0★",zero,"#475569"]].map(([lbl,val,col]) => (
         <div key={lbl} className="flex items-center gap-2">
           <span className="text-[9px] text-slate-500 w-5 text-right shrink-0">{lbl}</span>
           <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <div className="h-full rounded-full transition-all" style={{width: total > 0 ? `${((val||0)/total*100).toFixed(0)}%` : "0%", background: col}}/>
+            <div className="h-full rounded-full" style={{width: total > 0 ? `${((val||0)/total*100).toFixed(0)}%` : "0%", background: col}}/>
           </div>
           <span className="text-[9px] text-slate-500 w-4 text-right shrink-0">{val||0}</span>
         </div>
@@ -83,20 +78,47 @@ export default function PlayerProfilePage() {
   );
 
   const latest = data.seasons[0];
+  const prev = data.seasons[1] || null;
   const latestOverall = latest?.overall;
-  const totalStars = data.seasons.reduce((s, r) => s + (r.stars_earned||0), 0);
-  const totalMissed = data.seasons.reduce((s, r) => s + (r.missed_attacks||0), 0);
-  const avgEfficiency = data.seasons.length
-    ? (data.seasons.reduce((s, r) => s + parseFloat(r.efficiency||0), 0) / data.seasons.length).toFixed(2)
-    : "—";
-  const avgDefEff = data.seasons.length
-    ? (data.seasons.reduce((s, r) => s + parseFloat(r.defence_efficiency||0), 0) / data.seasons.length).toFixed(2)
-    : "—";
 
-  const careerThree = data.seasons.reduce((s,r)=>s+(r.three_stars||0),0);
-  const careerTwo   = data.seasons.reduce((s,r)=>s+(r.two_stars||0),0);
-  const careerOne   = data.seasons.reduce((s,r)=>s+(r.one_stars||0),0);
-  const careerZero  = data.seasons.reduce((s,r)=>s+(r.zero_stars||0),0);
+  // Career aggregates
+  const totalStars   = data.seasons.reduce((s,r)=>s+(r.stars_earned||0),0);
+  const totalMissed  = data.seasons.reduce((s,r)=>s+(r.missed_attacks||0),0);
+  const totalAttacks = data.seasons.reduce((s,r)=>s+(r.attacks_used||0),0);
+  const totalAvail   = data.seasons.reduce((s,r)=>s+(r.attacks_available||0),0);
+  const totalConceded= data.seasons.reduce((s,r)=>s+(r.stars_conceded||0),0);
+
+  const avgEfficiency = data.seasons.length
+    ? (data.seasons.reduce((s,r)=>s+parseFloat(r.efficiency||0),0)/data.seasons.length).toFixed(2) : "—";
+  const avgDefEff = data.seasons.length
+    ? (data.seasons.reduce((s,r)=>s+parseFloat(r.defence_efficiency||0),0)/data.seasons.length).toFixed(2) : "—";
+
+  // Performance summary — latest season
+  const threeStarRate = latest?.attacks_used > 0
+    ? ((latest.three_stars||0)/latest.attacks_used*100).toFixed(0)+"%" : "—";
+  const participationRate = latest?.attacks_available > 0
+    ? ((latest.attacks_used||0)/latest.attacks_available*100).toFixed(0)+"%" : "—";
+  const netStars = latest
+    ? ((latest.stars_earned||0)-(latest.stars_conceded||0)) : null;
+  const trend = (latestOverall != null && prev?.overall != null)
+    ? (parseFloat(latestOverall) > parseFloat(prev.overall) ? "up"
+      : parseFloat(latestOverall) < parseFloat(prev.overall) ? "down" : "same")
+    : null;
+
+  // Career consistency — seasons with above-average efficiency
+  const careerAvgEff = data.seasons.length
+    ? data.seasons.reduce((s,r)=>s+parseFloat(r.efficiency||0),0)/data.seasons.length : 0;
+  const aboveAvg = data.seasons.filter(s=>parseFloat(s.efficiency||0)>=careerAvgEff).length;
+
+  // Best season — highest overall
+  const bestSeasonIdx = data.seasons.reduce((bestIdx, s, i) =>
+    (s.overall != null && (data.seasons[bestIdx]?.overall == null || parseFloat(s.overall) > parseFloat(data.seasons[bestIdx].overall))) ? i : bestIdx, 0);
+
+  // Career pie totals
+  const careerThree  = data.seasons.reduce((s,r)=>s+(r.three_stars||0),0);
+  const careerTwo    = data.seasons.reduce((s,r)=>s+(r.two_stars||0),0);
+  const careerOne    = data.seasons.reduce((s,r)=>s+(r.one_stars||0),0);
+  const careerZero   = data.seasons.reduce((s,r)=>s+(r.zero_stars||0),0);
   const careerThreeC = data.seasons.reduce((s,r)=>s+(r.three_stars_conceded||0),0);
   const careerTwoC   = data.seasons.reduce((s,r)=>s+(r.two_stars_conceded||0),0);
   const careerOneC   = data.seasons.reduce((s,r)=>s+(r.one_stars_conceded||0),0);
@@ -118,22 +140,29 @@ export default function PlayerProfilePage() {
             <h1 className="text-2xl font-thin tracking-widest">{data.player_name}</h1>
           </div>
           {latestOverall != null && (
-            <div className="mt-1">
+            <div className="mt-1 flex items-center gap-2 justify-center">
               <span className="text-3xl font-thin text-purple-300">{parseFloat(latestOverall).toFixed(2)}</span>
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Overall Rating</p>
+              {trend === "up" && (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
+                </svg>
+              )}
+              {trend === "down" && (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              )}
             </div>
           )}
+          {latestOverall != null && <p className="text-[9px] text-slate-600 uppercase tracking-widest -mt-1">Overall Rating</p>}
           <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
             <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{latest?.clan_name?.split(" ")[0] || "—"}</span>
             <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">TH{data.town_hall_level}</span>
             <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">{data.totalSeasons} season{data.totalSeasons !== 1 ? "s" : ""}</span>
           </div>
         </div>
-
-        {/* Tab toggle — no separator */}
         <div className="flex items-center justify-center gap-4 pt-4 mt-3">
-          <button onClick={() => setView("overview")}
-            className="text-slate-500 hover:text-slate-300 transition p-1">
+          <button onClick={() => setView("overview")} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -141,8 +170,7 @@ export default function PlayerProfilePage() {
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[60px] text-center">
             {view === "overview" ? "Overview" : "Stats"}
           </span>
-          <button onClick={() => setView("stats")}
-            className="text-slate-500 hover:text-slate-300 transition p-1">
+          <button onClick={() => setView("stats")} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
             </svg>
@@ -164,8 +192,6 @@ export default function PlayerProfilePage() {
               <StatBox label="Missed" value={totalMissed} colour={totalMissed > 0 ? "text-red-400" : "text-slate-500"}/>
             </div>
           </div>
-
-          {/* Career attack breakdown — pie + bars */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career Attack Breakdown</p>
             <div className="flex items-center gap-4">
@@ -180,7 +206,29 @@ export default function PlayerProfilePage() {
       {view === "stats" && (
         <div className="relative z-10 space-y-4">
 
-          {/* Latest season attack */}
+          {/* Performance summary */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Performance · {latest?.season}</p>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <StatBox label="3★ Rate" value={threeStarRate} colour="text-green-300"/>
+              <StatBox label="Participation" value={participationRate} colour="text-purple-300"/>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <StatBox
+                label="Net Stars"
+                value={netStars != null ? (netStars > 0 ? `+${netStars}` : netStars) : "—"}
+                colour={netStars != null ? (netStars > 0 ? "text-green-300" : netStars < 0 ? "text-red-400" : "text-slate-500") : "text-slate-500"}
+              />
+              <StatBox
+                label="Consistency"
+                value={`${aboveAvg}/${data.seasons.length}`}
+                sub="seasons above avg"
+                colour="text-purple-300"
+              />
+            </div>
+          </div>
+
+          {/* Attack */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <div className="flex items-center gap-1.5 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -188,27 +236,22 @@ export default function PlayerProfilePage() {
               </svg>
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack · {latest?.season}</span>
             </div>
-            {/* Top row: 3 stat boxes + pie */}
-            <div className="grid grid-cols-4 gap-2 mb-2">
+            <div className="grid grid-cols-3 gap-2 mb-3">
               <StatBox label="Efficiency" value={parseFloat(latest?.efficiency||0).toFixed(2)} colour="text-purple-300"/>
               <StatBox label="Stars" value={latest?.stars_earned ?? "—"} colour="text-green-300"/>
               <StatBox label="Dest %" value={latest?.destruction_pct != null ? parseFloat(latest.destruction_pct).toFixed(1)+"%" : "—"} colour="text-slate-300"/>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 flex flex-col items-center justify-center gap-1">
-                <LargePie three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0} size={40}/>
-                <p className="text-[9px] text-slate-600">Breakdown</p>
-              </div>
             </div>
-            {/* Bar chart below */}
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
-              <StarBars three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0}/>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-2 gap-2 mb-3">
               <StatBox label="Attacks" value={`${latest?.attacks_used ?? "—"}/${latest?.attacks_available ?? "—"}`} colour="text-slate-300"/>
               <StatBox label="Missed" value={latest?.missed_attacks ?? "—"} colour={(latest?.missed_attacks||0) > 0 ? "text-red-400" : "text-slate-500"}/>
             </div>
+            <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06]">
+              <LargePie three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0} size={64}/>
+              <StarBars three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0}/>
+            </div>
           </div>
 
-          {/* Latest season defence */}
+          {/* Defence */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <div className="flex items-center gap-1.5 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -216,27 +259,18 @@ export default function PlayerProfilePage() {
               </svg>
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence · {latest?.season}</span>
             </div>
-            <div className="grid grid-cols-4 gap-2 mb-2">
+            <div className="grid grid-cols-3 gap-2 mb-3">
               <StatBox label="Def EFF" value={latest?.defence_efficiency != null ? parseFloat(latest.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300"/>
               <StatBox label="Stars Given" value={latest?.stars_conceded ?? "—"} colour="text-slate-400"/>
               <StatBox label="Dest Given" value={latest?.defence_pct != null ? parseFloat(latest.defence_pct).toFixed(1)+"%" : "—"} colour="text-slate-400"/>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 flex flex-col items-center justify-center gap-1">
-                <LargePie three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0} size={40}/>
-                <p className="text-[9px] text-slate-600">Breakdown</p>
-              </div>
             </div>
-            {/* Defence bar chart — inverted order (0★ best → 3★ worst) */}
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
-              <StarBars
-                three={latest?.three_stars_conceded||0}
-                two={latest?.two_stars_conceded||0}
-                one={latest?.one_stars_conceded||0}
-                zero={latest?.zero_stars_conceded||0}
-              />
+            <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06]">
+              <LargePie three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0} size={64}/>
+              <StarBars three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0}/>
             </div>
           </div>
 
-          {/* Career breakdown — attack + defence pie+bars side by side */}
+          {/* Career breakdown */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career Breakdown</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -257,7 +291,7 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
-          {/* Season history table */}
+          {/* Season history table — best season highlighted */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season History</p>
             <div className="overflow-x-auto -mx-1">
@@ -270,21 +304,25 @@ export default function PlayerProfilePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
-                  {data.seasons.map((s, i) => (
-                    <tr key={i} className="hover:bg-white/[0.03] transition">
-                      {STAT_COLS.map(col => (
-                        <td key={col.key} className={`py-2 px-1 whitespace-nowrap ${
-                          col.key === "overall" ? "text-purple-300 font-semibold" :
-                          col.key === "missed_attacks" && (s.missed_attacks||0) > 0 ? "text-red-400" :
-                          col.key === "efficiency" ? "text-purple-200" :
-                          col.key === "defence_efficiency" ? "text-blue-300" :
-                          "text-slate-400"
-                        }`}>
-                          {col.fmt(s[col.key])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {data.seasons.map((s, i) => {
+                    const isBest = i === bestSeasonIdx && data.seasons.length > 1;
+                    return (
+                      <tr key={i} className={`transition ${isBest ? "bg-amber-500/[0.07] border-l-2 border-amber-400/40" : "hover:bg-white/[0.03]"}`}>
+                        {STAT_COLS.map(col => (
+                          <td key={col.key} className={`py-2 px-1 whitespace-nowrap ${
+                            col.key === "overall" ? (isBest ? "text-amber-300 font-bold" : "text-purple-300 font-semibold") :
+                            col.key === "missed_attacks" && (s.missed_attacks||0) > 0 ? "text-red-400" :
+                            col.key === "efficiency" ? "text-purple-200" :
+                            col.key === "defence_efficiency" ? "text-blue-300" :
+                            "text-slate-400"
+                          }`}>
+                            {col.fmt(s[col.key])}
+                            {col.key === "season" && isBest && <span className="ml-1 text-amber-400 text-[8px]">★</span>}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -292,7 +330,6 @@ export default function PlayerProfilePage() {
         </div>
       )}
 
-      {/* Branding footer */}
       <div className="relative z-10 flex items-center justify-center gap-2 mt-6">
         <img src={BRANDING.cgnskull} alt="CGN" className="w-4 h-4 opacity-40"/>
         <span className="text-[10px] text-slate-700 tracking-widest">Cognition {"{CGN}"}</span>
