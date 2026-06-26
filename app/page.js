@@ -2009,23 +2009,20 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center">
-        <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12 mb-3"/>
-        <h1 className="text-2xl font-thin tracking-widest mb-3">{selectedClan}</h1>
-        <div className="flex items-center gap-2 flex-wrap justify-center">
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400">{rank}</span>
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400">{format}</span>
-          {season && <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500">{season}</span>}
-          {clanLink && (
-            <a href={clanLink} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-              </svg>
-              Open
-            </a>
-          )}
-        </div>
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
+        <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
+        <h1 className="text-2xl font-thin tracking-widest">{selectedClan}</h1>
+        <p className="text-xs text-slate-400">{format}</p>
+        {season && <p className="text-[10px] text-purple-400/70 tracking-widest">{season}</p>}
+        {clanLink && (
+          <a href={clanLink} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+            Open Clan
+          </a>
+        )}
       </div>
       <div className="relative z-10 space-y-2">
         {[...clanPlayers]
