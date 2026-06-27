@@ -244,6 +244,7 @@ export default function PlayerProfilePage() {
   const [error, setError] = useState(null);
   const [view, setView] = useState("overview");
   const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const shareCardRef = useRef(null);
 
   useEffect(() => {
@@ -316,7 +317,11 @@ export default function PlayerProfilePage() {
     setSharing(true);
     try {
       const { shareCard } = await import("@/lib/shareCard");
-      await shareCard(shareCardRef.current, `cgn-${data.player_name.toLowerCase().replace(/\s+/g,"-")}.png`);
+      const result = await shareCard(shareCardRef.current, `cgn-${data.player_name.toLowerCase().replace(/\s+/g,"-")}.png`);
+      if (result?.copied) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
     } catch (e) {
       console.error("Share failed", e);
     } finally {
@@ -412,18 +417,34 @@ export default function PlayerProfilePage() {
           <button
             onClick={handleShare}
             disabled={sharing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] hover:border-purple-500/40 hover:bg-purple-500/10 transition text-[10px] text-slate-500 hover:text-purple-300 uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full border transition text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed ${
+              copied
+                ? "border-green-500/50 bg-green-500/10 text-green-400"
+                : "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20"
+            }`}
           >
             {sharing ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Generating…
+              </>
+            ) : copied ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Copied
+              </>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-              </svg>
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                Share Card
+              </>
             )}
-            {sharing ? "Generating…" : "Share Card"}
           </button>
         </div>
       </div>
