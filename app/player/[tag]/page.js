@@ -206,10 +206,35 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
         gap: 14,
         marginBottom: 14,
       }}>
-        <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", writingMode: "vertical-rl", transform: "rotate(180deg)", flexShrink: 0 }}>
-          Career Attacks
-        </div>
-        {/* Mini bars */}
+        {/* Inline pie chart */}
+        {(() => {
+          const total = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
+          if (!total) return null;
+          const size = 56;
+          const cx = size/2, cy = size/2, r = size/2 - 2;
+          const slices = [
+            { value: careerThree, color: "#86efac" },
+            { value: careerTwo,   color: "#a78bfa" },
+            { value: careerOne,   color: "#fbbf24" },
+            { value: careerZero,  color: "#475569" },
+          ].filter(s => s.value > 0);
+          let startAngle = -Math.PI/2;
+          const paths = slices.map((s, i) => {
+            const angle = (s.value/total)*2*Math.PI;
+            const endAngle = startAngle + angle;
+            const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
+            const x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
+            const d=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${angle>Math.PI?1:0} 1 ${x2} ${y2} Z`;
+            startAngle = endAngle;
+            return <path key={i} d={d} fill={s.color}/>;
+          });
+          return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{flexShrink:0}}>
+              {paths}
+            </svg>
+          );
+        })()}
+        {/* Bar chart */}
         <div style={{ flex: 1 }}>
           {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
             const tot = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
