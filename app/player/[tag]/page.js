@@ -108,15 +108,35 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   const threeStarRate = latest?.attacks_used > 0
     ? ((latest.three_stars||0)/latest.attacks_used*100).toFixed(0)+"%" : "—";
 
+  const total = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
+  const pieSize = 64;
+  const cx = pieSize/2, cy = pieSize/2, r = pieSize/2 - 2;
+  const slices = [
+    { value: careerThree, color: "#86efac" },
+    { value: careerTwo,   color: "#a78bfa" },
+    { value: careerOne,   color: "#fbbf24" },
+    { value: careerZero,  color: "#475569" },
+  ].filter(s => s.value > 0);
+  let startAngle = -Math.PI/2;
+  const piePaths = total > 0 ? slices.map((s, i) => {
+    const angle = (s.value/total)*2*Math.PI;
+    const endAngle = startAngle + angle;
+    const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
+    const x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
+    const d=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${angle>Math.PI?1:0} 1 ${x2} ${y2} Z`;
+    startAngle = endAngle;
+    return <path key={i} d={d} fill={s.color}/>;
+  }) : null;
+
   return (
     <div style={{
-      width: 480,
+      width: 680,
       background: "#070b17",
       borderRadius: 24,
       border: rank <= 3
         ? `1px solid ${rank===1?"rgba(212,175,55,0.5)":rank===2?"rgba(167,167,173,0.5)":"rgba(205,127,50,0.5)"}`
         : "1px solid rgba(255,255,255,0.1)",
-      padding: 28,
+      padding: "24px 28px 20px",
       fontFamily: "ui-sans-serif, system-ui, sans-serif",
       color: "white",
       boxSizing: "border-box",
@@ -126,14 +146,14 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       {/* Background glow */}
       <div style={{
         position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)",
-        width: 360, height: 360, borderRadius: "50%",
-        background: "rgba(139,92,246,0.08)", filter: "blur(60px)", pointerEvents: "none",
+        width: 400, height: 400, borderRadius: "50%",
+        background: "rgba(139,92,246,0.07)", filter: "blur(60px)", pointerEvents: "none",
       }}/>
 
-      {/* Header row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+      {/* ── Row 1: Header ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
         {TH_ICONS[String(data.town_hall_level)] && (
-          <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={44} height={44} style={{borderRadius:8}}/>
+          <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={48} height={48} style={{borderRadius:8, flexShrink:0}}/>
         )}
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -142,22 +162,20 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
               </svg>
             )}
-            <span style={{ fontSize: 20, fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white" }}>
+            <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white" }}>
               {data.player_name}
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-            {rank && (
-              <span style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                #{rank} Alliance · {latest?.season}
-              </span>
-            )}
+          <div style={{ marginTop: 4 }}>
+            <span style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              {rank ? `#${rank} Alliance · ` : ""}{latest?.season}{latest?.clan_name ? ` · ${latest.clan_name.split(" ")[0]}` : ""}
+            </span>
           </div>
         </div>
-        {/* Overall rating */}
+        {/* Overall rating — right aligned */}
         {latestOverall != null && (
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 32, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
+          <div style={{ textAlign: "center", flexShrink: 0 }}>
+            <div style={{ fontSize: 36, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
               {parseFloat(latestOverall).toFixed(2)}
             </div>
             <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 3 }}>
@@ -168,92 +186,72 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 16 }}/>
+      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
 
-      {/* Stat grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
-        {[
-          { label: "Atk EFF", value: avgEfficiency, colour: "#c4b5fd" },
-          { label: "Def EFF", value: avgDefEff,     colour: "#93c5fd" },
-          { label: "Stars",   value: totalStars,    colour: "#86efac" },
-          { label: "3★ Rate", value: threeStarRate, colour: "#86efac" },
-          { label: "Missed",  value: totalMissed,   colour: totalMissed > 0 ? "#f87171" : "#475569" },
-          { label: "Seasons", value: data.seasons.length, colour: "#94a3b8" },
-          { label: "Best",    value: data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—", colour: "#fbbf24" },
-          { label: "Clan",    value: latest?.clan_name?.split(" ")[0] || "—", colour: "#94a3b8" },
-        ].map(({ label, value, colour }) => (
-          <div key={label} style={{
-            background: "rgba(255,255,255,0.04)",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.07)",
-            padding: "8px 6px",
-            textAlign: "center",
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
-            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{label}</div>
-          </div>
-        ))}
-      </div>
+      {/* ── Row 2: Two columns ── */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
 
-      {/* Attack breakdown pie + bars */}
-      <div style={{
-        background: "rgba(255,255,255,0.03)",
-        borderRadius: 14,
-        border: "1px solid rgba(255,255,255,0.07)",
-        padding: "12px 14px",
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        marginBottom: 14,
-      }}>
-        {/* Inline pie chart */}
-        {(() => {
-          const total = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
-          if (!total) return null;
-          const size = 56;
-          const cx = size/2, cy = size/2, r = size/2 - 2;
-          const slices = [
-            { value: careerThree, color: "#86efac" },
-            { value: careerTwo,   color: "#a78bfa" },
-            { value: careerOne,   color: "#fbbf24" },
-            { value: careerZero,  color: "#475569" },
-          ].filter(s => s.value > 0);
-          let startAngle = -Math.PI/2;
-          const paths = slices.map((s, i) => {
-            const angle = (s.value/total)*2*Math.PI;
-            const endAngle = startAngle + angle;
-            const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
-            const x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
-            const d=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${angle>Math.PI?1:0} 1 ${x2} ${y2} Z`;
-            startAngle = endAngle;
-            return <path key={i} d={d} fill={s.color}/>;
-          });
-          return (
-            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{flexShrink:0}}>
-              {paths}
+        {/* Left col — stat grid */}
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7 }}>
+          {[
+            { label: "Atk EFF",  value: avgEfficiency,         colour: "#c4b5fd" },
+            { label: "Def EFF",  value: avgDefEff,             colour: "#93c5fd" },
+            { label: "Stars",    value: totalStars,            colour: "#86efac" },
+            { label: "3★ Rate",  value: threeStarRate,         colour: "#86efac" },
+            { label: "Missed",   value: totalMissed,           colour: totalMissed > 0 ? "#f87171" : "#475569" },
+            { label: "Seasons",  value: data.seasons.length,   colour: "#94a3b8" },
+            { label: "Best",     value: data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—", colour: "#fbbf24" },
+            { label: "League",   value: latest?.cwl_rank || "—", colour: "#94a3b8" },
+          ].map(({ label, value, colour }) => (
+            <div key={label} style={{
+              background: "rgba(255,255,255,0.04)",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.07)",
+              padding: "7px 5px",
+              textAlign: "center",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
+              <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Right col — pie + bars */}
+        <div style={{
+          width: 190,
+          flexShrink: 0,
+          background: "rgba(255,255,255,0.03)",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.07)",
+          padding: "10px 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}>
+          {piePaths && (
+            <svg width={pieSize} height={pieSize} viewBox={`0 0 ${pieSize} ${pieSize}`} style={{flexShrink:0}}>
+              {piePaths}
             </svg>
-          );
-        })()}
-        {/* Bar chart */}
-        <div style={{ flex: 1 }}>
-          {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
-            const tot = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
-            const pct = tot > 0 ? ((val||0)/tot*100).toFixed(0) : 0;
-            return (
-              <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 9, color: "#64748b", width: 20, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
-                <div style={{ flex: 1, height: 5, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                  <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
+          )}
+          <div style={{ flex: 1 }}>
+            {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
+              const pct = total > 0 ? ((val||0)/total*100).toFixed(0) : 0;
+              return (
+                <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+                  <span style={{ fontSize: 8, color: "#64748b", width: 18, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
+                  <div style={{ flex: 1, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
+                  </div>
+                  <span style={{ fontSize: 8, color: "#64748b", width: 14, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
                 </div>
-                <span style={{ fontSize: 9, color: "#64748b", width: 16, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2, paddingBottom: 2 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 2 }}>
         <span style={{ fontSize: 7, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
           cgnco.vercel.app · Cognition {"{CGN}"}
         </span>
