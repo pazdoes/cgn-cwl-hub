@@ -391,6 +391,9 @@ export default function AdminOverviewPage() {
     );
   }
 
+  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
+  const [adminTab, setAdminTab] = useState("dashboard");
+
   const members = data?.members || [];
   const stats = data?.stats || {};
   const season = data?.season || "";
@@ -404,8 +407,10 @@ export default function AdminOverviewPage() {
     return matchSearch && matchPool && matchDiscord && matchToken;
   });
 
-  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
-  const [adminTab, setAdminTab] = useState("dashboard");
+  // Pre-computed quick stats — avoids IIFE in JSX which causes React hook count errors
+  const statsInPool = members.filter(m => m.in_pool).length;
+  const statsAssigned = members.filter(m => m.assigned_clan).length;
+  const statsPct = statsInPool > 0 ? Math.round((statsAssigned / statsInPool) * 100) : 0;
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
@@ -456,36 +461,31 @@ export default function AdminOverviewPage() {
           {adminTab === "dashboard" && (<>
 
           {/* Quick stats bar */}
-          {members.length > 0 && (() => {
-            const inPool = members.filter(m => m.in_pool).length;
-            const assigned = members.filter(m => m.assigned_clan).length;
-            const pct = inPool > 0 ? Math.round((assigned / inPool) * 100) : 0;
-            return (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <div className="text-center flex-1">
-                    <p className="text-lg font-thin text-white">{members.length}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
-                  </div>
-                  <div className="text-center flex-1">
-                    <p className="text-lg font-thin text-purple-300">{inPool}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">In Pool</p>
-                  </div>
-                  <div className="text-center flex-1">
-                    <p className="text-lg font-thin text-green-300">{assigned}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Assigned</p>
-                  </div>
-                  <div className="text-center flex-1">
-                    <p className={`text-lg font-thin ${pct === 100 ? "text-green-300" : pct >= 75 ? "text-amber-300" : "text-red-400"}`}>{pct}%</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Ready</p>
-                  </div>
+          {members.length > 0 && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="text-center flex-1">
+                  <p className="text-lg font-thin text-white">{members.length}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
                 </div>
-                <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full bg-purple-500/60 transition-all" style={{width: `${pct}%`}}/>
+                <div className="text-center flex-1">
+                  <p className="text-lg font-thin text-purple-300">{statsInPool}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">In Pool</p>
+                </div>
+                <div className="text-center flex-1">
+                  <p className="text-lg font-thin text-green-300">{statsAssigned}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Assigned</p>
+                </div>
+                <div className="text-center flex-1">
+                  <p className={`text-lg font-thin ${statsPct === 100 ? "text-green-300" : statsPct >= 75 ? "text-amber-300" : "text-red-400"}`}>{statsPct}%</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Ready</p>
                 </div>
               </div>
-            );
-          })()}
+              <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-full rounded-full bg-purple-500/60 transition-all" style={{width: `${statsPct}%`}}/>
+              </div>
+            </div>
+          )}
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">

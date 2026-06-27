@@ -702,6 +702,10 @@ export default function AdminPoolPage() {
   const currentClan = clans[Math.min(activeClanIdx, clans.length - 1)] || null;
   const currentClanEntries = currentClan ? assigned.filter(e => e.assigned_clan === currentClan).sort((a,b) => (b.town_hall_level??0)-(a.town_hall_level??0)) : [];
   const currentFormat = currentClan ? (clanFormats[currentClan] ?? 15) : 15;
+  const rosterPct = currentFormat > 0
+    ? Math.min(100, Math.round(currentClanEntries.length / currentFormat * 100))
+    : 0;
+  const rosterFull = currentClanEntries.length >= currentFormat;
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
@@ -888,20 +892,14 @@ export default function AdminPoolPage() {
                   </div>
                 )}
                 {/* Roster completion indicator */}
-                {currentClan && (() => {
-                  const count = currentClanEntries.length;
-                  const target = currentFormat;
-                  const pct = target > 0 ? Math.min(100, Math.round((count / target) * 100)) : 0;
-                  const full = count >= target;
-                  return (
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${full ? "bg-green-500/60" : "bg-purple-500/60"}`} style={{width:`${pct}%`}}/>
-                      </div>
-                      <span className={`text-[10px] shrink-0 font-semibold ${full ? "text-green-400" : "text-slate-500"}`}>{count}/{target}</span>
+                {currentClan && rosterPct !== null && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${rosterFull ? "bg-green-500/60" : "bg-purple-500/60"}`} style={{width:`${rosterPct}%`}}/>
                     </div>
-                  );
-                })()}
+                    <span className={`text-[10px] shrink-0 font-semibold ${rosterFull ? "text-green-400" : "text-slate-500"}`}>{currentClanEntries.length}/{currentFormat}</span>
+                  </div>
+                )}
 
                 {currentClan && (
                   <>
