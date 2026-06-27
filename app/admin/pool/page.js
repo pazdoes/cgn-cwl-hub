@@ -237,6 +237,14 @@ export default function AdminPoolPage() {
   const [fetchingCwl, setFetchingCwl] = useState(false);
   const [fetchCwlResult, setFetchCwlResult] = useState(null);
 
+  // Multi-select + roster builder state — must be before any early returns
+  const [selectedEntries, setSelectedEntries] = useState(new Set());
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+  const [builderTab, setBuilderTab] = useState("pool");
+  const [mainPoolTab, setMainPoolTab] = useState("roster");
+  const [activeClanIdx, setActiveClanIdx] = useState(0);
+  const [poolSearch, setPoolSearch] = useState("");
+
   async function loadPool(savedPin) {
     setLoading(true); setError(null);
     try {
@@ -658,7 +666,6 @@ export default function AdminPoolPage() {
   const unassigned = entries.filter(e => !e.assigned_clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned = entries.filter(e => e.assigned_clan);
 
-  // Multi-select state
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [builderTab, setBuilderTab] = useState("pool"); // "pool" | "roster"
