@@ -438,7 +438,7 @@ export default function AdminOverviewPage() {
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["dashboard","Dashboard"],["directory","Directory"]].map(([key,label]) => (
           <button key={key} onClick={() => setAdminTab(key)}
-            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               adminTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
@@ -460,14 +460,13 @@ export default function AdminOverviewPage() {
           {/* ── DASHBOARD TAB ── */}
           {adminTab === "dashboard" && (<>
 
-          {/* Quick stats bar */}
+          {/* CWL Countdown — most urgent, top of dashboard */}
+          <CwlCountdown season={season}/>
+
+          {/* Bar 1 — roster state (primary) */}
           {members.length > 0 && (
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
               <div className="flex items-center justify-between gap-3 mb-2">
-                <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-white">{members.length}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
-                </div>
                 <div className="text-center flex-1">
                   <p className="text-lg font-thin text-purple-300">{statsInPool}</p>
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest">In Pool</p>
@@ -487,16 +486,25 @@ export default function AdminOverviewPage() {
             </div>
           )}
 
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <StatTile label="Total Accounts" value={stats.totalAccounts ?? "—"} colour="text-white"/>
-            <StatTile label="In Pool" value={stats.inPool ?? "—"} colour="text-purple-300"/>
-            <StatTile label="Discord Linked" value={stats.discordLinked ?? "—"} colour="text-blue-300"/>
-            <StatTile label="Token Verified" value={stats.apiVerified ?? "—"} colour="text-green-300"/>
-          </div>
-
-          {/* CWL Countdown */}
-          <CwlCountdown season={season}/>
+          {/* Bar 2 — account health (secondary, receded) */}
+          {members.length > 0 && (
+            <div className="rounded-3xl border border-white/[0.06] bg-white/[0.02] px-5 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-center flex-1">
+                  <p className="text-lg font-thin text-slate-400">{members.length}</p>
+                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Total</p>
+                </div>
+                <div className="text-center flex-1">
+                  <p className="text-lg font-thin text-blue-400">{stats.discordLinked ?? "—"}</p>
+                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Discord</p>
+                </div>
+                <div className="text-center flex-1">
+                  <p className="text-lg font-thin text-green-400">{stats.apiVerified ?? "—"}</p>
+                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Token</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">

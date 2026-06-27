@@ -54,19 +54,24 @@ function RankRefreshButton({ busy, result, onClick }) {
 function StatusToggle({ status, busy, error, onSetStatus }) {
   const isConfirmed = status === "confirmed";
   const isSubstitute = status === "substitute";
+  const isRegistered = !status || status === "registered";
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
+        <button type="button" disabled={busy} onClick={() => onSetStatus("registered")}
+          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isRegistered ? "bg-white/10 text-slate-300" : "text-slate-500 hover:text-slate-300"}`}>
+          Registered
+        </button>
         <button type="button" disabled={busy} onClick={() => onSetStatus("confirmed")}
           className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isConfirmed ? "bg-green-500/30 text-green-200" : "text-slate-500 hover:text-slate-300"}`}>
           Confirmed
         </button>
         <button type="button" disabled={busy} onClick={() => onSetStatus("substitute")}
           className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isSubstitute ? "bg-orange-500/30 text-orange-200" : "text-slate-500 hover:text-slate-300"}`}>
-          Substitute
+          Sub
         </button>
       </div>
-      {error && <p className="text-[9px] text-red-400 text-right max-w-[140px] leading-tight">{error}</p>}
+      {error && <p className="text-[9px] text-red-400 text-right max-w-[160px] leading-tight">{error}</p>}
     </div>
   );
 }
@@ -737,21 +742,7 @@ export default function AdminPoolPage() {
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
           <button key={key} onClick={() => setMainPoolTab(key)}
-            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
-              mainPoolTab === key
-                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
-                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
-            }`}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Pool Manager tab nav */}
-      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
-          <button key={key} onClick={() => setMainPoolTab(key)}
-            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               mainPoolTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"

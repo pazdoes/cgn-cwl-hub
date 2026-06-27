@@ -2504,7 +2504,10 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
                   ? "bg-red-500/10 text-red-400 border-red-500/30"
                   : "bg-white/[0.04] text-slate-500 border-white/10"
                 }`}>
-                {player.status}
+                {player.status?.toLowerCase() === "registered" ? "Registered"
+                  : player.status?.toLowerCase() === "confirmed" ? "Confirmed"
+                  : player.status?.toLowerCase() === "substitute" ? "Substitute"
+                  : player.status || "Registered"}
               </span>
             </div>
           </div>
