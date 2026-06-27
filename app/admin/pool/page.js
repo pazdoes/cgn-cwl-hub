@@ -238,7 +238,7 @@ export default function AdminPoolPage() {
   const [fetchCwlResult, setFetchCwlResult] = useState(null);
 
   // Multi-select + roster builder state — must be before any early returns
-  const [selectedEntries, setSelectedEntries] = useState(new Set());
+  const [selectedTags, setSelectedTags] = useState([]);
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [builderTab, setBuilderTab] = useState("pool");
   const [mainPoolTab, setMainPoolTab] = useState("roster");
@@ -507,7 +507,7 @@ export default function AdminPoolPage() {
         }
       }
     });
-    setSelectedEntries(new Set());
+    setSelectedTags([]);
     setBulkAssigning(false);
   }
 
@@ -805,22 +805,22 @@ export default function AdminPoolPage() {
                   {filteredUnassigned.length > 0 && (
                     <button
                       onClick={() => {
-                        if (selectedEntries.size === filteredUnassigned.length) {
-                          setSelectedEntries(new Set());
+                        if (selectedTags.length === filteredUnassigned.length) {
+                          setSelectedTags([]);
                         } else {
-                          setSelectedEntries(new Set(filteredUnassigned.map(e => e.player_tag)));
+                          setSelectedTags(filteredUnassigned.map(e => e.player_tag));
                         }
                       }}
                       className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-slate-400 hover:text-white hover:border-white/20 transition uppercase tracking-widest font-semibold">
-                      {selectedEntries.size === filteredUnassigned.length ? "None" : "All"}
+                      {selectedTags.length === filteredUnassigned.length ? "None" : "All"}
                     </button>
                   )}
                 </div>
                 {/* Multi-select banner */}
-                {selectedEntries.size > 0 && (
+                {selectedTags.length > 0 && (
                   <div className="flex items-center gap-2 mb-3 rounded-2xl border border-purple-500/40 bg-purple-500/10 px-3 py-2">
-                    <span className="text-xs text-purple-200 font-semibold flex-1">{selectedEntries.size} player{selectedEntries.size > 1 ? "s" : ""} selected</span>
-                    <button onClick={() => setSelectedEntries(new Set())} className="text-slate-500 hover:text-white transition text-xs">✕</button>
+                    <span className="text-xs text-purple-200 font-semibold flex-1">{selectedTags.length} player{selectedTags.length > 1 ? "s" : ""} selected</span>
+                    <button onClick={() => setSelectedTags([])} className="text-slate-500 hover:text-white transition text-xs">✕</button>
                     <button onClick={() => setBuilderTab("roster")} className="text-[10px] text-purple-300 hover:text-white transition">Assign →</button>
                   </div>
                 )}
@@ -829,7 +829,7 @@ export default function AdminPoolPage() {
                 ) : (
                   <div className="space-y-2">
                     {filteredUnassigned.map(entry => {
-                      const isSelected = selectedEntries.has(entry.player_tag);
+                      const isSelected = selectedTags.includes(entry.player_tag);
                       const busy = assigning === entry.player_tag;
                       const status = assignStatus[entry.player_tag];
                       return (
@@ -837,12 +837,11 @@ export default function AdminPoolPage() {
                           draggable
                           onDragStart={() => onDragStart(entry)} onDragEnd={onDragEnd}
                           onTouchStart={e => onTouchStartPlayer(e, entry)} onTouchMove={onTouchMovePlayer} onTouchEnd={onTouchEndPlayer}
-                          onClick={() => setSelectedEntries(prev => {
-                            const next = new Set(prev);
-                            if (next.has(entry.player_tag)) next.delete(entry.player_tag);
-                            else next.add(entry.player_tag);
-                            return next;
-                          })}
+                          onClick={() => setSelectedTags(prev =>
+                            prev.includes(entry.player_tag)
+                              ? prev.filter(t => t !== entry.player_tag)
+                              : [...prev, entry.player_tag]
+                          )}
                           style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                           className={`rounded-2xl border p-3 transition cursor-pointer select-none
                             ${isSelected ? "border-purple-500/60 bg-purple-500/15 shadow-[0_0_12px_rgba(168,85,247,0.15)]" :
@@ -923,17 +922,17 @@ export default function AdminPoolPage() {
                     </div>
 
                     {/* Bulk assign button */}
-                    {selectedEntries.size > 0 && (
+                    {selectedTags.length > 0 && (
                       <button
                         onClick={() => {
-                          const toAssign = entries.filter(e => selectedEntries.has(e.player_tag));
+                          const toAssign = entries.filter(e => selectedTags.includes(e.player_tag));
                           doAssignMultiple(toAssign, currentClan);
                         }}
                         disabled={bulkAssigning}
                         className="w-full mb-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
                         {bulkAssigning
                           ? "Assigning…"
-                          : `+ Assign ${selectedEntries.size} player${selectedEntries.size > 1 ? "s" : ""} to ${currentClan?.split(" ")[0]}`}
+                          : `+ Assign ${selectedTags.length} player${selectedTags.length > 1 ? "s" : ""} to ${currentClan?.split(" ")[0]}`}
                       </button>
                     )}
 
