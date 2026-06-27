@@ -58,13 +58,13 @@ function StatusToggle({ status, busy, error, onSetStatus }) {
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
-        <button type="button" disabled={busy} onClick={() => onSetStatus("registered")}
-          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isRegistered ? "bg-white/10 text-slate-300" : "text-slate-500 hover:text-slate-300"}`}>
-          Registered
-        </button>
         <button type="button" disabled={busy} onClick={() => onSetStatus("confirmed")}
           className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isConfirmed ? "bg-green-500/30 text-green-200" : "text-slate-500 hover:text-slate-300"}`}>
           Confirmed
+        </button>
+        <button type="button" disabled={busy} onClick={() => onSetStatus("registered")}
+          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isRegistered ? "bg-white/10 text-slate-300" : "text-slate-500 hover:text-slate-300"}`}>
+          Registered
         </button>
         <button type="button" disabled={busy} onClick={() => onSetStatus("substitute")}
           className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isSubstitute ? "bg-orange-500/30 text-orange-200" : "text-slate-500 hover:text-slate-300"}`}>

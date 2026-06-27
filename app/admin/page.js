@@ -486,40 +486,25 @@ export default function AdminOverviewPage() {
             </div>
           )}
 
-          {/* Bar 2 — account health (secondary, receded) */}
+          {/* Bar 2 — account health (matched style, no progress bar) */}
           {members.length > 0 && (
-            <div className="rounded-3xl border border-white/[0.06] bg-white/[0.02] px-5 py-3">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-slate-400">{members.length}</p>
-                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Total</p>
+                  <p className="text-lg font-thin text-white">{members.length}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
                 </div>
                 <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-blue-400">{stats.discordLinked ?? "—"}</p>
-                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Discord</p>
+                  <p className="text-lg font-thin text-blue-300">{stats.discordLinked ?? "—"}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Discord</p>
                 </div>
                 <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-green-400">{stats.apiVerified ?? "—"}</p>
-                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Token</p>
+                  <p className="text-lg font-thin text-green-300">{stats.apiVerified ?? "—"}</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Token</p>
                 </div>
               </div>
             </div>
           )}
-
-          {/* Quick Actions */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Quick Actions</h2>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/admin/pool" className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Pool Manager
-              </Link>
-              <Link href="/admin/announcements" className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-transparent text-blue-400 border border-blue-500/60 shadow-[0_0_8px_rgba(59,130,246,0.15)] hover:border-blue-400 hover:text-blue-300 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                Announcements
-              </Link>
-            </div>
-          </div>
 
           {/* Scheduled Events Calendar */}
           <ScheduledCalendar
