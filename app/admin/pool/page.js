@@ -767,7 +767,7 @@ export default function AdminPoolPage() {
         <div className="relative z-10 space-y-4">
 
           {/* ── ROSTER TAB ── */}
-          {poolTab === "roster" && (<>}
+          {poolTab === "roster" && (<>
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             {/* Builder header */}
             <div className="p-4 border-b border-white/10">
