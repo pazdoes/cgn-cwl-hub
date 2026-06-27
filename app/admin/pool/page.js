@@ -666,12 +666,6 @@ export default function AdminPoolPage() {
   const unassigned = entries.filter(e => !e.assigned_clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned = entries.filter(e => e.assigned_clan);
 
-  const [selectedEntries, setSelectedEntries] = useState(new Set());
-  const [bulkAssigning, setBulkAssigning] = useState(false);
-  const [builderTab, setBuilderTab] = useState("pool"); // "pool" | "roster"
-  const [mainPoolTab, setMainPoolTab] = useState("roster"); // "roster" | "settings"
-  const [activeClanIdx, setActiveClanIdx] = useState(0);
-  const [poolSearch, setPoolSearch] = useState("");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const filteredUnassigned = unassigned.filter(e =>
