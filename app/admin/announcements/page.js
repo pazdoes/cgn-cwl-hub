@@ -819,10 +819,10 @@ export default function AnnouncementsPage() {
       </div>
 
       {/* ── MAIN NAV TABS ── */}
-      <div className="relative z-10 flex items-center justify-center gap-1.5 mb-4 flex-wrap">
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["compose","Compose"],["templates","Templates"],["manage","Manage"],["tools","Tools"]].map(([key,label]) => (
           <button key={key} onClick={() => setMainTab(key)}
-            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               mainTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
