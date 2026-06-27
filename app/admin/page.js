@@ -370,6 +370,9 @@ export default function AdminOverviewPage() {
     loadData(pin);
   }, [authed, pin]);
 
+  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
+  const [adminTab, setAdminTab] = useState("dashboard");
+
   if (!authed) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6">
@@ -390,9 +393,6 @@ export default function AdminOverviewPage() {
       </main>
     );
   }
-
-  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
-  const [adminTab, setAdminTab] = useState("dashboard");
 
   const members = data?.members || [];
   const stats = data?.stats || {};
