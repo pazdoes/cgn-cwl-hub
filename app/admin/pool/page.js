@@ -471,6 +471,33 @@ export default function AdminPoolPage() {
     } finally { setAssigning(null); }
   }
 
+  async function doAssignMultiple(entries, clan) {
+    if (!entries.length || !clan) return;
+    setBulkAssigning(true);
+    const results = await Promise.allSettled(
+      entries.map(entry =>
+        fetch("/api/admin/assign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+          body: JSON.stringify({ tag: entry.player_tag, playerName: entry.player_name, clan, townHall: entry.town_hall_level || "", season }),
+        }).then(r => r.json().then(data => ({ ok: r.ok, data, entry })))
+      )
+    );
+    results.forEach(r => {
+      if (r.status === "fulfilled") {
+        const { ok, data, entry } = r.value;
+        if (ok) {
+          setAssignStatus(prev => ({ ...prev, [entry.player_tag]: { ok: true, msg: `→ ${clan}` } }));
+          setEntries(prev => prev.map(e => e.player_tag === entry.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString() } : e));
+        } else {
+          setAssignStatus(prev => ({ ...prev, [entry.player_tag]: { ok: false, msg: data.error || "Failed" } }));
+        }
+      }
+    });
+    setSelectedEntries(new Set());
+    setBulkAssigning(false);
+  }
+
   async function doUnassign(entry) {
     setUnassigning(entry.player_tag);
     try {
@@ -626,8 +653,9 @@ export default function AdminPoolPage() {
   const unassigned = entries.filter(e => !e.assigned_clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned = entries.filter(e => e.assigned_clan);
 
-  // Mobile tap-to-assign state
-  const [selectedEntry, setSelectedEntry] = useState(null);
+  // Multi-select state
+  const [selectedEntries, setSelectedEntries] = useState(new Set());
+  const [bulkAssigning, setBulkAssigning] = useState(false);
   const [builderTab, setBuilderTab] = useState("pool"); // "pool" | "roster"
   const [activeClanIdx, setActiveClanIdx] = useState(0);
   const [poolSearch, setPoolSearch] = useState("");
@@ -737,13 +765,12 @@ export default function AdminPoolPage() {
                     className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                   {poolSearch && <button onClick={() => setPoolSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
                 </div>
-                {/* Selected player indicator */}
-                {selectedEntry && (
+                {/* Multi-select banner */}
+                {selectedEntries.size > 0 && (
                   <div className="flex items-center gap-2 mb-3 rounded-2xl border border-purple-500/40 bg-purple-500/10 px-3 py-2">
-                    <ThIcon level={selectedEntry.town_hall_level} size="w-5 h-5"/>
-                    <span className="text-xs text-purple-200 font-semibold flex-1 truncate">{selectedEntry.player_name} selected</span>
-                    <button onClick={() => setSelectedEntry(null)} className="text-slate-500 hover:text-white transition text-xs">✕</button>
-                    <button onClick={() => { setBuilderTab("roster"); }} className="text-[10px] text-purple-300 hover:text-white transition">Assign →</button>
+                    <span className="text-xs text-purple-200 font-semibold flex-1">{selectedEntries.size} player{selectedEntries.size > 1 ? "s" : ""} selected</span>
+                    <button onClick={() => setSelectedEntries(new Set())} className="text-slate-500 hover:text-white transition text-xs">✕</button>
+                    <button onClick={() => setBuilderTab("roster")} className="text-[10px] text-purple-300 hover:text-white transition">Assign →</button>
                   </div>
                 )}
                 {filteredUnassigned.length === 0 ? (
@@ -751,7 +778,7 @@ export default function AdminPoolPage() {
                 ) : (
                   <div className="space-y-2">
                     {filteredUnassigned.map(entry => {
-                      const isSelected = selectedEntry?.player_tag === entry.player_tag;
+                      const isSelected = selectedEntries.has(entry.player_tag);
                       const busy = assigning === entry.player_tag;
                       const status = assignStatus[entry.player_tag];
                       return (
@@ -759,7 +786,12 @@ export default function AdminPoolPage() {
                           draggable
                           onDragStart={() => onDragStart(entry)} onDragEnd={onDragEnd}
                           onTouchStart={e => onTouchStartPlayer(e, entry)} onTouchMove={onTouchMovePlayer} onTouchEnd={onTouchEndPlayer}
-                          onClick={() => setSelectedEntry(isSelected ? null : entry)}
+                          onClick={() => setSelectedEntries(prev => {
+                            const next = new Set(prev);
+                            if (next.has(entry.player_tag)) next.delete(entry.player_tag);
+                            else next.add(entry.player_tag);
+                            return next;
+                          })}
                           style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                           className={`rounded-2xl border p-3 transition cursor-pointer select-none
                             ${isSelected ? "border-purple-500/60 bg-purple-500/15 shadow-[0_0_12px_rgba(168,85,247,0.15)]" :
@@ -772,9 +804,13 @@ export default function AdminPoolPage() {
                               <p className="font-semibold text-sm text-white truncate">{entry.player_name}</p>
                               <p className="text-[10px] text-slate-600 font-mono">{entry.player_tag}</p>
                             </div>
-                            {isSelected && <span className="text-[10px] text-purple-300 shrink-0">Selected ✓</span>}
+                            {isSelected && (
+                              <span className="w-5 h-5 rounded-full bg-purple-500/30 border border-purple-500/60 flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              </span>
+                            )}
                             {status && !isSelected && <Pill variant={status.ok ? "success" : "error"}>{status.msg}</Pill>}
-                            {!isSelected && !status && <span className="text-[10px] text-slate-700 shrink-0 hidden sm:block">drag or tap</span>}
+                            {!isSelected && !status && <span className="text-[10px] text-slate-700 shrink-0 hidden sm:block">tap to select</span>}
                           </div>
                         </div>
                       );
@@ -820,11 +856,18 @@ export default function AdminPoolPage() {
                       <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                     </div>
 
-                    {/* Tap to assign indicator */}
-                    {selectedEntry && (
-                      <button onClick={() => { doAssign(selectedEntry, currentClan); setSelectedEntry(null); }}
-                        className="w-full mb-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition">
-                        + Assign {selectedEntry.player_name} to {currentClan?.split(" ")[0]}
+                    {/* Bulk assign button */}
+                    {selectedEntries.size > 0 && (
+                      <button
+                        onClick={() => {
+                          const toAssign = entries.filter(e => selectedEntries.has(e.player_tag));
+                          doAssignMultiple(toAssign, currentClan);
+                        }}
+                        disabled={bulkAssigning}
+                        className="w-full mb-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
+                        {bulkAssigning
+                          ? "Assigning…"
+                          : `+ Assign ${selectedEntries.size} player${selectedEntries.size > 1 ? "s" : ""} to ${currentClan?.split(" ")[0]}`}
                       </button>
                     )}
 
