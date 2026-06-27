@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
@@ -70,16 +70,13 @@ function OverallChart({ seasons }) {
     <div className="mt-3 pt-3 border-t border-white/[0.06]">
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
-        {/* Y gridlines */}
         {[0,1,2,3].map(v => (
           <g key={v}>
             <line x1={PAD_L} y1={toY(v)} x2={W-PAD_R} y2={toY(v)} stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
             <text x={PAD_L-2} y={toY(v)+4} fontSize="7" fill="#475569" textAnchor="end">{v}</text>
           </g>
         ))}
-        {/* Line */}
         <polyline points={pts} fill="none" stroke={lineColour} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
-        {/* Dots + season labels */}
         {valid.map((s, i) => (
           <g key={i}>
             <circle cx={toX(i)} cy={toY(s.overall)} r="3" fill={lineColour} stroke="#0d1424" strokeWidth="1.5"/>
@@ -105,12 +102,149 @@ const STAT_COLS = [
   { key: "destruction_pct",    label: "Dest %",   fmt: v => v != null ? parseFloat(v).toFixed(1)+"%" : "—" },
 ];
 
+/* ─── Share Card (hidden, rendered off-screen, snapshotted by html2canvas) ─── */
+function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDefEff, totalStars, totalMissed, careerThree, careerTwo, careerOne, careerZero }) {
+  const latest = data.seasons[0];
+  const threeStarRate = latest?.attacks_used > 0
+    ? ((latest.three_stars||0)/latest.attacks_used*100).toFixed(0)+"%" : "—";
+
+  return (
+    <div style={{
+      width: 480,
+      background: "#070b17",
+      borderRadius: 24,
+      border: rank <= 3
+        ? `1px solid ${rank===1?"rgba(212,175,55,0.5)":rank===2?"rgba(167,167,173,0.5)":"rgba(205,127,50,0.5)"}`
+        : "1px solid rgba(255,255,255,0.1)",
+      padding: 28,
+      fontFamily: "ui-sans-serif, system-ui, sans-serif",
+      color: "white",
+      boxSizing: "border-box",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Background glow */}
+      <div style={{
+        position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)",
+        width: 360, height: 360, borderRadius: "50%",
+        background: "rgba(139,92,246,0.08)", filter: "blur(60px)", pointerEvents: "none",
+      }}/>
+
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        {TH_ICONS[String(data.town_hall_level)] && (
+          <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={44} height={44} style={{borderRadius:8}}/>
+        )}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {rank <= 3 && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke={rankColour} strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+              </svg>
+            )}
+            <span style={{ fontSize: 20, fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white" }}>
+              {data.player_name}
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+            {rank && (
+              <span style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                #{rank} Alliance · {latest?.season}
+              </span>
+            )}
+          </div>
+        </div>
+        {/* Overall rating */}
+        {latestOverall != null && (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 32, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
+              {parseFloat(latestOverall).toFixed(2)}
+            </div>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 3 }}>
+              Overall
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 16 }}/>
+
+      {/* Stat grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
+        {[
+          { label: "Atk EFF", value: avgEfficiency, colour: "#c4b5fd" },
+          { label: "Def EFF", value: avgDefEff,     colour: "#93c5fd" },
+          { label: "Stars",   value: totalStars,    colour: "#86efac" },
+          { label: "3★ Rate", value: threeStarRate, colour: "#86efac" },
+          { label: "Missed",  value: totalMissed,   colour: totalMissed > 0 ? "#f87171" : "#475569" },
+          { label: "Seasons", value: data.seasons.length, colour: "#94a3b8" },
+          { label: "Best",    value: data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—", colour: "#fbbf24" },
+          { label: "Clan",    value: latest?.clan_name?.split(" ")[0] || "—", colour: "#94a3b8" },
+        ].map(({ label, value, colour }) => (
+          <div key={label} style={{
+            background: "rgba(255,255,255,0.04)",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.07)",
+            padding: "8px 6px",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Attack breakdown pie + bars */}
+      <div style={{
+        background: "rgba(255,255,255,0.03)",
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.07)",
+        padding: "12px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        marginBottom: 14,
+      }}>
+        <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", writingMode: "vertical-rl", transform: "rotate(180deg)", flexShrink: 0 }}>
+          Career Attacks
+        </div>
+        {/* Mini bars */}
+        <div style={{ flex: 1 }}>
+          {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
+            const tot = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
+            const pct = tot > 0 ? ((val||0)/tot*100).toFixed(0) : 0;
+            return (
+              <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 9, color: "#64748b", width: 20, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
+                <div style={{ flex: 1, height: 5, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
+                </div>
+                <span style={{ fontSize: 9, color: "#64748b", width: 16, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 4 }}>
+        <span style={{ fontSize: 9, color: "#334155", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+          cgnco.vercel.app · Cognition {"{CGN}"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function PlayerProfilePage() {
   const { tag } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [view, setView] = useState("overview");
+  const [sharing, setSharing] = useState(false);
+  const shareCardRef = useRef(null);
 
   useEffect(() => {
     if (!tag) return;
@@ -175,11 +309,50 @@ export default function PlayerProfilePage() {
   const careerOneC   = data.seasons.reduce((s,r)=>s+(r.one_stars_conceded||0),0);
   const careerZeroC  = data.seasons.reduce((s,r)=>s+(r.zero_stars_conceded||0),0);
 
-  // Hero border for top 3
   const heroBorderStyle = rank === 1 ? `1px solid rgba(212,175,55,0.4)` : rank === 2 ? `1px solid rgba(167,167,173,0.4)` : rank === 3 ? `1px solid rgba(205,127,50,0.4)` : null;
+
+  async function handleShare() {
+    if (!shareCardRef.current || sharing) return;
+    setSharing(true);
+    try {
+      const { shareCard } = await import("@/lib/shareCard");
+      await shareCard(shareCardRef.current, `cgn-${data.player_name.toLowerCase().replace(/\s+/g,"-")}.png`);
+    } catch (e) {
+      console.error("Share failed", e);
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      {/* Hidden share card — rendered off-screen, snapshotted on demand */}
+      <div
+        ref={shareCardRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: "-9999px",
+          zIndex: -1,
+          pointerEvents: "none",
+        }}
+      >
+        <ShareCard
+          data={data}
+          latestOverall={latestOverall}
+          rank={rank}
+          rankColour={rankColour}
+          avgEfficiency={avgEfficiency}
+          avgDefEff={avgDefEff}
+          totalStars={totalStars}
+          totalMissed={totalMissed}
+          careerThree={careerThree}
+          careerTwo={careerTwo}
+          careerOne={careerOne}
+          careerZero={careerZero}
+        />
+      </div>
+
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
@@ -215,11 +388,10 @@ export default function PlayerProfilePage() {
               </div>
             </div>
           )}
-
-
         </div>
 
-        <div className="flex items-center justify-center gap-4 pt-4 mt-3">
+        {/* Tab toggle */}
+        <div className="flex items-center justify-center gap-4 pt-4 mt-3 border-t border-white/[0.04]">
           <button onClick={() => setView("overview")} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
@@ -232,6 +404,26 @@ export default function PlayerProfilePage() {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
             </svg>
+          </button>
+        </div>
+
+        {/* Share button */}
+        <div className="flex justify-center mt-3">
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] hover:border-purple-500/40 hover:bg-purple-500/10 transition text-[10px] text-slate-500 hover:text-purple-300 uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {sharing ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+            )}
+            {sharing ? "Generating…" : "Share Card"}
           </button>
         </div>
       </div>
@@ -249,7 +441,6 @@ export default function PlayerProfilePage() {
               {data.bestEfficiency && <StatBox label="Best Atk EFF" value={parseFloat(data.bestEfficiency.efficiency).toFixed(2)} colour="text-green-400"/>}
               <StatBox label="Missed" value={totalMissed} colour={totalMissed > 0 ? "text-red-400" : "text-slate-500"}/>
             </div>
-
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
@@ -269,8 +460,6 @@ export default function PlayerProfilePage() {
       {/* ── STATS VIEW ── */}
       {view === "stats" && (
         <div className="relative z-10 space-y-4">
-
-          {/* Performance summary */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Performance · {latest?.season}</p>
             <div className="grid grid-cols-2 gap-2 mb-2">
@@ -292,7 +481,6 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
-          {/* Attack */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <div className="flex items-center gap-1.5 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -315,7 +503,6 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
-          {/* Defence */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <div className="flex items-center gap-1.5 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -334,13 +521,11 @@ export default function PlayerProfilePage() {
             </div>
           </div>
 
-          {/* Overall rating trend chart */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
             <OverallChart seasons={data.seasons}/>
           </div>
 
-          {/* Season history table — best season highlighted, CWL rank included */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season History</p>
             <div className="overflow-x-auto -mx-1">
