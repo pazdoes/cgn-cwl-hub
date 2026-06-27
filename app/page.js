@@ -1522,22 +1522,26 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Dot grid background */}
+      {/* Glass texture background */}
       <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <pattern id="dotgrid-recap" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.045)"/>
+          <radialGradient id="glass-depth-recap" cx="50%" cy="35%" r="65%" fx="50%" fy="25%">
+            <stop offset="0%" stopColor="#1c1408" stopOpacity="1"/>
+            <stop offset="45%" stopColor="#0d0c0a" stopOpacity="1"/>
+            <stop offset="100%" stopColor="#04060e" stopOpacity="1"/>
+          </radialGradient>
+          <radialGradient id="tint-recap" cx="50%" cy="20%" r="55%">
+            <stop offset="0%" stopColor="#d4a017" stopOpacity="0.10"/>
+            <stop offset="100%" stopColor="#d4a017" stopOpacity="0"/>
+          </radialGradient>
+          <pattern id="grain-recap" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="4" x2="4" y2="0" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5"/>
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#dotgrid-recap)"/>
+        <rect width="100%" height="100%" fill="url(#glass-depth-recap)"/>
+        <rect width="100%" height="100%" fill="url(#tint-recap)"/>
+        <rect width="100%" height="100%" fill="url(#grain-recap)"/>
       </svg>
-      {/* CGN skull watermark */}
-      <img src="/icons/branding/cgn-skull.png" alt="" style={{
-        position: "absolute", top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: 200, height: 200,
-        opacity: 0.025, pointerEvents: "none",
-      }}/>
 
       {/* ── Row 1: Season title + Top Clan ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>

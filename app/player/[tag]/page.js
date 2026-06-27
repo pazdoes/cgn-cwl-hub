@@ -143,22 +143,26 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Dot grid background */}
+      {/* Glass texture background */}
       <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <pattern id="dotgrid-player" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.045)"/>
+          <radialGradient id="glass-depth-player" cx="50%" cy="30%" r="65%" fx="50%" fy="20%">
+            <stop offset="0%" stopColor="#1a1040" stopOpacity="1"/>
+            <stop offset="45%" stopColor="#0d0d1f" stopOpacity="1"/>
+            <stop offset="100%" stopColor="#04060e" stopOpacity="1"/>
+          </radialGradient>
+          <radialGradient id="tint-player" cx="50%" cy="20%" r="55%">
+            <stop offset="0%" stopColor="#6d28d9" stopOpacity="0.12"/>
+            <stop offset="100%" stopColor="#6d28d9" stopOpacity="0"/>
+          </radialGradient>
+          <pattern id="grain-player" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="4" x2="4" y2="0" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5"/>
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#dotgrid-player)"/>
+        <rect width="100%" height="100%" fill="url(#glass-depth-player)"/>
+        <rect width="100%" height="100%" fill="url(#tint-player)"/>
+        <rect width="100%" height="100%" fill="url(#grain-player)"/>
       </svg>
-      {/* CGN skull watermark */}
-      <img src="/icons/branding/cgn-skull.png" alt="" style={{
-        position: "absolute", top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: 180, height: 180,
-        opacity: 0.025, pointerEvents: "none",
-      }}/>
 
       {/* ── Row 1: Header ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
