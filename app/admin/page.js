@@ -405,6 +405,7 @@ export default function AdminOverviewPage() {
   });
 
   const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
+  const [adminTab, setAdminTab] = useState("dashboard");
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
@@ -428,6 +429,20 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
+      {/* Tab nav */}
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
+        {[["dashboard","Dashboard"],["directory","Directory"]].map(([key,label]) => (
+          <button key={key} onClick={() => setAdminTab(key)}
+            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+              adminTab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="relative z-10 space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -436,6 +451,41 @@ export default function AdminOverviewPage() {
         </div>
       ) : (
         <div className="relative z-10 space-y-4">
+
+          {/* ── DASHBOARD TAB ── */}
+          {adminTab === "dashboard" && (<>
+
+          {/* Quick stats bar */}
+          {members.length > 0 && (() => {
+            const inPool = members.filter(m => m.in_pool).length;
+            const assigned = members.filter(m => m.assigned_clan).length;
+            const pct = inPool > 0 ? Math.round((assigned / inPool) * 100) : 0;
+            return (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="text-center flex-1">
+                    <p className="text-lg font-thin text-white">{members.length}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
+                  </div>
+                  <div className="text-center flex-1">
+                    <p className="text-lg font-thin text-purple-300">{inPool}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">In Pool</p>
+                  </div>
+                  <div className="text-center flex-1">
+                    <p className="text-lg font-thin text-green-300">{assigned}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Assigned</p>
+                  </div>
+                  <div className="text-center flex-1">
+                    <p className={`text-lg font-thin ${pct === 100 ? "text-green-300" : pct >= 75 ? "text-amber-300" : "text-red-400"}`}>{pct}%</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Ready</p>
+                  </div>
+                </div>
+                <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full bg-purple-500/60 transition-all" style={{width: `${pct}%`}}/>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
@@ -474,15 +524,21 @@ export default function AdminOverviewPage() {
             setEventFilter={setEventFilter}
           />
 
+          </>)} {/* end dashboard tab */}
+
+          {/* ── DIRECTORY TAB ── */}
+          {adminTab === "directory" && (<>
+
           {/* Member Directory */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Member Directory</h2>
               <button type="button" onClick={() => loadData(pin)} title="Refresh"
-                className="w-6 h-6 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-500 hover:text-white hover:border-white/20 transition">
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20 transition text-[10px] uppercase tracking-widest font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
+                Refresh
               </button>
             </div>
 
@@ -525,19 +581,16 @@ export default function AdminOverviewPage() {
                     {m.assigned_clan && <p className="text-[10px] text-slate-500 truncate">{m.assigned_clan.split(" ")[0]}</p>}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {/* In pool */}
                     <span title={m.in_pool ? "In pool" : "Not in pool"}
                       className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] border ${m.in_pool ? "border-purple-500/40 text-purple-400" : "border-white/10 text-slate-700"}`}>
                       {m.in_pool ? "✓" : "—"}
                     </span>
-                    {/* Discord */}
                     <span title={m.discord_id ? "Discord linked" : "No Discord"}
                       className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.discord_id ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-700"}`}>
                       <svg className="w-2.5 h-2.5" viewBox="0 0 127.14 96.36" fill="currentColor">
                         <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0 0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
                       </svg>
                     </span>
-                    {/* API Token */}
                     <span title={m.api_token_verified ? "Token verified" : "No token"}
                       className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.api_token_verified ? "border-green-500/40 text-green-400" : "border-white/10 text-slate-700"}`}>
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -552,6 +605,8 @@ export default function AdminOverviewPage() {
               )}
             </div>
           </div>
+
+          </>)} {/* end directory tab */}
 
         </div>
       )}

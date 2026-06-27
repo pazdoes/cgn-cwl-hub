@@ -37,10 +37,15 @@ function RankRefreshButton({ busy, result, onClick }) {
   const title = busy ? "Refreshing…" : result ? (result.ok ? `Updated: ${result.message}` : result.message) : "Refresh CWL Rank from CoC API";
   return (
     <button type="button" onClick={onClick} disabled={busy} title={title}
-      className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${result?.ok === false ? "bg-red-500/10 border-red-500/30 text-red-300" : "bg-white/[0.03] border-white/10 text-slate-400 hover:bg-white/[0.08] hover:text-slate-200"}`}>
-      <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-semibold uppercase tracking-widest transition disabled:opacity-40 ${
+        result?.ok === false
+          ? "border-red-500/40 bg-red-500/10 text-red-300"
+          : "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20"
+      }`}>
+      <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${busy ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
+      {result?.ok === false ? "Failed" : "Refresh"}
     </button>
   );
 }
@@ -657,6 +662,7 @@ export default function AdminPoolPage() {
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [builderTab, setBuilderTab] = useState("pool"); // "pool" | "roster"
+  const [poolTab, setPoolTab] = useState("roster"); // "roster" | "settings"
   const [activeClanIdx, setActiveClanIdx] = useState(0);
   const [poolSearch, setPoolSearch] = useState("");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
@@ -722,6 +728,34 @@ export default function AdminPoolPage() {
         </div>
       </div>
 
+      {/* Pool Manager tab nav */}
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
+        {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
+          <button key={key} onClick={() => setPoolTab(key)}
+            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+              poolTab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Pool Manager tab nav */}
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
+        {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
+          <button key={key} onClick={() => setPoolTab(key)}
+            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+              poolTab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       {loading && (
         <div className="relative z-10 space-y-3">
           {Array.from({length:3}).map((_,i) => <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] h-20 animate-pulse"/>)}
@@ -732,7 +766,8 @@ export default function AdminPoolPage() {
       {!loading && (clans.length > 0 || entries.length > 0) && (
         <div className="relative z-10 space-y-4">
 
-          {/* ── ROSTER BUILDER ── */}
+          {/* ── ROSTER TAB ── */}
+          {poolTab === "roster" && (<>}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             {/* Builder header */}
             <div className="p-4 border-b border-white/10">
@@ -759,11 +794,26 @@ export default function AdminPoolPage() {
             {/* Pool tab */}
             {builderTab === "pool" && (
               <div className="p-4">
-                {/* Search */}
-                <div className="relative mb-3">
-                  <input type="text" placeholder="Search pool…" value={poolSearch} onChange={e => setPoolSearch(e.target.value)}
-                    className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                  {poolSearch && <button onClick={() => setPoolSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
+                {/* Search + Select All */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="relative flex-1">
+                    <input type="text" placeholder="Search pool…" value={poolSearch} onChange={e => setPoolSearch(e.target.value)}
+                      className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    {poolSearch && <button onClick={() => setPoolSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
+                  </div>
+                  {filteredUnassigned.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (selectedEntries.size === filteredUnassigned.length) {
+                          setSelectedEntries(new Set());
+                        } else {
+                          setSelectedEntries(new Set(filteredUnassigned.map(e => e.player_tag)));
+                        }
+                      }}
+                      className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-slate-400 hover:text-white hover:border-white/20 transition uppercase tracking-widest font-semibold">
+                      {selectedEntries.size === filteredUnassigned.length ? "None" : "All"}
+                    </button>
+                  )}
                 </div>
                 {/* Multi-select banner */}
                 {selectedEntries.size > 0 && (
@@ -825,7 +875,7 @@ export default function AdminPoolPage() {
               <div className="p-4">
                 {/* Clan selector */}
                 {clans.length > 1 && (
-                  <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="flex items-center justify-center gap-3 mb-2">
                     <button onClick={() => setActiveClanIdx(i => Math.max(0, i-1))} disabled={activeClanIdx === 0}
                       className="text-slate-500 hover:text-slate-300 transition p-1 disabled:opacity-30">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -837,6 +887,21 @@ export default function AdminPoolPage() {
                     </button>
                   </div>
                 )}
+                {/* Roster completion indicator */}
+                {currentClan && (() => {
+                  const count = currentClanEntries.length;
+                  const target = currentFormat;
+                  const pct = target > 0 ? Math.min(100, Math.round((count / target) * 100)) : 0;
+                  const full = count >= target;
+                  return (
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${full ? "bg-green-500/60" : "bg-purple-500/60"}`} style={{width:`${pct}%`}}/>
+                      </div>
+                      <span className={`text-[10px] shrink-0 font-semibold ${full ? "text-green-400" : "text-slate-500"}`}>{count}/{target}</span>
+                    </div>
+                  );
+                })()}
 
                 {currentClan && (
                   <>
@@ -913,6 +978,11 @@ export default function AdminPoolPage() {
               </div>
             )}
           </div>
+
+          </>)} {/* end roster tab */}
+
+          {/* ── SETTINGS TAB ── */}
+          {poolTab === "settings" && (<>
 
           {/* ── SEASON TILE ── */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
@@ -1032,6 +1102,7 @@ export default function AdminPoolPage() {
             )}
           </div>
 
+          </>)} {/* end settings tab */}
 
         </div>
       )}
