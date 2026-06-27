@@ -47,7 +47,7 @@ export async function POST(request) {
     ];
   }
 
-  const webhookUrl = new URL(webhook.webhook_url);
+  const webhookUrl = new URL(webhook.webhook_url || webhook.webhookUrl);
   if (payload.components?.length) {
     webhookUrl.searchParams.set("with_components", "true");
   }
