@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { getLeagueStyles } from "../lib/leagueColors";
@@ -1486,12 +1486,265 @@ function ContrastToggle() {
 }
 
 
+// ─── Recap Share Card ────────────────────────────────────────────────────────
+// Rendered off-screen, snapshotted by html2canvas via lib/shareCard.js.
+// All graphics are inlined as raw SVG — no imported components.
+// 680px landscape, solid backgrounds, no backdrop-blur.
+
+function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason }) {
+  const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
+  const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
+
+  const statCell = (label, value, colour) => (
+    <div key={label} style={{
+      background: "rgba(255,255,255,0.04)",
+      borderRadius: 10,
+      border: "1px solid rgba(255,255,255,0.07)",
+      padding: "7px 5px",
+      textAlign: "center",
+      flex: 1,
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
+      <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
+    </div>
+  );
+
+  return (
+    <div style={{
+      width: 680,
+      background: "#070b17",
+      borderRadius: 24,
+      border: "1px solid rgba(212,175,55,0.35)",
+      padding: "22px 26px 18px",
+      fontFamily: "ui-sans-serif, system-ui, sans-serif",
+      color: "white",
+      boxSizing: "border-box",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Background glow */}
+      <div style={{
+        position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)",
+        width: 400, height: 400, borderRadius: "50%",
+        background: "rgba(139,92,246,0.06)", filter: "blur(60px)", pointerEvents: "none",
+      }}/>
+
+      {/* ── Row 1: Season title + Top Clan ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+        {/* Left: season label */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>
+            Season Recap
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 300, letterSpacing: "0.08em", color: "white" }}>
+            {selectedSeason}
+          </div>
+        </div>
+
+        {/* Right: Top Clan */}
+        {topClan && (
+          <div style={{
+            background: "rgba(212,175,55,0.06)",
+            border: "1px solid rgba(212,175,55,0.25)",
+            borderRadius: 14,
+            padding: "10px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+            </svg>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 300, letterSpacing: "0.1em", color: medalColours[1] }}>
+                {topClan.clan_name.split(" ")[0]}
+              </div>
+              <div style={{ fontSize: 9, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 2 }}>
+                {topClan.cwl_rank}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginLeft: 4 }}>
+              {[
+                { label: "Wins", value: topClan.wars_won, colour: "#86efac" },
+                { label: "Atk EFF", value: parseFloat(topClan.attack_efficiency).toFixed(2), colour: "#c4b5fd" },
+                { label: "Overall", value: topClan.overall.toFixed(2), colour: "#c4b5fd" },
+              ].map(({ label, value, colour }) => (
+                <div key={label} style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: colour }}>{value}</div>
+                  <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 1 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 12 }}/>
+
+      {/* ── Row 2: Top 3 Players + Standout Performers ── */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+
+        {/* Left: Top 3 Players */}
+        <div style={{
+          flex: 1,
+          background: "rgba(255,255,255,0.03)",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.07)",
+          padding: "10px 12px",
+        }}>
+          <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+            Top Players
+          </div>
+          {top3.map((p, i) => (
+            <div key={p.player_tag} style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: i < 2 ? 6 : 0,
+              paddingBottom: i < 2 ? 6 : 0,
+              borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+                </svg>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: medalColours[i+1] }}>{p.player_name}</div>
+                  <div style={{ fontSize: 8, color: "#64748b" }}>{p.clan_name.split(" ")[0]}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>{p.overall.toFixed(2)}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Right: Standout Performers */}
+        <div style={{
+          width: 200,
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}>
+          {bestAttacker && (
+            <div style={{
+              background: "rgba(139,92,246,0.06)",
+              borderRadius: 12,
+              border: "1px solid rgba(139,92,246,0.2)",
+              padding: "10px 12px",
+              flex: 1,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <div style={{ fontSize: 7.5, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Best Attack</div>
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{bestAttacker.player_name}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#c4b5fd", marginTop: 2 }}>{parseFloat(bestAttacker.efficiency).toFixed(2)}</div>
+            </div>
+          )}
+          {bestDefender && (
+            <div style={{
+              background: "rgba(59,130,246,0.06)",
+              borderRadius: 12,
+              border: "1px solid rgba(59,130,246,0.2)",
+              padding: "10px 12px",
+              flex: 1,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <div style={{ fontSize: 7.5, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Best Defence</div>
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{bestDefender.player_name}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#93c5fd", marginTop: 2 }}>{parseFloat(bestDefender.defence_efficiency).toFixed(2)}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Row 3: Alliance War Record ── */}
+      <div style={{
+        background: "rgba(255,255,255,0.03)",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.07)",
+        padding: "10px 12px",
+        marginBottom: 12,
+      }}>
+        <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          Alliance War Record
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {/* W/L/D summary */}
+          <div style={{ display: "flex", gap: 8, marginRight: 8 }}>
+            {[
+              { label: "Won", value: totalWins, colour: "#86efac" },
+              { label: "Lost", value: totalLosses, colour: "#f87171" },
+              { label: "Drawn", value: totalDraws, colour: "#64748b" },
+            ].map(({ label, value, colour }) => (
+              <div key={label} style={{
+                background: "rgba(255,255,255,0.04)",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.07)",
+                padding: "6px 12px",
+                textAlign: "center",
+                minWidth: 44,
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 300, color: colour }}>{value}</div>
+                <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 1 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Clan breakdown */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+            {clanWithOverall.slice(0, 4).map((c, i) => (
+              <div key={c.clan_name} style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingBottom: 4,
+                borderBottom: i < Math.min(clanWithOverall.length, 4) - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+                  </svg>
+                  <span style={{ fontSize: 10, color: "white" }}>{c.clan_name.split(" ")[0]}</span>
+                </div>
+                <div style={{ display: "flex", gap: 8, fontSize: 9 }}>
+                  <span style={{ color: "#86efac" }}>{c.wars_won}W</span>
+                  <span style={{ color: "#f87171" }}>{c.wars_lost}L</span>
+                  <span style={{ color: "#c4b5fd" }}>{parseFloat(c.attack_efficiency).toFixed(2)} EFF</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 7, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+          cgnco.vercel.app · Cognition {"{CGN}"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+
 function RecapView({ onBack }) {
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState(null);
   const [stats, setStats] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const recapCardRef = useRef(null);
 
   useEffect(() => {
     Promise.all([
@@ -1553,8 +1806,43 @@ function RecapView({ onBack }) {
   const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
 
+  async function handleShare() {
+    if (!recapCardRef.current || sharing) return;
+    setSharing(true);
+    try {
+      const { shareCard } = await import("@/lib/shareCard");
+      const result = await shareCard(recapCardRef.current, `cgn-recap-${(selectedSeason||"season").toLowerCase().replace(/\s+/g,"-")}.png`);
+      if (result?.copied) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } catch (e) {
+      console.error("Share failed", e);
+    } finally {
+      setSharing(false);
+    }
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+
+      {/* Hidden recap share card */}
+      <div ref={recapCardRef} style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1, pointerEvents: "none" }}>
+        {!loading && topClan && (
+          <RecapShareCard
+            topClan={topClan}
+            top3={top3}
+            bestAttacker={bestAttacker}
+            bestDefender={bestDefender}
+            totalWins={totalWins}
+            totalLosses={totalLosses}
+            totalDraws={totalDraws}
+            clanWithOverall={clanWithOverall}
+            selectedSeason={selectedSeason}
+          />
+        )}
+      </div>
+
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
@@ -1569,6 +1857,44 @@ function RecapView({ onBack }) {
           </select>
         ) : (
           <p className="text-slate-500 text-xs mt-1">{selectedSeason}</p>
+        )}
+
+        {/* Share button */}
+        {!loading && topClan && (
+          <div className="flex justify-center mt-3">
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full border transition text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed ${
+                copied
+                  ? "border-green-500/50 bg-green-500/10 text-green-400"
+                  : "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20"
+              }`}
+            >
+              {sharing ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  Generating…
+                </>
+              ) : copied ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Copied
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  </svg>
+                  Share Recap
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
 
@@ -1703,6 +2029,7 @@ function RecapView({ onBack }) {
     </main>
   );
 }
+
 
 
 function LeaderboardView({ onBack }) {
