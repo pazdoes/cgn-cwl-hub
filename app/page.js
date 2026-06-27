@@ -1522,8 +1522,8 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Glass texture background */}
-      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
+      {/* Glass texture background — z-index 0, sits behind all content */}
+      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="glass-depth-recap" cx="50%" cy="35%" r="65%" fx="50%" fy="25%">
             <stop offset="0%" stopColor="#1c1408" stopOpacity="1"/>
@@ -1542,8 +1542,8 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         <rect width="100%" height="100%" fill="url(#tint-recap)"/>
         <rect width="100%" height="100%" fill="url(#grain-recap)"/>
       </svg>
-
-      {/* ── Row 1: Season title + Top Clan ── */}
+      {/* Card content — z-index 1, sits above background */}
+      <div style={{ position: "relative", zIndex: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
         {/* Left: season label */}
         <div style={{ flex: 1 }}>
@@ -1745,6 +1745,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
           cgnco.vercel.app · Cognition {"{CGN}"}
         </span>
       </div>
+      </div>{/* end content wrapper */}
     </div>
   );
 }

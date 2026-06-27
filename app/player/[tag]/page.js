@@ -143,8 +143,8 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Glass texture background */}
-      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
+      {/* Glass texture background — z-index 0, sits behind all content */}
+      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="glass-depth-player" cx="50%" cy="30%" r="65%" fx="50%" fy="20%">
             <stop offset="0%" stopColor="#1a1040" stopOpacity="1"/>
@@ -163,8 +163,8 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
         <rect width="100%" height="100%" fill="url(#tint-player)"/>
         <rect width="100%" height="100%" fill="url(#grain-player)"/>
       </svg>
-
-      {/* ── Row 1: Header ── */}
+      {/* Card content — z-index 1, sits above background */}
+      <div style={{ position: "relative", zIndex: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
         {/* TH icon — spans full height of name + subtitle */}
         {TH_ICONS[String(data.town_hall_level)] && (
@@ -281,6 +281,7 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
           cgnco.vercel.app · Cognition {"{CGN}"}
         </span>
       </div>
+      </div>{/* end content wrapper */}
     </div>
   );
 }
