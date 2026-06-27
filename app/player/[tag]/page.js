@@ -228,8 +228,8 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       </div>
 
       {/* Footer */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 4 }}>
-        <span style={{ fontSize: 9, color: "#334155", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2, paddingBottom: 2 }}>
+        <span style={{ fontSize: 7, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
           cgnco.vercel.app · Cognition {"{CGN}"}
         </span>
       </div>
