@@ -156,16 +156,24 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
           <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={48} height={48} style={{borderRadius:8, flexShrink:0}}/>
         )}
         <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {rank <= 3 && (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={rankColour} strokeWidth={1.8} style={{ display: "inline-block", flexShrink: 0, position: "relative", top: "3px" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-              </svg>
-            )}
-            <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white", lineHeight: "20px", display: "block" }}>
-              {data.player_name}
-            </span>
-          </div>
+          <table style={{ borderCollapse: "collapse", marginBottom: 4 }}>
+            <tbody>
+              <tr>
+                {rank <= 3 && (
+                  <td style={{ verticalAlign: "middle", paddingRight: 8, lineHeight: 0 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={rankColour} strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                  </td>
+                )}
+                <td style={{ verticalAlign: "middle" }}>
+                  <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white" }}>
+                    {data.player_name}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <div style={{ marginTop: 4 }}>
             <span style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
               {rank ? `#${rank} Alliance · ` : ""}{latest?.season}{latest?.clan_name ? ` · ${latest.clan_name.split(" ")[0]}` : ""}
