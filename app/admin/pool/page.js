@@ -662,7 +662,7 @@ export default function AdminPoolPage() {
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [builderTab, setBuilderTab] = useState("pool"); // "pool" | "roster"
-  const [poolTab, setPoolTab] = useState("roster"); // "roster" | "settings"
+  const [mainPoolTab, setMainPoolTab] = useState("roster"); // "roster" | "settings"
   const [activeClanIdx, setActiveClanIdx] = useState(0);
   const [poolSearch, setPoolSearch] = useState("");
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
@@ -731,9 +731,9 @@ export default function AdminPoolPage() {
       {/* Pool Manager tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
-          <button key={key} onClick={() => setPoolTab(key)}
+          <button key={key} onClick={() => setMainPoolTab(key)}
             className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
-              poolTab === key
+              mainPoolTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
             }`}>
@@ -745,9 +745,9 @@ export default function AdminPoolPage() {
       {/* Pool Manager tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
-          <button key={key} onClick={() => setPoolTab(key)}
+          <button key={key} onClick={() => setMainPoolTab(key)}
             className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
-              poolTab === key
+              mainPoolTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
             }`}>
@@ -767,7 +767,7 @@ export default function AdminPoolPage() {
         <div className="relative z-10 space-y-4">
 
           {/* ── ROSTER TAB ── */}
-          {poolTab === "roster" && (<>
+          {mainPoolTab === "roster" && (<>
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             {/* Builder header */}
             <div className="p-4 border-b border-white/10">
@@ -982,7 +982,7 @@ export default function AdminPoolPage() {
           </>)} {/* end roster tab */}
 
           {/* ── SETTINGS TAB ── */}
-          {poolTab === "settings" && (<>
+          {mainPoolTab === "settings" && (<>
 
           {/* ── SEASON TILE ── */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
