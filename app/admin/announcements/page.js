@@ -369,7 +369,8 @@ export default function AnnouncementsPage() {
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [saveTemplateResult, setSaveTemplateResult] = useState(null);
 
-  const [tab, setTab] = useState("compose");
+  const [mainTab, setMainTab] = useState("compose");
+  const [manageTab, setManageTab] = useState(""); // accordion within manage
   const [composeMode, setComposeMode] = useState("quick");
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
@@ -817,7 +818,24 @@ export default function AnnouncementsPage() {
         </Card>
       </div>
 
+      {/* ── MAIN NAV TABS ── */}
+      <div className="relative z-10 flex items-center justify-center gap-1.5 mb-4 flex-wrap">
+        {[["compose","Compose"],["templates","Templates"],["manage","Manage"],["tools","Tools"]].map(([key,label]) => (
+          <button key={key} onClick={() => setMainTab(key)}
+            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+              mainTab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="relative z-10 space-y-4">
+
+        {/* ── COMPOSE TAB ── */}
+        {mainTab === "compose" && (<>
 
         {/* ── COMPOSE TILE ── */}
         <Card>
@@ -1117,68 +1135,68 @@ export default function AnnouncementsPage() {
           </div>
         </Card>
 
+        </>)} {/* end compose tab */}
+
+        {/* ── TEMPLATES TAB ── */}
+        {mainTab === "templates" && (<>
+
         {/* Templates */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setTemplateMenuOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-4">
-            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Templates</p><p className="text-[10px] text-slate-600 mt-0.5">{templates.length} saved</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${templateMenuOpen?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          {templateMenuOpen && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
-              <div>
-                <p className="text-[10px] text-slate-600 mb-2">Quick templates</p>
-                <div className="flex flex-wrap gap-2">
-                  {[["season-open","Season Open"],["rosters-final","Rosters Final"],["season-closing","Season Closing"]].map(([type,label]) => (
-                    <button key={type} type="button" onClick={() => applyTemplate(type)}
-                      className="px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">{label}</button>
-                  ))}
-                </div>
+        <Card>
+          <p className="text-[10px] text-slate-600 mb-3">Quick templates</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {[["season-open","Season Open"],["rosters-final","Rosters Final"],["season-closing","Season Closing"]].map(([type,label]) => (
+              <button key={type} type="button" onClick={() => { applyTemplate(type); setMainTab("compose"); }}
+                className="px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">{label}</button>
+            ))}
+          </div>
+          {templates.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] text-slate-600">Saved</p>
+                <button onClick={() => setTemplateEditMode(v => !v)} className="text-[10px] text-slate-600 hover:text-slate-400">{templateEditMode?"Done":"Edit"}</button>
               </div>
-              {templates.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] text-slate-600">Saved</p>
-                    <button onClick={() => setTemplateEditMode(v => !v)} className="text-[10px] text-slate-600 hover:text-slate-400">{templateEditMode?"Done":"Edit"}</button>
+              <div className="space-y-1.5">
+                {templates.map(t => (
+                  <div key={t.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                    <button type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }} className="flex-1 text-left text-xs text-slate-300 hover:text-white truncate">{t.name}</button>
+                    {t.use_count > 0 && <span className="text-[9px] text-slate-700">{t.use_count}×</span>}
+                    {templateEditMode && <button type="button" onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>}
                   </div>
-                  <div className="space-y-1.5">
-                    {templates.map(t => (
-                      <div key={t.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                        <button type="button" onClick={() => {applySavedTemplate(t);setTemplateMenuOpen(false);}} className="flex-1 text-left text-xs text-slate-300 hover:text-white truncate">{t.name}</button>
-                        {t.use_count > 0 && <span className="text-[9px] text-slate-700">{t.use_count}×</span>}
-                        {templateEditMode && <button type="button" onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="pt-2 border-t border-white/[0.06]">
-                {showSaveTemplate ? (
-                  <div className="space-y-2">
-                    <input type="text" placeholder="Template name" value={templateName} onChange={e => setTemplateName(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={handleSaveTemplate} disabled={savingTemplate||!templateName.trim()}
-                        className="flex-1 py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{savingTemplate?"Saving…":"Save"}</button>
-                      <button type="button" onClick={() => {setShowSaveTemplate(false);setTemplateName("");}} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
-                    </div>
-                    {saveTemplateResult && <p className={`text-xs text-center ${saveTemplateResult.ok?"text-green-400":"text-red-400"}`}>{saveTemplateResult.message}</p>}
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => setShowSaveTemplate(true)}
-                    className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">+ Save current as template</button>
-                )}
+                ))}
               </div>
             </div>
           )}
-        </div>
+          <div className="pt-3 border-t border-white/[0.06] mt-3">
+            {showSaveTemplate ? (
+              <div className="space-y-2">
+                <input type="text" placeholder="Template name" value={templateName} onChange={e => setTemplateName(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <div className="flex gap-2">
+                  <button type="button" onClick={handleSaveTemplate} disabled={savingTemplate||!templateName.trim()}
+                    className="flex-1 py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{savingTemplate?"Saving…":"Save"}</button>
+                  <button type="button" onClick={() => {setShowSaveTemplate(false);setTemplateName("");}} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
+                </div>
+                {saveTemplateResult && <p className={`text-xs text-center ${saveTemplateResult.ok?"text-green-400":"text-red-400"}`}>{saveTemplateResult.message}</p>}
+              </div>
+            ) : (
+              <button type="button" onClick={() => setShowSaveTemplate(true)}
+                className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">+ Save current as template</button>
+            )}
+          </div>
+        </Card>
+
+        </>)} {/* end templates tab */}
+
+        {/* ── MANAGE TAB ── */}
+        {mainTab === "manage" && (<>
 
         {/* Webhooks */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setShowAddWebhook(v => !v)} className="w-full flex items-center justify-between px-5 py-4">
+          <button onClick={() => setManageTab(manageTab==="webhooks"?"":"webhooks")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showAddWebhook?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="webhooks"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          {showAddWebhook && (
+          {manageTab === "webhooks" && (
             <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
               {webhooks.map(w => (
                 <div key={w.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
@@ -1203,11 +1221,11 @@ export default function AnnouncementsPage() {
 
         {/* Scheduled */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setTab(tab==="scheduled"?"":"scheduled")} className="w-full flex items-center justify-between px-5 py-4">
+          <button onClick={() => setManageTab(manageTab==="scheduled"?"":"scheduled")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">Scheduled</p><p className="text-[10px] text-slate-600 mt-0.5">{pendingScheduled.length} pending</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="scheduled"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="scheduled"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          {tab === "scheduled" && (
+          {manageTab === "scheduled" && (
             <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
               {scheduled.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No scheduled posts</p> : scheduled.map(s => {
                 const t = new Date(s.send_at);
@@ -1229,11 +1247,11 @@ export default function AnnouncementsPage() {
 
         {/* History */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setTab(tab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
+          <button onClick={() => setManageTab(manageTab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          {tab === "history" && (
+          {manageTab === "history" && (
             <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
               {history.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No history yet</p> : history.slice(0,10).map((h,i) => (
                 <div key={i} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
@@ -1247,18 +1265,25 @@ export default function AnnouncementsPage() {
           )}
         </div>
 
+        </>)} {/* end manage tab */}
+
+        {/* ── TOOLS TAB ── */}
+        {mainTab === "tools" && (<>
+
         {/* Timestamp Generator */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setTab(tab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
+          <button onClick={() => setManageTab(manageTab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${tab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          {tab === "timestamp" && (
+          {manageTab === "timestamp" && (
             <div className="px-5 pb-5 border-t border-white/10 pt-4">
               <TimestampTool/>
             </div>
           )}
         </div>
+
+        </>)} {/* end tools tab */}
 
       </div>
     </main>
