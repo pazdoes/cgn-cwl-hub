@@ -152,6 +152,10 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
 
       {/* ── Row 1: Header ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+        {/* TH icon — spans full height of name + subtitle */}
+        {TH_ICONS[String(data.town_hall_level)] && (
+          <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={68} height={68} style={{ display: "block", borderRadius: 8, flexShrink: 0 }}/>
+        )}
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: 4 }}>
             <table style={{ borderCollapse: "collapse", padding: 0, margin: 0 }}>
@@ -162,11 +166,6 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
                       <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke={rankColour} strokeWidth={1.8}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                       </svg>
-                    </td>
-                  )}
-                  {TH_ICONS[String(data.town_hall_level)] && (
-                    <td style={{ width: "56px", height: "48px", padding: 0, paddingRight: "12px", verticalAlign: "middle" }}>
-                      <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={48} height={48} style={{ display: "block", borderRadius: 8 }}/>
                     </td>
                   )}
                   <td style={{ height: "48px", padding: 0, verticalAlign: "middle" }}>
