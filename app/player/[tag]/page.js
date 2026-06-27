@@ -143,11 +143,21 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Background glow */}
-      <div style={{
-        position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)",
-        width: 400, height: 400, borderRadius: "50%",
-        background: "rgba(139,92,246,0.07)", filter: "blur(60px)", pointerEvents: "none",
+      {/* Dot grid background */}
+      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="dotgrid-player" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.045)"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#dotgrid-player)"/>
+      </svg>
+      {/* CGN skull watermark */}
+      <img src="/icons/branding/cgn-skull.png" alt="" style={{
+        position: "absolute", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 180, height: 180,
+        opacity: 0.025, pointerEvents: "none",
       }}/>
 
       {/* ── Row 1: Header ── */}
