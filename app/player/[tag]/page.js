@@ -189,7 +189,7 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
             <div style={{ fontSize: 36, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
               {parseFloat(latestOverall).toFixed(2)}
             </div>
-            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 3 }}>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 8 }}>
               Overall
             </div>
           </div>
