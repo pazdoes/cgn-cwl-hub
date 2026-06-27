@@ -636,83 +636,143 @@ export default function AnnouncementsPage() {
     const roleMap = Object.fromEntries(discordMeta.roles.map(r => [r.id, r]));
     const channelMap = Object.fromEntries(discordMeta.channels.map(c => [c.id, c]));
     const emojiMap = Object.fromEntries(discordMeta.emojis.map(e => [e.id, e]));
-    const parts = [];
-    let remaining = text;
-    let key = 0;
-    while (remaining.length > 0) {
-      // Role mention
-      const roleMatch = remaining.match(/^([\s\S]*?)<@&(\d+)>/);
-      // Channel mention
-      const chanMatch = remaining.match(/^([\s\S]*?)<#(\d+)>/);
-      // Custom emoji
-      const emojiMatch = remaining.match(/^([\s\S]*?)<:(\w+):(\d+)>/);
-      // Timestamp
-      const tsMatch = remaining.match(/^([\s\S]*?)<t:(\d+)(?::([tTdDfFR]))?>/);
-      // @everyone @here
-      const everyoneMatch = remaining.match(/^([\s\S]*?)(@everyone|@here)/);
-      // Bold
-      const boldMatch = remaining.match(/^([\s\S]*?)\*\*(.+?)\*\*/);
-      // Italic
-      const italicMatch = remaining.match(/^([\s\S]*?)\*(.+?)\*/);
-      // Code
-      const codeMatch = remaining.match(/^([\s\S]*?)`(.+?)`/);
 
-      const candidates = [
-        roleMatch && { idx: roleMatch[1].length, len: roleMatch[0].length, type: 'role', id: roleMatch[2] },
-        chanMatch && { idx: chanMatch[1].length, len: chanMatch[0].length, type: 'channel', id: chanMatch[2] },
-        emojiMatch && { idx: emojiMatch[1].length, len: emojiMatch[0].length, type: 'emoji', name: emojiMatch[2], id: emojiMatch[3] },
-        tsMatch && { idx: tsMatch[1].length, len: tsMatch[0].length, type: 'ts', unix: tsMatch[2], fmt: tsMatch[3]||'f' },
-        everyoneMatch && { idx: everyoneMatch[1].length, len: everyoneMatch[0].length, type: 'everyone', val: everyoneMatch[2] },
-        boldMatch && { idx: boldMatch[1].length, len: boldMatch[0].length, type: 'bold', val: boldMatch[2] },
-        italicMatch && { idx: italicMatch[1].length, len: italicMatch[0].length, type: 'italic', val: italicMatch[2] },
-        codeMatch && { idx: codeMatch[1].length, len: codeMatch[0].length, type: 'code', val: codeMatch[2] },
-      ].filter(Boolean).sort((a, b) => a.idx - b.idx);
-
-      if (candidates.length === 0) { parts.push(<span key={key++}>{remaining}</span>); break; }
-      const hit = candidates[0];
-      if (hit.idx > 0) parts.push(<span key={key++}>{remaining.slice(0, hit.idx)}</span>);
-      if (hit.type === 'role') {
-        const role = roleMap[hit.id];
-        parts.push(<span key={key++} style={{background: (role?.colour||'#a78bfa')+'33', color: role?.colour||'#a78bfa'}} className="rounded px-1 text-xs font-semibold">@{role?.name||hit.id}</span>);
-      } else if (hit.type === 'channel') {
-        const ch = channelMap[hit.id];
-        parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#8ab4f8]">#{ch?.name||hit.id}</span>);
-      } else if (hit.type === 'emoji') {
-        const em = emojiMap[hit.id];
-        if (em) parts.push(<img key={key++} src={`https://cdn.discordapp.com/emojis/${hit.id}.png`} alt={hit.name} className="inline w-4 h-4 mx-0.5"/>);
-        else parts.push(<span key={key++} className="text-xs text-slate-400">:{hit.name}:</span>);
-      } else if (hit.type === 'ts') {
-        const d = new Date(parseInt(hit.unix) * 1000);
-        const fmt = hit.fmt || 'f';
-        let display;
-        if (fmt === 't') display = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-        else if (fmt === 'T') display = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        else if (fmt === 'd') display = d.toLocaleDateString([], {day:'2-digit',month:'2-digit',year:'numeric'});
-        else if (fmt === 'D') display = d.toLocaleDateString([], {day:'numeric',month:'long',year:'numeric'});
-        else if (fmt === 'F') display = d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-        else if (fmt === 'R') {
-          const diff = Math.round((d - Date.now()) / 1000);
-          const abs = Math.abs(diff);
-          const past = diff < 0;
-          if (abs < 60) display = past ? 'just now' : 'in a few seconds';
-          else if (abs < 3600) display = past ? `${Math.floor(abs/60)} minutes ago` : `in ${Math.floor(abs/60)} minutes`;
-          else if (abs < 86400) display = past ? `${Math.floor(abs/3600)} hours ago` : `in ${Math.floor(abs/3600)} hours`;
-          else display = past ? `${Math.floor(abs/86400)} days ago` : `in ${Math.floor(abs/86400)} days`;
+    // Process line by line first to handle blockquotes and code blocks
+    const lines = text.split("\n");
+    const processedLines = [];
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      // Code block (```) — multi-line
+      if (line.startsWith("```")) {
+        const lang = line.slice(3).trim();
+        const codeLines = [];
+        i++;
+        while (i < lines.length && !lines[i].startsWith("```")) {
+          codeLines.push(lines[i]);
+          i++;
         }
-        else display = d.toLocaleDateString([], {day:'numeric',month:'long',year:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-        parts.push(<span key={key++} className="rounded px-1 text-xs bg-white/10 text-[#dbdee1]">{display}</span>);
-      } else if (hit.type === 'everyone') {
-        parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#c9cdfb]">{hit.val}</span>);
-      } else if (hit.type === 'bold') {
-        parts.push(<strong key={key++} className="text-white font-bold">{hit.val}</strong>);
-      } else if (hit.type === 'italic') {
-        parts.push(<em key={key++}>{hit.val}</em>);
-      } else if (hit.type === 'code') {
-        parts.push(<code key={key++} className="bg-black/30 rounded px-1 text-xs font-mono text-[#dbdee1]">{hit.val}</code>);
+        processedLines.push({ type: "codeblock", content: codeLines.join("\n"), lang });
+        i++;
+        continue;
       }
-      remaining = remaining.slice(hit.idx + hit.len);
+      // Blockquote
+      if (line.startsWith("> ")) {
+        processedLines.push({ type: "blockquote", content: line.slice(2) });
+        i++;
+        continue;
+      }
+      processedLines.push({ type: "text", content: line });
+      i++;
     }
-    return <>{parts}</>;
+
+    function parseInline(text) {
+      const parts = [];
+      let remaining = text;
+      let key = 0;
+      while (remaining.length > 0) {
+        const roleMatch      = remaining.match(/^([\s\S]*?)<@&(\d+)>/);
+        const chanMatch      = remaining.match(/^([\s\S]*?)<#(\d+)>/);
+        const emojiMatch     = remaining.match(/^([\s\S]*?)<a?:(\w+):(\d+)>/);
+        const tsMatch        = remaining.match(/^([\s\S]*?)<t:(\d+)(?::([tTdDfFR]))?>/);
+        const everyoneMatch  = remaining.match(/^([\s\S]*?)(@everyone|@here)/);
+        const boldMatch      = remaining.match(/^([\s\S]*?)\*\*(.+?)\*\*/);
+        const italicMatch    = remaining.match(/^([\s\S]*?)\*(.+?)\*/);
+        const underlineMatch = remaining.match(/^([\s\S]*?)__(.+?)__/);
+        const strikeMatch    = remaining.match(/^([\s\S]*?)~~(.+?)~~/);
+        const spoilerMatch   = remaining.match(/^([\s\S]*?)\|\|(.+?)\|\|/);
+        const codeMatch      = remaining.match(/^([\s\S]*?)`(.+?)`/);
+
+        const candidates = [
+          roleMatch      && { idx: roleMatch[1].length,      len: roleMatch[0].length,      type: "role",      id: roleMatch[2] },
+          chanMatch      && { idx: chanMatch[1].length,      len: chanMatch[0].length,      type: "channel",   id: chanMatch[2] },
+          emojiMatch     && { idx: emojiMatch[1].length,     len: emojiMatch[0].length,     type: "emoji",     name: emojiMatch[2], id: emojiMatch[3] },
+          tsMatch        && { idx: tsMatch[1].length,        len: tsMatch[0].length,        type: "ts",        unix: tsMatch[2], fmt: tsMatch[3]||"f" },
+          everyoneMatch  && { idx: everyoneMatch[1].length,  len: everyoneMatch[0].length,  type: "everyone",  val: everyoneMatch[2] },
+          boldMatch      && { idx: boldMatch[1].length,      len: boldMatch[0].length,      type: "bold",      val: boldMatch[2] },
+          underlineMatch && { idx: underlineMatch[1].length, len: underlineMatch[0].length, type: "underline", val: underlineMatch[2] },
+          strikeMatch    && { idx: strikeMatch[1].length,    len: strikeMatch[0].length,    type: "strike",    val: strikeMatch[2] },
+          spoilerMatch   && { idx: spoilerMatch[1].length,   len: spoilerMatch[0].length,   type: "spoiler",   val: spoilerMatch[2] },
+          italicMatch    && { idx: italicMatch[1].length,    len: italicMatch[0].length,    type: "italic",    val: italicMatch[2] },
+          codeMatch      && { idx: codeMatch[1].length,      len: codeMatch[0].length,      type: "code",      val: codeMatch[2] },
+        ].filter(Boolean).sort((a, b) => a.idx - b.idx);
+
+        if (candidates.length === 0) { parts.push(<span key={key++}>{remaining}</span>); break; }
+        const hit = candidates[0];
+        if (hit.idx > 0) parts.push(<span key={key++}>{remaining.slice(0, hit.idx)}</span>);
+
+        if (hit.type === "role") {
+          const role = roleMap[hit.id];
+          parts.push(<span key={key++} style={{background:(role?.colour||"#a78bfa")+"33",color:role?.colour||"#a78bfa"}} className="rounded px-1 text-xs font-semibold">@{role?.name||hit.id}</span>);
+        } else if (hit.type === "channel") {
+          const ch = channelMap[hit.id];
+          parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#8ab4f8]">#{ch?.name||hit.id}</span>);
+        } else if (hit.type === "emoji") {
+          parts.push(<img key={key++} src={`https://cdn.discordapp.com/emojis/${hit.id}.png`} alt={hit.name} className="inline w-4 h-4 mx-0.5"/>);
+        } else if (hit.type === "ts") {
+          const d = new Date(parseInt(hit.unix) * 1000);
+          const fmt = hit.fmt || "f";
+          let display;
+          if (fmt === "t") display = d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+          else if (fmt === "T") display = d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+          else if (fmt === "d") display = d.toLocaleDateString([], {day:"2-digit",month:"2-digit",year:"numeric"});
+          else if (fmt === "D") display = d.toLocaleDateString([], {day:"numeric",month:"long",year:"numeric"});
+          else if (fmt === "F") display = d.toLocaleDateString([], {weekday:"long",day:"numeric",month:"long",year:"numeric"})+" "+d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+          else if (fmt === "R") {
+            const diff = Math.round((d - Date.now()) / 1000);
+            const abs = Math.abs(diff); const past = diff < 0;
+            if (abs < 60) display = past ? "just now" : "in a few seconds";
+            else if (abs < 3600) display = past ? `${Math.floor(abs/60)} minutes ago` : `in ${Math.floor(abs/60)} minutes`;
+            else if (abs < 86400) display = past ? `${Math.floor(abs/3600)} hours ago` : `in ${Math.floor(abs/3600)} hours`;
+            else display = past ? `${Math.floor(abs/86400)} days ago` : `in ${Math.floor(abs/86400)} days`;
+          } else display = d.toLocaleDateString([], {day:"numeric",month:"long",year:"numeric"})+" "+d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+          parts.push(<span key={key++} className="rounded px-1 text-xs bg-white/10 text-[#dbdee1]">{display}</span>);
+        } else if (hit.type === "everyone") {
+          parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#c9cdfb]">{hit.val}</span>);
+        } else if (hit.type === "bold") {
+          parts.push(<strong key={key++} className="text-white font-bold">{hit.val}</strong>);
+        } else if (hit.type === "underline") {
+          parts.push(<span key={key++} style={{textDecoration:"underline"}}>{hit.val}</span>);
+        } else if (hit.type === "strike") {
+          parts.push(<span key={key++} style={{textDecoration:"line-through"}} className="text-slate-400">{hit.val}</span>);
+        } else if (hit.type === "spoiler") {
+          parts.push(<span key={key++} className="bg-[#202225] text-[#202225] hover:text-[#dbdee1] rounded px-0.5 cursor-pointer transition-colors select-none">{hit.val}</span>);
+        } else if (hit.type === "italic") {
+          parts.push(<em key={key++}>{hit.val}</em>);
+        } else if (hit.type === "code") {
+          parts.push(<code key={key++} className="bg-black/30 rounded px-1 text-xs font-mono text-[#dbdee1]">{hit.val}</code>);
+        }
+        remaining = remaining.slice(hit.idx + hit.len);
+      }
+      return parts;
+    }
+
+    return (
+      <>
+        {processedLines.map((line, li) => {
+          if (line.type === "codeblock") {
+            return (
+              <pre key={li} className="bg-black/40 rounded p-2 text-xs font-mono text-[#dbdee1] whitespace-pre-wrap my-1 overflow-x-auto">
+                {line.content}
+              </pre>
+            );
+          }
+          if (line.type === "blockquote") {
+            return (
+              <div key={li} className="border-l-4 border-[#4e5058] pl-2 my-0.5 text-[#dbdee1]">
+                {parseInline(line.content)}
+              </div>
+            );
+          }
+          return (
+            <span key={li}>
+              {parseInline(line.content)}
+              {li < processedLines.length - 1 && <br/>}
+            </span>
+          );
+        })}
+      </>
+    );
   }
 
   const pendingScheduled = scheduled.filter(s => !s.sent);

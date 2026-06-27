@@ -16,14 +16,13 @@ export async function POST(request) {
   }
 
   const webhooks = await getWebhooks();
-  const webhook = webhooks.find(w => w.id === webhookId);
+  // Coerce both sides to integer — Neon returns id as number, UI sends string
+  const webhook = webhooks.find(w => Number(w.id) === Number(webhookId));
   if (!webhook) return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
 
   // Strip internal _button field from embed before sending to Discord
   const { _button, ...cleanEmbed } = embed;
 
-  // Build payload — standard webhook format (embeds + optional action row)
-  // Do NOT use flags:32768 (IS_COMPONENTS_V2) — it's mutually exclusive with embeds
   const payload = {
     embeds: [cleanEmbed],
     ...(content && { content }),
@@ -31,30 +30,29 @@ export async function POST(request) {
     ...(avatarUrl && { avatar_url: avatarUrl }),
   };
 
-  // Add link button as a standard action row component — compatible with embeds
+  // Add link button as a standard action row component
   if (_button?.label && _button?.url) {
     payload.components = [
       {
-        type: 1, // Action Row
+        type: 1,
         components: [
           {
-            type: 2,  // Button
-            style: 5, // Link style
+            type: 2,
+            style: 5,
             label: _button.emoji ? `${_button.emoji} ${_button.label}` : _button.label,
             url: _button.url,
           },
         ],
       },
     ];
-    // No flags — standard components work alongside embeds without any special flag
   }
 
-  // Add with_components=true so Discord renders button components alongside embeds
   const webhookUrl = new URL(webhook.webhook_url);
   if (payload.components?.length) {
-    webhookUrl.searchParams.set('with_components', 'true');
+    webhookUrl.searchParams.set("with_components", "true");
   }
-  webhookUrl.searchParams.set('wait', 'true');
+  webhookUrl.searchParams.set("wait", "true");
+
   const discordRes = await fetch(webhookUrl.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -69,13 +67,14 @@ export async function POST(request) {
     );
   }
 
+  // Log to announcement_history — always after confirmed Discord success
   let sentBy = null;
   try {
     const session = await auth();
     sentBy = session?.user?.name || null;
   } catch { /* non-fatal */ }
 
-  await logAnnouncement(webhookId, embed.title || null, embed, sentBy);
+  await logAnnouncement(Number(webhookId), embed.title || null, embed, sentBy);
 
   return NextResponse.json({ sent: true });
 }
