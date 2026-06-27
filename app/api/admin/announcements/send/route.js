@@ -16,9 +16,16 @@ export async function POST(request) {
   }
 
   const webhooks = await getWebhooks();
-  // Coerce both sides to integer — Neon returns id as number, UI sends string
   const webhook = webhooks.find(w => Number(w.id) === Number(webhookId));
   if (!webhook) return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
+
+  // Handle all possible column name casings from Neon driver
+  const rawUrl = webhook.webhook_url ?? webhook.webhookUrl ?? webhook["webhook_url"];
+  if (!rawUrl) {
+    return NextResponse.json({
+      error: `Webhook URL missing. Available keys: ${Object.keys(webhook).join(", ")}`
+    }, { status: 500 });
+  }
 
   // Strip internal _button field from embed before sending to Discord
   const { _button, ...cleanEmbed } = embed;
@@ -47,7 +54,7 @@ export async function POST(request) {
     ];
   }
 
-  const webhookUrl = new URL(webhook.webhook_url || webhook.webhookUrl);
+  const webhookUrl = new URL(rawUrl);
   if (payload.components?.length) {
     webhookUrl.searchParams.set("with_components", "true");
   }
@@ -67,7 +74,6 @@ export async function POST(request) {
     );
   }
 
-  // Log to announcement_history — always after confirmed Discord success
   let sentBy = null;
   try {
     const session = await auth();
