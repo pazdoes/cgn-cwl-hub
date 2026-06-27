@@ -396,14 +396,16 @@ export default function AnnouncementsPage() {
       fetch("/api/admin/announcements", { headers: { "x-officer-pin": pin } }).then(r => r.json()),
       fetch("/api/admin/announcements/templates", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ templates: [] })),
       fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ scheduled: [] })),
-    fetch("/api/admin/discord-meta").then(r => r.json()).catch(() => ({ roles: [], channels: [], emojis: [] })),
-    ]).then(([wData, tData, sData, metaData]) => {
+      fetch("/api/admin/discord-meta").then(r => r.json()).catch(() => ({ roles: [], channels: [], emojis: [] })),
+      fetch("/api/admin/announcements/history", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ history: [] })),
+    ]).then(([wData, tData, sData, metaData, histData]) => {
       setDiscordMeta({ roles: metaData.roles || [], channels: metaData.channels || [], emojis: metaData.emojis || [] });
       const wh = wData.webhooks || [];
       setWebhooks(wh);
       if (wh.length > 0 && !selectedWebhookId) setSelectedWebhookId(wh[0].id);
       setTemplates(tData.templates || []);
       setScheduled(sData.scheduled || []);
+      setHistory(histData.history || []);
     }).finally(() => setLoadingData(false));
   }, [authed]);
 
@@ -483,6 +485,9 @@ export default function AnnouncementsPage() {
       if (res.ok) {
         setSendResult({ ok: true, message: "Posted to Discord ✓" });
         setEmbed({ ...DEFAULT_EMBED }); setContent("");
+        // Reload history
+        fetch("/api/admin/announcements/history", { headers: { "x-officer-pin": pin } })
+          .then(r => r.json()).then(d => setHistory(d.history || [])).catch(() => {});
       } else { setSendResult({ ok: false, message: data.error || "Failed to send" }); }
     } catch { setSendResult({ ok: false, message: "Network error" }); }
     finally { setSending(false); }
