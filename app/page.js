@@ -2211,6 +2211,11 @@ function LeaderboardView({ onBack }) {
           three_stars: 0, two_stars: 0, one_stars: 0, zero_stars: 0,
           three_stars_conceded: 0, two_stars_conceded: 0, one_stars_conceded: 0, zero_stars_conceded: 0,
           _destSum: 0, _defSum: 0, _atkCount: 0, _defCount: 0,
+          // War metrics accumulators
+          _warMetricCount: 0,
+          _avgStarsSum: 0, _threeStarRateSum: 0, _punchUpRateSum: 0,
+          _clutchRateSum: 0, _consistencySum: 0,
+          dips: 0, reaches: 0,
         };
       }
       const m = map[tag];
@@ -2228,6 +2233,17 @@ function LeaderboardView({ onBack }) {
       m.one_stars_conceded += p.one_stars_conceded || 0;
       m.zero_stars_conceded += p.zero_stars_conceded || 0;
       if (p.attacks_used > 0) { m._destSum += parseFloat(p.destruction_pct||0) * p.attacks_used; m._atkCount += p.attacks_used; }
+      // Accumulate war metrics if present
+      if (p.avg_stars_per_attack != null) {
+        m._warMetricCount++;
+        m._avgStarsSum += parseFloat(p.avg_stars_per_attack || 0);
+        m._threeStarRateSum += parseFloat(p.three_star_rate || 0);
+        m._punchUpRateSum += parseFloat(p.punch_up_rate || 0);
+        m._clutchRateSum += parseFloat(p.clutch_rate || 0);
+        m._consistencySum += parseFloat(p.consistency_score || 0);
+        m.dips += parseInt(p.dips || 0);
+        m.reaches += parseInt(p.reaches || 0);
+      }
       if (p.attacks_available > 0) { m._defSum += parseFloat(p.defence_pct||0) * p.attacks_available; m._defCount += p.attacks_available; }
     }
     return Object.values(map).map(m => ({
@@ -2236,6 +2252,12 @@ function LeaderboardView({ onBack }) {
       defence_pct: m._defCount > 0 ? (m._defSum / m._defCount).toFixed(2) : "0.00",
       efficiency: m.attacks_used > 0 ? (m.stars_earned / m.attacks_used).toFixed(2) : "0.00",
       defence_efficiency: m.attacks_available > 0 ? (m.stars_conceded / m.attacks_available).toFixed(2) : "0.00",
+      // Average war metrics across seasons where data exists
+      avg_stars_per_attack: m._warMetricCount > 0 ? (m._avgStarsSum / m._warMetricCount).toFixed(2) : null,
+      three_star_rate: m._warMetricCount > 0 ? (m._threeStarRateSum / m._warMetricCount).toFixed(2) : null,
+      punch_up_rate: m._warMetricCount > 0 ? (m._punchUpRateSum / m._warMetricCount).toFixed(2) : null,
+      clutch_rate: m._warMetricCount > 0 ? (m._clutchRateSum / m._warMetricCount).toFixed(2) : null,
+      consistency_score: m._warMetricCount > 0 ? (m._consistencySum / m._warMetricCount).toFixed(2) : null,
     })).map(p => ({
       ...p,
       overall: (p.attacks_used > 0 && p.attacks_available > 0)
