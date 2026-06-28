@@ -245,6 +245,7 @@ export default function AdminPoolPage() {
   // Multi-select + roster builder state — must be before any early returns
   const [selectedTags, setSelectedTags] = useState([]);
   const [bulkAssigning, setBulkAssigning] = useState(false);
+  const [bulkTargetClan, setBulkTargetClan] = useState("");
   const [builderTab, setBuilderTab] = useState("pool");
   const [mainPoolTab, setMainPoolTab] = useState("roster");
   const [activeClanIdx, setActiveClanIdx] = useState(0);
@@ -811,12 +812,33 @@ export default function AdminPoolPage() {
                     </button>
                   )}
                 </div>
-                {/* Multi-select banner */}
+                {/* Multi-select assign panel */}
                 {selectedTags.length > 0 && (
-                  <div className="flex items-center gap-2 mb-3 rounded-2xl border border-purple-500/40 bg-purple-500/10 px-3 py-2">
-                    <span className="text-xs text-purple-200 font-semibold flex-1">{selectedTags.length} player{selectedTags.length > 1 ? "s" : ""} selected</span>
-                    <button onClick={() => setSelectedTags([])} className="text-slate-500 hover:text-white transition text-xs">✕</button>
-                    <button onClick={() => setBuilderTab("roster")} className="text-[10px] text-purple-300 hover:text-white transition">Assign →</button>
+                  <div className="mb-3 rounded-2xl border border-purple-500/40 bg-purple-500/10 p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-purple-200 font-semibold flex-1">{selectedTags.length} player{selectedTags.length > 1 ? "s" : ""} selected</span>
+                      <button onClick={() => setSelectedTags([])} className="text-slate-500 hover:text-white transition text-xs">✕</button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={bulkTargetClan}
+                        onChange={e => setBulkTargetClan(e.target.value)}
+                        className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/40 transition [color-scheme:dark]">
+                        <option value="">Select clan…</option>
+                        {clans.map(c => <option key={c.clan_name} value={c.clan_name}>{c.clan_name.split(" ")[0]}</option>)}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (!bulkTargetClan) return;
+                          const toAssign = entries.filter(e => selectedTags.includes(e.player_tag));
+                          doAssignMultiple(toAssign, bulkTargetClan);
+                          setBulkTargetClan("");
+                        }}
+                        disabled={bulkAssigning || !bulkTargetClan}
+                        className="shrink-0 px-4 py-1.5 rounded-xl border border-green-500/60 bg-green-500/10 text-green-400 text-xs font-semibold hover:border-green-400 hover:text-green-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        {bulkAssigning ? "…" : "Assign"}
+                      </button>
+                    </div>
                   </div>
                 )}
                 {filteredUnassigned.length === 0 ? (
@@ -909,21 +931,6 @@ export default function AdminPoolPage() {
                       </div>
                       <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                     </div>
-
-                    {/* Bulk assign button */}
-                    {selectedTags.length > 0 && (
-                      <button
-                        onClick={() => {
-                          const toAssign = entries.filter(e => selectedTags.includes(e.player_tag));
-                          doAssignMultiple(toAssign, currentClan);
-                        }}
-                        disabled={bulkAssigning}
-                        className="w-full mb-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
-                        {bulkAssigning
-                          ? "Assigning…"
-                          : `+ Assign ${selectedTags.length} player${selectedTags.length > 1 ? "s" : ""} to ${currentClan?.split(" ")[0]}`}
-                      </button>
-                    )}
 
                     {/* Drop zone */}
                     <div data-clan-zone={currentClan}
