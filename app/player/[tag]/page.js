@@ -508,24 +508,7 @@ export default function PlayerProfilePage() {
           )}
         </div>
 
-        {/* Tab toggle */}
-        <div className="flex items-center justify-center gap-4 pt-4 mt-3 border-t border-white/[0.04]">
-          <button onClick={() => setView("overview")} className="text-slate-500 hover:text-slate-300 transition p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[60px] text-center">
-            {view === "overview" ? "Overview" : "Stats"}
-          </span>
-          <button onClick={() => setView("stats")} className="text-slate-500 hover:text-slate-300 transition p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* Share button */}
+        {/* Share button — above separator */}
         <div className="flex justify-center mt-3">
           <button
             onClick={handleShare}
@@ -558,6 +541,23 @@ export default function PlayerProfilePage() {
                 Share Card
               </>
             )}
+          </button>
+        </div>
+
+        {/* Tab toggle */}
+        <div className="flex items-center justify-center gap-4 pt-4 mt-3 border-t border-white/[0.04]">
+          <button onClick={() => setView("overview")} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[60px] text-center">
+            {view === "overview" ? "Overview" : "Stats"}
+          </span>
+          <button onClick={() => setView("stats")} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -663,31 +663,31 @@ export default function PlayerProfilePage() {
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season History</p>
 
-            {/* Header row */}
-            <div className="flex items-center gap-2 mb-1">
-              <div className="overflow-x-auto flex-1 -mx-1">
-                <table className="w-full text-xs min-w-[520px]">
-                  <thead>
-                    <tr>
-                      {STAT_COLS.map(col => (
-                        <th key={col.key} className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">{col.label}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              <div className="w-6 shrink-0"/>
-            </div>
-
-            {/* Season rows */}
+            {/* Header + season rows — headers inside scroll, arrow outside */}
             <div className="divide-y divide-white/[0.04]">
+              {/* Header row */}
+              <div className="flex items-center gap-2 pb-1">
+                <div className="overflow-x-auto flex-1 -mx-1">
+                  <table className="w-full text-xs min-w-[520px]">
+                    <thead>
+                      <tr>
+                        {STAT_COLS.map(col => (
+                          <th key={col.key} className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">{col.label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
+                <div className="w-6 shrink-0"/>
+              </div>
+
+              {/* Data rows */}
               {data.seasons.map((s, i) => {
                 const isBest = i === bestSeasonIdx && data.seasons.length > 1;
                 const isSelected = selectedSeason === s.season;
                 const hasWarData = data.warsBySeason?.[s.season]?.length > 0;
                 return (
                   <div key={i} className={`flex items-center gap-2 transition ${isBest ? "bg-amber-500/[0.07]" : ""} ${isSelected ? "bg-purple-500/[0.07]" : ""}`}>
-                    {/* Scrollable stat columns */}
                     <div className="overflow-x-auto flex-1 -mx-1">
                       <table className="w-full text-xs min-w-[520px]">
                         <tbody>
@@ -709,11 +709,9 @@ export default function PlayerProfilePage() {
                         </tbody>
                       </table>
                     </div>
-                    {/* Arrow button — always visible outside scroll */}
                     <div className="w-6 shrink-0 flex items-center justify-center">
                       {hasWarData ? (
-                        <button
-                          onClick={() => setSelectedSeason(isSelected ? null : s.season)}
+                        <button onClick={() => setSelectedSeason(isSelected ? null : s.season)}
                           className="text-slate-500 hover:text-purple-300 transition p-1">
                           <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 transition-transform ${isSelected ? "rotate-180 text-purple-300" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
