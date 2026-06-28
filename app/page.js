@@ -925,6 +925,221 @@ function ClanPerformanceChart({ history }) {
   );
 }
 
+// ── War Intelligence View ────────────────────────────────────────────────────
+function WarIntelView({ onBack }) {
+  const [tab, setTab] = useState("days");
+  const [loading, setLoading] = useState(true);
+  const [dayData, setDayData] = useState(null);
+  const [matchupData, setMatchupData] = useState(null);
+  const [attendanceData, setAttendanceData] = useState(null);
+  const [clanData, setClanData] = useState(null);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState("all");
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/war-intel/days").then(r => r.json()).catch(() => ({})),
+      fetch("/api/war-intel/matchups").then(r => r.json()).catch(() => ({})),
+      fetch("/api/war-intel/attendance").then(r => r.json()).catch(() => ({})),
+      fetch("/api/war-intel/clans").then(r => r.json()).catch(() => ({})),
+    ]).then(([d, m, a, c]) => {
+      setDayData(d.days || []);
+      setMatchupData(m.matchups || []);
+      setAttendanceData(a.attendance || []);
+      setClanData(c.clans || []);
+      setSeasons(d.seasons || []);
+      setLoading(false);
+    });
+  }, []);
+
+  const TABS = [["days","Days"],["matchups","Matchups"],["attendance","Attendance"],["clans","Clans"]];
+
+  // Filter day data by season
+  const filteredDays = selectedSeason === "all"
+    ? dayData
+    : dayData?.filter(d => d.season === selectedSeason);
+
+  // Aggregate days across seasons
+  const dayAggregates = (() => {
+    if (!filteredDays?.length) return [];
+    const map = {};
+    for (const d of filteredDays) {
+      if (!map[d.war_day]) map[d.war_day] = { war_day: d.war_day, _starSum: 0, _count: 0, wins: 0, losses: 0, draws: 0 };
+      const m = map[d.war_day];
+      m._starSum += parseFloat(d.avg_stars || 0);
+      m._count++;
+      if (d.war_result === "win") m.wins++;
+      else if (d.war_result === "loss") m.losses++;
+      else m.draws++;
+    }
+    return Object.values(map).sort((a, b) => a.war_day - b.war_day).map(m => ({
+      ...m,
+      avg_stars: m._count > 0 ? (m._starSum / m._count).toFixed(2) : null,
+    }));
+  })();
+
+  const maxStars = Math.max(...dayAggregates.map(d => parseFloat(d.avg_stars || 0)), 1);
+
+  return (
+    <main className="min-h-screen bg-[#0a0a0f] px-4 py-6 max-w-lg mx-auto">
+      {/* Header */}
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">War Intel</h1>
+        <p className="text-slate-500 text-xs mb-3">Alliance war performance analytics</p>
+        <div className="flex items-center justify-center gap-4">
+          <button onClick={onBack} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[80px] text-center">War Intel</span>
+          <span className="w-6 h-6"/>
+        </div>
+      </div>
+
+      {/* Tab nav */}
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
+        {TABS.map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
+              tab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>{label}</button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3].map(i => <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] h-24 animate-pulse"/>)}
+        </div>
+      ) : (
+        <div className="relative z-10 space-y-4">
+
+          {/* ── DAYS TAB ── */}
+          {tab === "days" && (
+            <>
+              {/* Season filter */}
+              <div className="flex justify-end">
+                <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+                  <option value="all">All Seasons</option>
+                  {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Avg Stars Per War Day</p>
+                {dayAggregates.length === 0 ? (
+                  <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+                ) : (
+                  <div className="space-y-2">
+                    {dayAggregates.map(d => {
+                      const pct = maxStars > 0 ? (parseFloat(d.avg_stars) / maxStars) * 100 : 0;
+                      const stars = parseFloat(d.avg_stars || 0);
+                      const colour = stars >= 2.8 ? "bg-green-500/60" : stars >= 2.4 ? "bg-amber-500/60" : "bg-red-500/60";
+                      return (
+                        <div key={d.war_day} className="flex items-center gap-3">
+                          <span className="text-[10px] text-slate-500 w-10 shrink-0">Day {d.war_day}</span>
+                          <div className="flex-1 h-5 rounded-full bg-white/[0.04] overflow-hidden">
+                            <div className={`h-full rounded-full ${colour} transition-all`} style={{width:`${pct}%`}}/>
+                          </div>
+                          <span className="text-[10px] text-slate-300 w-8 text-right shrink-0">{d.avg_stars}★</span>
+                          <span className="text-[9px] text-slate-600 w-12 shrink-0">{d.wins}W-{d.losses}L{d.draws > 0 ? `-${d.draws}D` : ""}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* ── MATCHUPS TAB ── */}
+          {tab === "matchups" && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">3★ Rate by TH Matchup</p>
+              <p className="text-[9px] text-slate-700 mb-4">Attacker TH → Defender TH</p>
+              {matchupData.length === 0 ? (
+                <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {matchupData.map((m, i) => {
+                    const rate = parseFloat(m.three_star_rate || 0);
+                    const colour = rate >= 80 ? "text-green-400" : rate >= 50 ? "text-amber-400" : "text-red-400";
+                    return (
+                      <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                        <span className="text-[10px] text-slate-400 w-20 shrink-0">TH{m.attacker_th} → TH{m.defender_th}</span>
+                        <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                          <div className={`h-full rounded-full ${rate >= 80 ? "bg-green-500/60" : rate >= 50 ? "bg-amber-500/60" : "bg-red-500/60"}`} style={{width:`${rate}%`}}/>
+                        </div>
+                        <span className={`text-[10px] font-semibold w-10 text-right shrink-0 ${colour}`}>{rate.toFixed(0)}%</span>
+                        <span className="text-[9px] text-slate-700 w-10 shrink-0">{m.total} atks</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── ATTENDANCE TAB ── */}
+          {tab === "attendance" && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Missed Attacks by Player</p>
+              {attendanceData.length === 0 ? (
+                <p className="text-slate-700 text-xs text-center py-6">No missed attacks on record</p>
+              ) : (
+                <div className="space-y-2">
+                  {attendanceData.map((a, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                      <span className="flex-1 text-xs text-slate-300 truncate">{a.player_name}</span>
+                      <span className="text-[9px] text-slate-500 shrink-0">{a.clan_name?.split(" ")[0]}</span>
+                      <span className={`text-sm font-semibold shrink-0 w-6 text-right ${a.missed > 2 ? "text-red-400" : a.missed > 0 ? "text-amber-400" : "text-slate-600"}`}>{a.missed}</span>
+                      <span className="text-[9px] text-slate-600 shrink-0">missed</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── CLANS TAB ── */}
+          {tab === "clans" && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Clan Comparison</p>
+              {clanData.length === 0 ? (
+                <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+              ) : (
+                <div className="space-y-4">
+                  {[
+                    { label: "Avg Stars/Day", key: "avg_stars", fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
+                    { label: "3★ Rate", key: "three_star_rate", fmt: v => parseFloat(v).toFixed(0) + "%", colour: "text-green-300" },
+                    { label: "Wars Won", key: "wins", fmt: v => v, colour: "text-purple-300" },
+                    { label: "Wars Lost", key: "losses", fmt: v => v, colour: "text-red-400" },
+                    { label: "Punch-Up Rate", key: "punch_up_rate", fmt: v => parseFloat(v).toFixed(0) + "%", colour: "text-blue-300" },
+                  ].map(metric => (
+                    <div key={metric.key}>
+                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">{metric.label}</p>
+                      <div className="space-y-1.5">
+                        {clanData.map((c, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <span className="text-[10px] text-slate-400 w-28 shrink-0 truncate">{c.clan_name?.split(" ")[0]}</span>
+                            <span className={`text-sm font-semibold ${metric.colour}`}>{c[metric.key] != null ? metric.fmt(c[metric.key]) : "—"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      )}
+    </main>
+  );
+}
+
 function HistoryView({ onBack }) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2466,7 +2681,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
     // Stat tile views use reserved hash names; anything else is treated
     // as a clan name (the original selectedClan behaviour).
-    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard" || hash === "recap") {
+    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard" || hash === "recap" || hash === "warintel") {
       setStatView(hash);
       setSelectedClan(null);
       setHighlightedAccount(null);
@@ -2517,6 +2732,9 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
   if (statView === "leaderboard") {
     return <LeaderboardView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+  }
+  if (statView === "warintel") {
+    return <WarIntelView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
   if (statView === "recap") {
     return <RecapView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
@@ -2760,24 +2978,32 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         <div className="text-slate-400 text-xs uppercase tracking-widest">Leaderboard</div>
       </div>
 
-      {/* Row 2: Season Recap + History */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Row 2: War Intel + Season Recap + History */}
+      <div className="grid grid-cols-3 gap-2">
+        <div
+          onClick={() => { window.history.pushState({}, "", "#warintel"); setStatView("warintel"); }}
+          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+          <div className="text-slate-400 text-[10px] uppercase tracking-widest text-center">War Intel</div>
+        </div>
         <div
           onClick={() => { window.history.pushState({}, "", "#recap"); setStatView("recap"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
+          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
           </svg>
-          <div className="text-slate-400 text-xs uppercase tracking-widest">Season Recap</div>
+          <div className="text-slate-400 text-[10px] uppercase tracking-widest text-center">Season Recap</div>
         </div>
         <div
           onClick={() => { window.history.pushState({}, "", "#history"); setStatView("history"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
+          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l4-8 4 5 2-3" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
           </svg>
-          <div className="text-slate-400 text-xs uppercase tracking-widest">History</div>
+          <div className="text-slate-400 text-[10px] uppercase tracking-widest text-center">History</div>
         </div>
       </div>
 
