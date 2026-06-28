@@ -981,11 +981,15 @@ function WarIntelView({ onBack }) {
   const maxStars = Math.max(...dayAggregates.map(d => parseFloat(d.avg_stars || 0)), 1);
 
   return (
-    <main className="min-h-screen bg-[#0a0a0f] px-4 py-6 max-w-lg mx-auto">
-      {/* Header */}
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+
+      {/* Hero card */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">War Intel</h1>
-        <p className="text-slate-500 text-xs mb-3">Alliance war performance analytics</p>
+        <p className="text-slate-500 text-xs mb-4">Alliance war performance analytics</p>
         <div className="flex items-center justify-center gap-4">
           <button onClick={onBack} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
