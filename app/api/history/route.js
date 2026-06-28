@@ -5,16 +5,17 @@ export async function GET() {
   const sql = getDb();
   const history = await sql`
     SELECT
-      clan_name, season, cwl_rank,
-      wars_won, wars_lost, wars_drawn,
-      total_stars, total_stars_conceded,
-      total_attacks_used, total_attacks_available, total_attacks_missed,
-      avg_destruction_pct, avg_defence_pct,
-      attack_efficiency, defence_efficiency,
-      three_star_rate,
-      three_stars_clan, two_stars_clan, one_stars_clan, zero_stars_clan
-    FROM clan_season_history
-    ORDER BY clan_name, season
+      csh.clan_name, csh.season, csh.cwl_rank,
+      csh.wars_won, csh.wars_lost, csh.wars_drawn,
+      csh.total_stars, csh.total_stars_conceded,
+      csh.total_attacks_used, csh.total_attacks_available, csh.total_attacks_missed,
+      csh.avg_destruction_pct, csh.avg_defence_pct,
+      csh.attack_efficiency, csh.defence_efficiency,
+      csh.three_star_rate,
+      csh.three_stars_clan, csh.two_stars_clan, csh.one_stars_clan, csh.zero_stars_clan
+    FROM clan_season_history csh
+    LEFT JOIN season_registry sr ON sr.season = csh.season
+    ORDER BY csh.clan_name, sr.season_date ASC NULLS LAST
   `;
   return NextResponse.json({ history });
 }

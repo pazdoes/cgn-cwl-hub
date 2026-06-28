@@ -7,15 +7,21 @@ export async function GET() {
   const [days, seasons] = await Promise.all([
     sql`
       SELECT
-        season, clan_name, war_day,
-        war_result,
-        ROUND(AVG(stars_earned)::NUMERIC, 2) AS avg_stars,
+        wd.season, wd.clan_name, wd.war_day,
+        wd.war_result,
+        ROUND(AVG(wd.stars_earned)::NUMERIC, 2) AS avg_stars,
         COUNT(*) AS war_count
-      FROM war_days
-      GROUP BY season, clan_name, war_day, war_result
-      ORDER BY season DESC, war_day ASC
+      FROM war_days wd
+      LEFT JOIN season_registry sr ON sr.season = wd.season
+      GROUP BY wd.season, wd.clan_name, wd.war_day, wd.war_result, sr.season_date
+      ORDER BY sr.season_date DESC NULLS LAST, wd.war_day ASC
     `,
-    sql`SELECT DISTINCT season FROM war_days ORDER BY season DESC`,
+    sql`
+      SELECT wd.season
+      FROM (SELECT DISTINCT season FROM war_days) wd
+      LEFT JOIN season_registry sr ON sr.season = wd.season
+      ORDER BY sr.season_date DESC NULLS LAST
+    `,
   ]);
 
   return NextResponse.json({

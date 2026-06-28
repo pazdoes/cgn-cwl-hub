@@ -19,8 +19,9 @@ export async function GET(request, { params }) {
     FROM player_cwl_stats ps
     LEFT JOIN clan_season_history csh
       ON csh.clan_name = ps.clan_name AND csh.season = ps.season
+    LEFT JOIN season_registry sr ON sr.season = ps.season
     WHERE ps.player_tag = ${playerTag}
-    ORDER BY ps.season DESC
+    ORDER BY sr.season_date DESC NULLS LAST
   `;
 
   if (rows.length === 0) {
@@ -34,7 +35,6 @@ export async function GET(request, { params }) {
       : null,
   }));
 
-  // Get rank among all players for latest season
   const latestSeason = seasons[0]?.season;
   let currentRank = null;
   if (latestSeason) {
@@ -57,7 +57,6 @@ export async function GET(request, { params }) {
   const bestOverall = withOverall.reduce((best, s) => s.overall > (best?.overall||0) ? s : best, null);
   const bestEfficiency = seasons.reduce((best, s) => parseFloat(s.efficiency||0) > parseFloat(best?.efficiency||0) ? s : best, null);
 
-  // Fetch per-war attack data grouped by season
   const warAttackRows = await getPlayerWarAttacks(playerTag);
   const warsBySeason = {};
   for (const row of warAttackRows) {

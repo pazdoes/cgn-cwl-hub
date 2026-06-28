@@ -7,8 +7,10 @@ export async function GET(request) {
   const sql = getDb();
 
   const seasonRows = await sql`
-    SELECT DISTINCT season FROM player_cwl_stats
-    ORDER BY season DESC
+    SELECT ps.season
+    FROM (SELECT DISTINCT season FROM player_cwl_stats) ps
+    LEFT JOIN season_registry sr ON sr.season = ps.season
+    ORDER BY sr.season_date DESC NULLS LAST
   `;
   const seasons = seasonRows.map(r => r.season);
 
