@@ -662,48 +662,70 @@ export default function PlayerProfilePage() {
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season History</p>
-            <div className="overflow-x-auto -mx-1">
-              <table className="w-full text-xs min-w-[520px]">
-                <thead>
-                  <tr>
-                    {STAT_COLS.map(col => (
-                      <th key={col.key} className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">{col.label}</th>
-                    ))}
-                    <th className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">Wars</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.04]">
-                  {data.seasons.map((s, i) => {
-                    const isBest = i === bestSeasonIdx && data.seasons.length > 1;
-                    const isSelected = selectedSeason === s.season;
-                    const hasWarData = data.warsBySeason?.[s.season]?.length > 0;
-                    return (
-                      <tr key={i}
-                        onClick={() => hasWarData && setSelectedSeason(isSelected ? null : s.season)}
-                        className={`transition ${isBest ? "bg-amber-500/[0.07]" : ""} ${hasWarData ? "cursor-pointer hover:bg-white/[0.04]" : ""} ${isSelected ? "bg-purple-500/[0.07]" : ""}`}>
-                        {STAT_COLS.map(col => (
-                          <td key={col.key} className={`py-2 px-1 whitespace-nowrap ${
-                            col.key === "overall" ? (isBest ? "text-amber-300 font-bold" : "text-purple-300 font-semibold") :
-                            col.key === "missed_attacks" && (s.missed_attacks||0) > 0 ? "text-red-400" :
-                            col.key === "efficiency" ? "text-purple-200" :
-                            col.key === "defence_efficiency" ? "text-blue-300" :
-                            col.key === "cwl_rank" ? "text-slate-500" :
-                            "text-slate-400"
-                          }`}>
-                            {col.fmt(s[col.key])}
-                            {col.key === "season" && isBest && <span className="ml-1 text-amber-400 text-[8px]">★</span>}
-                          </td>
-                        ))}
-                        <td className="py-2 px-1">
-                          {hasWarData
-                            ? <span className={`text-[9px] ${isSelected ? "text-purple-300" : "text-slate-600"}`}>{isSelected ? "▲" : "▼"}</span>
-                            : <span className="text-[9px] text-slate-700">—</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+
+            {/* Header row */}
+            <div className="flex items-center gap-2 mb-1">
+              <div className="overflow-x-auto flex-1 -mx-1">
+                <table className="w-full text-xs min-w-[520px]">
+                  <thead>
+                    <tr>
+                      {STAT_COLS.map(col => (
+                        <th key={col.key} className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">{col.label}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <div className="w-6 shrink-0"/>
+            </div>
+
+            {/* Season rows */}
+            <div className="divide-y divide-white/[0.04]">
+              {data.seasons.map((s, i) => {
+                const isBest = i === bestSeasonIdx && data.seasons.length > 1;
+                const isSelected = selectedSeason === s.season;
+                const hasWarData = data.warsBySeason?.[s.season]?.length > 0;
+                return (
+                  <div key={i} className={`flex items-center gap-2 transition ${isBest ? "bg-amber-500/[0.07]" : ""} ${isSelected ? "bg-purple-500/[0.07]" : ""}`}>
+                    {/* Scrollable stat columns */}
+                    <div className="overflow-x-auto flex-1 -mx-1">
+                      <table className="w-full text-xs min-w-[520px]">
+                        <tbody>
+                          <tr>
+                            {STAT_COLS.map(col => (
+                              <td key={col.key} className={`py-2 px-1 whitespace-nowrap ${
+                                col.key === "overall" ? (isBest ? "text-amber-300 font-bold" : "text-purple-300 font-semibold") :
+                                col.key === "missed_attacks" && (s.missed_attacks||0) > 0 ? "text-red-400" :
+                                col.key === "efficiency" ? "text-purple-200" :
+                                col.key === "defence_efficiency" ? "text-blue-300" :
+                                col.key === "cwl_rank" ? "text-slate-500" :
+                                "text-slate-400"
+                              }`}>
+                                {col.fmt(s[col.key])}
+                                {col.key === "season" && isBest && <span className="ml-1 text-amber-400 text-[8px]">★</span>}
+                              </td>
+                            ))}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Arrow button — always visible outside scroll */}
+                    <div className="w-6 shrink-0 flex items-center justify-center">
+                      {hasWarData ? (
+                        <button
+                          onClick={() => setSelectedSeason(isSelected ? null : s.season)}
+                          className="text-slate-500 hover:text-purple-300 transition p-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 transition-transform ${isSelected ? "rotate-180 text-purple-300" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                          </svg>
+                        </button>
+                      ) : (
+                        <span className="text-[9px] text-slate-800">—</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* War breakdown panel */}
