@@ -1150,6 +1150,49 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
                   </div>
                 </div>
               </div>
+              {/* War Metrics — only show if data exists */}
+              {(p.avg_stars_per_attack != null || p.three_star_rate != null || p.punch_up_rate != null) && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">War Metrics</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                      <p className="text-sm font-bold text-amber-300">{p.avg_stars_per_attack != null ? parseFloat(p.avg_stars_per_attack).toFixed(2) : "—"}</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">Avg ★/Atk</p>
+                    </div>
+                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                      <p className="text-sm font-bold text-amber-300">{p.three_star_rate != null ? `${parseFloat(p.three_star_rate).toFixed(0)}%` : "—"}</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">3★ Rate</p>
+                    </div>
+                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                      <p className="text-sm font-bold text-amber-300">{p.clutch_rate != null ? parseFloat(p.clutch_rate).toFixed(2) : "—"}</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">Clutch (5-7)</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                      <p className="text-sm font-bold text-green-300">{p.punch_up_rate != null ? `${parseFloat(p.punch_up_rate).toFixed(0)}%` : "—"}</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">Punch-Up</p>
+                    </div>
+                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                      <p className="text-sm font-bold text-slate-300">{p.consistency_score != null ? parseFloat(p.consistency_score).toFixed(2) : "—"}</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">Consistency</p>
+                    </div>
+                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                      <p className="text-sm font-bold text-slate-300">
+                        {p.reaches != null ? <span className="text-green-400">↑{p.reaches}</span> : "—"}
+                        {p.dips != null && p.reaches != null && <span className="text-slate-600"> · </span>}
+                        {p.dips != null ? <span className="text-slate-400">↓{p.dips}</span> : ""}
+                      </p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">↑Reach ↓Dip</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -2216,7 +2259,7 @@ function LeaderboardView({ onBack }) {
   const sorted = [...filtered].sort((a, b) => {
     const av = parseFloat(a[sortBy]) || 0;
     const bv = parseFloat(b[sortBy]) || 0;
-    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
+    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency" || sortBy === "consistency_score";
     const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
     return (av - bv) * dir;
   });
@@ -2282,6 +2325,13 @@ function LeaderboardView({ onBack }) {
                 <option value="defence_efficiency">Def Efficiency</option>
                 <option value="stars_conceded">Stars Conceded</option>
                 <option value="defence_pct">Defence %</option>
+              </optgroup>
+              <optgroup label="War Metrics">
+                <option value="avg_stars_per_attack">Avg Stars / Attack</option>
+                <option value="three_star_rate">3★ Rate</option>
+                <option value="punch_up_rate">Punch-Up Rate</option>
+                <option value="clutch_rate">Clutch Rate (Days 5-7)</option>
+                <option value="consistency_score">Consistency Score</option>
               </optgroup>
             </>) : (<>
               {["Overall","Attack","Defence","Record"].map(g=>(
