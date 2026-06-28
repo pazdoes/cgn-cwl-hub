@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
-import { captureCwlData } from "@/lib/cwlCapture";
+import { captureWarAttacks } from "@/lib/cwlCapture";
 
-// Called by cron-job.org on the 10th of each month at 23:00 UTC
-// Captures CWL rank history and player war stats for all clans
-// for the current open season.
+// Called by cron-job.org daily at 09:00 UTC, days 1-12 of each month
+// Captures per-war attack data for all clans for the current open season.
+// Idempotent — skips wars already stored. Safe to call multiple times.
 // Authorization: Bearer {CWL_CRON_SECRET}
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -17,7 +17,7 @@ export async function GET(request) {
     return NextResponse.json({ error: "No open season found" }, { status: 404 });
   }
 
-  const result = await captureCwlData(season);
+  const result = await captureWarAttacks(season);
 
   return NextResponse.json({
     ok: true,
