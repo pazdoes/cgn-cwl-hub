@@ -825,7 +825,7 @@ export default function AdminPoolPage() {
                         onChange={e => setBulkTargetClan(e.target.value)}
                         className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/40 transition [color-scheme:dark]">
                         <option value="">Select clan…</option>
-                        {clans.map(c => <option key={c.clan_name} value={c.clan_name}>{c.clan_name.split(" ")[0]}</option>)}
+                        {clans.map(c => <option key={c} value={c}>{c.split(" ")[0]}</option>)}
                       </select>
                       <button
                         onClick={() => {
