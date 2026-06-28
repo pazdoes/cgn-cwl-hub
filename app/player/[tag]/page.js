@@ -5,6 +5,69 @@ import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
 import { LargePie } from "@/lib/components";
 
+function WarBreakdown({ wars, season }) {
+  const byDay = {};
+  for (const w of wars) {
+    if (!byDay[w.war_day]) byDay[w.war_day] = w;
+  }
+  const days = Object.values(byDay).sort((a, b) => a.war_day - b.war_day);
+  const wins = days.filter(d => d.war_result === "win").length;
+  const losses = days.filter(d => d.war_result === "loss").length;
+  const draws = days.filter(d => d.war_result === "draw").length;
+  const totalStars = days.reduce((s, d) => s + (d.stars || 0), 0);
+  const attacked = days.filter(d => d.opponent_clan).length;
+  const missed = days.length - attacked;
+  const avgDest = attacked > 0
+    ? (days.filter(d => d.opponent_clan).reduce((s, d) => s + parseFloat(d.destruction_pct || 0), 0) / attacked).toFixed(1)
+    : "—";
+
+  return (
+    <div className="mt-4 border-t border-white/[0.06] pt-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">{season} · War Breakdown</p>
+      <div className="flex items-center gap-3 mb-3 text-[10px] flex-wrap">
+        <span className="text-slate-400">
+          <span className="text-green-400 font-semibold">{wins}W</span>
+          {draws > 0 && <span className="text-slate-500 font-semibold"> · {draws}D</span>}
+          <span className="text-red-400 font-semibold"> · {losses}L</span>
+        </span>
+        <span className="text-slate-700">·</span>
+        <span className="text-slate-400">{totalStars}★ / {attacked * 3} max</span>
+        <span className="text-slate-700">·</span>
+        <span className="text-slate-400">{avgDest}% avg dest</span>
+        {missed > 0 && <><span className="text-slate-700">·</span><span className="text-red-400">{missed} missed</span></>}
+      </div>
+      <div className="space-y-1.5">
+        {days.map(d => (
+          <div key={d.war_day} className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${
+            d.war_result === "win" ? "border-green-500/20 bg-green-500/[0.04]"
+            : d.war_result === "loss" ? "border-red-500/20 bg-red-500/[0.04]"
+            : "border-white/[0.06] bg-white/[0.02]"
+          }`}>
+            <span className="text-[9px] text-slate-600 w-8 shrink-0">Day {d.war_day}</span>
+            <span className={`text-[9px] font-semibold w-5 shrink-0 ${
+              d.war_result === "win" ? "text-green-400" : d.war_result === "loss" ? "text-red-400" : "text-slate-500"
+            }`}>{d.war_result === "win" ? "W" : d.war_result === "loss" ? "L" : "D"}</span>
+            {d.opponent_clan ? (<>
+              <div className="flex items-center gap-0.5 shrink-0">
+                {[0,1,2].map(i => (
+                  <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${i < (d.stars||0) ? "text-amber-400" : "text-slate-700"}`} viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ))}
+              </div>
+              <span className="text-[10px] text-slate-400">{parseFloat(d.destruction_pct||0).toFixed(1)}%</span>
+              {d.defender_th_level && <span className="text-[9px] text-slate-600">TH{d.defender_th_level}</span>}
+              <span className="text-[9px] text-slate-600 truncate flex-1 text-right">{d.opponent_clan}</span>
+            </>) : (
+              <span className="text-[9px] text-red-400/70 flex-1">missed attack</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MedalIcon({ rank }) {
   const colours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
   const col = colours[rank];
@@ -294,6 +357,7 @@ export default function PlayerProfilePage() {
   const [view, setView] = useState("overview");
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState(null);
   const shareCardRef = useRef(null);
 
   useEffect(() => {
@@ -605,13 +669,18 @@ export default function PlayerProfilePage() {
                     {STAT_COLS.map(col => (
                       <th key={col.key} className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">{col.label}</th>
                     ))}
+                    <th className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-2 text-left px-1 whitespace-nowrap">Wars</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
                   {data.seasons.map((s, i) => {
                     const isBest = i === bestSeasonIdx && data.seasons.length > 1;
+                    const isSelected = selectedSeason === s.season;
+                    const hasWarData = data.warsBySeason?.[s.season]?.length > 0;
                     return (
-                      <tr key={i} className={`transition ${isBest ? "bg-amber-500/[0.07]" : "hover:bg-white/[0.03]"}`}>
+                      <tr key={i}
+                        onClick={() => hasWarData && setSelectedSeason(isSelected ? null : s.season)}
+                        className={`transition ${isBest ? "bg-amber-500/[0.07]" : ""} ${hasWarData ? "cursor-pointer hover:bg-white/[0.04]" : ""} ${isSelected ? "bg-purple-500/[0.07]" : ""}`}>
                         {STAT_COLS.map(col => (
                           <td key={col.key} className={`py-2 px-1 whitespace-nowrap ${
                             col.key === "overall" ? (isBest ? "text-amber-300 font-bold" : "text-purple-300 font-semibold") :
@@ -625,12 +694,22 @@ export default function PlayerProfilePage() {
                             {col.key === "season" && isBest && <span className="ml-1 text-amber-400 text-[8px]">★</span>}
                           </td>
                         ))}
+                        <td className="py-2 px-1">
+                          {hasWarData
+                            ? <span className={`text-[9px] ${isSelected ? "text-purple-300" : "text-slate-600"}`}>{isSelected ? "▲" : "▼"}</span>
+                            : <span className="text-[9px] text-slate-700">—</span>}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
+
+            {/* War breakdown panel */}
+            {selectedSeason && data.warsBySeason?.[selectedSeason] && (
+              <WarBreakdown wars={data.warsBySeason[selectedSeason]} season={selectedSeason}/>
+            )}
           </div>
         </div>
       )}

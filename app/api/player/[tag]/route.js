@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getPlayerWarAttacks } from "@/lib/pool";
 
 export async function GET(request, { params }) {
   const { tag } = await params;
@@ -56,6 +57,14 @@ export async function GET(request, { params }) {
   const bestOverall = withOverall.reduce((best, s) => s.overall > (best?.overall||0) ? s : best, null);
   const bestEfficiency = seasons.reduce((best, s) => parseFloat(s.efficiency||0) > parseFloat(best?.efficiency||0) ? s : best, null);
 
+  // Fetch per-war attack data grouped by season
+  const warAttackRows = await getPlayerWarAttacks(playerTag);
+  const warsBySeason = {};
+  for (const row of warAttackRows) {
+    if (!warsBySeason[row.season]) warsBySeason[row.season] = [];
+    warsBySeason[row.season].push(row);
+  }
+
   return NextResponse.json({
     player_tag: playerTag,
     player_name: rows[0].player_name,
@@ -65,5 +74,6 @@ export async function GET(request, { params }) {
     bestEfficiency,
     totalSeasons: seasons.length,
     currentRank,
+    warsBySeason,
   });
 }
