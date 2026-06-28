@@ -1113,26 +1113,38 @@ function WarIntelView({ onBack }) {
               {clanData.length === 0 ? (
                 <p className="text-slate-700 text-xs text-center py-6">No data available</p>
               ) : (
-                <div className="space-y-4">
-                  {[
-                    { label: "Avg Stars/Day", key: "avg_stars", fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
-                    { label: "3★ Rate", key: "three_star_rate", fmt: v => parseFloat(v).toFixed(0) + "%", colour: "text-green-300" },
-                    { label: "Wars Won", key: "wins", fmt: v => v, colour: "text-purple-300" },
-                    { label: "Wars Lost", key: "losses", fmt: v => v, colour: "text-red-400" },
-                    { label: "Punch-Up Rate", key: "punch_up_rate", fmt: v => parseFloat(v).toFixed(0) + "%", colour: "text-blue-300" },
-                  ].map(metric => (
-                    <div key={metric.key}>
-                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">{metric.label}</p>
-                      <div className="space-y-1.5">
+                <div className="overflow-x-auto -mx-1">
+                  <table className="w-full text-xs min-w-[300px]">
+                    <thead>
+                      <tr>
+                        <th className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-3 text-left px-1 w-24">Metric</th>
                         {clanData.map((c, i) => (
-                          <div key={i} className="flex items-center gap-3">
-                            <span className="text-[10px] text-slate-400 w-28 shrink-0 truncate">{c.clan_name?.split(" ")[0]}</span>
-                            <span className={`text-sm font-semibold ${metric.colour}`}>{c[metric.key] != null ? metric.fmt(c[metric.key]) : "—"}</span>
-                          </div>
+                          <th key={i} className="text-[9px] text-slate-400 font-semibold pb-3 text-center px-1 whitespace-nowrap">
+                            {c.clan_name?.split(" ")[0]}
+                          </th>
                         ))}
-                      </div>
-                    </div>
-                  ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.04]">
+                      {[
+                        { label: "Avg ★/Day",   key: "avg_stars",      fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
+                        { label: "3★ Rate",      key: "three_star_rate", fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-green-300" },
+                        { label: "Punch-Up",     key: "punch_up_rate",  fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-blue-300" },
+                        { label: "Wars Won",     key: "wins",           fmt: v => v,                               colour: "text-purple-300" },
+                        { label: "Wars Lost",    key: "losses",         fmt: v => v,                               colour: "text-red-400" },
+                        { label: "Total Wars",   key: "total_wars",     fmt: v => v,                               colour: "text-slate-400" },
+                      ].map(metric => (
+                        <tr key={metric.key}>
+                          <td className="py-2.5 px-1 text-[9px] text-slate-600 uppercase tracking-widest whitespace-nowrap">{metric.label}</td>
+                          {clanData.map((c, i) => (
+                            <td key={i} className={`py-2.5 px-1 text-center font-semibold text-sm ${metric.colour}`}>
+                              {c[metric.key] != null ? metric.fmt(c[metric.key]) : "—"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
