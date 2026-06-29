@@ -1953,12 +1953,46 @@ function SeasonAwards({ stats }) {
   );
 }
 
+function AlliancePerformanceTile({ stats, totalAllianceStars }) {
+  const withAtks = (stats||[]).filter(p => p.attacks_used > 0);
+  const totalThreeStars = withAtks.reduce((s,p) => s+(p.three_stars||0), 0);
+  const totalAtks = withAtks.reduce((s,p) => s+(p.attacks_used||0), 0);
+  const allianceThreeStarRate = totalAtks > 0 ? (totalThreeStars/totalAtks*100).toFixed(0)+"%" : "—";
+  const punchUpPlayers = withAtks.filter(p => p.punch_up_rate != null);
+  const alliancePunchUp = punchUpPlayers.length ? (punchUpPlayers.reduce((s,p)=>s+parseFloat(p.punch_up_rate||0),0)/punchUpPlayers.length).toFixed(0)+"%" : "—";
+  const clutchPlayers = withAtks.filter(p => p.clutch_rate != null);
+  const allianceClutch = clutchPlayers.length ? (clutchPlayers.reduce((s,p)=>s+parseFloat(p.clutch_rate||0),0)/clutchPlayers.length).toFixed(2) : "—";
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance Performance</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
+          <p className="text-3xl font-thin text-amber-300">{totalAllianceStars}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Total Alliance Stars</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+          <p className="text-xl font-thin text-green-300">{totalThreeStars}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">3★ Hits ({allianceThreeStarRate})</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+          <p className="text-xl font-thin text-blue-300">{alliancePunchUp}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Punch-Up</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
+          <p className="text-xl font-thin text-purple-300">{allianceClutch}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Clutch Rate (Days 5-7)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Recap Share Card ────────────────────────────────────────────────────────
 // Rendered off-screen, snapshotted by html2canvas via lib/shareCard.js.
 // All graphics are inlined as raw SVG — no imported components.
 // 680px landscape, solid backgrounds, no backdrop-blur.
 
-function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason }) {
+function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason, totalAllianceStars, awardMostThreeStars, awardClutchKing, awardPunchUpKing, awardIronDefence }) {
   const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
 
@@ -2012,7 +2046,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
       {/* Card content — z-index 1, sits above background */}
       <div style={{ position: "relative", zIndex: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
-        {/* Left: season label */}
+        {/* Left: season label + total stars */}
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>
             Season Recap
@@ -2020,6 +2054,12 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
           <div style={{ fontSize: 18, fontWeight: 300, letterSpacing: "0.08em", color: "white" }}>
             {selectedSeason}
           </div>
+          {totalAllianceStars > 0 && (
+            <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 22, fontWeight: 300, color: "#fbbf24" }}>{totalAllianceStars}</span>
+              <span style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Alliance Stars</span>
+            </div>
+          )}
         </div>
 
         {/* Right: Top Clan */}
@@ -2206,6 +2246,37 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         </div>
       </div>
 
+      {/* Season Awards 2x2 */}
+      {(awardMostThreeStars || awardClutchKing || awardPunchUpKing || awardIronDefence) && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Season Awards</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { label: "Most 3★", player: awardMostThreeStars, value: awardMostThreeStars ? `${awardMostThreeStars.three_stars} hits` : null, colour: "#fbbf24" },
+              { label: "Clutch King", player: awardClutchKing, value: awardClutchKing ? `${parseFloat(awardClutchKing.clutch_rate).toFixed(2)} avg` : null, colour: "#c4b5fd" },
+              { label: "Punch-Up King", player: awardPunchUpKing, value: awardPunchUpKing ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null, colour: "#93c5fd" },
+              { label: "Iron Defence", player: awardIronDefence, value: awardIronDefence ? `${awardIronDefence.stars_conceded}★ conceded` : null, colour: "#86efac" },
+            ].filter(a => a.player && a.value).map((award, i) => (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.03)",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.07)",
+                padding: "8px 10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}>
+                <div>
+                  <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 2 }}>{award.label}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{award.player.player_name}</div>
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: award.colour, flexShrink: 0, marginLeft: 8 }}>{award.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: 7, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
@@ -2286,6 +2357,27 @@ function RecapView({ onBack }) {
   })).sort((a,b) => b.overall - a.overall);
   const topClan = clanWithOverall[0];
 
+  // Total alliance stars
+  const totalAllianceStars = seasonHistory.reduce((s,r) => s + (r.total_stars||0), 0);
+
+  // Season awards for share card
+  const withAttacks = stats.filter(p => p.attacks_used > 0);
+  const awardMostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
+  const awardClutchKing = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
+  const awardPunchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
+  const awardIronDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => (a.stars_conceded||0) - (b.stars_conceded||0))[0];
+
+  // Previous season delta
+  const selectedSeasonIdx = seasons.indexOf(selectedSeason);
+  const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
+  const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
+  const prevClanWithOverall = prevSeasonHistory.map(c => ({
+    ...c,
+    overall: parseFloat(((parseFloat(c.attack_efficiency||0)*0.5)+((3-parseFloat(c.defence_efficiency||0))*0.3)+((c.wars_won||0)/7*3*0.2)).toFixed(2))
+  })).sort((a,b) => b.overall - a.overall);
+  const prevTopClan = prevClanWithOverall[0];
+  const topClanDelta = topClan && prevTopClan ? parseFloat((topClan.overall - prevTopClan.overall).toFixed(2)) : null;
+
   const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
 
@@ -2325,6 +2417,11 @@ function RecapView({ onBack }) {
             totalDraws={totalDraws}
             clanWithOverall={clanWithOverall}
             selectedSeason={selectedSeason}
+            totalAllianceStars={totalAllianceStars}
+            awardMostThreeStars={awardMostThreeStars}
+            awardClutchKing={awardClutchKing}
+            awardPunchUpKing={awardPunchUpKing}
+            awardIronDefence={awardIronDefence}
           />
         </div>
       )}
@@ -2412,8 +2509,15 @@ function RecapView({ onBack }) {
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Overall</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
+                    {topClanDelta !== null && (
+                      <span className={`text-[9px] font-semibold ${topClanDelta > 0 ? "text-green-400" : topClanDelta < 0 ? "text-red-400" : "text-slate-500"}`}>
+                        {topClanDelta > 0 ? `↑${topClanDelta}` : topClanDelta < 0 ? `↓${Math.abs(topClanDelta)}` : "→"}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">CGN Rating</p>
                 </div>
               </div>
             </div>
@@ -2476,6 +2580,11 @@ function RecapView({ onBack }) {
 
           {/* Category winners */}
           <SeasonAwards stats={stats} />
+
+          {/* Alliance Performance */}
+          {stats.length > 0 && (
+            <AlliancePerformanceTile stats={stats} totalAllianceStars={totalAllianceStars} />
+          )}
 
           {/* Alliance war record */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">

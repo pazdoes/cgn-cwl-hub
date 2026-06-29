@@ -191,8 +191,12 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   const threeStarRate = latest?.attacks_used > 0
     ? ((latest.three_stars||0)/latest.attacks_used*100).toFixed(0)+"%" : "—";
 
+  // Career war metrics from latest season (most recent has computed values)
+  const avgStarsPerAtk = latest?.avg_stars_per_attack != null ? parseFloat(latest.avg_stars_per_attack).toFixed(2) : "—";
+  const punchUpRate = latest?.punch_up_rate != null ? parseFloat(latest.punch_up_rate).toFixed(0)+"%" : "—";
+
   const total = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
-  const pieSize = 64;
+  const pieSize = 60;
   const cx = pieSize/2, cy = pieSize/2, r = pieSize/2 - 2;
   const slices = [
     { value: careerThree, color: "#86efac" },
@@ -211,6 +215,23 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
     return <path key={i} d={d} fill={s.color}/>;
   }) : null;
 
+  // Sparkline — oldest first, CGN Rating per season
+  const sparkSeasons = [...(data.seasons||[])].reverse();
+  const sparkPoints = sparkSeasons.map(s => {
+    if (!s.attacks_used || !s.attacks_available) return null;
+    return parseFloat(((parseFloat(s.efficiency||0)*0.6)+((3-parseFloat(s.defence_efficiency||0))*0.4)).toFixed(2));
+  }).filter(v => v !== null);
+  const SW = 72, SH = 60, SPAD = 6;
+  const sMin = Math.min(...sparkPoints);
+  const sMax = Math.max(...sparkPoints);
+  const sRange = sMax - sMin || 0.1;
+  const sXStep = sparkPoints.length > 1 ? (SW - SPAD*2) / (sparkPoints.length - 1) : 0;
+  const sXPos = i => SPAD + i * sXStep;
+  const sYPos = v => SH - SPAD - ((v - sMin) / sRange) * (SH - SPAD * 2);
+  const sparkPath = sparkPoints.map((v, i) => `${i===0?"M":"L"} ${sXPos(i)} ${sYPos(v)}`).join(" ");
+  const sparkTrend = sparkPoints.length > 1 ? sparkPoints[sparkPoints.length-1] - sparkPoints[0] : 0;
+  const sparkColour = sparkTrend > 0.05 ? "#86efac" : sparkTrend < -0.05 ? "#f87171" : "#a78bfa";
+
   return (
     <div style={{
       width: 680,
@@ -226,7 +247,6 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Glass texture background — z-index 0, sits behind all content */}
       <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="glass-depth-player" cx="50%" cy="30%" r="65%" fx="50%" fy="20%">
@@ -246,125 +266,149 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
         <rect width="100%" height="100%" fill="url(#tint-player)"/>
         <rect width="100%" height="100%" fill="url(#grain-player)"/>
       </svg>
-      {/* Card content — z-index 1, sits above background */}
       <div style={{ position: "relative", zIndex: 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
-        {/* TH icon — spans full height of name + subtitle */}
-        {TH_ICONS[String(data.town_hall_level)] && (
-          <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={68} height={68} style={{ display: "block", borderRadius: 8, flexShrink: 0 }}/>
-        )}
-        <div style={{ flex: 1 }}>
-          <div style={{ marginBottom: 2 }}>
-            <table style={{ borderCollapse: "collapse", padding: 0, margin: 0 }}>
-              <tbody>
-                <tr style={{ height: "30px" }}>
-                  {rank <= 3 && (
-                    <td style={{ width: "34px", height: "30px", padding: 0, paddingRight: "8px", verticalAlign: "top" }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke={rankColour} strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                      </svg>
-                    </td>
-                  )}
-                  <td style={{ height: "30px", padding: 0, verticalAlign: "middle" }}>
-                    <span style={{ fontSize: "22px", fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white" }}>
-                      {data.player_name}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div style={{ marginTop: 2 }}>
-            <span style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              {rank ? `#${rank} Alliance · ` : ""}{latest?.season}{latest?.clan_name ? ` · ${latest.clan_name.split(" ")[0]}` : ""}
-            </span>
-          </div>
-        </div>
-        {/* CGN Rating — right aligned */}
-        {latestOverall != null && (
-          <div style={{ textAlign: "center", flexShrink: 0 }}>
-            <div style={{ fontSize: 36, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
-              {parseFloat(latestOverall).toFixed(2)}
-            </div>
-            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 8 }}>
-              Overall
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Divider */}
-      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
-
-      {/* ── Row 2: Two columns ── */}
-      <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
-
-        {/* Left col — stat grid */}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7 }}>
-          {[
-            { label: "Atk EFF",  value: avgEfficiency,         colour: "#c4b5fd" },
-            { label: "Def EFF",  value: avgDefEff,             colour: "#93c5fd" },
-            { label: "Stars",    value: totalStars,            colour: "#86efac" },
-            { label: "3★ Rate",  value: threeStarRate,         colour: "#86efac" },
-            { label: "Missed",   value: totalMissed,           colour: totalMissed > 0 ? "#f87171" : "#475569" },
-            { label: "Seasons",  value: data.seasons.length,   colour: "#94a3b8" },
-            { label: "Best",     value: data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—", colour: "#fbbf24" },
-            { label: "League",   value: latest?.cwl_rank || "—", colour: "#94a3b8" },
-          ].map(({ label, value, colour }) => (
-            <div key={label} style={{
-              background: "rgba(255,255,255,0.04)",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.07)",
-              padding: "7px 5px",
-              textAlign: "center",
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
-              <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Right col — pie + bars */}
-        <div style={{
-          width: 190,
-          flexShrink: 0,
-          background: "rgba(255,255,255,0.03)",
-          borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.07)",
-          padding: "10px 12px",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}>
-          {piePaths && (
-            <svg width={pieSize} height={pieSize} viewBox={`0 0 ${pieSize} ${pieSize}`} style={{flexShrink:0}}>
-              {piePaths}
-            </svg>
+        {/* Row 1 — TH icon + name + CGN Rating */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
+          {TH_ICONS[String(data.town_hall_level)] && (
+            <img src={TH_ICONS[String(data.town_hall_level)]} alt="" width={68} height={68} style={{ display: "block", borderRadius: 8, flexShrink: 0 }}/>
           )}
           <div style={{ flex: 1 }}>
-            {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
-              const pct = total > 0 ? ((val||0)/total*100).toFixed(0) : 0;
-              return (
-                <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-                  <span style={{ fontSize: 8, color: "#64748b", width: 18, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
-                  <div style={{ flex: 1, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
-                  </div>
-                  <span style={{ fontSize: 8, color: "#64748b", width: 14, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
+            <div style={{ marginBottom: 2 }}>
+              <table style={{ borderCollapse: "collapse", padding: 0, margin: 0 }}>
+                <tbody>
+                  <tr style={{ height: "30px" }}>
+                    {rank <= 3 && (
+                      <td style={{ width: "34px", height: "30px", padding: 0, paddingRight: "8px", verticalAlign: "top" }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke={rankColour} strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                      </td>
+                    )}
+                    <td style={{ height: "30px", padding: 0, verticalAlign: "middle" }}>
+                      <span style={{ fontSize: "22px", fontWeight: 300, letterSpacing: "0.1em", color: rankColour || "white" }}>
+                        {data.player_name}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: 2 }}>
+              <span style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                {rank ? `#${rank} Alliance · ` : ""}{latest?.season}{latest?.clan_name ? ` · ${latest.clan_name.split(" ")[0]}` : ""}
+              </span>
+            </div>
+          </div>
+          {latestOverall != null && (
+            <div style={{ textAlign: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: 36, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
+                {parseFloat(latestOverall).toFixed(2)}
+              </div>
+              <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 8 }}>
+                CGN Rating
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
+
+        {/* Row 2 — stat grid + right panel */}
+        <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
+
+          {/* Stat grid — 4×2 */}
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7 }}>
+            {[
+              { label: "Atk EFF",   value: avgEfficiency,   colour: "#c4b5fd" },
+              { label: "Def EFF",   value: avgDefEff,       colour: "#93c5fd" },
+              { label: "Stars",     value: totalStars,      colour: "#86efac" },
+              { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac" },
+              { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569" },
+              { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24" },
+              { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd" },
+              { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8" },
+            ].map(({ label, value, colour }) => (
+              <div key={label} style={{
+                background: "rgba(255,255,255,0.04)",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.07)",
+                padding: "7px 5px",
+                textAlign: "center",
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
+                <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right panel — pie + bars + sparkline */}
+          <div style={{
+            width: 190,
+            flexShrink: 0,
+            background: "rgba(255,255,255,0.03)",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.07)",
+            padding: "10px 10px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}>
+            {/* Pie + bars */}
+            <div style={{ display: "flex", alignItems: "center", gap: 7, flex: 1 }}>
+              {piePaths && (
+                <svg width={pieSize} height={pieSize} viewBox={`0 0 ${pieSize} ${pieSize}`} style={{flexShrink:0}}>
+                  {piePaths}
+                </svg>
+              )}
+              <div style={{ flex: 1 }}>
+                {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
+                  const pct = total > 0 ? ((val||0)/total*100).toFixed(0) : 0;
+                  return (
+                    <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                      <span style={{ fontSize: 8, color: "#64748b", width: 16, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
+                      <div style={{ flex: 1, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
+                      </div>
+                      <span style={{ fontSize: 8, color: "#64748b", width: 14, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Divider */}
+            {sparkPoints.length >= 2 && (
+              <div style={{ width: 1, height: "80%", background: "rgba(255,255,255,0.06)", flexShrink: 0 }}/>
+            )}
+
+            {/* Sparkline */}
+            {sparkPoints.length >= 2 && (
+              <div style={{ width: SW, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>Trend</div>
+                <svg width={SW} height={SH} viewBox={`0 0 ${SW} ${SH}`}>
+                  <path d={sparkPath} fill="none" stroke={sparkColour} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {sparkPoints.map((v, i) => (
+                    <circle key={i} cx={sXPos(i)} cy={sYPos(v)} r="2" fill={sparkColour}/>
+                  ))}
+                </svg>
+                <div style={{ fontSize: 11, fontWeight: 700, color: sparkColour, marginTop: 2 }}>
+                  {sparkPoints[sparkPoints.length-1].toFixed(2)}
                 </div>
-              );
-            })}
+                <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em" }}>latest</div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 2 }}>
-        <span style={{ fontSize: 7, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          cgnco.vercel.app · Cognition {"{CGN}"}
-        </span>
+        {/* Footer */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 2 }}>
+          <span style={{ fontSize: 7, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            cgnco.vercel.app · Cognition {"{CGN}"}
+          </span>
+        </div>
       </div>
-      </div>{/* end content wrapper */}
     </div>
   );
 }
@@ -443,6 +487,21 @@ export default function PlayerProfilePage() {
   const careerTwoC   = data.seasons.reduce((s,r)=>s+(r.two_stars_conceded||0),0);
   const careerOneC   = data.seasons.reduce((s,r)=>s+(r.one_stars_conceded||0),0);
   const careerZeroC  = data.seasons.reduce((s,r)=>s+(r.zero_stars_conceded||0),0);
+
+  // Career war metrics — averaged across seasons that have computed values
+  const totalCareerAttacks = data.seasons.reduce((s,r)=>s+(r.attacks_used||0),0);
+  const seasonsWithWarMetrics = data.seasons.filter(s => s.avg_stars_per_attack != null);
+  const careerAvgStarsPerAtk = seasonsWithWarMetrics.length
+    ? (seasonsWithWarMetrics.reduce((s,r)=>s+parseFloat(r.avg_stars_per_attack||0),0)/seasonsWithWarMetrics.length).toFixed(2) : null;
+  const seasonsWithPunchUp = data.seasons.filter(s => s.punch_up_rate != null);
+  const careerPunchUpRate = seasonsWithPunchUp.length
+    ? (seasonsWithPunchUp.reduce((s,r)=>s+parseFloat(r.punch_up_rate||0),0)/seasonsWithPunchUp.length).toFixed(0)+"%" : null;
+  const seasonsWithClutch = data.seasons.filter(s => s.clutch_rate != null);
+  const careerClutchRate = seasonsWithClutch.length
+    ? (seasonsWithClutch.reduce((s,r)=>s+parseFloat(r.clutch_rate||0),0)/seasonsWithClutch.length).toFixed(2) : null;
+  const seasonsWithThreeStarRate = data.seasons.filter(s => s.three_star_rate != null);
+  const careerThreeStarRate = seasonsWithThreeStarRate.length
+    ? (seasonsWithThreeStarRate.reduce((s,r)=>s+parseFloat(r.three_star_rate||0),0)/seasonsWithThreeStarRate.length).toFixed(0)+"%" : null;
 
   const heroBorderStyle = rank === 1 ? `1px solid rgba(212,175,55,0.4)` : rank === 2 ? `1px solid rgba(167,167,173,0.4)` : rank === 3 ? `1px solid rgba(205,127,50,0.4)` : null;
 
@@ -599,11 +658,25 @@ export default function PlayerProfilePage() {
               <StatBox label="Avg Atk EFF" value={avgEfficiency} colour="text-purple-300"/>
               <StatBox label="Avg Def EFF" value={avgDefEff} colour="text-blue-300"/>
               <StatBox label="Total Stars" value={totalStars} colour="text-green-300"/>
-              {data.bestOverall && <StatBox label="Best Overall" value={parseFloat(data.bestOverall.overall).toFixed(2)} colour="text-purple-400"/>}
+              <StatBox label="Total Attacks" value={totalCareerAttacks} colour="text-slate-300"/>
+              {data.bestOverall && <StatBox label="Best Rating" value={parseFloat(data.bestOverall.overall).toFixed(2)} colour="text-purple-400"/>}
               {data.bestEfficiency && <StatBox label="Best Atk EFF" value={parseFloat(data.bestEfficiency.efficiency).toFixed(2)} colour="text-green-400"/>}
               <StatBox label="Missed" value={totalMissed} colour={totalMissed > 0 ? "text-red-400" : "text-slate-500"}/>
             </div>
           </div>
+
+          {/* Career War Metrics */}
+          {(careerAvgStarsPerAtk || careerPunchUpRate || careerClutchRate || careerThreeStarRate) && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career War Metrics</p>
+              <div className="grid grid-cols-2 gap-2">
+                {careerAvgStarsPerAtk && <StatBox label="Avg ★/Attack" value={careerAvgStarsPerAtk} colour="text-amber-300"/>}
+                {careerPunchUpRate && <StatBox label="Punch-Up Rate" value={careerPunchUpRate} colour="text-blue-300"/>}
+                {careerClutchRate && <StatBox label="Clutch Rate" value={careerClutchRate} colour="text-purple-300"/>}
+                {careerThreeStarRate && <StatBox label="3★ Rate" value={careerThreeStarRate} colour="text-green-300"/>}
+              </div>
+            </div>
+          )}
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career Attack Breakdown</p>
@@ -635,9 +708,8 @@ export default function PlayerProfilePage() {
                 colour={netStars != null ? (netStars > 0 ? "text-green-300" : netStars < 0 ? "text-red-400" : "text-slate-500") : "text-slate-500"}
               />
               <StatBox
-                label="Consistency"
+                label="Seasons Above Avg"
                 value={`${aboveAvg}/${data.seasons.length}`}
-                sub="seasons above avg"
                 colour="text-purple-300"
               />
             </div>
