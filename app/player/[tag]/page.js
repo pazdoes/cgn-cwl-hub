@@ -215,22 +215,25 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
     return <path key={i} d={d} fill={s.color}/>;
   }) : null;
 
-  // Sparkline — oldest first, CGN Rating per season
+  // Sparkline — oldest first
   const sparkSeasons = [...(data.seasons||[])].reverse();
   const sparkPoints = sparkSeasons.map(s => {
     if (!s.attacks_used || !s.attacks_available) return null;
     return parseFloat(((parseFloat(s.efficiency||0)*0.6)+((3-parseFloat(s.defence_efficiency||0))*0.4)).toFixed(2));
   }).filter(v => v !== null);
-  const SW = 72, SH = 60, SPAD = 6;
-  const sMin = Math.min(...sparkPoints);
-  const sMax = Math.max(...sparkPoints);
-  const sRange = sMax - sMin || 0.1;
-  const sXStep = sparkPoints.length > 1 ? (SW - SPAD*2) / (sparkPoints.length - 1) : 0;
-  const sXPos = i => SPAD + i * sXStep;
-  const sYPos = v => SH - SPAD - ((v - sMin) / sRange) * (SH - SPAD * 2);
-  const sparkPath = sparkPoints.map((v, i) => `${i===0?"M":"L"} ${sXPos(i)} ${sYPos(v)}`).join(" ");
   const sparkTrend = sparkPoints.length > 1 ? sparkPoints[sparkPoints.length-1] - sparkPoints[0] : 0;
   const sparkColour = sparkTrend > 0.05 ? "#86efac" : sparkTrend < -0.05 ? "#f87171" : "#a78bfa";
+  const sparkSeasonLabels = sparkSeasons.filter(s => s.attacks_used && s.attacks_available).map(s => s.season?.split(" ")[0]?.slice(0,3) || "");
+
+  // Sparkline SVG dimensions
+  const SPW = 380, SPH = 66, SPAD2 = 10;
+  const sMin2 = sparkPoints.length ? Math.min(...sparkPoints) : 0;
+  const sMax2 = sparkPoints.length ? Math.max(...sparkPoints) : 1;
+  const sRange2 = sMax2 - sMin2 || 0.1;
+  const sXStep2 = sparkPoints.length > 1 ? (SPW - SPAD2*2) / (sparkPoints.length - 1) : 0;
+  const sXPos2 = i => SPAD2 + i * sXStep2;
+  const sYPos2 = v => SPAD2 + (SPH - SPAD2*2) - ((v - sMin2) / sRange2) * (SPH - SPAD2*2);
+  const sparkPath2 = sparkPoints.map((v, i) => `${i===0?"M":"L"} ${sXPos2(i)} ${sYPos2(v)}`).join(" ");
 
   return (
     <div style={{
@@ -315,90 +318,92 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
         {/* Divider */}
         <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
 
-        {/* Row 2 — stat grid + right panel */}
-        <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
-
-          {/* Stat grid — 4×2 */}
-          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7 }}>
-            {[
-              { label: "Atk EFF",   value: avgEfficiency,   colour: "#c4b5fd" },
-              { label: "Def EFF",   value: avgDefEff,       colour: "#93c5fd" },
-              { label: "Stars",     value: totalStars,      colour: "#86efac" },
-              { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac" },
-              { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569" },
-              { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24" },
-              { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd" },
-              { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8" },
-            ].map(({ label, value, colour }) => (
-              <div key={label} style={{
-                background: "rgba(255,255,255,0.04)",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.07)",
-                padding: "7px 5px",
-                textAlign: "center",
-              }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
-                <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Right panel — pie + bars + sparkline */}
-          <div style={{
-            width: 190,
-            flexShrink: 0,
-            background: "rgba(255,255,255,0.03)",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.07)",
-            padding: "10px 10px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}>
-            {/* Pie + bars */}
-            <div style={{ display: "flex", alignItems: "center", gap: 7, flex: 1 }}>
-              {piePaths && (
-                <svg width={pieSize} height={pieSize} viewBox={`0 0 ${pieSize} ${pieSize}`} style={{flexShrink:0}}>
-                  {piePaths}
-                </svg>
-              )}
-              <div style={{ flex: 1 }}>
-                {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
-                  const pct = total > 0 ? ((val||0)/total*100).toFixed(0) : 0;
-                  return (
-                    <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-                      <span style={{ fontSize: 8, color: "#64748b", width: 16, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
-                      <div style={{ flex: 1, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
-                      </div>
-                      <span style={{ fontSize: 8, color: "#64748b", width: 14, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
-                    </div>
-                  );
-                })}
-              </div>
+        {/* Row 2 — stat grid full width */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7, marginBottom: 14 }}>
+          {[
+            { label: "Atk EFF",   value: avgEfficiency,   colour: "#c4b5fd" },
+            { label: "Def EFF",   value: avgDefEff,       colour: "#93c5fd" },
+            { label: "Stars",     value: totalStars,      colour: "#86efac" },
+            { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac" },
+            { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569" },
+            { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24" },
+            { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd" },
+            { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8" },
+          ].map(({ label, value, colour }) => (
+            <div key={label} style={{
+              background: "rgba(255,255,255,0.04)",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.07)",
+              padding: "7px 5px",
+              textAlign: "center",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
+              <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
             </div>
+          ))}
+        </div>
 
-            {/* Divider */}
-            {sparkPoints.length >= 2 && (
-              <div style={{ width: 1, height: "80%", background: "rgba(255,255,255,0.06)", flexShrink: 0 }}/>
-            )}
-
-            {/* Sparkline */}
-            {sparkPoints.length >= 2 && (
-              <div style={{ width: SW, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>Trend</div>
-                <svg width={SW} height={SH} viewBox={`0 0 ${SW} ${SH}`}>
-                  <path d={sparkPath} fill="none" stroke={sparkColour} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        {/* Row 3 — full-width: sparkline (2/3) | divider | pie + bars (1/3) */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0,
+          background: "rgba(255,255,255,0.03)",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.07)",
+          padding: "12px 14px",
+          marginBottom: 14,
+          minHeight: 90,
+        }}>
+          {sparkPoints.length >= 2 ? (
+              <div style={{ flex: "0 0 62%", display: "flex", flexDirection: "column" }}>
+                <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
+                  CGN Rating Trend · {sparkColour === "#86efac" ? "↑ Improving" : sparkColour === "#f87171" ? "↓ Declining" : "→ Stable"}
+                </div>
+                <svg width="100%" height={SPH} viewBox={`0 0 ${SPW} ${SPH}`} style={{ overflow: "visible" }}>
+                  {[0, 0.5, 1].map(pct => (
+                    <line key={pct} x1={SPAD2} y1={SPAD2 + pct*(SPH-SPAD2*2)} x2={SPW-SPAD2} y2={SPAD2 + pct*(SPH-SPAD2*2)} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
+                  ))}
+                  <path d={sparkPath2} fill="none" stroke={sparkColour} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   {sparkPoints.map((v, i) => (
-                    <circle key={i} cx={sXPos(i)} cy={sYPos(v)} r="2" fill={sparkColour}/>
+                    <g key={i}>
+                      <circle cx={sXPos2(i)} cy={sYPos2(v)} r="3" fill={sparkColour}/>
+                      <text x={sXPos2(i)} y={sYPos2(v) - 6} textAnchor="middle" fontSize="7.5" fill={sparkColour} fontWeight="600">{v.toFixed(2)}</text>
+                      <text x={sXPos2(i)} y={SPH + 2} textAnchor="middle" fontSize="7" fill="#475569">{sparkSeasonLabels[i]}</text>
+                    </g>
                   ))}
                 </svg>
-                <div style={{ fontSize: 11, fontWeight: 700, color: sparkColour, marginTop: 2 }}>
-                  {sparkPoints[sparkPoints.length-1].toFixed(2)}
-                </div>
-                <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em" }}>latest</div>
               </div>
+            ) : (
+              <div style={{ flex: "0 0 62%" }}/>
             )}
+
+          {/* Vertical divider */}
+          <div style={{ width: 1, alignSelf: "stretch", background: "rgba(255,255,255,0.06)", margin: "0 14px", flexShrink: 0 }}/>
+
+          {/* Pie chart */}
+          {piePaths && (
+            <div style={{ flexShrink: 0 }}>
+              <svg width={pieSize} height={pieSize} viewBox={`0 0 ${pieSize} ${pieSize}`}>
+                {piePaths}
+              </svg>
+            </div>
+          )}
+
+          {/* Bar chart */}
+          <div style={{ flex: 1, marginLeft: 10 }}>
+            {[["3★", careerThree, "#86efac"],["2★", careerTwo, "#a78bfa"],["1★", careerOne, "#fbbf24"],["0★", careerZero, "#475569"]].map(([lbl,val,col]) => {
+              const pct = total > 0 ? ((val||0)/total*100).toFixed(0) : 0;
+              return (
+                <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                  <span style={{ fontSize: 8, color: "#64748b", width: 16, textAlign: "right", flexShrink: 0 }}>{lbl}</span>
+                  <div style={{ flex: 1, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 9999, background: col }}/>
+                  </div>
+                  <span style={{ fontSize: 8, color: "#64748b", width: 14, textAlign: "right", flexShrink: 0 }}>{val||0}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
