@@ -20,6 +20,12 @@ export async function GET(request) {
 
   const targetSeason = season || seasons[0];
 
+  // Latest season from registry for fallback filter
+  const latestSeasonRow = await sql`
+    SELECT season FROM season_registry ORDER BY season_date DESC LIMIT 1
+  `;
+  const latestSeason = latestSeasonRow[0]?.season;
+
   const stats = await sql`
     SELECT
       ps.*,
@@ -29,6 +35,12 @@ export async function GET(request) {
       ON csh.clan_name = ps.clan_name
       AND csh.season = ps.season
     WHERE ps.season = ${targetSeason}
+      AND ps.player_tag IN (
+        SELECT player_tag FROM accounts
+        UNION
+        SELECT player_tag FROM player_cwl_stats
+        WHERE season = ${latestSeason}
+      )
     ORDER BY ps.stars_earned DESC, ps.destruction_pct DESC
   `;
 
