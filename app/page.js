@@ -759,12 +759,15 @@ function ClanPerformanceChart({ history }) {
     setTrackedClans(prev => prev.filter(c => c.name !== name));
   }
 
+  // Recompute clan data inline on every render — avoids stale closure crash on stat change
+  const trackedClansData = trackedClans.map(c => ({
+    ...c,
+    data: buildClanData(c.name, selectedStat),
+  }));
+
   useEffect(() => {
     if (!history || trackedClans.length === 0) return;
-    setTrackedClans(prev => prev.map(c => ({
-      ...c,
-      data: buildClanData(c.name, selectedStat),
-    })));
+    setTrackedClans(prev => prev.map(c => ({ ...c })));
   }, [selectedStat, history]);
 
   // Auto-populate top 3 clans by attack_efficiency on first data load
@@ -793,11 +796,11 @@ function ClanPerformanceChart({ history }) {
   const plotH = CHART_H - PAD_T - PAD_B;
 
   const validSeasons = allSeasons.filter(s =>
-    trackedClans.some(c => c.data.find(d => d.season === s && d.value !== null))
+    trackedClansData.some(c => c.data.find(d => d.season === s && d.value !== null))
   );
   const xStep = validSeasons.length > 1 ? plotW / (validSeasons.length - 1) : plotW / 2;
 
-  const allVals = trackedClans.flatMap(c => c.data.map(d => d.value)).filter(v => v !== null);
+  const allVals = trackedClansData.flatMap(c => c.data.map(d => d.value)).filter(v => v !== null);
   const isOverallStat = selectedStat === "overall";
   const minVal = isOverallStat ? 0 : (allVals.length ? Math.min(...allVals) : 0);
   const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
@@ -872,7 +875,7 @@ function ClanPerformanceChart({ history }) {
           Search for a clan above to begin tracking
         </div>
       ) : validSeasons.length === 0 ? (
-        <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected clans</div>
+        <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected metric</div>
       ) : (
         <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
@@ -882,7 +885,6 @@ function ClanPerformanceChart({ history }) {
               if (selectedStat === "cwl_rank") {
                 const idx = Math.round(pct * (CWL_RANK_LIST.length - 1));
                 label = CWL_RANK_LIST[idx]?.replace(" I"," I").replace(" II"," II").replace(" III"," III") || "";
-                // Shorten
                 label = label.replace("Champion","Champ").replace("Crystal","Cryst").replace("Silver","Silv").replace("Bronze","Brnz").replace("Master","Mastr");
               } else {
                 const val = maxVal - pct * valRange;
@@ -900,14 +902,14 @@ function ClanPerformanceChart({ history }) {
                 {s.split(" ")[0].slice(0, 3)}
               </text>
             ))}
-            {trackedClans.map((c, ci) => {
+            {trackedClansData.map((c, ci) => {
               const color = CLAN_COLORS_CHART[ci];
               const pts = c.data.filter(d => d.value !== null && validSeasons.includes(d.season));
               if (!pts.length) return null;
-              const d = pts.map((pt, j) => `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`).join(" ");
+              const pathD = pts.map((pt, j) => `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`).join(" ");
               return (
                 <g key={c.name}>
-                  <path d={d} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d={pathD} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
                   {pts.map(pt => (
                     <g key={pt.season}>
                       <circle cx={xPos(pt.season)} cy={yPos(pt.value)} r="3.5" fill={color} opacity="0.9"/>
