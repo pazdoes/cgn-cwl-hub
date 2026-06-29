@@ -710,8 +710,8 @@ function ClanPerformanceChart({ history }) {
   // All unique clan names from history
   const allClans = history ? [...new Set(history.map(r => r.clan_name))].sort() : [];
 
-  // All seasons — use API order (already sorted chronologically via season_registry)
-  const allSeasons = history ? [...new Set(history.map(r => r.season))] : [];
+  // All seasons — reverse API order (API returns newest first, chart needs oldest first)
+  const allSeasons = history ? [...new Set(history.map(r => r.season))].reverse() : [];
 
   // Search
   useEffect(() => {
@@ -1171,8 +1171,8 @@ function HistoryView({ onBack }) {
     fetch("/api/leaderboard")
       .then(r => r.json())
       .then(async d => {
-        // Use API order — already sorted chronologically via season_registry
-        const allSeasons = d.seasons || [];
+        // Use API order reversed — API returns newest first, chart needs oldest first
+        const allSeasons = (d.seasons || []).slice().reverse();
         setSeasons(allSeasons);
         const rows = [];
         for (const s of allSeasons) {
