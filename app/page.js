@@ -1293,13 +1293,59 @@ function HistoryView({ onBack }) {
 
 
 
-function PlayerCard({ p, rank, isExpanded, onToggle }) {
+function PlayerSparkline({ sparkData }) {
+  const minV = Math.min(...sparkData.map(d => d.value));
+  const maxV = Math.max(...sparkData.map(d => d.value));
+  const range = maxV - minV || 0.1;
+  const W = 200, H = 32, PAD = 4;
+  const xStep = (W - PAD * 2) / (sparkData.length - 1);
+  const xPos = i => PAD + i * xStep;
+  const yPos = v => H - PAD - ((v - minV) / range) * (H - PAD * 2);
+  const path = sparkData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos(d.value)}`).join(" ");
+  const trend = sparkData[sparkData.length - 1].value - sparkData[0].value;
+  const trendColour = trend > 0.05 ? "text-green-400" : trend < -0.05 ? "text-red-400" : "text-slate-500";
+  const trendLabel = trend > 0.05 ? "↑ Improving" : trend < -0.05 ? "↓ Declining" : "→ Stable";
+  return (
+    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest">Rating Trend</p>
+        <span className={`text-[9px] font-semibold ${trendColour}`}>{trendLabel}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <svg viewBox={`0 0 ${W} ${H}`} className="flex-1 h-8">
+          <path d={path} fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          {sparkData.map((d, i) => (
+            <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r="2" fill="#a78bfa"/>
+          ))}
+        </svg>
+        <div className="shrink-0 text-right">
+          <p className="text-xs font-bold text-purple-300">{sparkData[sparkData.length-1].value.toFixed(2)}</p>
+          <p className="text-[9px] text-slate-600">latest</p>
+        </div>
+      </div>
+      <div className="flex justify-between mt-0.5">
+        <span className="text-[8px] text-slate-700">{sparkData[0].season.split(" ")[0]}</span>
+        <span className="text-[8px] text-slate-700">{sparkData[sparkData.length-1].season.split(" ").slice(0,2).join(" ")}</span>
+      </div>
+    </div>
+  );
+}
+
+function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons }) {
   const [cardView, setCardView] = useState("stats"); // "stats" | "breakdown"
 
   const rankBorderClass = rank === 1 ? "border-yellow-400/40 shadow-yellow-400/10"
     : rank === 2 ? "border-slate-300/30 shadow-slate-300/10"
     : rank === 3 ? "border-amber-600/40 shadow-amber-600/10"
     : "border-white/10";
+
+  // Build sparkline data for this player across all seasons
+  const sparkData = (seasons || []).map(season => {
+    const row = (allSeasonData || []).find(r => r.player_tag === p.player_tag && r.season === season);
+    if (!row || !row.attacks_used || !row.attacks_available) return { season, value: null };
+    const overall = parseFloat(((parseFloat(row.efficiency||0)*0.6)+((3-parseFloat(row.defence_efficiency||0))*0.4)).toFixed(2));
+    return { season, value: overall };
+  }).filter(d => d.value !== null);
 
   // When collapsed, reset to stats view
   const handleToggle = () => {
@@ -1450,6 +1496,11 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Season trend sparkline */}
+              {sparkData.length >= 2 && (
+                <PlayerSparkline sparkData={sparkData} />
               )}
             </div>
           )}
@@ -2663,6 +2714,8 @@ function LeaderboardView({ onBack }) {
           </div>
         ) : lbTab === "player" ? sorted.map((p, i) => (
           <PlayerCard key={p.player_tag} p={p} rank={i+1}
+            allSeasonData={allSeasonData}
+            seasons={seasons}
             isExpanded={expandedTag === p.player_tag}
             onToggle={() => toggleExpand(p.player_tag)}/>
         )) : null}
