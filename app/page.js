@@ -1450,31 +1450,46 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons }) {
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Efficiency</p>
+                    </div>
                     <p className="text-sm font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Efficiency</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-green-500/[0.06] border border-green-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#86efac" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Stars</p>
+                    </div>
                     <p className="text-sm font-bold text-green-300">{p.stars_earned}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Stars</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Dest %</p>
+                    </div>
                     <p className="text-sm font-bold text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Dest %</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center gap-0.5">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2 flex flex-col items-center justify-center gap-0.5">
                     <MiniPie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
-                    <p className="text-[9px] text-slate-600">Breakdown</p>
+                    <p className="text-[8px] text-slate-500 uppercase tracking-widest">Breakdown</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Attacks</p>
+                    </div>
                     <p className="text-sm font-bold text-slate-300">{p.attacks_used}<span className="text-slate-600 text-xs">/{p.attacks_available}</span></p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Attacks</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className={`rounded-xl p-2 ${p.missed_attacks > 0 ? "bg-red-500/[0.06] border border-red-500/20" : "bg-white/[0.03] border border-white/10"}`}>
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke={p.missed_attacks > 0 ? "#f87171" : "#94a3b8"} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Missed</p>
+                    </div>
                     <p className={`text-sm font-bold ${p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}`}>{p.missed_attacks}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Missed</p>
                   </div>
                 </div>
               </div>
@@ -1487,67 +1502,74 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons }) {
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Def EFF</p>
+                    </div>
                     <p className="text-sm font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Def EFF</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Stars Given</p>
+                    </div>
                     <p className="text-sm font-bold text-slate-400">{p.stars_conceded}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Stars Given</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                      <p className="text-[8px] text-slate-500 uppercase tracking-widest">Dest Given</p>
+                    </div>
                     <p className="text-sm font-bold text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center gap-0.5">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2 flex flex-col items-center justify-center gap-0.5">
                     <MiniPie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
-                    <p className="text-[9px] text-slate-600">Breakdown</p>
+                    <p className="text-[8px] text-slate-500 uppercase tracking-widest">Breakdown</p>
                   </div>
                 </div>
               </div>
-              {/* War Metrics — only show if data exists */}
-              {(p.avg_stars_per_attack != null || p.three_star_rate != null || p.punch_up_rate != null) && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">War Metrics</span>
+              {/* War Metrics — always show, display — if no data */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">War Metrics</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Avg ★/Atk</p></div>
+                    <p className="text-sm font-bold text-amber-300">{p.avg_stars_per_attack != null ? parseFloat(p.avg_stars_per_attack).toFixed(2) : "—"}</p>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                      <p className="text-sm font-bold text-amber-300">{p.avg_stars_per_attack != null ? parseFloat(p.avg_stars_per_attack).toFixed(2) : "—"}</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">Avg ★/Atk</p>
-                    </div>
-                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                      <p className="text-sm font-bold text-amber-300">{p.three_star_rate != null ? `${parseFloat(p.three_star_rate).toFixed(0)}%` : "—"}</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">3★ Rate</p>
-                    </div>
-                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                      <p className="text-sm font-bold text-amber-300">{p.clutch_rate != null ? parseFloat(p.clutch_rate).toFixed(2) : "—"}</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">Clutch (5-7)</p>
-                    </div>
+                  <div className="rounded-xl bg-green-500/[0.06] border border-green-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#86efac" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">3★ Rate</p></div>
+                    <p className="text-sm font-bold text-green-300">{p.three_star_rate != null ? `${parseFloat(p.three_star_rate).toFixed(0)}%` : "—"}</p>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                      <p className="text-sm font-bold text-green-300">{p.punch_up_rate != null ? `${parseFloat(p.punch_up_rate).toFixed(0)}%` : "—"}</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">Punch-Up</p>
-                    </div>
-                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                      <p className="text-sm font-bold text-slate-300">{p.consistency_score != null ? parseFloat(p.consistency_score).toFixed(2) : "—"}</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">Consistency</p>
-                    </div>
-                    <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                      <p className="text-sm font-bold text-slate-300">
-                        {p.reaches != null ? <span className="text-green-400">↑{p.reaches}</span> : "—"}
-                        {p.dips != null && p.reaches != null && <span className="text-slate-600"> · </span>}
-                        {p.dips != null ? <span className="text-slate-400">↓{p.dips}</span> : ""}
-                      </p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">↑Reach ↓Dip</p>
-                    </div>
+                  <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Clutch</p></div>
+                    <p className="text-sm font-bold text-purple-300">{p.clutch_rate != null ? parseFloat(p.clutch_rate).toFixed(2) : "—"}</p>
                   </div>
                 </div>
-              )}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2">
+                    <div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Punch-Up</p></div>
+                    <p className="text-sm font-bold text-blue-300">{p.punch_up_rate != null ? `${parseFloat(p.punch_up_rate).toFixed(0)}%` : "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Consistency</p></div>
+                    <p className="text-sm font-bold text-slate-300">{p.consistency_score != null ? parseFloat(p.consistency_score).toFixed(2) : "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2">
+                    <div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">↑Reach ↓Dip</p></div>
+                    <p className="text-sm font-bold">
+                      {p.reaches != null ? <span className="text-green-400">↑{p.reaches}</span> : "—"}
+                      {p.dips != null && p.reaches != null && <span className="text-slate-600"> · </span>}
+                      {p.dips != null ? <span className="text-slate-400">↓{p.dips}</span> : ""}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* Season trend sparkline */}
               {sparkData.length >= 2 && (

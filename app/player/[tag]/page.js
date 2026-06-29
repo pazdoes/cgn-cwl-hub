@@ -99,6 +99,51 @@ function MedalIcon({ rank }) {
   );
 }
 
+// Icon paths used across stat tiles
+const ICONS = {
+  atk:    "M13 10V3L4 14h7v7l9-11h-7z",
+  def:    "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+  star:   "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+  miss:   "M6 18L18 6M6 6l12 12",
+  avg:    "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+  punch:  "M5 10l7-7m0 0l7 7m-7-7v18",
+  clutch: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",
+  league: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
+  dest:   "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+  consist:"M4 6h16M4 10h16M4 14h16M4 18h16",
+  atks:   "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+  best:   "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
+  net:    "M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3",
+};
+
+// Colour map for icon tiles
+const TILE = {
+  purple: { text: "text-purple-300",  bg: "bg-purple-500/[0.06]",  border: "border-purple-500/20",  stroke: "#a78bfa" },
+  blue:   { text: "text-blue-300",    bg: "bg-blue-500/[0.06]",    border: "border-blue-500/20",    stroke: "#60a5fa" },
+  green:  { text: "text-green-300",   bg: "bg-green-500/[0.06]",   border: "border-green-500/20",   stroke: "#86efac" },
+  amber:  { text: "text-amber-300",   bg: "bg-amber-500/[0.06]",   border: "border-amber-500/20",   stroke: "#fbbf24" },
+  red:    { text: "text-red-400",     bg: "bg-red-500/[0.06]",     border: "border-red-500/20",     stroke: "#f87171" },
+  slate:  { text: "text-slate-400",   bg: "bg-white/[0.03]",       border: "border-white/10",       stroke: "#94a3b8" },
+};
+
+function IconStatBox({ label, value, iconKey, colourKey = "slate" }) {
+  const c = TILE[colourKey] || TILE.slate;
+  const icon = ICONS[iconKey];
+  return (
+    <div className={`rounded-2xl border ${c.border} ${c.bg} p-2.5 flex flex-col h-full`}>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        {icon && (
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke={c.stroke} strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={icon}/>
+          </svg>
+        )}
+        <p className="text-[9px] text-slate-500 uppercase tracking-widest leading-none">{label}</p>
+      </div>
+      <p className={`text-sm font-bold ${c.text}`}>{value ?? "—"}</p>
+    </div>
+  );
+}
+
 function StatBox({ label, value, colour = "text-white", sub = null }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 flex flex-col items-center justify-center text-center h-full">
@@ -670,28 +715,25 @@ export default function PlayerProfilePage() {
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career</p>
             <div className="grid grid-cols-3 gap-2">
-              <StatBox label="Avg Atk EFF" value={avgEfficiency} colour="text-purple-300"/>
-              <StatBox label="Avg Def EFF" value={avgDefEff} colour="text-blue-300"/>
-              <StatBox label="Total Stars" value={totalStars} colour="text-green-300"/>
-              <StatBox label="Total Attacks" value={totalCareerAttacks} colour="text-slate-300"/>
-              {data.bestOverall && <StatBox label="Best Rating" value={parseFloat(data.bestOverall.overall).toFixed(2)} colour="text-purple-400"/>}
-              {data.bestEfficiency && <StatBox label="Best Atk EFF" value={parseFloat(data.bestEfficiency.efficiency).toFixed(2)} colour="text-green-400"/>}
-              <StatBox label="Missed" value={totalMissed} colour={totalMissed > 0 ? "text-red-400" : "text-slate-500"}/>
+              <IconStatBox label="Avg Atk EFF" value={avgEfficiency} iconKey="atk" colourKey="purple"/>
+              <IconStatBox label="Avg Def EFF" value={avgDefEff} iconKey="def" colourKey="blue"/>
+              <IconStatBox label="Total Stars" value={totalStars} iconKey="star" colourKey="green"/>
+              <IconStatBox label="Total Attacks" value={totalCareerAttacks} iconKey="atks" colourKey="slate"/>
+              <IconStatBox label="Best Rating" value={data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—"} iconKey="best" colourKey="purple"/>
+              <IconStatBox label="Missed" value={totalMissed} iconKey="miss" colourKey={totalMissed > 0 ? "red" : "slate"}/>
             </div>
           </div>
 
           {/* Career War Metrics */}
-          {(careerAvgStarsPerAtk || careerPunchUpRate || careerClutchRate || careerThreeStarRate) && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career War Metrics</p>
-              <div className="grid grid-cols-2 gap-2">
-                {careerAvgStarsPerAtk && <StatBox label="Avg ★/Attack" value={careerAvgStarsPerAtk} colour="text-amber-300"/>}
-                {careerPunchUpRate && <StatBox label="Punch-Up Rate" value={careerPunchUpRate} colour="text-blue-300"/>}
-                {careerClutchRate && <StatBox label="Clutch Rate" value={careerClutchRate} colour="text-purple-300"/>}
-                {careerThreeStarRate && <StatBox label="3★ Rate" value={careerThreeStarRate} colour="text-green-300"/>}
-              </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career War Metrics</p>
+            <div className="grid grid-cols-2 gap-2">
+              <IconStatBox label="Avg ★/Attack" value={careerAvgStarsPerAtk ?? "—"} iconKey="avg" colourKey="amber"/>
+              <IconStatBox label="Punch-Up Rate" value={careerPunchUpRate ?? "—"} iconKey="punch" colourKey="blue"/>
+              <IconStatBox label="Clutch Rate" value={careerClutchRate ?? "—"} iconKey="clutch" colourKey="purple"/>
+              <IconStatBox label="3★ Rate" value={careerThreeStarRate ?? "—"} iconKey="star" colourKey="green"/>
             </div>
-          )}
+          </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career Attack Breakdown</p>
@@ -713,20 +755,17 @@ export default function PlayerProfilePage() {
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Performance · {latest?.season}</p>
             <div className="grid grid-cols-2 gap-2 mb-2">
-              <StatBox label="3★ Rate" value={threeStarRate} colour="text-green-300"/>
-              <StatBox label="Participation" value={participationRate} colour="text-purple-300"/>
+              <IconStatBox label="3★ Rate" value={threeStarRate} iconKey="star" colourKey="green"/>
+              <IconStatBox label="Participation" value={participationRate} iconKey="atks" colourKey="purple"/>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <StatBox
+              <IconStatBox
                 label="Net Stars"
                 value={netStars != null ? (netStars > 0 ? `+${netStars}` : String(netStars)) : "—"}
-                colour={netStars != null ? (netStars > 0 ? "text-green-300" : netStars < 0 ? "text-red-400" : "text-slate-500") : "text-slate-500"}
+                iconKey="net"
+                colourKey={netStars != null ? (netStars > 0 ? "green" : netStars < 0 ? "red" : "slate") : "slate"}
               />
-              <StatBox
-                label="Seasons Above Avg"
-                value={`${aboveAvg}/${data.seasons.length}`}
-                colour="text-purple-300"
-              />
+              <IconStatBox label="Seasons Above Avg" value={`${aboveAvg}/${data.seasons.length}`} iconKey="consist" colourKey="purple"/>
             </div>
           </div>
 
@@ -738,13 +777,13 @@ export default function PlayerProfilePage() {
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack · {latest?.season}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-2">
-              <StatBox label="Efficiency" value={parseFloat(latest?.efficiency||0).toFixed(2)} colour="text-purple-300"/>
-              <StatBox label="Stars" value={latest?.stars_earned ?? "—"} colour="text-green-300"/>
-              <StatBox label="Dest %" value={latest?.destruction_pct != null ? parseFloat(latest.destruction_pct).toFixed(1)+"%" : "—"} colour="text-slate-300"/>
+              <IconStatBox label="Efficiency" value={parseFloat(latest?.efficiency||0).toFixed(2)} iconKey="atk" colourKey="purple"/>
+              <IconStatBox label="Stars" value={latest?.stars_earned ?? "—"} iconKey="star" colourKey="green"/>
+              <IconStatBox label="Dest %" value={latest?.destruction_pct != null ? parseFloat(latest.destruction_pct).toFixed(1)+"%" : "—"} iconKey="dest" colourKey="slate"/>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <StatBox label="Attacks" value={`${latest?.attacks_used ?? "—"}/${latest?.attacks_available ?? "—"}`} colour="text-slate-300"/>
-              <StatBox label="Missed" value={latest?.missed_attacks ?? "—"} colour={(latest?.missed_attacks||0) > 0 ? "text-red-400" : "text-slate-500"}/>
+              <IconStatBox label="Attacks" value={`${latest?.attacks_used ?? "—"}/${latest?.attacks_available ?? "—"}`} iconKey="atks" colourKey="slate"/>
+              <IconStatBox label="Missed" value={latest?.missed_attacks ?? "—"} iconKey="miss" colourKey={(latest?.missed_attacks||0) > 0 ? "red" : "slate"}/>
             </div>
             <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06]">
               <LargePie three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0} size={64}/>
@@ -760,9 +799,9 @@ export default function PlayerProfilePage() {
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence · {latest?.season}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-3">
-              <StatBox label="Def EFF" value={latest?.defence_efficiency != null ? parseFloat(latest.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300"/>
-              <StatBox label="Stars Given" value={latest?.stars_conceded ?? "—"} colour="text-slate-400"/>
-              <StatBox label="Dest Given" value={latest?.defence_pct != null ? parseFloat(latest.defence_pct).toFixed(1)+"%" : "—"} colour="text-slate-400"/>
+              <IconStatBox label="Def EFF" value={latest?.defence_efficiency != null ? parseFloat(latest.defence_efficiency).toFixed(2) : "—"} iconKey="def" colourKey="blue"/>
+              <IconStatBox label="Stars Given" value={latest?.stars_conceded ?? "—"} iconKey="star" colourKey="slate"/>
+              <IconStatBox label="Dest Given" value={latest?.defence_pct != null ? parseFloat(latest.defence_pct).toFixed(1)+"%" : "—"} iconKey="dest" colourKey="slate"/>
             </div>
             <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06]">
               <LargePie three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0} size={64}/>
