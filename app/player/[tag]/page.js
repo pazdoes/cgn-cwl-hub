@@ -207,11 +207,11 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   const statTiles = [
     { label: "Atk EFF",   value: avgEfficiency,   colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.2)",  icon: ICON_ATK },
     { label: "Def EFF",   value: avgDefEff,       colour: "#60a5fa", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: ICON_DEF },
-    { label: "Stars",     value: totalStars,      colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
     { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
     { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569", bg: totalMissed > 0 ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.03)", border: totalMissed > 0 ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.07)", icon: ICON_MISS },
     { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: ICON_AVG },
     { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: ICON_PUNCH },
+    { label: "Stars",     value: totalStars,      colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
     { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)", icon: ICON_LEAGUE },
   ];
 
