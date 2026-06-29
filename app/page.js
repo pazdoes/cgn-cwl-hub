@@ -710,12 +710,8 @@ function ClanPerformanceChart({ history }) {
   // All unique clan names from history
   const allClans = history ? [...new Set(history.map(r => r.clan_name))].sort() : [];
 
-  // All seasons sorted chronologically
-  const allSeasons = history ? [...new Set(history.map(r => r.season))].sort((a, b) => {
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const [am, ay] = a.split(" "); const [bm, by] = b.split(" ");
-    return parseInt(ay) - parseInt(by) || months.indexOf(am) - months.indexOf(bm);
-  }) : [];
+  // All seasons — use API order (already sorted chronologically via season_registry)
+  const allSeasons = history ? [...new Set(history.map(r => r.season))] : [];
 
   // Search
   useEffect(() => {
@@ -1175,11 +1171,8 @@ function HistoryView({ onBack }) {
     fetch("/api/leaderboard")
       .then(r => r.json())
       .then(async d => {
-        const allSeasons = (d.seasons || []).sort((a, b) => {
-          const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-          const [am, ay] = a.split(" "); const [bm, by] = b.split(" ");
-          return parseInt(ay) - parseInt(by) || months.indexOf(am) - months.indexOf(bm);
-        });
+        // Use API order — already sorted chronologically via season_registry
+        const allSeasons = d.seasons || [];
         setSeasons(allSeasons);
         const rows = [];
         for (const s of allSeasons) {
