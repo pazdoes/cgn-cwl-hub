@@ -15,7 +15,7 @@ export async function GET() {
       csh.three_stars_clan, csh.two_stars_clan, csh.one_stars_clan, csh.zero_stars_clan
     FROM clan_season_history csh
     LEFT JOIN season_registry sr ON sr.season = csh.season
-    ORDER BY csh.clan_name, sr.season_date ASC NULLS LAST
+    ORDER BY sr.season_date ASC NULLS LAST, csh.clan_name ASC
   `;
   return NextResponse.json({ history });
 }

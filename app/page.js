@@ -710,8 +710,8 @@ function ClanPerformanceChart({ history }) {
   // All unique clan names from history
   const allClans = history ? [...new Set(history.map(r => r.clan_name))].sort() : [];
 
-  // All seasons — reverse API order (API returns newest first, chart needs oldest first)
-  const allSeasons = history ? [...new Set(history.map(r => r.season))].reverse() : [];
+  // All seasons — API returns oldest-first (ASC from season_registry join)
+  const allSeasons = history ? [...new Set(history.map(r => r.season))] : [];
 
   // Search
   useEffect(() => {
