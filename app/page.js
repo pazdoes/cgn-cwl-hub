@@ -1787,6 +1787,7 @@ function FaqButton() {
       { q: "How do I disconnect Discord?", a: "Tap your Discord name pill at the top of the page and select Disconnect." },
     ]},
     { section: "Leaderboard", items: [
+      { q: "What is CGN Rating?", a: "A weighted performance score combining 60% attack efficiency and 40% defence efficiency. It rewards players who attack well and defend well." },
       { q: "What is Attack Efficiency?", a: "Average stars earned per attack. Maximum is 3.00 — every attack was a 3-star." },
       { q: "What is Defence Efficiency?", a: "Average stars conceded per defence. Lower is better." },
       { q: "What is Three Star Rate?", a: "Percentage of attacks that achieved full 3-star destruction." },

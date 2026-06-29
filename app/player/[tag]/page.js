@@ -5,6 +5,26 @@ import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
 import { LargePie } from "@/lib/components";
 
+function RatingTooltip() {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setShow(v => !v)}
+        className={`w-4 h-4 rounded-full flex items-center justify-center border transition text-[9px] font-semibold shrink-0 ${show ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400"}`}>
+        ?
+      </button>
+      {show && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-48 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
+          <p className="text-[11px] text-slate-300 leading-relaxed">
+            Weighted score — 60% attack efficiency · 40% defence efficiency.
+          </p>
+          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WarBreakdown({ wars, season }) {
   const byDay = {};
   for (const w of wars) {
@@ -493,7 +513,7 @@ export default function PlayerProfilePage() {
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">CGN Rating</p>
-                <span title="60% attack efficiency · 40% defence efficiency" className="text-[9px] text-slate-700 cursor-help border border-slate-700 rounded-full w-3.5 h-3.5 flex items-center justify-center shrink-0">?</span>
+                <RatingTooltip />
                 {trend === "up" && (
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
