@@ -4,7 +4,6 @@ import { getDb } from "@/lib/db";
 export async function GET() {
   const sql = getDb();
 
-  // Only show active clans from the clans table
   const activeClanRows = await sql`SELECT clan_tag, clan_name FROM clans WHERE clan_tag IS NOT NULL`;
   const activeTags = activeClanRows.map(r => r.clan_tag);
 
@@ -12,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ clans: [] });
   }
 
-  const [clans, punchUp] = await Promise.all([
+  const [clans, punchUp, defEff] = await Promise.all([
     sql`
       SELECT
         clan_tag,
@@ -36,13 +35,26 @@ export async function GET() {
       WHERE clan_tag = ANY(${activeTags})
       GROUP BY clan_tag
     `,
+    sql`
+      SELECT
+        clan_name,
+        ROUND(AVG(defence_efficiency)::NUMERIC, 2) AS avg_defence_efficiency,
+        ROUND(AVG(stars_conceded)::NUMERIC, 2) AS avg_stars_conceded
+      FROM player_cwl_stats
+      WHERE clan_name = ANY(${activeClanRows.map(r => r.clan_name)})
+      GROUP BY clan_name
+    `,
   ]);
 
   const punchMap = Object.fromEntries(punchUp.map(r => [r.clan_tag, r]));
+  const defMap = Object.fromEntries(defEff.map(r => [r.clan_name, r]));
+
   const combined = clans.map(c => ({
     ...c,
     punch_up_rate: punchMap[c.clan_tag]?.punch_up_rate ?? null,
     three_star_rate: punchMap[c.clan_tag]?.three_star_rate ?? null,
+    avg_defence_efficiency: defMap[c.clan_name]?.avg_defence_efficiency ?? null,
+    avg_stars_conceded: defMap[c.clan_name]?.avg_stars_conceded ?? null,
   }));
 
   return NextResponse.json({ clans: combined });

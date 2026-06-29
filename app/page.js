@@ -1130,12 +1130,14 @@ function WarIntelView({ onBack }) {
                     </thead>
                     <tbody className="divide-y divide-white/[0.04]">
                       {[
-                        { label: "Avg ★/Day",   key: "avg_stars",      fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
-                        { label: "3★ Rate",      key: "three_star_rate", fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-green-300" },
-                        { label: "Punch-Up",     key: "punch_up_rate",  fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-blue-300" },
-                        { label: "Wars Won",     key: "wins",           fmt: v => v,                               colour: "text-purple-300" },
-                        { label: "Wars Lost",    key: "losses",         fmt: v => v,                               colour: "text-red-400" },
-                        { label: "Total Wars",   key: "total_wars",     fmt: v => v,                               colour: "text-slate-400" },
+                        { label: "Avg ★/Day",   key: "avg_stars",              fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
+                        { label: "3★ Rate",      key: "three_star_rate",         fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-green-300" },
+                        { label: "Punch-Up",     key: "punch_up_rate",           fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-blue-300" },
+                        { label: "Def Eff",      key: "avg_defence_efficiency",  fmt: v => parseFloat(v).toFixed(2),        colour: "text-red-400" },
+                        { label: "★ Conceded",   key: "avg_stars_conceded",      fmt: v => parseFloat(v).toFixed(2),        colour: "text-red-300" },
+                        { label: "Wars Won",     key: "wins",                    fmt: v => v,                               colour: "text-purple-300" },
+                        { label: "Wars Lost",    key: "losses",                  fmt: v => v,                               colour: "text-red-400" },
+                        { label: "Total Wars",   key: "total_wars",              fmt: v => v,                               colour: "text-slate-400" },
                       ].map(metric => (
                         <tr key={metric.key}>
                           <td className="py-2.5 px-1 text-[9px] text-slate-600 uppercase tracking-widest whitespace-nowrap">{metric.label}</td>
