@@ -15,6 +15,8 @@ export async function GET(request, { params }) {
       ps.efficiency, ps.defence_efficiency, ps.town_hall_level,
       ps.three_stars, ps.two_stars, ps.one_stars, ps.zero_stars,
       ps.three_stars_conceded, ps.two_stars_conceded, ps.one_stars_conceded, ps.zero_stars_conceded,
+      ps.avg_stars_per_attack, ps.punch_up_rate, ps.clutch_rate,
+      ps.three_star_rate, ps.consistency_score, ps.dips, ps.reaches,
       csh.cwl_rank
     FROM player_cwl_stats ps
     LEFT JOIN clan_season_history csh

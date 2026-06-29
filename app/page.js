@@ -2187,7 +2187,33 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         </div>
       </div>
 
-      {/* ── Row 3: Alliance War Record ── */}
+      {/* ── Row 3: Season Awards ── */}
+      {(awardMostThreeStars || awardClutchKing || awardPunchUpKing || awardIronDefence) && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Season Awards</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { label: "Most 3★",     player: awardMostThreeStars, value: awardMostThreeStars ? `${awardMostThreeStars.three_stars} hits` : null,                          colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+              { label: "Clutch King", player: awardClutchKing,     value: awardClutchKing     ? `${parseFloat(awardClutchKing.clutch_rate).toFixed(2)} avg` : null,          colour: "#c4b5fd", bg: "rgba(139,92,246,0.06)", border: "rgba(139,92,246,0.2)",  icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" },
+              { label: "Punch-Up",    player: awardPunchUpKing,    value: awardPunchUpKing    ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null,           colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: "M5 10l7-7m0 0l7 7m-7-7v18" },
+              { label: "Iron Defence",player: awardIronDefence,    value: awardIronDefence    ? `${awardIronDefence.stars_conceded}★ conceded` : null,                       colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+            ].filter(a => a.player && a.value).map((award, i) => (
+              <div key={i} style={{ background: award.bg, borderRadius: 10, border: `1px solid ${award.border}`, padding: "8px 10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={award.colour} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={award.icon}/>
+                  </svg>
+                  <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{award.label}</div>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{award.player.player_name}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: award.colour, marginTop: 2 }}>{award.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Row 4: Alliance War Record ── */}
       <div style={{
         background: "rgba(255,255,255,0.03)",
         borderRadius: 12,
@@ -2201,21 +2227,19 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         <div style={{ display: "flex", gap: 8 }}>
           {/* W/L/D summary */}
           <div style={{ display: "flex", gap: 8, marginRight: 8 }}>
-            {[
-              { label: "Won", value: totalWins, colour: "#86efac" },
-              { label: "Lost", value: totalLosses, colour: "#f87171" },
-              { label: "Drawn", value: totalDraws, colour: "#64748b" },
-            ].map(({ label, value, colour }) => (
-              <div key={label} style={{
-                background: "rgba(255,255,255,0.04)",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.07)",
-                padding: "6px 12px",
-                textAlign: "center",
-                minWidth: 44,
-              }}>
-                <div style={{ fontSize: 16, fontWeight: 300, color: colour }}>{value}</div>
-                <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 1 }}>{label}</div>
+          {[
+              { label: "Won",   value: totalWins,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.2)",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
+              { label: "Lost",  value: totalLosses, colour: "#f87171", bg: "rgba(239,68,68,0.06)",  border: "rgba(239,68,68,0.2)",  icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" },
+              { label: "Drawn", value: totalDraws,  colour: "#64748b", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+            ].map(({ label, value, colour, bg, border, icon }) => (
+              <div key={label} style={{ background: bg, borderRadius: 10, border: `1px solid ${border}`, padding: "8px 12px", minWidth: 44 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={colour} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={icon}/>
+                  </svg>
+                  <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{label}</div>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: colour }}>{value}</div>
               </div>
             ))}
           </div>
@@ -2245,37 +2269,6 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
           </div>
         </div>
       </div>
-
-      {/* Season Awards 2x2 */}
-      {(awardMostThreeStars || awardClutchKing || awardPunchUpKing || awardIronDefence) && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Season Awards</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            {[
-              { label: "Most 3★", player: awardMostThreeStars, value: awardMostThreeStars ? `${awardMostThreeStars.three_stars} hits` : null, colour: "#fbbf24" },
-              { label: "Clutch King", player: awardClutchKing, value: awardClutchKing ? `${parseFloat(awardClutchKing.clutch_rate).toFixed(2)} avg` : null, colour: "#c4b5fd" },
-              { label: "Punch-Up King", player: awardPunchUpKing, value: awardPunchUpKing ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null, colour: "#93c5fd" },
-              { label: "Iron Defence", player: awardIronDefence, value: awardIronDefence ? `${awardIronDefence.stars_conceded}★ conceded` : null, colour: "#86efac" },
-            ].filter(a => a.player && a.value).map((award, i) => (
-              <div key={i} style={{
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.07)",
-                padding: "8px 10px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}>
-                <div>
-                  <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 2 }}>{award.label}</div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{award.player.player_name}</div>
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: award.colour, flexShrink: 0, marginLeft: 8 }}>{award.value}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>

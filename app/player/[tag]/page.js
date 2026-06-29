@@ -191,9 +191,29 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   const threeStarRate = latest?.attacks_used > 0
     ? ((latest.three_stars||0)/latest.attacks_used*100).toFixed(0)+"%" : "—";
 
-  // Career war metrics from latest season (most recent has computed values)
+  // Career war metrics from latest season
   const avgStarsPerAtk = latest?.avg_stars_per_attack != null ? parseFloat(latest.avg_stars_per_attack).toFixed(2) : "—";
   const punchUpRate = latest?.punch_up_rate != null ? parseFloat(latest.punch_up_rate).toFixed(0)+"%" : "—";
+
+  // Icon paths
+  const ICON_ATK    = "M13 10V3L4 14h7v7l9-11h-7z";
+  const ICON_DEF    = "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z";
+  const ICON_STAR   = "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z";
+  const ICON_MISS   = "M6 18L18 6M6 6l12 12";
+  const ICON_AVG    = "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z";
+  const ICON_PUNCH  = "M5 10l7-7m0 0l7 7m-7-7v18";
+  const ICON_LEAGUE = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
+
+  const statTiles = [
+    { label: "Atk EFF",   value: avgEfficiency,   colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.2)",  icon: ICON_ATK },
+    { label: "Def EFF",   value: avgDefEff,       colour: "#60a5fa", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: ICON_DEF },
+    { label: "Stars",     value: totalStars,      colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
+    { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
+    { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569", bg: totalMissed > 0 ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.03)", border: totalMissed > 0 ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.07)", icon: ICON_MISS },
+    { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: ICON_AVG },
+    { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: ICON_PUNCH },
+    { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)", icon: ICON_LEAGUE },
+  ];
 
   const total = (careerThree||0)+(careerTwo||0)+(careerOne||0)+(careerZero||0);
   const pieSize = 60;
@@ -225,8 +245,8 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   const sparkColour = sparkTrend > 0.05 ? "#86efac" : sparkTrend < -0.05 ? "#f87171" : "#a78bfa";
   const sparkSeasonLabels = sparkSeasons.filter(s => s.attacks_used && s.attacks_available).map(s => s.season?.split(" ")[0]?.slice(0,3) || "");
 
-  // Sparkline SVG dimensions
-  const SPW = 380, SPH = 66, SPAD2 = 10;
+  // Sparkline SVG dimensions — increased padding to prevent label clipping
+  const SPW = 380, SPH = 72, SPAD2 = 14;
   const sMin2 = sparkPoints.length ? Math.min(...sparkPoints) : 0;
   const sMax2 = sparkPoints.length ? Math.max(...sparkPoints) : 1;
   const sRange2 = sMax2 - sMin2 || 0.1;
@@ -318,27 +338,17 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
         {/* Divider */}
         <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
 
-        {/* Row 2 — stat grid full width */}
+        {/* Row 2 — stat grid full width with icon+label tile design */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7, marginBottom: 14 }}>
-          {[
-            { label: "Atk EFF",   value: avgEfficiency,   colour: "#c4b5fd" },
-            { label: "Def EFF",   value: avgDefEff,       colour: "#93c5fd" },
-            { label: "Stars",     value: totalStars,      colour: "#86efac" },
-            { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac" },
-            { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569" },
-            { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24" },
-            { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd" },
-            { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8" },
-          ].map(({ label, value, colour }) => (
-            <div key={label} style={{
-              background: "rgba(255,255,255,0.04)",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.07)",
-              padding: "7px 5px",
-              textAlign: "center",
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: colour }}>{value}</div>
-              <div style={{ fontSize: 7.5, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
+          {statTiles.map(({ label, value, colour, bg, border, icon }) => (
+            <div key={label} style={{ background: bg, borderRadius: 10, border: `1px solid ${border}`, padding: "8px 8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={colour} strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={icon}/>
+                </svg>
+                <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{label}</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: colour }}>{value}</div>
             </div>
           ))}
         </div>
