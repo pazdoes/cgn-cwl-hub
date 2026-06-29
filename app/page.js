@@ -722,17 +722,19 @@ function ClanPerformanceChart({ history }) {
     ).slice(0, 6));
   }, [clanSearch, allClans, trackedClans]);
 
-  function buildClanData(clanName) {
+  function buildClanData(clanName, stat) {
+    const statKey = stat || selectedStat;
+    const isRank = statKey === "cwl_rank";
     return allSeasons.map(season => {
       const row = history?.find(r => r.clan_name === clanName && r.season === season);
       if (!row) return { season, value: null, displayValue: null };
-      if (isRankStat || selectedStat === "cwl_rank") {
+      if (isRank) {
         const rank = row.cwl_rank;
         if (!rank || rank === "Unknown") return { season, value: null, displayValue: null };
         const idx = CWL_RANK_LIST.indexOf(rank);
         return { season, value: idx === -1 ? null : idx, displayValue: rank || null };
       }
-      if (selectedStat === "overall") {
+      if (statKey === "overall") {
         const atk = parseFloat(row.attack_efficiency||0);
         const def = parseFloat(row.defence_efficiency||0);
         const wins = row.wars_won||0;
@@ -741,7 +743,7 @@ function ClanPerformanceChart({ history }) {
           : null;
         return { season, value: v, displayValue: v };
       }
-      const v = parseFloat(row[selectedStat]);
+      const v = parseFloat(row[statKey]);
       return { season, value: isNaN(v) ? null : v, displayValue: isNaN(v) ? null : v };
     });
   }
@@ -749,7 +751,7 @@ function ClanPerformanceChart({ history }) {
   function addClan(clanName) {
     if (trackedClans.length >= 3) return;
     if (trackedClans.find(c => c.name === clanName)) return;
-    setTrackedClans(prev => [...prev, { name: clanName, data: buildClanData(clanName) }]);
+    setTrackedClans(prev => [...prev, { name: clanName, data: buildClanData(clanName, selectedStat) }]);
     setClanSearch(""); setSearchResults([]);
   }
 
@@ -761,7 +763,7 @@ function ClanPerformanceChart({ history }) {
     if (!history || trackedClans.length === 0) return;
     setTrackedClans(prev => prev.map(c => ({
       ...c,
-      data: buildClanData(c.name),
+      data: buildClanData(c.name, selectedStat),
     })));
   }, [selectedStat, history]);
 
@@ -781,7 +783,7 @@ function ClanPerformanceChart({ history }) {
       top3.push(r.clan_name);
       if (top3.length >= 3) break;
     }
-    setTrackedClans(top3.map(name => ({ name, data: buildClanData(name) })));
+    setTrackedClans(top3.map(name => ({ name, data: buildClanData(name, selectedStat) })));
   }, [history]);
 
   // Chart
