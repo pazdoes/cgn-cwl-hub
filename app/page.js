@@ -975,6 +975,51 @@ function MatchupsPanel({ matchupData }) {
   );
 }
 
+function WarMomentumChart({ dayAggregates }) {
+  let cumulative = 0;
+  const cumulativeData = dayAggregates.map(d => {
+    cumulative += parseFloat(d.avg_stars || 0);
+    return { day: d.war_day, value: parseFloat(cumulative.toFixed(2)) };
+  });
+  const maxCumulative = cumulativeData[cumulativeData.length - 1]?.value || 1;
+  const W = 280, H = 80, PAD_L = 28, PAD_R = 8, PAD_T = 8, PAD_B = 20;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+  const xStep = cumulativeData.length > 1 ? plotW / (cumulativeData.length - 1) : plotW;
+  const xPos = i => PAD_L + i * xStep;
+  const yPos = v => PAD_T + plotH - (v / maxCumulative) * plotH;
+  const path = cumulativeData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos(d.value)}`).join(" ");
+  const perfectLine = cumulativeData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos((i + 1) * (maxCumulative / cumulativeData.length))}`).join(" ");
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest">War Momentum</p>
+        <p className="text-[9px] text-slate-700">Cumulative avg ★ across days</p>
+      </div>
+      <div className="overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[220px]">
+          {[0, 0.5, 1].map(pct => (
+            <line key={pct} x1={PAD_L} y1={PAD_T + pct * plotH} x2={W - PAD_R} y2={PAD_T + pct * plotH} stroke="#1e293b" strokeWidth="1"/>
+          ))}
+          <path d={perfectLine} fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="3,3"/>
+          <path d={path} fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          {cumulativeData.map((d, i) => (
+            <g key={i}>
+              <circle cx={xPos(i)} cy={yPos(d.value)} r="3" fill="#a78bfa"/>
+              <text x={xPos(i)} y={H - 4} textAnchor="middle" fontSize="7" fill="#475569">D{d.day}</text>
+              <text x={xPos(i)} y={yPos(d.value) - 5} textAnchor="middle" fontSize="6.5" fill="#a78bfa">{d.value.toFixed(1)}</text>
+            </g>
+          ))}
+          <text x={PAD_L - 3} y={PAD_T + 3} textAnchor="end" fontSize="6" fill="#475569">{maxCumulative.toFixed(0)}</text>
+          <text x={PAD_L - 3} y={PAD_T + plotH / 2 + 3} textAnchor="end" fontSize="6" fill="#475569">{(maxCumulative / 2).toFixed(0)}</text>
+          <text x={PAD_L - 3} y={PAD_T + plotH + 3} textAnchor="end" fontSize="6" fill="#475569">0</text>
+        </svg>
+      </div>
+      <p className="text-[8px] text-slate-700 mt-1">Dashed line = even pace reference</p>
+    </div>
+  );
+}
+
 // ── War Intelligence View ────────────────────────────────────────────────────
 function WarIntelView({ onBack }) {
   const [tab, setTab] = useState("days");
@@ -1080,6 +1125,7 @@ function WarIntelView({ onBack }) {
                 </select>
               </div>
 
+              {/* Avg stars bar chart */}
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Avg Stars Per War Day</p>
                 {dayAggregates.length === 0 ? (
@@ -1104,6 +1150,9 @@ function WarIntelView({ onBack }) {
                   </div>
                 )}
               </div>
+
+              {/* War momentum cumulative chart */}
+              {dayAggregates.length >= 2 && <WarMomentumChart dayAggregates={dayAggregates} />}
             </>
           )}
 
