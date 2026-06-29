@@ -1838,6 +1838,49 @@ function ContrastToggle() {
 }
 
 
+function SeasonAwards({ stats }) {
+  if (!stats?.length) return null;
+  const withAttacks = stats.filter(p => p.attacks_used > 0);
+  const mostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
+  const bestClutch = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
+  const punchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
+  const ironDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => (a.stars_conceded||0) - (b.stars_conceded||0))[0];
+  const perfectAttendance = stats.filter(p => (p.missed_attacks||0) === 0 && p.attacks_used > 0);
+  const categories = [
+    { label: "Most 3★",     player: mostThreeStars, value: mostThreeStars ? `${mostThreeStars.three_stars} hits` : null,                                      colour: "text-amber-300" },
+    { label: "Clutch King", player: bestClutch,     value: bestClutch     ? `${parseFloat(bestClutch.clutch_rate).toFixed(2)} avg (Days 5-7)` : null,          colour: "text-purple-300" },
+    { label: "Punch-Up King",player: punchUpKing,   value: punchUpKing    ? `${parseFloat(punchUpKing.punch_up_rate).toFixed(0)}% punch-up` : null,            colour: "text-blue-300" },
+    { label: "Iron Defence", player: ironDefence,   value: ironDefence    ? `${ironDefence.stars_conceded} ★ conceded` : null,                                 colour: "text-green-300" },
+  ].filter(c => c.player && c.value);
+  if (!categories.length && !perfectAttendance.length) return null;
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season Awards</p>
+      <div className="space-y-2">
+        {categories.map((cat, i) => (
+          <a key={i} href={`/player/${cat.player.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
+            <div className="min-w-0">
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest">{cat.label}</p>
+              <p className="text-xs font-semibold text-white truncate">{cat.player.player_name}</p>
+            </div>
+            <p className={`text-xs font-bold shrink-0 ml-2 ${cat.colour}`}>{cat.value}</p>
+          </a>
+        ))}
+        {perfectAttendance.length > 0 && (
+          <div className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+            <div className="min-w-0">
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest">Perfect Attendance</p>
+              <p className="text-xs text-slate-300 truncate">{perfectAttendance.map(p => p.player_name).join(", ")}</p>
+            </div>
+            <p className="text-xs font-bold text-green-300 shrink-0 ml-2">{perfectAttendance.length} players</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Recap Share Card ────────────────────────────────────────────────────────
 // Rendered off-screen, snapshotted by html2canvas via lib/shareCard.js.
 // All graphics are inlined as raw SVG — no imported components.
@@ -2354,6 +2397,9 @@ function RecapView({ onBack }) {
               )}
             </div>
           </div>
+
+          {/* Category winners */}
+          <SeasonAwards stats={stats} />
 
           {/* Alliance war record */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
