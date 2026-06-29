@@ -1339,8 +1339,8 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons }) {
     : rank === 3 ? "border-amber-600/40 shadow-amber-600/10"
     : "border-white/10";
 
-  // Build sparkline data for this player across all seasons
-  const sparkData = (seasons || []).map(season => {
+  // Build sparkline data oldest-first (seasons from API is newest-first)
+  const sparkData = ([...(seasons || [])].reverse()).map(season => {
     const row = (allSeasonData || []).find(r => r.player_tag === p.player_tag && r.season === season);
     if (!row || !row.attacks_used || !row.attacks_available) return { season, value: null };
     const overall = parseFloat(((parseFloat(row.efficiency||0)*0.6)+((3-parseFloat(row.defence_efficiency||0))*0.4)).toFixed(2));
