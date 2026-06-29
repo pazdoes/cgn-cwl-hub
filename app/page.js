@@ -728,6 +728,7 @@ function ClanPerformanceChart({ history }) {
       if (!row) return { season, value: null, displayValue: null };
       if (isRankStat || selectedStat === "cwl_rank") {
         const rank = row.cwl_rank;
+        if (!rank || rank === "Unknown") return { season, value: null, displayValue: null };
         const idx = CWL_RANK_LIST.indexOf(rank);
         return { season, value: idx === -1 ? null : idx, displayValue: rank || null };
       }
@@ -805,8 +806,10 @@ function ClanPerformanceChart({ history }) {
     return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
   }
   function yPos(val) {
+    if (val === null || val === undefined) return PAD_T + plotH / 2;
     if (selectedStat === "cwl_rank") {
-      return PAD_T + (val / (CWL_RANK_LIST.length - 1)) * plotH;
+      const listLen = CWL_RANK_LIST.length - 1;
+      return PAD_T + (val / (listLen || 1)) * plotH;
     }
     return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
   }
