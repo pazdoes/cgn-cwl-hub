@@ -928,6 +928,53 @@ function ClanPerformanceChart({ history }) {
   );
 }
 
+function MatchupsPanel({ matchupData }) {
+  const sorted = [...(matchupData||[])].sort((a, b) => parseFloat(b.three_star_rate) - parseFloat(a.three_star_rate));
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">3★ Rate by TH Matchup</p>
+      <p className="text-[9px] text-slate-700 mb-4">Attacker TH → Defender TH · min 3 attacks</p>
+      {!matchupData?.length ? (
+        <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+      ) : (
+        <>
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1 rounded-2xl border border-green-500/20 bg-green-500/[0.06] px-3 py-2">
+              <p className="text-[9px] text-green-500/70 uppercase tracking-widest mb-1">Strength</p>
+              <p className="text-xs text-green-300 font-semibold">TH{best?.attacker_th} → TH{best?.defender_th}</p>
+              <p className="text-[10px] text-green-400">{parseFloat(best?.three_star_rate||0).toFixed(0)}% 3★ rate</p>
+            </div>
+            <div className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-3 py-2">
+              <p className="text-[9px] text-red-500/70 uppercase tracking-widest mb-1">Weakness</p>
+              <p className="text-xs text-red-300 font-semibold">TH{worst?.attacker_th} → TH{worst?.defender_th}</p>
+              <p className="text-[10px] text-red-400">{parseFloat(worst?.three_star_rate||0).toFixed(0)}% 3★ rate</p>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {matchupData.map((m, i) => {
+              const rate = parseFloat(m.three_star_rate || 0);
+              const colour = rate >= 80 ? "text-green-400" : rate >= 50 ? "text-amber-400" : "text-red-400";
+              const barColour = rate >= 80 ? "bg-green-500/60" : rate >= 50 ? "bg-amber-500/60" : "bg-red-500/60";
+              return (
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                  <span className="text-[10px] text-slate-400 w-20 shrink-0">TH{m.attacker_th} → TH{m.defender_th}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className={`h-full rounded-full ${barColour}`} style={{width:`${rate}%`}}/>
+                  </div>
+                  <span className={`text-[10px] font-semibold w-10 text-right shrink-0 ${colour}`}>{rate.toFixed(0)}%</span>
+                  <span className="text-[9px] text-slate-700 w-10 shrink-0">{m.total} atks</span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── War Intelligence View ────────────────────────────────────────────────────
 function WarIntelView({ onBack }) {
   const [tab, setTab] = useState("days");
@@ -1062,30 +1109,7 @@ function WarIntelView({ onBack }) {
 
           {/* ── MATCHUPS TAB ── */}
           {tab === "matchups" && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">3★ Rate by TH Matchup</p>
-              <p className="text-[9px] text-slate-700 mb-4">Attacker TH → Defender TH</p>
-              {matchupData.length === 0 ? (
-                <p className="text-slate-700 text-xs text-center py-6">No data available</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {matchupData.map((m, i) => {
-                    const rate = parseFloat(m.three_star_rate || 0);
-                    const colour = rate >= 80 ? "text-green-400" : rate >= 50 ? "text-amber-400" : "text-red-400";
-                    return (
-                      <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-                        <span className="text-[10px] text-slate-400 w-20 shrink-0">TH{m.attacker_th} → TH{m.defender_th}</span>
-                        <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                          <div className={`h-full rounded-full ${rate >= 80 ? "bg-green-500/60" : rate >= 50 ? "bg-amber-500/60" : "bg-red-500/60"}`} style={{width:`${rate}%`}}/>
-                        </div>
-                        <span className={`text-[10px] font-semibold w-10 text-right shrink-0 ${colour}`}>{rate.toFixed(0)}%</span>
-                        <span className="text-[9px] text-slate-700 w-10 shrink-0">{m.total} atks</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <MatchupsPanel matchupData={matchupData} />
           )}
 
           {/* ── ATTENDANCE TAB ── */}
