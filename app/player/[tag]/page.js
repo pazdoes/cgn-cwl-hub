@@ -512,10 +512,40 @@ export default function PlayerProfilePage() {
   const latest = data.seasons[0];
   const prev = data.seasons[1] || null;
 
-  // Stats tab season — defaults to latest, can be switched via selector
-  const statsRow = statsSeason
-    ? (data.seasons.find(s => s.season === statsSeason) || latest)
-    : latest;
+  // Overall aggregate across all seasons for Stats tab
+  const allSeasons = data.seasons;
+  const overallRow = allSeasons.length > 0 ? {
+    season: "Overall",
+    attacks_used:        allSeasons.reduce((s,r)=>s+(r.attacks_used||0),0),
+    attacks_available:   allSeasons.reduce((s,r)=>s+(r.attacks_available||0),0),
+    missed_attacks:      allSeasons.reduce((s,r)=>s+(r.missed_attacks||0),0),
+    stars_earned:        allSeasons.reduce((s,r)=>s+(r.stars_earned||0),0),
+    stars_conceded:      allSeasons.reduce((s,r)=>s+(r.stars_conceded||0),0),
+    three_stars:         allSeasons.reduce((s,r)=>s+(r.three_stars||0),0),
+    two_stars:           allSeasons.reduce((s,r)=>s+(r.two_stars||0),0),
+    one_stars:           allSeasons.reduce((s,r)=>s+(r.one_stars||0),0),
+    zero_stars:          allSeasons.reduce((s,r)=>s+(r.zero_stars||0),0),
+    three_stars_conceded:allSeasons.reduce((s,r)=>s+(r.three_stars_conceded||0),0),
+    two_stars_conceded:  allSeasons.reduce((s,r)=>s+(r.two_stars_conceded||0),0),
+    one_stars_conceded:  allSeasons.reduce((s,r)=>s+(r.one_stars_conceded||0),0),
+    zero_stars_conceded: allSeasons.reduce((s,r)=>s+(r.zero_stars_conceded||0),0),
+    efficiency: allSeasons.length
+      ? parseFloat((allSeasons.reduce((s,r)=>s+parseFloat(r.efficiency||0),0)/allSeasons.length).toFixed(2)) : null,
+    defence_efficiency: allSeasons.length
+      ? parseFloat((allSeasons.reduce((s,r)=>s+parseFloat(r.defence_efficiency||0),0)/allSeasons.length).toFixed(2)) : null,
+    destruction_pct: allSeasons.length
+      ? parseFloat((allSeasons.reduce((s,r)=>s+parseFloat(r.destruction_pct||0),0)/allSeasons.length).toFixed(2)) : null,
+    defence_pct: allSeasons.length
+      ? parseFloat((allSeasons.reduce((s,r)=>s+parseFloat(r.defence_pct||0),0)/allSeasons.length).toFixed(2)) : null,
+    cwl_rank: null,
+  } : null;
+
+  // Stats tab season — defaults to latest, "overall" shows aggregate
+  const statsRow = statsSeason === "overall"
+    ? overallRow
+    : statsSeason
+      ? (data.seasons.find(s => s.season === statsSeason) || latest)
+      : latest;
   const latestOverall = latest?.overall;
   const rank = data.currentRank;
   const rankColour = rank === 1 ? "#D4AF37" : rank === 2 ? "#A7A7AD" : rank === 3 ? "#CD7F32" : null;
@@ -533,6 +563,8 @@ export default function PlayerProfilePage() {
     ? ((statsRow.attacks_used||0)/statsRow.attacks_available*100).toFixed(0)+"%" : "—";
   const netStars = statsRow
     ? ((statsRow.stars_earned||0)-(statsRow.stars_conceded||0)) : null;
+  // For Overall mode, "seasons above avg" still makes sense; net stars is career total
+  const isOverallMode = statsSeason === "overall";
   const trend = (latestOverall != null && prev?.overall != null)
     ? (parseFloat(latestOverall) > parseFloat(prev.overall) ? "up"
       : parseFloat(latestOverall) < parseFloat(prev.overall) ? "down" : "same")
@@ -767,6 +799,7 @@ export default function PlayerProfilePage() {
                 value={statsSeason || data.seasons[0]?.season || ""}
                 onChange={e => setStatsSeason(e.target.value)}
                 className="rounded-xl border border-white/10 bg-transparent px-2 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+                <option value="overall">Overall (All Seasons)</option>
                 {data.seasons.map(s => (
                   <option key={s.season} value={s.season}>{s.season}</option>
                 ))}
@@ -775,19 +808,26 @@ export default function PlayerProfilePage() {
           )}
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Performance · {statsRow?.season}</p>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">
+              {isOverallMode ? "Performance · All Seasons" : `Performance · ${statsRow?.season}`}
+            </p>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <IconStatBox label="3★ Rate" value={threeStarRate} iconKey="star" colourKey="green"/>
               <IconStatBox label="Participation" value={participationRate} iconKey="atks" colourKey="purple"/>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <IconStatBox
-                label="Net Stars"
+                label={isOverallMode ? "Net Stars (Career)" : "Net Stars"}
                 value={netStars != null ? (netStars > 0 ? `+${netStars}` : String(netStars)) : "—"}
                 iconKey="net"
                 colourKey={netStars != null ? (netStars > 0 ? "green" : netStars < 0 ? "red" : "slate") : "slate"}
               />
-              <IconStatBox label="Seasons Above Avg" value={`${aboveAvg}/${data.seasons.length}`} iconKey="consist" colourKey="purple"/>
+              {!isOverallMode && (
+                <IconStatBox label="Seasons Above Avg" value={`${aboveAvg}/${data.seasons.length}`} iconKey="consist" colourKey="purple"/>
+              )}
+              {isOverallMode && (
+                <IconStatBox label="Seasons Played" value={data.seasons.length} iconKey="league" colourKey="slate"/>
+              )}
             </div>
           </div>
 
@@ -796,7 +836,9 @@ export default function PlayerProfilePage() {
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack · {statsRow?.season}</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">
+                {isOverallMode ? "Attack · All Seasons" : `Attack · ${statsRow?.season}`}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-2">
               <IconStatBox label="Efficiency" value={parseFloat(statsRow?.efficiency||0).toFixed(2)} iconKey="atk" colourKey="purple"/>
@@ -818,7 +860,9 @@ export default function PlayerProfilePage() {
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence · {statsRow?.season}</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">
+                {isOverallMode ? "Defence · All Seasons" : `Defence · ${statsRow?.season}`}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-3">
               <IconStatBox label="Def EFF" value={statsRow?.defence_efficiency != null ? parseFloat(statsRow?.defence_efficiency).toFixed(2) : "—"} iconKey="def" colourKey="blue"/>
