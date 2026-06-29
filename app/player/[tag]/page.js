@@ -483,7 +483,7 @@ export default function PlayerProfilePage() {
   const [copied, setCopied] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(null);
-  const [statsSeason, setStatsSeason] = useState(null);
+  const [statsSeason, setStatsSeason] = useState("overall");
   const shareCardRef = useRef(null);
 
   useEffect(() => {
@@ -796,7 +796,7 @@ export default function PlayerProfilePage() {
             <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2">
               <p className="text-[9px] text-slate-600 uppercase tracking-widest">Season</p>
               <select
-                value={statsSeason || data.seasons[0]?.season || ""}
+                value={statsSeason || "overall"}
                 onChange={e => setStatsSeason(e.target.value)}
                 className="rounded-xl border border-white/10 bg-transparent px-2 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
                 <option value="overall">Overall (All Seasons)</option>
