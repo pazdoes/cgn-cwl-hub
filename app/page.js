@@ -561,14 +561,21 @@ function PlayerPerformanceChart({ allData, seasons }) {
   const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
   const valRange = maxVal - minVal || 1;
 
+  // Stats where lower = better — invert Y axis so best sits at top
+  const INVERTED_STATS = new Set(["defence_efficiency", "stars_conceded", "defence_pct"]);
+  const isInvertedStat = INVERTED_STATS.has(selectedStat);
+
   function xPos(season) {
     const idx = validSeasons.indexOf(season);
     return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
   }
   function yPos(val) {
     if (isRankStat) {
-      // Rank: lower index = better, so invert Y so best (0) is at top
       return PAD_T + (val / (CWL_RANK_ORDER_HIST.length)) * plotH;
+    }
+    if (isInvertedStat) {
+      // Invert: lower value = higher on chart (lower is better)
+      return PAD_T + ((val - minVal) / valRange) * plotH;
     }
     return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
   }
@@ -622,7 +629,11 @@ function PlayerPerformanceChart({ allData, seasons }) {
       ) : validSeasons.length === 0 ? (
         <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected players</div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          {isInvertedStat && (
+            <p className="text-[9px] text-blue-400/60 uppercase tracking-widest mb-1 text-right">↓ lower is better · chart inverted</p>
+          )}
+          <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
             {[0, 0.25, 0.5, 0.75, 1].map(pct => {
               const y = PAD_T + pct * plotH;
@@ -630,6 +641,10 @@ function PlayerPerformanceChart({ allData, seasons }) {
               if (isRankStat) {
                 const idx = Math.round(pct * (CWL_RANK_ORDER_HIST.length - 1));
                 label = CWL_RANK_ORDER_HIST[idx]?.replace(" I","I").replace(" II","II").replace(" III","III") || "";
+              } else if (isInvertedStat) {
+                // Inverted: top of chart = minVal (best), bottom = maxVal (worst)
+                const val = minVal + pct * valRange;
+                label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
               } else {
                 const val = maxVal - pct * valRange;
                 label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
@@ -666,13 +681,12 @@ function PlayerPerformanceChart({ allData, seasons }) {
               );
             })}
           </svg>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
 }
-
-// ── Clan Performance History Chart ────────────────────────────────────────────
 const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
 const CLAN_STAT_OPTIONS = [
   { group: "CGN Rating", key: "overall",                label: "CGN Rating" },
@@ -806,6 +820,10 @@ function ClanPerformanceChart({ history }) {
   const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
   const valRange = maxVal - minVal || 1;
 
+  // Stats where lower = better — invert Y axis
+  const CLAN_INVERTED_STATS = new Set(["defence_efficiency", "total_stars_conceded", "avg_defence_pct"]);
+  const isInvertedStat = CLAN_INVERTED_STATS.has(selectedStat);
+
   function xPos(season) {
     const idx = validSeasons.indexOf(season);
     return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
@@ -815,6 +833,10 @@ function ClanPerformanceChart({ history }) {
     if (selectedStat === "cwl_rank") {
       const listLen = CWL_RANK_LIST.length - 1;
       return PAD_T + (val / (listLen || 1)) * plotH;
+    }
+    if (isInvertedStat) {
+      // Invert: lower value = higher on chart (lower is better)
+      return PAD_T + ((val - minVal) / valRange) * plotH;
     }
     return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
   }
@@ -877,7 +899,11 @@ function ClanPerformanceChart({ history }) {
       ) : validSeasons.length === 0 ? (
         <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected metric</div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          {isInvertedStat && (
+            <p className="text-[9px] text-blue-400/60 uppercase tracking-widest mb-1 text-right">↓ lower is better · chart inverted</p>
+          )}
+          <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
             {[0, 0.25, 0.5, 0.75, 1].map(pct => {
               const y = PAD_T + pct * plotH;
@@ -886,6 +912,9 @@ function ClanPerformanceChart({ history }) {
                 const idx = Math.round(pct * (CWL_RANK_LIST.length - 1));
                 label = CWL_RANK_LIST[idx]?.replace(" I"," I").replace(" II"," II").replace(" III"," III") || "";
                 label = label.replace("Champion","Champ").replace("Crystal","Cryst").replace("Silver","Silv").replace("Bronze","Brnz").replace("Master","Mastr");
+              } else if (isInvertedStat) {
+                const val = minVal + pct * valRange;
+                label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
               } else {
                 const val = maxVal - pct * valRange;
                 label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
@@ -922,7 +951,8 @@ function ClanPerformanceChart({ history }) {
               );
             })}
           </svg>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
