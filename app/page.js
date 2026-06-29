@@ -982,7 +982,7 @@ function WarMomentumChart({ dayAggregates }) {
     return { day: d.war_day, value: parseFloat(cumulative.toFixed(2)) };
   });
   const maxCumulative = cumulativeData[cumulativeData.length - 1]?.value || 1;
-  const W = 280, H = 80, PAD_L = 28, PAD_R = 8, PAD_T = 8, PAD_B = 20;
+  const W = 280, H = 90, PAD_L = 28, PAD_R = 20, PAD_T = 16, PAD_B = 20;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
   const xStep = cumulativeData.length > 1 ? plotW / (cumulativeData.length - 1) : plotW;
@@ -1125,6 +1125,9 @@ function WarIntelView({ onBack }) {
                 </select>
               </div>
 
+              {/* War momentum cumulative chart — above bar chart */}
+              {dayAggregates.length >= 2 && <WarMomentumChart dayAggregates={dayAggregates} />}
+
               {/* Avg stars bar chart */}
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Avg Stars Per War Day</p>
@@ -1151,8 +1154,7 @@ function WarIntelView({ onBack }) {
                 )}
               </div>
 
-              {/* War momentum cumulative chart */}
-              {dayAggregates.length >= 2 && <WarMomentumChart dayAggregates={dayAggregates} />}
+              {/* War momentum cumulative chart — moved above */}
             </>
           )}
 
