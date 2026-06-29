@@ -483,6 +483,7 @@ export default function PlayerProfilePage() {
   const [copied, setCopied] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(null);
+  const [statsSeason, setStatsSeason] = useState(null);
   const shareCardRef = useRef(null);
 
   useEffect(() => {
@@ -510,6 +511,11 @@ export default function PlayerProfilePage() {
 
   const latest = data.seasons[0];
   const prev = data.seasons[1] || null;
+
+  // Stats tab season — defaults to latest, can be switched via selector
+  const statsRow = statsSeason
+    ? (data.seasons.find(s => s.season === statsSeason) || latest)
+    : latest;
   const latestOverall = latest?.overall;
   const rank = data.currentRank;
   const rankColour = rank === 1 ? "#D4AF37" : rank === 2 ? "#A7A7AD" : rank === 3 ? "#CD7F32" : null;
@@ -521,12 +527,12 @@ export default function PlayerProfilePage() {
   const avgDefEff = data.seasons.length
     ? (data.seasons.reduce((s,r)=>s+parseFloat(r.defence_efficiency||0),0)/data.seasons.length).toFixed(2) : "—";
 
-  const threeStarRate = latest?.attacks_used > 0
-    ? ((latest.three_stars||0)/latest.attacks_used*100).toFixed(0)+"%" : "—";
-  const participationRate = latest?.attacks_available > 0
-    ? ((latest.attacks_used||0)/latest.attacks_available*100).toFixed(0)+"%" : "—";
-  const netStars = latest
-    ? ((latest.stars_earned||0)-(latest.stars_conceded||0)) : null;
+  const threeStarRate = statsRow?.attacks_used > 0
+    ? ((statsRow.three_stars||0)/statsRow.attacks_used*100).toFixed(0)+"%" : "—";
+  const participationRate = statsRow?.attacks_available > 0
+    ? ((statsRow.attacks_used||0)/statsRow.attacks_available*100).toFixed(0)+"%" : "—";
+  const netStars = statsRow
+    ? ((statsRow.stars_earned||0)-(statsRow.stars_conceded||0)) : null;
   const trend = (latestOverall != null && prev?.overall != null)
     ? (parseFloat(latestOverall) > parseFloat(prev.overall) ? "up"
       : parseFloat(latestOverall) < parseFloat(prev.overall) ? "down" : "same")
@@ -752,8 +758,24 @@ export default function PlayerProfilePage() {
       {/* ── STATS VIEW ── */}
       {view === "stats" && (
         <div className="relative z-10 space-y-4">
+
+          {/* Season selector */}
+          {data.seasons.length > 1 && (
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest">Season</p>
+              <select
+                value={statsSeason || data.seasons[0]?.season || ""}
+                onChange={e => setStatsSeason(e.target.value)}
+                className="rounded-xl border border-white/10 bg-transparent px-2 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+                {data.seasons.map(s => (
+                  <option key={s.season} value={s.season}>{s.season}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Performance · {latest?.season}</p>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Performance · {statsRow?.season}</p>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <IconStatBox label="3★ Rate" value={threeStarRate} iconKey="star" colourKey="green"/>
               <IconStatBox label="Participation" value={participationRate} iconKey="atks" colourKey="purple"/>
@@ -774,20 +796,20 @@ export default function PlayerProfilePage() {
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack · {latest?.season}</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack · {statsRow?.season}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-2">
-              <IconStatBox label="Efficiency" value={parseFloat(latest?.efficiency||0).toFixed(2)} iconKey="atk" colourKey="purple"/>
-              <IconStatBox label="Stars" value={latest?.stars_earned ?? "—"} iconKey="star" colourKey="green"/>
-              <IconStatBox label="Dest %" value={latest?.destruction_pct != null ? parseFloat(latest.destruction_pct).toFixed(1)+"%" : "—"} iconKey="dest" colourKey="slate"/>
+              <IconStatBox label="Efficiency" value={parseFloat(statsRow?.efficiency||0).toFixed(2)} iconKey="atk" colourKey="purple"/>
+              <IconStatBox label="Stars" value={statsRow?.stars_earned ?? "—"} iconKey="star" colourKey="green"/>
+              <IconStatBox label="Dest %" value={statsRow?.destruction_pct != null ? parseFloat(statsRow?.destruction_pct).toFixed(1)+"%" : "—"} iconKey="dest" colourKey="slate"/>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <IconStatBox label="Attacks" value={`${latest?.attacks_used ?? "—"}/${latest?.attacks_available ?? "—"}`} iconKey="atks" colourKey="slate"/>
-              <IconStatBox label="Missed" value={latest?.missed_attacks ?? "—"} iconKey="miss" colourKey={(latest?.missed_attacks||0) > 0 ? "red" : "slate"}/>
+              <IconStatBox label="Attacks" value={`${statsRow?.attacks_used ?? "—"}/${statsRow?.attacks_available ?? "—"}`} iconKey="atks" colourKey="slate"/>
+              <IconStatBox label="Missed" value={statsRow?.missed_attacks ?? "—"} iconKey="miss" colourKey={(statsRow?.missed_attacks||0) > 0 ? "red" : "slate"}/>
             </div>
             <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06]">
-              <LargePie three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0} size={64}/>
-              <StarBars three={latest?.three_stars||0} two={latest?.two_stars||0} one={latest?.one_stars||0} zero={latest?.zero_stars||0}/>
+              <LargePie three={statsRow?.three_stars||0} two={statsRow?.two_stars||0} one={statsRow?.one_stars||0} zero={statsRow?.zero_stars||0} size={64}/>
+              <StarBars three={statsRow?.three_stars||0} two={statsRow?.two_stars||0} one={statsRow?.one_stars||0} zero={statsRow?.zero_stars||0}/>
             </div>
           </div>
 
@@ -796,16 +818,16 @@ export default function PlayerProfilePage() {
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence · {latest?.season}</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence · {statsRow?.season}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-3">
-              <IconStatBox label="Def EFF" value={latest?.defence_efficiency != null ? parseFloat(latest.defence_efficiency).toFixed(2) : "—"} iconKey="def" colourKey="blue"/>
-              <IconStatBox label="Stars Given" value={latest?.stars_conceded ?? "—"} iconKey="star" colourKey="slate"/>
-              <IconStatBox label="Dest Given" value={latest?.defence_pct != null ? parseFloat(latest.defence_pct).toFixed(1)+"%" : "—"} iconKey="dest" colourKey="slate"/>
+              <IconStatBox label="Def EFF" value={statsRow?.defence_efficiency != null ? parseFloat(statsRow?.defence_efficiency).toFixed(2) : "—"} iconKey="def" colourKey="blue"/>
+              <IconStatBox label="Stars Given" value={statsRow?.stars_conceded ?? "—"} iconKey="star" colourKey="slate"/>
+              <IconStatBox label="Dest Given" value={statsRow?.defence_pct != null ? parseFloat(statsRow?.defence_pct).toFixed(1)+"%" : "—"} iconKey="dest" colourKey="slate"/>
             </div>
             <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06]">
-              <LargePie three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0} size={64}/>
-              <StarBars three={latest?.three_stars_conceded||0} two={latest?.two_stars_conceded||0} one={latest?.one_stars_conceded||0} zero={latest?.zero_stars_conceded||0}/>
+              <LargePie three={statsRow?.three_stars_conceded||0} two={statsRow?.two_stars_conceded||0} one={statsRow?.one_stars_conceded||0} zero={statsRow?.zero_stars_conceded||0} size={64}/>
+              <StarBars three={statsRow?.three_stars_conceded||0} two={statsRow?.two_stars_conceded||0} one={statsRow?.one_stars_conceded||0} zero={statsRow?.zero_stars_conceded||0}/>
             </div>
           </div>
 
