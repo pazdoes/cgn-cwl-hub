@@ -1133,6 +1133,7 @@ function WarIntelView({ onBack }) {
                         { label: "Avg ★/Day",   key: "avg_stars",              fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
                         { label: "3★ Rate",      key: "three_star_rate",         fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-green-300" },
                         { label: "Punch-Up",     key: "punch_up_rate",           fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-blue-300" },
+                        { label: "Atk Eff",      key: "avg_attack_efficiency",   fmt: v => parseFloat(v).toFixed(2),        colour: "text-purple-300" },
                         { label: "Def Eff",      key: "avg_defence_efficiency",  fmt: v => parseFloat(v).toFixed(2),        colour: "text-red-400" },
                         { label: "★ Conceded",   key: "avg_stars_conceded",      fmt: v => parseFloat(v).toFixed(2),        colour: "text-red-300" },
                         { label: "Wars Won",     key: "wins",                    fmt: v => v,                               colour: "text-purple-300" },

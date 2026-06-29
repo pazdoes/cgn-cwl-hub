@@ -38,6 +38,7 @@ export async function GET() {
     sql`
       SELECT
         clan_name,
+        ROUND(AVG(efficiency)::NUMERIC, 2) AS avg_attack_efficiency,
         ROUND(AVG(defence_efficiency)::NUMERIC, 2) AS avg_defence_efficiency,
         ROUND(AVG(stars_conceded)::NUMERIC, 2) AS avg_stars_conceded
       FROM player_cwl_stats
@@ -53,6 +54,7 @@ export async function GET() {
     ...c,
     punch_up_rate: punchMap[c.clan_tag]?.punch_up_rate ?? null,
     three_star_rate: punchMap[c.clan_tag]?.three_star_rate ?? null,
+    avg_attack_efficiency: defMap[c.clan_name]?.avg_attack_efficiency ?? null,
     avg_defence_efficiency: defMap[c.clan_name]?.avg_defence_efficiency ?? null,
     avg_stars_conceded: defMap[c.clan_name]?.avg_stars_conceded ?? null,
   }));
