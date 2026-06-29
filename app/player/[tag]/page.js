@@ -250,13 +250,13 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   const ICON_LEAGUE = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
 
   const statTiles = [
+    { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: ICON_AVG },
+    { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
+    { label: "Stars",     value: totalStars,      colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
+    { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569", bg: totalMissed > 0 ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.03)", border: totalMissed > 0 ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.07)", icon: ICON_MISS },
     { label: "Atk EFF",   value: avgEfficiency,   colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.2)",  icon: ICON_ATK },
     { label: "Def EFF",   value: avgDefEff,       colour: "#60a5fa", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: ICON_DEF },
-    { label: "3★ Rate",   value: threeStarRate,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
-    { label: "Missed",    value: totalMissed,     colour: totalMissed > 0 ? "#f87171" : "#475569", bg: totalMissed > 0 ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.03)", border: totalMissed > 0 ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.07)", icon: ICON_MISS },
-    { label: "Avg ★/Atk", value: avgStarsPerAtk,  colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: ICON_AVG },
     { label: "Punch-Up",  value: punchUpRate,     colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: ICON_PUNCH },
-    { label: "Stars",     value: totalStars,      colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: ICON_STAR },
     { label: "League",    value: latest?.cwl_rank || "—", colour: "#94a3b8", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)", icon: ICON_LEAGUE },
   ];
 
@@ -716,10 +716,10 @@ export default function PlayerProfilePage() {
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career</p>
             <div className="grid grid-cols-3 gap-2">
               <IconStatBox label="Avg Atk EFF" value={avgEfficiency} iconKey="atk" colourKey="purple"/>
-              <IconStatBox label="Avg Def EFF" value={avgDefEff} iconKey="def" colourKey="blue"/>
               <IconStatBox label="Total Stars" value={totalStars} iconKey="star" colourKey="green"/>
-              <IconStatBox label="Total Attacks" value={totalCareerAttacks} iconKey="atks" colourKey="slate"/>
               <IconStatBox label="Best Rating" value={data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—"} iconKey="best" colourKey="purple"/>
+              <IconStatBox label="Avg Def EFF" value={avgDefEff} iconKey="def" colourKey="blue"/>
+              <IconStatBox label="Total Attacks" value={totalCareerAttacks} iconKey="atks" colourKey="slate"/>
               <IconStatBox label="Missed" value={totalMissed} iconKey="miss" colourKey={totalMissed > 0 ? "red" : "slate"}/>
             </div>
           </div>
@@ -729,9 +729,9 @@ export default function PlayerProfilePage() {
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career War Metrics</p>
             <div className="grid grid-cols-2 gap-2">
               <IconStatBox label="Avg ★/Attack" value={careerAvgStarsPerAtk ?? "—"} iconKey="avg" colourKey="amber"/>
-              <IconStatBox label="Punch-Up Rate" value={careerPunchUpRate ?? "—"} iconKey="punch" colourKey="blue"/>
-              <IconStatBox label="Clutch Rate" value={careerClutchRate ?? "—"} iconKey="clutch" colourKey="purple"/>
               <IconStatBox label="3★ Rate" value={careerThreeStarRate ?? "—"} iconKey="star" colourKey="green"/>
+              <IconStatBox label="Clutch Rate" value={careerClutchRate ?? "—"} iconKey="clutch" colourKey="purple"/>
+              <IconStatBox label="Punch-Up Rate" value={careerPunchUpRate ?? "—"} iconKey="punch" colourKey="blue"/>
             </div>
           </div>
 
