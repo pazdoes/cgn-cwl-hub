@@ -716,11 +716,11 @@ export default function PlayerProfilePage() {
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Career</p>
             <div className="grid grid-cols-3 gap-2">
               <IconStatBox label="Avg Atk EFF" value={avgEfficiency} iconKey="atk" colourKey="purple"/>
-              <IconStatBox label="Total Stars" value={totalStars} iconKey="star" colourKey="green"/>
               <IconStatBox label="Best Rating" value={data.bestOverall ? parseFloat(data.bestOverall.overall).toFixed(2) : "—"} iconKey="best" colourKey="purple"/>
+              <IconStatBox label="Total Stars" value={totalStars} iconKey="star" colourKey="green"/>
               <IconStatBox label="Avg Def EFF" value={avgDefEff} iconKey="def" colourKey="blue"/>
-              <IconStatBox label="Total Attacks" value={totalCareerAttacks} iconKey="atks" colourKey="slate"/>
               <IconStatBox label="Missed" value={totalMissed} iconKey="miss" colourKey={totalMissed > 0 ? "red" : "slate"}/>
+              <IconStatBox label="Total Attacks" value={totalCareerAttacks} iconKey="atks" colourKey="slate"/>
             </div>
           </div>
 
