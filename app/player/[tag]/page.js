@@ -377,6 +377,7 @@ export default function PlayerProfilePage() {
   const [view, setView] = useState("overview");
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(null);
   const shareCardRef = useRef(null);
 
@@ -446,8 +447,11 @@ export default function PlayerProfilePage() {
   const heroBorderStyle = rank === 1 ? `1px solid rgba(212,175,55,0.4)` : rank === 2 ? `1px solid rgba(167,167,173,0.4)` : rank === 3 ? `1px solid rgba(205,127,50,0.4)` : null;
 
   async function handleShare() {
-    if (!shareCardRef.current || sharing) return;
+    if (sharing) return;
     setSharing(true);
+    setShowShareCard(true);
+    // Wait for DOM to render the card
+    await new Promise(r => setTimeout(r, 100));
     try {
       const { shareCard } = await import("@/lib/shareCard");
       const result = await shareCard(shareCardRef.current, `cgn-${data.player_name.toLowerCase().replace(/\s+/g,"-")}.png`);
@@ -459,37 +463,40 @@ export default function PlayerProfilePage() {
       console.error("Share failed", e);
     } finally {
       setSharing(false);
+      setShowShareCard(false);
     }
   }
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
-      {/* Hidden share card — rendered off-screen, snapshotted on demand */}
-      <div
-        ref={shareCardRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: "-9999px",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      >
-        <ShareCard
-          data={data}
-          latestOverall={latestOverall}
-          rank={rank}
-          rankColour={rankColour}
-          avgEfficiency={avgEfficiency}
-          avgDefEff={avgDefEff}
-          totalStars={totalStars}
-          totalMissed={totalMissed}
-          careerThree={careerThree}
-          careerTwo={careerTwo}
-          careerOne={careerOne}
-          careerZero={careerZero}
-        />
-      </div>
+      {/* Hidden share card — only mounted when Share is tapped */}
+      {showShareCard && (
+        <div
+          ref={shareCardRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: "-9999px",
+            zIndex: -1,
+            pointerEvents: "none",
+          }}
+        >
+          <ShareCard
+            data={data}
+            latestOverall={latestOverall}
+            rank={rank}
+            rankColour={rankColour}
+            avgEfficiency={avgEfficiency}
+            avgDefEff={avgDefEff}
+            totalStars={totalStars}
+            totalMissed={totalMissed}
+            careerThree={careerThree}
+            careerTwo={careerTwo}
+            careerOne={careerOne}
+            careerZero={careerZero}
+          />
+        </div>
+      )}
 
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>

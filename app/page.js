@@ -2226,6 +2226,7 @@ function RecapView({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const recapCardRef = useRef(null);
 
   useEffect(() => {
@@ -2289,8 +2290,10 @@ function RecapView({ onBack }) {
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
 
   async function handleShare() {
-    if (!recapCardRef.current || sharing) return;
+    if (sharing) return;
     setSharing(true);
+    setShowShareCard(true);
+    await new Promise(r => setTimeout(r, 100));
     try {
       const { shareCard } = await import("@/lib/shareCard");
       const result = await shareCard(recapCardRef.current, `cgn-recap-${(selectedSeason||"season").toLowerCase().replace(/\s+/g,"-")}.png`);
@@ -2302,15 +2305,16 @@ function RecapView({ onBack }) {
       console.error("Share failed", e);
     } finally {
       setSharing(false);
+      setShowShareCard(false);
     }
   }
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
 
-      {/* Hidden recap share card */}
-      <div ref={recapCardRef} style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1, pointerEvents: "none" }}>
-        {!loading && topClan && (
+      {/* Hidden recap share card — only mounted when Share is tapped */}
+      {showShareCard && topClan && (
+        <div ref={recapCardRef} style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1, pointerEvents: "none" }}>
           <RecapShareCard
             topClan={topClan}
             top3={top3}
@@ -2322,8 +2326,8 @@ function RecapView({ onBack }) {
             clanWithOverall={clanWithOverall}
             selectedSeason={selectedSeason}
           />
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
