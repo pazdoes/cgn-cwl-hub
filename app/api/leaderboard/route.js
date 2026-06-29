@@ -6,9 +6,13 @@ export async function GET(request) {
   const season = searchParams.get("season");
   const sql = getDb();
 
+  const activeClanRows = await sql`SELECT clan_tag, clan_name FROM clans WHERE clan_tag IS NOT NULL`;
+  const activeTags = activeClanRows.map(r => r.clan_tag);
+  const activeClanNames = activeClanRows.map(r => r.clan_name);
+
   const seasonRows = await sql`
     SELECT ps.season
-    FROM (SELECT DISTINCT season FROM player_cwl_stats) ps
+    FROM (SELECT DISTINCT season FROM player_cwl_stats WHERE clan_name = ANY(${activeClanNames})) ps
     LEFT JOIN season_registry sr ON sr.season = ps.season
     ORDER BY sr.season_date DESC NULLS LAST
   `;
@@ -20,7 +24,6 @@ export async function GET(request) {
 
   const targetSeason = season || seasons[0];
 
-  // Latest season from registry for fallback filter
   const latestSeasonRow = await sql`
     SELECT season FROM season_registry ORDER BY season_date DESC LIMIT 1
   `;
@@ -35,6 +38,7 @@ export async function GET(request) {
       ON csh.clan_name = ps.clan_name
       AND csh.season = ps.season
     WHERE ps.season = ${targetSeason}
+      AND ps.clan_name = ANY(${activeClanNames})
       AND ps.player_tag IN (
         SELECT player_tag FROM accounts
         UNION

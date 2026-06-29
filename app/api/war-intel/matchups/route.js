@@ -4,6 +4,9 @@ import { getDb } from "@/lib/db";
 export async function GET() {
   const sql = getDb();
 
+  const activeClanRows = await sql`SELECT clan_tag FROM clans WHERE clan_tag IS NOT NULL`;
+  const activeTags = activeClanRows.map(r => r.clan_tag);
+
   const matchups = await sql`
     SELECT
       town_hall_level AS attacker_th,
@@ -14,6 +17,7 @@ export async function GET() {
     FROM war_attacks
     WHERE town_hall_level IS NOT NULL
       AND defender_th_level IS NOT NULL
+      AND clan_tag = ANY(${activeTags})
     GROUP BY town_hall_level, defender_th_level
     HAVING COUNT(*) >= 3
     ORDER BY town_hall_level DESC, defender_th_level DESC
