@@ -131,7 +131,7 @@ function OverallChart({ seasons }) {
   const lineColour = latest.overall >= prev.overall ? "#a78bfa" : "#f87171";
   return (
     <div className="mt-3 pt-3 border-t border-white/[0.06]">
-      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">CGN Rating Trend</p>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
         {[0,1,2,3].map(v => (
           <g key={v}>
@@ -260,7 +260,7 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
             </span>
           </div>
         </div>
-        {/* Overall rating — right aligned */}
+        {/* CGN Rating — right aligned */}
         {latestOverall != null && (
           <div style={{ textAlign: "center", flexShrink: 0 }}>
             <div style={{ fontSize: 36, fontWeight: 300, color: "#c4b5fd", lineHeight: 1 }}>
@@ -492,7 +492,8 @@ export default function PlayerProfilePage() {
                 {parseFloat(latestOverall).toFixed(2)}
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Overall Rating</p>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">CGN Rating</p>
+                <span title="60% attack efficiency · 40% defence efficiency" className="text-[9px] text-slate-700 cursor-help border border-slate-700 rounded-full w-3.5 h-3.5 flex items-center justify-center shrink-0">?</span>
                 {trend === "up" && (
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
@@ -585,7 +586,7 @@ export default function PlayerProfilePage() {
             </div>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">CGN Rating Trend</p>
             <OverallChart seasons={data.seasons}/>
           </div>
         </div>
@@ -656,7 +657,7 @@ export default function PlayerProfilePage() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Overall Rating Trend</p>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">CGN Rating Trend</p>
             <OverallChart seasons={data.seasons}/>
           </div>
 

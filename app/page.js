@@ -428,7 +428,7 @@ function AvgThView({ players, clans, onBack }) {
 // ── Player Performance History Chart ─────────────────────────────────────────
 const PLAYER_COLORS = ["#a78bfa", "#34d399", "#fb923c"];
 const STAT_OPTIONS = [
-  { key: "overall",            label: "Overall Rating" },
+  { key: "overall",            label: "CGN Rating" },
   { key: "efficiency",         label: "Atk Efficiency" },
   { key: "stars_earned",       label: "Stars Earned" },
   { key: "destruction_pct",    label: "Destruction %" },
@@ -675,7 +675,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
 // ── Clan Performance History Chart ────────────────────────────────────────────
 const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
 const CLAN_STAT_OPTIONS = [
-  { group: "Overall", key: "overall",                label: "Overall Rating" },
+  { group: "CGN Rating", key: "overall",                label: "CGN Rating" },
   { group: "Rank",    key: "cwl_rank",               label: "CWL Rank" },
   { group: "Attack",  key: "total_stars",             label: "Total Stars" },
   { group: "Attack",  key: "attack_efficiency",       label: "Attack Efficiency" },
@@ -820,7 +820,7 @@ function ClanPerformanceChart({ history }) {
   }
 
   // Group stat options for select
-  const groups = ["Overall", ...new Set(CLAN_STAT_OPTIONS.filter(o=>o.group!=="Overall").map(o => o.group))];
+  const groups = ["CGN Rating", ...new Set(CLAN_STAT_OPTIONS.filter(o=>o.group!=="CGN Rating").map(o => o.group))];
 
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
@@ -2047,7 +2047,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
               {[
                 { label: "Wins", value: topClan.wars_won, colour: "#86efac" },
                 { label: "Atk EFF", value: parseFloat(topClan.attack_efficiency).toFixed(2), colour: "#c4b5fd" },
-                { label: "Overall", value: topClan.overall.toFixed(2), colour: "#c4b5fd" },
+                { label: "CGN Rating", value: topClan.overall.toFixed(2), colour: "#c4b5fd" },
               ].map(({ label, value, colour }) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: colour }}>{value}</div>
@@ -2416,7 +2416,7 @@ function RecapView({ onBack }) {
 
           {/* Top 3 players */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Players · Overall Rating</p>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Players · CGN Rating</p>
             <div className="space-y-2">
               {top3.map((p, i) => (
                 <a key={p.player_tag} href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
@@ -2564,7 +2564,7 @@ function LeaderboardView({ onBack }) {
   }
 
   const CLAN_SORT_OPTIONS = [
-    { key: "overall",              label: "Overall Rating", group: "Overall" },
+    { key: "overall",              label: "CGN Rating", group: "CGN Rating" },
     { key: "attack_efficiency",    label: "Atk Efficiency", group: "Attack" },
     { key: "total_stars",          label: "Total Stars",    group: "Attack" },
     { key: "avg_destruction_pct",  label: "Destruction %",  group: "Attack" },
@@ -2759,8 +2759,8 @@ function LeaderboardView({ onBack }) {
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             {lbTab === "player" ? (<>
-              <optgroup label="Overall">
-                <option value="overall">Overall Rating</option>
+              <optgroup label="CGN Rating">
+                <option value="overall">CGN Rating</option>
               </optgroup>
               <optgroup label="Attack">
                 <option value="efficiency">Atk Efficiency</option>
@@ -2782,7 +2782,7 @@ function LeaderboardView({ onBack }) {
                 <option value="consistency_score">Consistency Score</option>
               </optgroup>
             </>) : (<>
-              {["Overall","Attack","Defence","Record"].map(g=>(
+              {["CGN Rating","Attack","Defence","Record"].map(g=>(
                 <optgroup key={g} label={g}>
                   {CLAN_SORT_OPTIONS.filter(o=>o.group===g).map(o=>(
                     <option key={o.key} value={o.key}>{o.label}</option>
