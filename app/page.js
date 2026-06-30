@@ -3270,7 +3270,7 @@ function AppHeader({ variant = "bar" }) {
 // ─── Shared footer — home button, branded Discord server link, contrast
 // toggle + FAQ — used on every top-level view. onNavigateHome is optional;
 // when omitted, the home button navigates via a hard hash reset.
-function AppFooter({ onNavigateHome }) {
+function AppFooter({ onNavigateHome, showHome = true }) {
   function goHome() {
     if (onNavigateHome) { onNavigateHome(); return; }
     if (typeof window !== "undefined") window.location.href = "/";
@@ -3278,11 +3278,13 @@ function AppFooter({ onNavigateHome }) {
   return (
     <div className="relative z-10 w-full py-4 flex items-center px-4">
       <div className="w-16 shrink-0 flex items-center">
-        <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-          </svg>
-        </button>
+        {showHome && (
+          <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+          </button>
+        )}
       </div>
       <div className="flex-1 flex justify-center">
         <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
@@ -3549,7 +3551,7 @@ export default function Home() {
           <StatsHighlightReel/>
         </button>
       </div>
-      <AppFooter/>
+      <AppFooter showHome={false}/>
     </main>
   );
 }
