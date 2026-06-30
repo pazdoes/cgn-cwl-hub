@@ -2712,6 +2712,7 @@ function LeaderboardView({ onBack }) {
   const [selectedSeason, setSelectedSeason] = useState("all");
   const [clanFilter, setClanFilter] = useState("all");
   const [thFilter, setThFilter] = useState("all");
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [sortBy, setSortBy] = useState("stars_earned");
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
@@ -2909,41 +2910,6 @@ function LeaderboardView({ onBack }) {
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-          <select value={selectedSeason} onChange={e => {
-            const val = e.target.value;
-            setSelectedSeason(val);
-            setExpandedTag(null);
-            setClanFilter("all");
-            if (val !== "all") {
-              setData(null);
-              fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
-                .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
-                ...p,
-                overall: (p.attacks_used > 0 && p.attacks_available > 0)
-                  ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
-                  : null,
-              })))).catch(()=>setData([]));
-            }
-          }} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-            <option value="all">All Time</option>
-            {seasons.map(s=><option key={s} value={s}>{s}</option>)}
-          </select>
-          {clans.length > 1 && (
-            <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              <option value="all">All Clans</option>
-              {clans.map(c=><option key={c} value={c}>{c}</option>)}
-            </select>
-          )}
-          {lbTab === "player" && (
-            <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              <option value="all">All TH</option>
-              {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
-                <option key={th} value={String(th)}>TH{th}</option>
-              ))}
-            </select>
-          )}
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             {lbTab === "player" ? (<>
@@ -2980,10 +2946,127 @@ function LeaderboardView({ onBack }) {
             </>)}
           </select>
           <button type="button" onClick={()=>setSortDir(d=>d==="desc"?"asc":"desc")}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400 hover:text-white transition">
-            {sortDir === "desc" ? "↓ High–Low" : "↑ Low–High"}
+            title={sortDir === "desc" ? "High to low" : "Low to high"}
+            className="rounded-full border border-white/10 bg-white/[0.04] w-7 h-7 flex items-center justify-center text-slate-400 hover:text-white transition shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              {sortDir === "desc"
+                ? <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                : <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>}
+            </svg>
           </button>
+          {(() => {
+            const activeCount = (selectedSeason !== "all" ? 1 : 0) + (clanFilter !== "all" ? 1 : 0) + (lbTab === "player" && thFilter !== "all" ? 1 : 0);
+            return (
+              <button type="button" onClick={() => setShowFiltersModal(true)}
+                className={`relative rounded-full border px-3 py-1 text-xs flex items-center gap-1.5 transition ${activeCount > 0 ? "border-purple-500/40 bg-purple-500/[0.08] text-purple-300" : "border-white/10 bg-white/[0.04] text-slate-300 hover:text-white"}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filters
+                {activeCount > 0 && (
+                  <span className="ml-0.5 rounded-full bg-purple-500/30 text-purple-200 text-[10px] font-bold w-4 h-4 flex items-center justify-center">{activeCount}</span>
+                )}
+              </button>
+            );
+          })()}
         </div>
+
+        {/* Filters modal */}
+        {showFiltersModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowFiltersModal(false)}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+            <div onClick={e => e.stopPropagation()}
+              className="relative z-10 w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] p-5 pb-8 sm:pb-5 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white">Filters</h3>
+                <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
+                  <select value={selectedSeason} onChange={e => {
+                    const val = e.target.value;
+                    setSelectedSeason(val);
+                    setExpandedTag(null);
+                    setClanFilter("all");
+                    if (val !== "all") {
+                      setData(null);
+                      fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
+                        .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
+                        ...p,
+                        overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                          ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
+                          : null,
+                      })))).catch(()=>setData([]));
+                    }
+                  }} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                    <option value="all">All Time</option>
+                    {seasons.map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                {clans.length > 1 && (
+                  <div>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Clan</p>
+                    <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                      <option value="all">All Clans</option>
+                      {clans.map(c=><option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {lbTab === "player" && (
+                  <div>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Town Hall</p>
+                    <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                      <option value="all">All TH</option>
+                      {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
+                        <option key={th} value={String(th)}>TH{th}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
+                <button onClick={() => { setSelectedSeason("all"); setClanFilter("all"); setThFilter("all"); }}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition">
+                  Clear all
+                </button>
+                <button onClick={() => setShowFiltersModal(false)}
+                  className="rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-200 text-xs font-semibold px-4 py-1.5 hover:bg-purple-500/30 transition">
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Value reference legend — mirrors the row tiles for the active sort */}
+        {lbTab === "player" && (
+          <div className="flex items-center justify-center gap-3 mb-4 flex-wrap">
+            <span className="text-[9px] text-slate-600 uppercase tracking-widest">Showing</span>
+            {getRowTiles(sortBy).map(tile => {
+              const stroke = typeof tile.stroke === "function" ? tile.stroke({}) : tile.stroke;
+              return (
+                <div key={tile.key} className="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke={stroke} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+                  </svg>
+                  <span className="text-[10px] text-slate-400">{tile.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="relative max-w-xs mx-auto mb-4">
           <input type="text" placeholder={lbTab === "player" ? "Search player or tag…" : "Search clan…"} value={search} onChange={e=>setSearch(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
