@@ -1205,7 +1205,7 @@ function WarIntelView({ onBack }) {
                   {attendanceData.map((a, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                       <span className="flex-1 text-xs text-slate-300 truncate">{a.player_name}</span>
-                      <span className="text-[9px] text-slate-500 shrink-0">{a.clan_name?.split(" ")[0]}</span>
+                      <span className="text-[9px] text-slate-500 shrink-0">{a.seasons_played} season{a.seasons_played !== 1 ? "s" : ""}</span>
                       <span className={`text-sm font-semibold shrink-0 w-6 text-right ${a.missed > 2 ? "text-red-400" : a.missed > 0 ? "text-amber-400" : "text-slate-600"}`}>{a.missed}</span>
                       <span className="text-[9px] text-slate-600 shrink-0">missed</span>
                     </div>

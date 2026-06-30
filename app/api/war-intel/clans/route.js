@@ -6,14 +6,16 @@ export async function GET() {
 
   // Only clans currently registered in the clans table (active OR paused)
   // appear here, grouped by clan_tag to avoid bundling old/deleted clans
-  // that happen to share a name with a current clan (e.g. old vs current
-  // Cognitive, old vs current Incognito).
+  // that happen to share a name with a current clan.
   const [clans, punchUp] = await Promise.all([
     sql`
       SELECT
         wd.clan_tag,
         wd.clan_name,
         ROUND(AVG(wd.stars_earned)::NUMERIC, 2) AS avg_stars,
+        ROUND(AVG(wd.stars_conceded)::NUMERIC, 2) AS avg_stars_conceded,
+        ROUND((SUM(wd.stars_earned)::NUMERIC / NULLIF(SUM(wd.attacks_used), 0)), 2) AS avg_attack_efficiency,
+        ROUND((SUM(wd.stars_conceded)::NUMERIC / NULLIF(SUM(wd.attacks_available), 0)), 2) AS avg_defence_efficiency,
         COUNT(*) FILTER (WHERE wd.war_result = 'win') AS wins,
         COUNT(*) FILTER (WHERE wd.war_result = 'loss') AS losses,
         COUNT(*) FILTER (WHERE wd.war_result = 'draw') AS draws,
