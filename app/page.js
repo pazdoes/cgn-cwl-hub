@@ -2973,10 +2973,10 @@ function LeaderboardView({ onBack }) {
 
         {/* Filters modal */}
         {showFiltersModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowFiltersModal(false)}>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
             <div onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] p-5 pb-8 sm:pb-5 max-h-[80vh] overflow-y-auto">
+              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] p-5 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-white">Filters</h3>
                 <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
@@ -2986,8 +2986,8 @@ function LeaderboardView({ onBack }) {
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
+                <div className="sm:w-44">
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
                   <select value={selectedSeason} onChange={e => {
                     const val = e.target.value;
@@ -3011,7 +3011,7 @@ function LeaderboardView({ onBack }) {
                 </div>
 
                 {clans.length > 1 && (
-                  <div>
+                  <div className="sm:w-44">
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Clan</p>
                     <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
                       className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
@@ -3022,7 +3022,7 @@ function LeaderboardView({ onBack }) {
                 )}
 
                 {lbTab === "player" && (
-                  <div>
+                  <div className="sm:w-44">
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Town Hall</p>
                     <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
                       className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
