@@ -2338,7 +2338,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
           {/* Clan breakdown */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
             {clanWithOverall.slice(0, 4).map((c, i) => (
-              <div key={c.clan_name} style={{
+              <div key={c.clan_tag || c.clan_name} style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -2691,7 +2691,7 @@ function RecapView({ onBack }) {
             {/* Clan breakdown */}
             <div className="mt-3 space-y-1.5">
               {clanWithOverall.map((c, i) => (
-                <div key={c.clan_name} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                <div key={c.clan_tag || c.clan_name} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                   <div className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
