@@ -1144,7 +1144,7 @@ function WarIntelView({ onBack }) {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </button>
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[80px] text-center">War Intel</span>
-          <span className="w-6 h-6"/>
+          <AppHeader variant="icon"/>
         </div>
         <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
           className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
@@ -1345,8 +1345,11 @@ function HistoryView({ onBack }) {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Hero card — flush to top, no back button */}
+      {/* Hero card — flush to top */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <div className="absolute left-5 top-5">
+          <AppHeader variant="icon"/>
+        </div>
         <h1 className="text-2xl font-thin tracking-widest mb-1">History</h1>
         <p className="text-slate-500 text-xs mb-4">CWL performance records by season</p>
 
@@ -2535,6 +2538,9 @@ function RecapView({ onBack }) {
 
       {/* Header */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <div className="absolute left-5 top-5">
+          <AppHeader variant="icon"/>
+        </div>
         <h1 className="text-2xl font-thin tracking-widest mb-1">Season Recap</h1>
         {seasons.length > 1 ? (
           <select value={selectedSeason||""} onChange={e => setSelectedSeason(e.target.value)}
@@ -2948,6 +2954,9 @@ function LeaderboardView({ onBack }) {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <div className="absolute left-5 top-5">
+          <AppHeader variant="icon"/>
+        </div>
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -3172,46 +3181,85 @@ function LeaderboardView({ onBack }) {
   );
 }
 
-// ─── Hamburger navigation drawer — available from any top-level screen ──────
-function NavDrawer({ open, onClose, onNavigate }) {
-  if (!open) return null;
+// ─── Shared branded header + hamburger nav — used on every top-level view ──
+// Navigation uses direct hash changes (not a shared in-memory router), so
+// this works identically whether mounted inside the top-level Home component
+// or any other page (including the standalone player profile route).
+function AppHeader({ variant = "bar" }) {
+  const [navOpen, setNavOpen] = useState(false);
   const items = [
-    { key: "home", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    { key: "", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
     { key: "roster", label: "Signup / Rosters", icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" },
     { key: "leaderboard", label: "Leaderboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
     { key: "history", label: "History", icon: "M7 17l4-8 4 5 2-3M3 3v18h18" },
     { key: "recap", label: "Season Recap", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
     { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
   ];
+
+  function go(key) {
+    setNavOpen(false);
+    if (typeof window === "undefined") return;
+    if (key === "") {
+      window.location.href = window.location.pathname;
+    } else {
+      window.location.hash = key;
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
-      <div onClick={e => e.stopPropagation()}
-        className="relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5">
-        <div className="flex items-center gap-2 mb-8">
-          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
-          <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
-        </div>
-        <nav className="flex-1 space-y-1">
-          {items.map(item => (
-            <button key={item.key} onClick={() => { onNavigate(item.key); onClose(); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+    <>
+      {navOpen && (
+        <div className="fixed inset-0 z-50 flex" onClick={() => setNavOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+          <div onClick={e => e.stopPropagation()}
+            className="relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5">
+            <div className="flex items-center gap-2 mb-8">
+              <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
+              <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
+            </div>
+            <nav className="flex-1 space-y-1">
+              {items.map(item => (
+                <button key={item.key || "home"} onClick={() => go(item.key)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                  </svg>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 no-underline px-3 py-2 text-[11px] text-slate-500 hover:text-slate-300 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 no-underline px-3 py-2 text-[11px] text-slate-500 hover:text-slate-300 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              Join our Discord
+            </a>
+          </div>
+        </div>
+      )}
+      {variant === "bar" && (
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
+            <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
+          </div>
+          <span className="w-8"/>
+        </div>
+      )}
+      {variant === "icon" && (
+        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
-          Join our Discord
-        </a>
-      </div>
-    </div>
+        </button>
+      )}
+    </>
   );
 }
 
@@ -3331,7 +3379,6 @@ function StatsHighlightReel() {
 
 export default function Home() {
   const [page, setPage] = useState("home"); // "home" | "roster" | "leaderboard" | "history" | "recap" | "warintel"
-  const [navOpen, setNavOpen] = useState(false);
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
@@ -3373,21 +3420,7 @@ export default function Home() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      <NavDrawer open={navOpen} onClose={() => setNavOpen(false)} onNavigate={navigate}/>
-
-      {/* Header — hamburger + brand mark */}
-      <div className="relative z-10 flex items-center justify-between mb-6">
-        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
-        <div className="flex items-center gap-2">
-          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
-          <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
-        </div>
-        <span className="w-8"/>
-      </div>
+      <AppHeader variant="bar"/>
 
       {/* Brand hero */}
       <div className="relative z-10 text-center mb-8">
@@ -3650,6 +3683,10 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
     text-center
   "
 >
+
+  <div className="absolute left-5 top-5">
+    <AppHeader variant="icon"/>
+  </div>
 
   <img
     src={BRANDING.cwlhub}
