@@ -3124,9 +3124,9 @@ function LeaderboardView({ onBack }) {
               <p className="text-slate-600 text-sm">{search ? "No clans match your search." : "No clan data yet."}</p>
             </div>
           ) : filteredClans.map((c, i) => (
-            <ClanCard key={c.clan_name} c={c} rank={i+1}
-              isExpanded={expandedClan === c.clan_name}
-              onToggle={() => toggleExpandClan(c.clan_name)}/>
+            <ClanCard key={c.clan_tag || c.clan_name} c={c} rank={i+1}
+              isExpanded={expandedClan === (c.clan_tag || c.clan_name)}
+              onToggle={() => toggleExpandClan(c.clan_tag || c.clan_name)}/>
           ))
         )}
       </div>
