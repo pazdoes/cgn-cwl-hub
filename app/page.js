@@ -1069,11 +1069,18 @@ function WarIntelView({ onBack }) {
   const [clanData, setClanData] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState("all");
+  const [registeredClanTags, setRegisteredClanTags] = useState(null);
 
   useEffect(() => {
     fetch("/api/war-intel/days").then(r => r.json()).catch(() => ({})).then(d => {
       setDayData(d.days || []);
       setSeasons(d.seasons || []);
+    });
+    // Registered clan tags — used to scope the "All Seasons" aggregate view
+    // of Days to currently-registered clans, matching the same rule applied
+    // to Clans/Matchups/Attendance when no specific season is selected.
+    fetch("/api/war-intel/clans").then(r => r.json()).catch(() => ({})).then(c => {
+      setRegisteredClanTags(new Set((c.clans || []).map(cl => cl.clan_tag)));
     });
   }, []);
 
@@ -1094,9 +1101,11 @@ function WarIntelView({ onBack }) {
 
   const TABS = [["days","Days"],["matchups","Matchups"],["attendance","Attendance"],["clans","Clans"]];
 
-  // Filter day data by season
+  // Filter day data by season. "All Seasons" is an aggregate view, so it's
+  // scoped to currently-registered clans; a specific season is a snapshot
+  // and shows every clan that played that season, registered or not.
   const filteredDays = selectedSeason === "all"
-    ? dayData
+    ? dayData?.filter(d => !registeredClanTags || registeredClanTags.has(d.clan_tag))
     : dayData?.filter(d => d.season === selectedSeason);
 
   // Aggregate days across seasons
@@ -1988,7 +1997,7 @@ function SeasonAwards({ stats }) {
   const mostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
   const bestClutch = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
   const punchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
-  const ironDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => (a.stars_conceded||0) - (b.stars_conceded||0))[0];
+  const ironDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
 
   const awards = [
     {
@@ -2014,7 +2023,7 @@ function SeasonAwards({ stats }) {
     },
     {
       label: "Iron Defence", player: ironDefence,
-      value: ironDefence ? `${ironDefence.stars_conceded}★ conceded` : null,
+      value: ironDefence ? `${parseFloat(ironDefence.defence_efficiency||0).toFixed(2)} Def EFF` : null,
       colour: "text-green-300",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>,
       iconColour: "text-green-400",
@@ -2288,7 +2297,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
               { label: "Most 3★",     player: awardMostThreeStars, value: awardMostThreeStars ? `${awardMostThreeStars.three_stars} hits` : null,                          colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
               { label: "Clutch King", player: awardClutchKing,     value: awardClutchKing     ? `${parseFloat(awardClutchKing.clutch_rate).toFixed(2)} avg` : null,          colour: "#c4b5fd", bg: "rgba(139,92,246,0.06)", border: "rgba(139,92,246,0.2)",  icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" },
               { label: "Punch-Up",    player: awardPunchUpKing,    value: awardPunchUpKing    ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null,           colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: "M5 10l7-7m0 0l7 7m-7-7v18" },
-              { label: "Iron Defence",player: awardIronDefence,    value: awardIronDefence    ? `${awardIronDefence.stars_conceded}★ conceded` : null,                       colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+              { label: "Iron Defence",player: awardIronDefence,    value: awardIronDefence    ? `${parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2)} Def EFF` : null,                       colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
             ].filter(a => a.player && a.value).map((award, i) => (
               <div key={i} style={{ background: award.bg, borderRadius: 10, border: `1px solid ${award.border}`, padding: "8px 10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
@@ -2409,7 +2418,7 @@ function RecapView({ onBack }) {
     setLoading(true);
     Promise.all([
       fetch(`/api/leaderboard?season=${encodeURIComponent(selectedSeason)}`).then(r => r.json()),
-      fetch("/api/history").then(r => r.json()),
+      fetch(`/api/history?season=${encodeURIComponent(selectedSeason)}`).then(r => r.json()),
     ]).then(([lb, hist]) => {
       const withOverall = (lb.stats || []).map(p => ({
         ...p,
@@ -2450,7 +2459,7 @@ function RecapView({ onBack }) {
   const awardMostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
   const awardClutchKing = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
   const awardPunchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
-  const awardIronDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => (a.stars_conceded||0) - (b.stars_conceded||0))[0];
+  const awardIronDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
 
   // Previous season delta
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
@@ -2750,11 +2759,16 @@ function LeaderboardView({ onBack }) {
       })
       .catch(() => {});
   }, []);
-    // Fetch clan history for clan leaderboard
-    fetch("/api/history")
+  // Fetch clan history for clan leaderboard — refetches per season so the
+  // season-snapshot rule (full clan list, registered or not) applies whenever
+  // a specific season is selected; "All Time" stays scoped to registered clans.
+  useEffect(() => {
+    const seasonParam = selectedSeason === "all" ? "" : `?season=${encodeURIComponent(selectedSeason)}`;
+    fetch(`/api/history${seasonParam}`)
       .then(r => r.json())
       .then(d => setClanHistory(d.history || []))
       .catch(() => setClanHistory([]));
+  }, [selectedSeason]);
 
   function toggleExpand(tag) {
     setExpandedTag(prev => prev === tag ? null : tag);
