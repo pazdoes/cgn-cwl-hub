@@ -7,14 +7,17 @@ export async function GET(request) {
   const sql = getDb();
 
   // Seasons list — every season where a linked alliance account has data.
-  // This drives the season picker, so it stays scoped to linked accounts
-  // regardless of season specificity (the picker itself is a "current roster"
-  // concept, distinct from viewing a specific historical snapshot).
+  // DISTINCT is nested in a subquery so the outer ORDER BY (on season_date,
+  // a column not in the DISTINCT select list) doesn't violate Postgres's
+  // DISTINCT/ORDER BY rule (error 42P10).
   const seasonRows = await sql`
-    SELECT DISTINCT ps.season
-    FROM player_cwl_stats ps
+    SELECT ps.season
+    FROM (
+      SELECT DISTINCT season
+      FROM player_cwl_stats
+      WHERE player_tag IN (SELECT player_tag FROM accounts)
+    ) ps
     LEFT JOIN season_registry sr ON sr.season = ps.season
-    WHERE ps.player_tag IN (SELECT player_tag FROM accounts)
     ORDER BY sr.season_date DESC NULLS LAST
   `;
   const seasons = seasonRows.map(r => r.season);
