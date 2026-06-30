@@ -2976,8 +2976,8 @@ function LeaderboardView({ onBack }) {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
             <div onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] p-5 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
+              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[100dvh] sm:max-h-[90vh]">
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
                 <h3 className="text-sm font-semibold text-white">Filters</h3>
                 <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -2986,56 +2986,58 @@ function LeaderboardView({ onBack }) {
                 </button>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
-                <div className="sm:w-44">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
-                  <select value={selectedSeason} onChange={e => {
-                    const val = e.target.value;
-                    setSelectedSeason(val);
-                    setExpandedTag(null);
-                    setClanFilter("all");
-                    if (val !== "all") {
-                      setData(null);
-                      fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
-                        .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
-                        ...p,
-                        overall: (p.attacks_used > 0 && p.attacks_available > 0)
-                          ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
-                          : null,
-                      })))).catch(()=>setData([]));
-                    }
-                  }} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
-                    <option value="all">All Time</option>
-                    {seasons.map(s=><option key={s} value={s}>{s}</option>)}
-                  </select>
+              <div className="flex-1 overflow-y-auto px-5 min-h-0">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
+                  <div className="sm:w-44">
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
+                    <select value={selectedSeason} onChange={e => {
+                      const val = e.target.value;
+                      setSelectedSeason(val);
+                      setExpandedTag(null);
+                      setClanFilter("all");
+                      if (val !== "all") {
+                        setData(null);
+                        fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
+                          .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
+                          ...p,
+                          overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                            ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
+                            : null,
+                        })))).catch(()=>setData([]));
+                      }
+                    }} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                      <option value="all">All Time</option>
+                      {seasons.map(s=><option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+
+                  {clans.length > 1 && (
+                    <div className="sm:w-44">
+                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Clan</p>
+                      <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                        <option value="all">All Clans</option>
+                        {clans.map(c=><option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {lbTab === "player" && (
+                    <div className="sm:w-44">
+                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Town Hall</p>
+                      <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                        <option value="all">All TH</option>
+                        {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
+                          <option key={th} value={String(th)}>TH{th}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
-
-                {clans.length > 1 && (
-                  <div className="sm:w-44">
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Clan</p>
-                    <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
-                      <option value="all">All Clans</option>
-                      {clans.map(c=><option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                {lbTab === "player" && (
-                  <div className="sm:w-44">
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Town Hall</p>
-                    <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
-                      <option value="all">All TH</option>
-                      {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
-                        <option key={th} value={String(th)}>TH{th}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </div>
 
-              <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between px-5 py-4 border-t border-white/10 shrink-0" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
                 <button onClick={() => { setSelectedSeason("all"); setClanFilter("all"); setThFilter("all"); }}
                   className="text-xs text-slate-500 hover:text-slate-300 transition">
                   Clear all
