@@ -1063,20 +1063,26 @@ function WarIntelView({ onBack }) {
   const [selectedSeason, setSelectedSeason] = useState("all");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/war-intel/days").then(r => r.json()).catch(() => ({})),
-      fetch("/api/war-intel/matchups").then(r => r.json()).catch(() => ({})),
-      fetch("/api/war-intel/attendance").then(r => r.json()).catch(() => ({})),
-      fetch("/api/war-intel/clans").then(r => r.json()).catch(() => ({})),
-    ]).then(([d, m, a, c]) => {
+    fetch("/api/war-intel/days").then(r => r.json()).catch(() => ({})).then(d => {
       setDayData(d.days || []);
+      setSeasons(d.seasons || []);
+    });
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const seasonParam = selectedSeason === "all" ? "" : `?season=${encodeURIComponent(selectedSeason)}`;
+    Promise.all([
+      fetch(`/api/war-intel/matchups${seasonParam}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/war-intel/attendance${seasonParam}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/war-intel/clans${seasonParam}`).then(r => r.json()).catch(() => ({})),
+    ]).then(([m, a, c]) => {
       setMatchupData(m.matchups || []);
       setAttendanceData(a.attendance || []);
       setClanData(c.clans || []);
-      setSeasons(d.seasons || []);
       setLoading(false);
     });
-  }, []);
+  }, [selectedSeason]);
 
   const TABS = [["days","Days"],["matchups","Matchups"],["attendance","Attendance"],["clans","Clans"]];
 
@@ -1116,13 +1122,18 @@ function WarIntelView({ onBack }) {
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">War Intel</h1>
         <p className="text-slate-500 text-xs mb-4">Alliance war performance analytics</p>
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 mb-3">
           <button onClick={onBack} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </button>
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[80px] text-center">War Intel</span>
           <span className="w-6 h-6"/>
         </div>
+        <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
+          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          <option value="all">All Seasons</option>
+          {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
       </div>
 
       {/* Tab nav */}
@@ -1147,15 +1158,6 @@ function WarIntelView({ onBack }) {
           {/* ── DAYS TAB ── */}
           {tab === "days" && (
             <>
-              {/* Season filter */}
-              <div className="flex justify-end">
-                <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-                  <option value="all">All Seasons</option>
-                  {seasons.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-
               {/* War momentum cumulative chart — above bar chart */}
               {dayAggregates.length >= 2 && <WarMomentumChart dayAggregates={dayAggregates} />}
 
