@@ -2976,7 +2976,7 @@ function LeaderboardView({ onBack }) {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
             <div onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[100dvh] sm:max-h-[90vh]">
+              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[85dvh] sm:max-h-[90vh]">
               <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
                 <h3 className="text-sm font-semibold text-white">Filters</h3>
                 <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
@@ -3037,7 +3037,7 @@ function LeaderboardView({ onBack }) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between px-5 py-4 border-t border-white/10 shrink-0" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
+              <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
                 <button onClick={() => { setSelectedSeason("all"); setClanFilter("all"); setThFilter("all"); }}
                   className="text-xs text-slate-500 hover:text-slate-300 transition">
                   Clear all
