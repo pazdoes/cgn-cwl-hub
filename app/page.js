@@ -722,8 +722,15 @@ function ClanPerformanceChart({ history }) {
   const [selectedStat, setSelectedStat] = useState("overall");
   const isRankStat = selectedStat === "cwl_rank";
 
-  // All unique clan names from history
-  const allClans = history ? [...new Set(history.map(r => r.clan_name))].sort() : [];
+  // All unique clans from history — keyed by clan_tag to avoid bundling
+  // clans that share a display name (e.g. old vs current Cognitive).
+  const allClanTags = history ? [...new Set(history.map(r => r.clan_tag || r.clan_name))] : [];
+  const clanNameByTag = {};
+  if (history) for (const r of history) {
+    const key = r.clan_tag || r.clan_name;
+    if (!clanNameByTag[key]) clanNameByTag[key] = r.clan_name;
+  }
+  const allClans = allClanTags.map(tag => clanNameByTag[tag]).sort();
 
   // All seasons — API returns oldest-first (ASC from season_registry join)
   const allSeasons = history ? [...new Set(history.map(r => r.season))] : [];
@@ -732,16 +739,16 @@ function ClanPerformanceChart({ history }) {
   useEffect(() => {
     if (!clanSearch.trim()) { setSearchResults([]); return; }
     const q = clanSearch.toLowerCase();
-    setSearchResults(allClans.filter(c =>
-      c.toLowerCase().includes(q) && !trackedClans.find(t => t.name === c)
+    setSearchResults(allClanTags.filter(tag =>
+      clanNameByTag[tag].toLowerCase().includes(q) && !trackedClans.find(t => t.tag === tag)
     ).slice(0, 6));
-  }, [clanSearch, allClans, trackedClans]);
+  }, [clanSearch, allClanTags, trackedClans]);
 
-  function buildClanData(clanName, stat) {
+  function buildClanData(clanTag, stat) {
     const statKey = stat || selectedStat;
     const isRank = statKey === "cwl_rank";
     return allSeasons.map(season => {
-      const row = history?.find(r => r.clan_name === clanName && r.season === season);
+      const row = history?.find(r => (r.clan_tag || r.clan_name) === clanTag && r.season === season);
       if (!row) return { season, value: null, displayValue: null };
       if (isRank) {
         const rank = row.cwl_rank;
@@ -763,21 +770,21 @@ function ClanPerformanceChart({ history }) {
     });
   }
 
-  function addClan(clanName) {
+  function addClan(clanTag) {
     if (trackedClans.length >= 3) return;
-    if (trackedClans.find(c => c.name === clanName)) return;
-    setTrackedClans(prev => [...prev, { name: clanName, data: buildClanData(clanName, selectedStat) }]);
+    if (trackedClans.find(c => c.tag === clanTag)) return;
+    setTrackedClans(prev => [...prev, { tag: clanTag, name: clanNameByTag[clanTag], data: buildClanData(clanTag, selectedStat) }]);
     setClanSearch(""); setSearchResults([]);
   }
 
-  function removeClan(name) {
-    setTrackedClans(prev => prev.filter(c => c.name !== name));
+  function removeClan(tag) {
+    setTrackedClans(prev => prev.filter(c => c.tag !== tag));
   }
 
   // Recompute clan data inline on every render — avoids stale closure crash on stat change
   const trackedClansData = trackedClans.map(c => ({
     ...c,
-    data: buildClanData(c.name, selectedStat),
+    data: buildClanData(c.tag, selectedStat),
   }));
 
   useEffect(() => {
@@ -796,12 +803,13 @@ function ClanPerformanceChart({ history }) {
       return ob - oa;
     });
     for (const r of sorted) {
-      if (seen.has(r.clan_name)) continue;
-      seen.add(r.clan_name);
-      top3.push(r.clan_name);
+      const tag = r.clan_tag || r.clan_name;
+      if (seen.has(tag)) continue;
+      seen.add(tag);
+      top3.push({ tag, name: r.clan_name });
       if (top3.length >= 3) break;
     }
-    setTrackedClans(top3.map(name => ({ name, data: buildClanData(name, selectedStat) })));
+    setTrackedClans(top3.map(({tag, name}) => ({ tag, name, data: buildClanData(tag, selectedStat) })));
   }, [history]);
 
   // Chart
@@ -869,10 +877,10 @@ function ClanPerformanceChart({ history }) {
               className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {searchResults.length > 0 && (
               <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
-                {searchResults.map(c => (
-                  <button key={c} type="button" onClick={() => addClan(c)}
+                {searchResults.map(tag => (
+                  <button key={tag} type="button" onClick={() => addClan(tag)}
                     className="w-full px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
-                    {c}
+                    {clanNameByTag[tag]}
                   </button>
                 ))}
               </div>
@@ -884,10 +892,10 @@ function ClanPerformanceChart({ history }) {
       {trackedClans.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {trackedClans.map((c, i) => (
-            <div key={c.name} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+            <div key={c.tag} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CLAN_COLORS_CHART[i] }}/>
               <span className="text-xs text-slate-300 max-w-[100px] truncate">{c.name.split(" ")[0]}</span>
-              <button onClick={() => removeClan(c.name)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
+              <button onClick={() => removeClan(c.tag)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
             </div>
           ))}
         </div>
@@ -938,7 +946,7 @@ function ClanPerformanceChart({ history }) {
               if (!pts.length) return null;
               const pathD = pts.map((pt, j) => `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`).join(" ");
               return (
-                <g key={c.name}>
+                <g key={c.tag}>
                   <path d={pathD} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
                   {pts.map(pt => (
                     <g key={pt.season}>
