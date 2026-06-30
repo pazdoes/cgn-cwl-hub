@@ -3270,37 +3270,59 @@ function AppHeader({ variant = "bar" }) {
 function CwlCountdown() {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60000);
+    const t = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(t);
   }, []);
 
+  // CWL war week begins exactly when the new season starts: the 1st of the
+  // month at 08:00 UTC (Clash of Clans' confirmed season-start time, not
+  // midnight). War week runs the 1st-8th, so within that window CWL is live.
   const utcNow = new Date(now.toISOString());
-  const dayOfMonth = utcNow.getUTCDate();
-  const isLive = dayOfMonth <= 8;
+  const thisMonthStart = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), 1, 8, 0, 0));
+  const isLive = utcNow >= thisMonthStart && utcNow < new Date(thisMonthStart.getTime() + 8 * 24 * 60 * 60 * 1000);
 
-  let label, daysLeft;
+  let label, timeLeft;
   if (isLive) {
     label = "CWL War Week";
-    daysLeft = null;
+    timeLeft = null;
   } else {
-    const nextMonthStart = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 1, 0, 0, 0));
-    const msLeft = nextMonthStart - utcNow;
-    daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    const nextStart = utcNow < thisMonthStart
+      ? thisMonthStart
+      : new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 1, 8, 0, 0));
+    const msLeft = Math.max(0, nextStart - utcNow);
+    const totalSeconds = Math.floor(msLeft / 1000);
+    timeLeft = {
+      days: Math.floor(totalSeconds / 86400),
+      hours: Math.floor((totalSeconds % 86400) / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+    };
     label = "Next CWL Starts In";
   }
 
   return (
-    <div>
-      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">{label}</p>
+    <div className="flex flex-col items-center text-center">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">{label}</p>
       {isLive ? (
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
-          <span className="text-2xl font-thin tracking-widest text-green-300">Live Now</span>
+          <span className="text-3xl font-thin tracking-widest text-green-300">Live Now</span>
         </div>
       ) : (
-        <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{daysLeft}</span>
-          <span className="text-sm text-slate-500">day{daysLeft !== 1 ? "s" : ""}</span>
+        <div className="flex items-baseline gap-3">
+          <div className="flex flex-col items-center">
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{timeLeft.days}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">days</span>
+          </div>
+          <span className="text-2xl text-slate-600 font-thin">:</span>
+          <div className="flex flex-col items-center">
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{String(timeLeft.hours).padStart(2,"0")}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">hrs</span>
+          </div>
+          <span className="text-2xl text-slate-600 font-thin">:</span>
+          <div className="flex flex-col items-center">
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{String(timeLeft.minutes).padStart(2,"0")}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">min</span>
+          </div>
         </div>
       )}
     </div>
@@ -3423,32 +3445,72 @@ export default function Home() {
       <AppHeader variant="bar"/>
 
       {/* Brand hero */}
-      <div className="relative z-10 text-center mb-8">
+      <div className="relative z-10 text-center mb-6">
         <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-16 h-16 mx-auto mb-3 opacity-90"/>
         <h1 className="text-2xl font-thin tracking-widest">CWL Hub</h1>
         <p className="text-slate-500 text-xs mt-1">Cognition Collective</p>
       </div>
 
-      {/* Two pathways */}
       <div className="relative z-10 space-y-4 max-w-lg mx-auto">
-        <button onClick={() => navigate("roster")}
-          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-white/20 transition">
-          <div className="flex items-center gap-2 mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
-            </svg>
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest">Signup &amp; Rosters</span>
-          </div>
+
+        {/* Countdown — standalone, centred */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           <CwlCountdown/>
+        </div>
+
+        {/* Sign Up — explicit instruction + direct link */}
+        <a href="/signup"
+          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        {/* Rosters — explicit instruction + direct link to Roster hub */}
+        <button onClick={() => navigate("roster")}
+          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">View Published Rosters</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">See clan rosters &amp; league standings</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
         </button>
 
+        {/* Stats gateway — highlight reel signals depth, clearly tappable */}
         <button onClick={() => navigate("leaderboard")}
-          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-white/20 transition">
-          <div className="flex items-center gap-2 mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
+          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] text-slate-500 uppercase tracking-widest">Stats &amp; Overview</span>
+            <span className="flex items-center gap-1 text-[10px] text-purple-400 group-hover:text-purple-300 transition">
+              View Leaderboard
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 group-hover:translate-x-0.5 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+              </svg>
+            </span>
           </div>
           <StatsHighlightReel/>
         </button>
