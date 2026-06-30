@@ -3333,10 +3333,17 @@ export default function Home() {
   const [page, setPage] = useState("home"); // "home" | "roster" | "leaderboard" | "history" | "recap" | "warintel"
   const [navOpen, setNavOpen] = useState(false);
   useEffect(() => {
-    const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-    if (["roster","leaderboard","history","recap","warintel"].includes(hash)) {
-      setPage(hash);
-    }
+    const syncFromHash = () => {
+      const hash = decodeURIComponent(window.location.hash.replace("#", ""));
+      if (["roster","leaderboard","history","recap","warintel"].includes(hash)) {
+        setPage(hash);
+      } else {
+        setPage("home");
+      }
+    };
+    syncFromHash();
+    window.addEventListener("popstate", syncFromHash);
+    return () => window.removeEventListener("popstate", syncFromHash);
   }, []);
 
   function navigate(key) {
@@ -3453,16 +3460,19 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   const handlePopState = () => {
     const hash = decodeURIComponent(window.location.hash.replace("#", ""));
 
-    // Stat tile views use reserved hash names; anything else is treated
-    // as a clan name (the original selectedClan behaviour).
+    // Stat tile views use reserved hash names; "roster" or empty hash means
+    // this hub's own home state; anything else is treated as a clan name.
     if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard" || hash === "recap" || hash === "warintel") {
       setStatView(hash);
       setSelectedClan(null);
       setHighlightedAccount(null);
+    } else if (hash === "roster" || !hash) {
+      setStatView(null);
+      setSelectedClan(null);
+      setHighlightedAccount(null);
     } else {
       setStatView(null);
-      setSelectedClan(hash || null);
-      if (!hash) setHighlightedAccount(null);
+      setSelectedClan(hash);
     }
   };
 
