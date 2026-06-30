@@ -2774,11 +2774,13 @@ function LeaderboardView({ onBack }) {
     if (!clanHistory) return [];
     const rows = selectedSeason === "all" ? clanHistory : clanHistory.filter(r => r.season === selectedSeason);
     if (selectedSeason !== "all") return rows;
-    // Aggregate across seasons
+    // Aggregate across seasons — keyed by clan_tag to avoid bundling clans
+    // that share a name but are actually different clans (old vs current).
     const map = {};
     for (const r of rows) {
-      if (!map[r.clan_name]) map[r.clan_name] = { clan_name: r.clan_name, cwl_rank: r.cwl_rank, wars_won:0,wars_lost:0,wars_drawn:0, total_stars:0,total_stars_conceded:0,total_attacks_used:0,total_attacks_available:0,total_attacks_missed:0, three_stars_clan:0,two_stars_clan:0,one_stars_clan:0,zero_stars_clan:0, _destSum:0,_defSum:0,_atkCount:0,_defCount:0,_threeStar:0,_totalAtk:0 };
-      const m = map[r.clan_name];
+      const key = r.clan_tag || r.clan_name; // fallback for any legacy row without a tag
+      if (!map[key]) map[key] = { clan_tag: r.clan_tag, clan_name: r.clan_name, cwl_rank: r.cwl_rank, wars_won:0,wars_lost:0,wars_drawn:0, total_stars:0,total_stars_conceded:0,total_attacks_used:0,total_attacks_available:0,total_attacks_missed:0, three_stars_clan:0,two_stars_clan:0,one_stars_clan:0,zero_stars_clan:0, _destSum:0,_defSum:0,_atkCount:0,_defCount:0,_threeStar:0,_totalAtk:0 };
+      const m = map[key];
       m.wars_won += r.wars_won||0; m.wars_lost += r.wars_lost||0; m.wars_drawn += r.wars_drawn||0;
       m.total_stars += r.total_stars||0; m.total_stars_conceded += r.total_stars_conceded||0;
       m.total_attacks_used += r.total_attacks_used||0; m.total_attacks_available += r.total_attacks_available||0; m.total_attacks_missed += r.total_attacks_missed||0;
