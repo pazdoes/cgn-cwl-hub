@@ -2713,7 +2713,7 @@ function LeaderboardView({ onBack }) {
   const [clanFilter, setClanFilter] = useState("all");
   const [thFilter, setThFilter] = useState("all");
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [sortBy, setSortBy] = useState("stars_earned");
+  const [sortBy, setSortBy] = useState("overall");
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
   const [expandedTag, setExpandedTag] = useState(null);
@@ -2976,7 +2976,7 @@ function LeaderboardView({ onBack }) {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
             <div onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[85dvh] sm:max-h-[90vh]">
+              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[75dvh] sm:max-h-[90vh]">
               <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
                 <h3 className="text-sm font-semibold text-white">Filters</h3>
                 <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
