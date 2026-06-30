@@ -5,7 +5,7 @@ import { TH_ICONS } from "@/lib/icons";
 import { BRANDING } from "@/lib/branding";
 import { LargePie } from "@/lib/components";
 
-function AppHeader({ variant = "icon" }) {
+function AppHeader({ variant = "bar" }) {
   const [navOpen, setNavOpen] = useState(false);
   const items = [
     { key: "", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -52,11 +52,26 @@ function AppHeader({ variant = "icon" }) {
           </div>
         </div>
       )}
-      <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
+      {variant === "bar" ? (
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
+            <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
+          </div>
+          <span className="w-8"/>
+        </div>
+      ) : (
+        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      )}
     </>
   );
 }
@@ -715,11 +730,10 @@ export default function PlayerProfilePage() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
+      <AppHeader variant="bar"/>
+
       {/* Hero tile */}
       <div className="relative z-10 rounded-3xl bg-white/[0.04] backdrop-blur-xl p-5 mb-4" style={{border: heroBorderStyle || "1px solid rgba(255,255,255,0.1)"}}>
-        <div className="absolute left-5 top-5">
-          <AppHeader variant="icon"/>
-        </div>
         <div className="flex flex-col items-center text-center gap-2">
           <div className="flex items-center justify-center gap-3">
             {TH_ICONS[String(data.town_hall_level)] && (

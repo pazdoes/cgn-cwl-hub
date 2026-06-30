@@ -1135,6 +1135,8 @@ function WarIntelView({ onBack }) {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
+      <AppHeader variant="bar"/>
+
       {/* Hero card */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">War Intel</h1>
@@ -1144,7 +1146,7 @@ function WarIntelView({ onBack }) {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </button>
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[80px] text-center">War Intel</span>
-          <AppHeader variant="icon"/>
+          <span className="w-6 h-6"/>
         </div>
         <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
           className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
@@ -1345,11 +1347,10 @@ function HistoryView({ onBack }) {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Hero card — flush to top */}
+      <AppHeader variant="bar"/>
+
+      {/* Hero card */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <div className="absolute left-5 top-5">
-          <AppHeader variant="icon"/>
-        </div>
         <h1 className="text-2xl font-thin tracking-widest mb-1">History</h1>
         <p className="text-slate-500 text-xs mb-4">CWL performance records by season</p>
 
@@ -2536,11 +2537,10 @@ function RecapView({ onBack }) {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
+      <AppHeader variant="bar"/>
+
       {/* Header */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <div className="absolute left-5 top-5">
-          <AppHeader variant="icon"/>
-        </div>
         <h1 className="text-2xl font-thin tracking-widest mb-1">Season Recap</h1>
         {seasons.length > 1 ? (
           <select value={selectedSeason||""} onChange={e => setSelectedSeason(e.target.value)}
@@ -2953,10 +2953,10 @@ function LeaderboardView({ onBack }) {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
+
+      <AppHeader variant="bar"/>
+
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <div className="absolute left-5 top-5">
-          <AppHeader variant="icon"/>
-        </div>
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -3664,7 +3664,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 </div>
 
-
+<AppHeader variant="bar"/>
 
     <motion.div
   initial={{ opacity: 0, y: 15 }}
@@ -3683,10 +3683,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
     text-center
   "
 >
-
-  <div className="absolute left-5 top-5">
-    <AppHeader variant="icon"/>
-  </div>
 
   <img
     src={BRANDING.cwlhub}
