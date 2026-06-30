@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { getLeagueStyles } from "../lib/leagueColors";
@@ -2971,8 +2972,8 @@ function LeaderboardView({ onBack }) {
           })()}
         </div>
 
-        {/* Filters modal */}
-        {showFiltersModal && (
+        {/* Filters modal — rendered via portal to escape overflow-clipped ancestors */}
+        {showFiltersModal && typeof document !== "undefined" && createPortal(
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
             <div onClick={e => e.stopPropagation()}
@@ -3048,7 +3049,8 @@ function LeaderboardView({ onBack }) {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Value reference legend — mirrors the row tiles for the active sort */}
