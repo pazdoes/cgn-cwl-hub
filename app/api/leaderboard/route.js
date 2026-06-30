@@ -6,14 +6,13 @@ export async function GET(request) {
   const season = searchParams.get("season");
   const sql = getDb();
 
-  const activeClanRows = await sql`SELECT clan_tag, clan_name FROM clans WHERE clan_tag IS NOT NULL`;
-  const activeTags = activeClanRows.map(r => r.clan_tag);
-  const activeClanNames = activeClanRows.map(r => r.clan_name);
-
+  // Seasons list — any season where a linked alliance account has data,
+  // regardless of whether the clan they played under is still active.
   const seasonRows = await sql`
-    SELECT ps.season
-    FROM (SELECT DISTINCT season FROM player_cwl_stats WHERE clan_name = ANY(${activeClanNames})) ps
+    SELECT DISTINCT ps.season
+    FROM player_cwl_stats ps
     LEFT JOIN season_registry sr ON sr.season = ps.season
+    WHERE ps.player_tag IN (SELECT player_tag FROM accounts)
     ORDER BY sr.season_date DESC NULLS LAST
   `;
   const seasons = seasonRows.map(r => r.season);
@@ -24,11 +23,10 @@ export async function GET(request) {
 
   const targetSeason = season || seasons[0];
 
-  const latestSeasonRow = await sql`
-    SELECT season FROM season_registry ORDER BY season_date DESC LIMIT 1
-  `;
-  const latestSeason = latestSeasonRow[0]?.season;
-
+  // Alliance member = anyone with a linked account (accounts table). Their
+  // historical seasons must show regardless of whether the clan they played
+  // under at the time is still active today — clan deletion/rename does not
+  // erase a real alliance member's CWL history.
   const stats = await sql`
     SELECT
       ps.*,
@@ -38,13 +36,7 @@ export async function GET(request) {
       ON csh.clan_name = ps.clan_name
       AND csh.season = ps.season
     WHERE ps.season = ${targetSeason}
-      AND ps.clan_name = ANY(${activeClanNames})
-      AND ps.player_tag IN (
-        SELECT player_tag FROM accounts
-        UNION
-        SELECT player_tag FROM player_cwl_stats
-        WHERE season = ${latestSeason}
-      )
+      AND ps.player_tag IN (SELECT player_tag FROM accounts)
     ORDER BY ps.stars_earned DESC, ps.destruction_pct DESC
   `;
 
