@@ -1412,7 +1412,111 @@ function PlayerSparkline({ sparkData }) {
   );
 }
 
-function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons }) {
+// ─── Tile definitions for dynamic leaderboard row stats ─────────────────────
+// Each tile knows how to render itself from a player row `p`.
+const TILE_DEFS = {
+  overall: {
+    key: "overall", label: "CGN Rating", colour: "text-purple-300", bg: "bg-purple-500/[0.08]", border: "border-purple-500/20", stroke: "#a78bfa",
+    icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
+    value: p => p.overall != null ? parseFloat(p.overall).toFixed(2) : (p.attacks_used > 0 && p.attacks_available > 0 ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2) : "—"),
+  },
+  efficiency: {
+    key: "efficiency", label: "Atk EFF", colour: "text-purple-300", bg: "bg-purple-500/[0.08]", border: "border-purple-500/20", stroke: "#a78bfa",
+    icon: "M13 10V3L4 14h7v7l9-11h-7z",
+    value: p => p.efficiency != null ? parseFloat(p.efficiency).toFixed(2) : "—",
+  },
+  stars_earned: {
+    key: "stars_earned", label: "Stars", colour: "text-green-300", bg: "bg-green-500/[0.08]", border: "border-green-500/20", stroke: "#86efac",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    value: p => p.stars_earned ?? "—",
+  },
+  destruction_pct: {
+    key: "destruction_pct", label: "Dest %", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    value: p => p.destruction_pct != null ? parseFloat(p.destruction_pct).toFixed(1)+"%" : "—",
+  },
+  attacks_used: {
+    key: "attacks_used", label: "Attacks", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+    value: p => `${p.attacks_used ?? "—"}/${p.attacks_available ?? "—"}`,
+  },
+  missed_attacks: {
+    key: "missed_attacks", label: "Missed", colour: p => p.missed_attacks > 0 ? "text-red-400" : "text-slate-500", bg: p => p.missed_attacks > 0 ? "bg-red-500/[0.08]" : "bg-white/[0.04]", border: p => p.missed_attacks > 0 ? "border-red-500/20" : "border-white/10", stroke: p => p.missed_attacks > 0 ? "#f87171" : "#94a3b8",
+    icon: "M6 18L18 6M6 6l12 12",
+    value: p => p.missed_attacks ?? "—",
+  },
+  defence_efficiency: {
+    key: "defence_efficiency", label: "Def EFF", colour: "text-blue-300", bg: "bg-blue-500/[0.08]", border: "border-blue-500/20", stroke: "#60a5fa",
+    icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+    value: p => p.defence_efficiency != null ? parseFloat(p.defence_efficiency).toFixed(2) : "—",
+  },
+  stars_conceded: {
+    key: "stars_conceded", label: "Stars Given", colour: "text-slate-400", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    value: p => p.stars_conceded ?? "—",
+  },
+  defence_pct: {
+    key: "defence_pct", label: "Def %", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    value: p => p.defence_pct != null ? parseFloat(p.defence_pct).toFixed(1)+"%" : "—",
+  },
+  attacks_available: {
+    key: "attacks_available", label: "Available", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+    value: p => p.attacks_available ?? "—",
+  },
+  avg_stars_per_attack: {
+    key: "avg_stars_per_attack", label: "Avg ★/Atk", colour: "text-amber-300", bg: "bg-amber-500/[0.08]", border: "border-amber-500/20", stroke: "#fbbf24",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    value: p => p.avg_stars_per_attack != null ? parseFloat(p.avg_stars_per_attack).toFixed(2) : "—",
+  },
+  three_star_rate: {
+    key: "three_star_rate", label: "3★ Rate", colour: "text-green-300", bg: "bg-green-500/[0.08]", border: "border-green-500/20", stroke: "#86efac",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    value: p => p.three_star_rate != null ? parseFloat(p.three_star_rate).toFixed(0)+"%" : "—",
+  },
+  punch_up_rate: {
+    key: "punch_up_rate", label: "Punch-Up", colour: "text-blue-300", bg: "bg-blue-500/[0.08]", border: "border-blue-500/20", stroke: "#60a5fa",
+    icon: "M5 10l7-7m0 0l7 7m-7-7v18",
+    value: p => p.punch_up_rate != null ? parseFloat(p.punch_up_rate).toFixed(0)+"%" : "—",
+  },
+  clutch_rate: {
+    key: "clutch_rate", label: "Clutch", colour: "text-purple-300", bg: "bg-purple-500/[0.08]", border: "border-purple-500/20", stroke: "#a78bfa",
+    icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",
+    value: p => p.clutch_rate != null ? parseFloat(p.clutch_rate).toFixed(2) : "—",
+  },
+  consistency_score: {
+    key: "consistency_score", label: "Consistency", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M4 6h16M4 10h16M4 14h16M4 18h16",
+    value: p => p.consistency_score != null ? parseFloat(p.consistency_score).toFixed(2) : "—",
+  },
+};
+
+// Maps each sort option to the 4 tile keys shown on the leaderboard row.
+// Tile 1 is always the sorted stat; tiles 2-4 provide explanatory context.
+const SORT_TILE_MAP = {
+  overall:               ["overall", "efficiency", "defence_efficiency", "stars_earned"],
+  efficiency:            ["efficiency", "stars_earned", "three_star_rate", "attacks_used"],
+  stars_earned:          ["stars_earned", "efficiency", "defence_efficiency", "stars_conceded"],
+  destruction_pct:       ["destruction_pct", "efficiency", "three_star_rate", "stars_earned"],
+  attacks_used:          ["attacks_used", "missed_attacks", "efficiency", "stars_earned"],
+  missed_attacks:        ["missed_attacks", "attacks_used", "efficiency", "stars_earned"],
+  defence_efficiency:    ["defence_efficiency", "stars_conceded", "defence_pct", "efficiency"],
+  stars_conceded:        ["stars_conceded", "defence_efficiency", "attacks_available", "efficiency"],
+  defence_pct:           ["defence_pct", "defence_efficiency", "stars_conceded", "efficiency"],
+  avg_stars_per_attack:  ["avg_stars_per_attack", "three_star_rate", "punch_up_rate", "efficiency"],
+  three_star_rate:       ["three_star_rate", "avg_stars_per_attack", "stars_earned", "efficiency"],
+  punch_up_rate:         ["punch_up_rate", "three_star_rate", "avg_stars_per_attack", "efficiency"],
+  clutch_rate:           ["clutch_rate", "avg_stars_per_attack", "three_star_rate", "stars_earned"],
+  consistency_score:     ["consistency_score", "avg_stars_per_attack", "efficiency", "three_star_rate"],
+};
+
+function getRowTiles(sortBy) {
+  const keys = SORT_TILE_MAP[sortBy] || SORT_TILE_MAP.stars_earned;
+  return keys.map(k => TILE_DEFS[k]);
+}
+
+function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sortBy }) {
   const [cardView, setCardView] = useState("stats"); // "stats" | "breakdown"
 
   const rankBorderClass = rank === 1 ? "border-yellow-400/40 shadow-yellow-400/10"
@@ -1454,22 +1558,20 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons }) {
           </div>
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg bg-green-500/[0.08] border border-green-500/20 px-1.5 sm:px-2 py-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="#86efac" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-            <span className="text-[11px] sm:text-xs font-bold text-green-300">{p.stars_earned}</span>
-          </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg bg-purple-500/[0.08] border border-purple-500/20 px-1.5 sm:px-2 py-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span className="text-[11px] sm:text-xs font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</span>
-          </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg bg-blue-500/[0.08] border border-blue-500/20 px-1.5 sm:px-2 py-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            <span className="text-[11px] sm:text-xs font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</span>
-          </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg bg-white/[0.04] border border-white/10 px-1.5 sm:px-2 py-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-            <span className="text-xs font-bold text-slate-400">{p.stars_conceded}</span>
-          </div>
+          {getRowTiles(sortBy).map(tile => {
+            const colour = typeof tile.colour === "function" ? tile.colour(p) : tile.colour;
+            const bg = typeof tile.bg === "function" ? tile.bg(p) : tile.bg;
+            const border = typeof tile.border === "function" ? tile.border(p) : tile.border;
+            const stroke = typeof tile.stroke === "function" ? tile.stroke(p) : tile.stroke;
+            return (
+              <div key={tile.key} className={`flex flex-col items-center gap-0.5 rounded-lg ${bg} border ${border} px-1.5 sm:px-2 py-1 min-w-[34px] sm:min-w-[40px]`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke={stroke} strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+                </svg>
+                <span className={`text-[11px] sm:text-xs font-bold ${colour}`}>{tile.value(p)}</span>
+              </div>
+            );
+          })}
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
@@ -2919,6 +3021,7 @@ function LeaderboardView({ onBack }) {
           <PlayerCard key={p.player_tag} p={p} rank={i+1}
             allSeasonData={allSeasonData}
             seasons={seasons}
+            sortBy={sortBy}
             isExpanded={expandedTag === p.player_tag}
             onToggle={() => toggleExpand(p.player_tag)}/>
         )) : null}
