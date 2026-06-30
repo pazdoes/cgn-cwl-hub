@@ -1565,7 +1565,7 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sor
             const stroke = typeof tile.stroke === "function" ? tile.stroke(p) : tile.stroke;
             return (
               <div key={tile.key} className={`flex flex-col items-center gap-0.5 rounded-lg ${bg} border ${border} px-1.5 sm:px-2 py-1 min-w-[34px] sm:min-w-[40px]`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke={stroke} strokeWidth={2}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke={stroke} strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
                 </svg>
                 <span className={`text-[11px] sm:text-xs font-bold ${colour}`}>{tile.value(p)}</span>
