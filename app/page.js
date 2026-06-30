@@ -1309,18 +1309,27 @@ function HistoryView({ onBack }) {
         // Use API order reversed — API returns newest first, chart needs oldest first
         const allSeasons = (d.seasons || []).slice().reverse();
         setSeasons(allSeasons);
+        // Linked accounts set — per-season fetches below now correctly
+        // include unlinked players (season-snapshot rule), so this
+        // cross-season player tracking chart must filter back down to
+        // linked accounts only.
+        const linkedRes = await fetch("/api/linked-accounts").then(r => r.json()).catch(() => ({ tags: [] }));
+        const linkedTags = new Set(linkedRes.tags || []);
         const rows = [];
         for (const s of allSeasons) {
           try {
             const r = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
             const sd = await r.json();
-            (sd.stats || []).forEach(p => rows.push({
-              ...p,
-              season: s,
-              overall: (p.attacks_used > 0 && p.attacks_available > 0)
-                ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
-                : null,
-            }));
+            (sd.stats || []).forEach(p => {
+              if (!linkedTags.has(p.player_tag)) return;
+              rows.push({
+                ...p,
+                season: s,
+                overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                  ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
+                  : null,
+              });
+            });
           } catch {}
         }
         setAllData(rows);
@@ -2747,12 +2756,17 @@ function LeaderboardView({ onBack }) {
       .then(async d => {
         const allSeasons = d.seasons || [];
         setSeasons(allSeasons);
+        // Linked accounts set — per-season fetches below now correctly
+        // include unlinked players (season-snapshot rule), so this rollup
+        // must filter back down to linked accounts only before aggregating.
+        const linkedRes = await fetch("/api/linked-accounts").then(r => r.json()).catch(() => ({ tags: [] }));
+        const linkedTags = new Set(linkedRes.tags || []);
         const allData = [];
         for (const s of allSeasons) {
           try {
             const r2 = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
             const d2 = await r2.json();
-            allData.push(...(d2.stats || []));
+            (d2.stats || []).forEach(p => { if (linkedTags.has(p.player_tag)) allData.push(p); });
           } catch {}
         }
         setAllSeasonData(allData);
