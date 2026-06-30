@@ -3239,17 +3239,17 @@ function AppHeader({ variant = "bar" }) {
         </div>
       )}
       {variant === "bar" && (
-        <div className="relative z-10 flex items-center justify-between mb-4">
-          <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+        <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
+          <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0" title="Menu">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
             <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
           </div>
-          <span className="w-8"/>
+          <DiscordWidget variant="corner" />
         </div>
       )}
       {variant === "icon" && (
@@ -3446,9 +3446,7 @@ export default function Home() {
 
       {/* Brand hero */}
       <div className="relative z-10 text-center mb-6">
-        <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-20 h-20 mx-auto mb-3"/>
-        <h1 className="text-2xl font-thin tracking-widest">CWL Hub</h1>
-        <p className="text-slate-500 text-xs mt-1">Cognition Collective</p>
+        <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-40 h-40 mx-auto"/>
       </div>
 
       <div className="relative z-10 space-y-4 max-w-lg mx-auto">
@@ -3732,7 +3730,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   initial={{ opacity: 0, y: 15 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.5 }}
-  className="relative z-10 mb-4 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
+  className="relative z-20 mb-4 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
 >
 
   <h1 className="text-2xl font-thin tracking-widest">
@@ -3742,10 +3740,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   <p className="text-slate-500 text-xs mt-1">
     Cognition Collective
   </p>
-
-  <div className="mt-3 flex justify-center">
-    <DiscordWidget variant="center" />
-  </div>
 
   <div className="mt-4">
     <Link
