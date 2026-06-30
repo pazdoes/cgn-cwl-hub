@@ -8,11 +8,16 @@ export async function GET(request) {
 
   // Seasons list — any season where a linked alliance account has data,
   // regardless of whether the clan they played under is still active.
+  // Uses a subquery for DISTINCT so it can be safely ORDERed by season_date
+  // without violating Postgres's "ORDER BY must appear in SELECT" rule for DISTINCT.
   const seasonRows = await sql`
-    SELECT DISTINCT ps.season
-    FROM player_cwl_stats ps
+    SELECT ps.season
+    FROM (
+      SELECT DISTINCT season
+      FROM player_cwl_stats
+      WHERE player_tag IN (SELECT player_tag FROM accounts)
+    ) ps
     LEFT JOIN season_registry sr ON sr.season = ps.season
-    WHERE ps.player_tag IN (SELECT player_tag FROM accounts)
     ORDER BY sr.season_date DESC NULLS LAST
   `;
   const seasons = seasonRows.map(r => r.season);
