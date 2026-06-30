@@ -3172,7 +3172,252 @@ function LeaderboardView({ onBack }) {
   );
 }
 
+// ─── Hamburger navigation drawer — available from any top-level screen ──────
+function NavDrawer({ open, onClose, onNavigate }) {
+  if (!open) return null;
+  const items = [
+    { key: "home", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    { key: "roster", label: "Signup / Rosters", icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" },
+    { key: "leaderboard", label: "Leaderboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+    { key: "history", label: "History", icon: "M7 17l4-8 4 5 2-3M3 3v18h18" },
+    { key: "recap", label: "Season Recap", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+    { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+      <div onClick={e => e.stopPropagation()}
+        className="relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5">
+        <div className="flex items-center gap-2 mb-8">
+          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
+          <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
+        </div>
+        <nav className="flex-1 space-y-1">
+          {items.map(item => (
+            <button key={item.key} onClick={() => { onNavigate(item.key); onClose(); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+              </svg>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 no-underline px-3 py-2 text-[11px] text-slate-500 hover:text-slate-300 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Join our Discord
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ─── CWL countdown — always counts to the 1st of next month, 00:00 UTC ─────
+// CWL war week begins on the 1st of every calendar month. If currently within
+// the first 8 days (live war week), shows a "live" state instead of counting
+// down to the same month's already-passed start.
+function CwlCountdown() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  const utcNow = new Date(now.toISOString());
+  const dayOfMonth = utcNow.getUTCDate();
+  const isLive = dayOfMonth <= 8;
+
+  let label, daysLeft;
+  if (isLive) {
+    label = "CWL War Week";
+    daysLeft = null;
+  } else {
+    const nextMonthStart = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 1, 0, 0, 0));
+    const msLeft = nextMonthStart - utcNow;
+    daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    label = "Next CWL Starts In";
+  }
+
+  return (
+    <div>
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">{label}</p>
+      {isLive ? (
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+          <span className="text-2xl font-thin tracking-widest text-green-300">Live Now</span>
+        </div>
+      ) : (
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{daysLeft}</span>
+          <span className="text-sm text-slate-500">day{daysLeft !== 1 ? "s" : ""}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Stats highlight reel — rotates featured stat each load ────────────────
+function StatsHighlightReel() {
+  const [data, setData] = useState(null);
+  const [featureType] = useState(() => {
+    const types = ["stars", "efficiency", "threeStarRate", "clutch"];
+    return types[Math.floor(Math.random() * types.length)];
+  });
+
+  useEffect(() => {
+    fetch("/api/leaderboard").then(r => r.json()).then(d => setData(d.stats || [])).catch(() => setData([]));
+  }, []);
+
+  if (!data) {
+    return <div className="h-24 rounded-2xl bg-white/[0.03] animate-pulse"/>;
+  }
+  if (data.length === 0) {
+    return <p className="text-slate-700 text-xs text-center py-4">No stats yet this season</p>;
+  }
+
+  const withAtks = data.filter(p => p.attacks_used > 0);
+  let featured, statLabel, statValue, statColour;
+  if (featureType === "efficiency" && withAtks.length) {
+    featured = [...withAtks].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0];
+    statLabel = "Top Atk EFF"; statValue = parseFloat(featured.efficiency).toFixed(2); statColour = "text-purple-300";
+  } else if (featureType === "threeStarRate" && withAtks.filter(p=>p.three_star_rate!=null).length) {
+    featured = [...withAtks].filter(p=>p.three_star_rate!=null).sort((a,b) => parseFloat(b.three_star_rate||0) - parseFloat(a.three_star_rate||0))[0];
+    statLabel = "Top 3★ Rate"; statValue = parseFloat(featured.three_star_rate).toFixed(0)+"%"; statColour = "text-green-300";
+  } else if (featureType === "clutch" && withAtks.filter(p=>p.clutch_rate!=null).length) {
+    featured = [...withAtks].filter(p=>p.clutch_rate!=null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
+    statLabel = "Clutch King"; statValue = parseFloat(featured.clutch_rate).toFixed(2); statColour = "text-purple-300";
+  } else {
+    featured = [...data].sort((a,b) => (b.stars_earned||0) - (a.stars_earned||0))[0];
+    statLabel = "Most Stars"; statValue = featured.stars_earned; statColour = "text-green-300";
+  }
+
+  if (!featured) return <p className="text-slate-700 text-xs text-center py-4">No stats yet this season</p>;
+
+  return (
+    <div>
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Season Highlight</p>
+      <div className="flex items-center gap-3 mb-3">
+        {TH_ICONS[String(featured.town_hall_level)] && (
+          <img src={TH_ICONS[String(featured.town_hall_level)]} alt="" className="w-9 h-9 shrink-0"/>
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white truncate">{featured.player_name}</p>
+          <p className="text-[10px] text-slate-500">{statLabel}</p>
+        </div>
+        <span className={`ml-auto text-xl font-thin ${statColour}`}>{statValue}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <p className="text-[7px] text-slate-500 uppercase tracking-widest">Atk EFF</p>
+          </div>
+          <p className="text-xs font-bold text-purple-300">{featured.efficiency != null ? parseFloat(featured.efficiency).toFixed(2) : "—"}</p>
+        </div>
+        <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+            <p className="text-[7px] text-slate-500 uppercase tracking-widest">Clutch</p>
+          </div>
+          <p className="text-xs font-bold text-purple-300">{featured.clutch_rate != null ? parseFloat(featured.clutch_rate).toFixed(2) : "—"}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const [page, setPage] = useState("home"); // "home" | "roster" | "leaderboard" | "history" | "recap" | "warintel"
+  const [navOpen, setNavOpen] = useState(false);
+  useEffect(() => {
+    const hash = decodeURIComponent(window.location.hash.replace("#", ""));
+    if (["roster","leaderboard","history","recap","warintel"].includes(hash)) {
+      setPage(hash);
+    }
+  }, []);
+
+  function navigate(key) {
+    window.history.pushState({}, "", key === "home" ? window.location.pathname : `#${key}`);
+    setPage(key);
+  }
+
+  if (page === "roster") {
+    return <RosterHubView onNavigateHome={() => navigate("home")} />;
+  }
+  if (page === "leaderboard") {
+    return <LeaderboardView onBack={() => navigate("home")} />;
+  }
+  if (page === "history") {
+    return <HistoryView onBack={() => navigate("home")} />;
+  }
+  if (page === "recap") {
+    return <RecapView onBack={() => navigate("home")} />;
+  }
+  if (page === "warintel") {
+    return <WarIntelView onBack={() => navigate("home")} />;
+  }
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+
+      <NavDrawer open={navOpen} onClose={() => setNavOpen(false)} onNavigate={navigate}/>
+
+      {/* Header — hamburger + brand mark */}
+      <div className="relative z-10 flex items-center justify-between mb-6">
+        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <div className="flex items-center gap-2">
+          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
+          <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
+        </div>
+        <span className="w-8"/>
+      </div>
+
+      {/* Brand hero */}
+      <div className="relative z-10 text-center mb-8">
+        <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-16 h-16 mx-auto mb-3 opacity-90"/>
+        <h1 className="text-2xl font-thin tracking-widest">CWL Hub</h1>
+        <p className="text-slate-500 text-xs mt-1">Cognition Collective</p>
+      </div>
+
+      {/* Two pathways */}
+      <div className="relative z-10 space-y-4 max-w-lg mx-auto">
+        <button onClick={() => navigate("roster")}
+          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-white/20 transition">
+          <div className="flex items-center gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+            </svg>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest">Signup &amp; Rosters</span>
+          </div>
+          <CwlCountdown/>
+        </button>
+
+        <button onClick={() => navigate("leaderboard")}
+          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-white/20 transition">
+          <div className="flex items-center gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest">Stats &amp; Overview</span>
+          </div>
+          <StatsHighlightReel/>
+        </button>
+      </div>
+    </main>
+  );
+}
+
+function RosterHubView({ onNavigateHome }) {
   const [players, setPlayers] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedClan, setSelectedClan] = useState(null);
@@ -3671,7 +3916,13 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 
     <div className="relative w-full py-4 flex items-center px-4">
-      <div className="w-16 shrink-0"/>
+      <div className="w-16 shrink-0 flex items-center">
+        <button onClick={onNavigateHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+        </button>
+      </div>
       <div className="flex-1 flex justify-center">
         <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 no-underline">
