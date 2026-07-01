@@ -296,7 +296,7 @@ const MONTH_NAMES = ["January","February","March","April","May","June","July","A
 const DAY_NAMES = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 const RECURRENCE_LABELS = { "24hr":"Daily","48hr":"Every 2 days","7days":"Weekly","14days":"Fortnightly","30days":"Monthly" };
 
-function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, setSelectedDate, eventFilter = ["cwl","announcement"], setEventFilter }) {
+function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, selectedDate, setSelectedDate, eventFilter = ["cwl","announcement","sidewar"], setEventFilter }) {
   const { year, month } = calMonth;
   const firstDay = new Date(year, month, 1).getDay();
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -309,9 +309,16 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
     { id: `cwl-end-${year}-${month}`,    title: "CWL Season Ends",   send_at: new Date(Date.UTC(year, month, 10, 8, 0, 0)).toISOString(), type: "cwl", colour: "#34d399" },
   ];
 
-  // Merge CWL + scheduled announcements with type tags
+  // Merge CWL + scheduled announcements + side wars with type tags
   const announcementEvents = scheduled.map(s => ({ ...s, type: "announcement", colour: "#a78bfa" }));
-  const allEvents = [...cwlEvents, ...announcementEvents];
+  const sideWarEvents = sideWars.map(w => ({
+    id: `sidewar-${w.id}`,
+    title: `Side War · ${w.clan_name}`,
+    send_at: w.start_time,
+    type: "sidewar",
+    colour: "#f472b6",
+  }));
+  const allEvents = [...cwlEvents, ...announcementEvents, ...sideWarEvents];
 
   // Apply filter — show all types in the active filter array
   const filteredEvents = allEvents.filter(e => eventFilter.includes(e.type));
@@ -409,6 +416,14 @@ function ScheduledCalendar({ scheduled, calMonth, setCalMonth, selectedDate, set
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
           </svg>
           Posts
+        </button>
+        {/* Side Wars toggle */}
+        <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("sidewar") ? prev.filter(v=>v!=="sidewar") : [...prev,"sidewar"]); }}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("sidewar") ? "text-pink-400 border-pink-500/60 bg-pink-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+          </svg>
+          Side Wars
         </button>
       </div>
 
@@ -513,7 +528,7 @@ export default function AdminOverviewPage() {
   const [scheduled, setScheduled] = useState([]);
   const [calMonth, setCalMonth] = useState(() => { const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() }; });
   const [selectedDate, setSelectedDate] = useState(null);
-  const [eventFilter, setEventFilter] = useState(["cwl","announcement"]); // array of active types
+  const [eventFilter, setEventFilter] = useState(["cwl","announcement","sidewar"]);
   const [filterPool, setFilterPool] = useState("all"); // all | in | out
   const [filterDiscord, setFilterDiscord] = useState("all"); // all | yes | no
   const [filterToken, setFilterToken] = useState("all"); // all | yes | no
@@ -765,6 +780,7 @@ export default function AdminOverviewPage() {
           {/* Scheduled Events Calendar */}
           <ScheduledCalendar
             scheduled={scheduled}
+            sideWars={sideWars.filter(w => w.start_time)}
             calMonth={calMonth}
             setCalMonth={setCalMonth}
             selectedDate={selectedDate}
@@ -860,7 +876,155 @@ export default function AdminOverviewPage() {
           {/* ── SIDE WARS TAB ── */}
           {adminTab === "sidewars" && (<>
 
-          {/* Save a clan to the registry — no start time needed */}
+          {/* Saved clans — at top for quick access */}
+          {sideWars.length === 0 ? (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+              <p className="text-slate-600 text-xs">No clans saved yet — add one below</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sideWars.map(war => {
+                const pendingTime = swTimes[war.id] ?? "";
+                const showPicker = !war.start_time || swTimes[war.id] !== undefined;
+                return (
+                  <div key={war.id} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
+
+                    {/* Clan identity row */}
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{war.clan_name}</p>
+                          <p className="text-[10px] text-slate-500 font-mono">{war.clan_tag}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={() => swToggle(war)}
+                          className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition ${
+                            war.is_active
+                              ? "bg-pink-500/20 border-pink-500/60 text-pink-300"
+                              : war.start_time
+                                ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300"
+                                : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"
+                          }`}>
+                          {war.is_active ? "Live" : "Off"}
+                        </button>
+                        <button onClick={() => swDelete(war.id)}
+                          className="w-7 h-7 rounded-full flex items-center justify-center border border-white/10 text-slate-600 hover:border-red-500/40 hover:text-red-400 transition">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Schedule row */}
+                    <div className="border-t border-white/[0.06] pt-3">
+                      {war.start_time && !showPicker && (
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div>
+                            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
+                            <p className="text-[11px] text-slate-300">
+                              {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setSwTimes(p => ({...p, [war.id]: ""}))}
+                            className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Change
+                          </button>
+                        </div>
+                      )}
+                      {!war.start_time && (
+                        <p className="text-[10px] text-slate-600 mb-2">No start time — schedule before activating</p>
+                      )}
+                      {showPicker && (
+                        <div className="flex items-center gap-2">
+                          <input type="datetime-local"
+                            value={pendingTime}
+                            onChange={e => setSwTimes(p => ({...p, [war.id]: e.target.value}))}
+                            className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
+                          <button onClick={() => {
+                            if (!pendingTime) { setSwTimeErrors(p => ({...p, [war.id]: "Pick a date and time first"})); return; }
+                            setSwTimeErrors(p => ({...p, [war.id]: ""}));
+                            fetch("/api/admin/side-wars", {
+                              method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+                              body: JSON.stringify({ id: war.id, action: "set_time", start_time: pendingTime }),
+                            }).then(r => r.json()).then(data => {
+                              if (data.war) {
+                                setSideWars(prev => prev.map(w => w.id === war.id ? data.war : w));
+                                setSwTimes(p => { const n = {...p}; delete n[war.id]; return n; });
+                              }
+                            });
+                          }}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-2xl text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Set
+                          </button>
+                        </div>
+                      )}
+                      {swTimeErrors[war.id] && (
+                        <p className="text-[10px] text-red-400 mt-1">{swTimeErrors[war.id]}</p>
+                      )}
+                    </div>
+
+                    {/* Time format selector */}
+                    <div className="border-t border-white/[0.06] pt-3 mt-3">
+                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Time Display</p>
+                      <div className="flex gap-1.5">
+                        {[
+                          ["calendar", (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                          ), "Date"],
+                          ["countdown", (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                          ), "Countdown"],
+                          ["recurring", (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                          ), "Recurring"],
+                        ].map(([fmt, icon, label]) => (
+                          <button key={fmt} onClick={() => swSetFormat(war, fmt)}
+                            className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-2xl text-[9px] font-semibold border transition ${
+                              (war.time_format || "calendar") === fmt
+                                ? "bg-purple-500/20 border-purple-500/60 text-purple-300"
+                                : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
+                            }`}>
+                            {icon}{label}
+                          </button>
+                        ))}
+                      </div>
+                      {war.time_format === "recurring" && (
+                        <p className="text-[9px] text-slate-600 mt-1.5">Resets every 48h from start time</p>
+                      )}
+                    </div>
+
+                    {war.is_active && (
+                      <div className="mt-3 pt-3 border-t border-pink-500/10 flex items-center justify-between">
+                        <p className="text-[10px] text-pink-400">Visible on homepage</p>
+                        <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
+                          className="text-[10px] text-slate-500 hover:text-slate-300 transition underline">
+                          View clan link
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Save a clan to the registry — below the list */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <img src="/icons/branding/war-shield.png" alt="" className="w-6 h-6"/>
@@ -897,119 +1061,6 @@ export default function AdminOverviewPage() {
               </button>
             </div>
           </div>
-
-          {/* Saved clans — schedule + activate individually */}
-          {sideWars.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-              <p className="text-slate-600 text-xs">No clans saved yet — add one above</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {sideWars.map(war => (
-                <div key={war.id} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
-
-                  {/* Clan identity row */}
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{war.clan_name}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">{war.clan_tag}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Live/Off toggle */}
-                      <button onClick={() => swToggle(war)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition ${
-                          war.is_active
-                            ? "bg-pink-500/20 border-pink-500/60 text-pink-300"
-                            : war.start_time
-                              ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300"
-                              : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"
-                        }`}>
-                        {war.is_active ? "Live" : "Off"}
-                      </button>
-                      {/* Delete */}
-                      <button onClick={() => swDelete(war.id)}
-                        className="w-7 h-7 rounded-full flex items-center justify-center border border-white/10 text-slate-600 hover:border-red-500/40 hover:text-red-400 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Schedule row */}
-                  <div className="border-t border-white/[0.06] pt-3">
-                    {war.start_time ? (
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
-                          <p className="text-[11px] text-slate-300">
-                            {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setSwTimes(p => ({...p, [war.id]: p[war.id] === undefined ? "" : undefined}))}
-                          className="text-[10px] text-slate-600 hover:text-slate-400 transition underline">
-                          Change
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-slate-600 mb-2">No start time set — schedule before activating</p>
-                    )}
-
-                    {/* Time picker — always shown if no time set, or toggled via Change */}
-                    {(swTimes[war.id] !== undefined || !war.start_time) && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <input type="datetime-local"
-                          value={swTimes[war.id] || ""}
-                          onChange={e => setSwTimes(p => ({...p, [war.id]: e.target.value}))}
-                          className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
-                        <button onClick={() => swSetTime(war)}
-                          className="px-3 py-1.5 rounded-2xl text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
-                          Set
-                        </button>
-                      </div>
-                    )}
-                    {swTimeErrors[war.id] && (
-                      <p className="text-[10px] text-red-400 mt-1">{swTimeErrors[war.id]}</p>
-                    )}
-                  </div>
-
-                  {/* Time format selector */}
-                  <div className="border-t border-white/[0.06] pt-3 mt-3">
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Time Display</p>
-                    <div className="flex gap-1.5">
-                      {[["calendar","📅 Date"],["countdown","⏱ Countdown"],["recurring","🔁 Recurring"]].map(([fmt, label]) => (
-                        <button key={fmt} onClick={() => swSetFormat(war, fmt)}
-                          className={`flex-1 py-1.5 rounded-2xl text-[9px] font-semibold border transition ${
-                            (war.time_format || "calendar") === fmt
-                              ? "bg-purple-500/20 border-purple-500/60 text-purple-300"
-                              : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
-                          }`}>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    {(war.time_format === "recurring" || !war.time_format) && war.time_format === "recurring" && (
-                      <p className="text-[9px] text-slate-600 mt-1.5">Resets every 48h from start time</p>
-                    )}
-                  </div>
-
-                  {war.is_active && (
-                    <div className="mt-3 pt-3 border-t border-pink-500/10 flex items-center justify-between">
-                      <p className="text-[10px] text-pink-400">Visible on homepage</p>
-                      <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
-                        className="text-[10px] text-slate-500 hover:text-slate-300 transition underline">
-                        View clan link
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
 
           </>)} {/* end side wars tab */}
 
