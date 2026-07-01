@@ -1746,6 +1746,7 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sor
             </a>
           </div>
         </div>
+      )}
     </div>
   );
 }
