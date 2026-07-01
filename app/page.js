@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { getLeagueStyles } from "../lib/leagueColors";
@@ -434,7 +435,7 @@ function AvgThView({ players, clans, onBack }) {
 // ── Player Performance History Chart ─────────────────────────────────────────
 const PLAYER_COLORS = ["#a78bfa", "#34d399", "#fb923c"];
 const STAT_OPTIONS = [
-  { key: "overall",            label: "Overall Rating" },
+  { key: "overall",            label: "CGN Rating" },
   { key: "efficiency",         label: "Atk Efficiency" },
   { key: "stars_earned",       label: "Stars Earned" },
   { key: "destruction_pct",    label: "Destruction %" },
@@ -567,14 +568,21 @@ function PlayerPerformanceChart({ allData, seasons }) {
   const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
   const valRange = maxVal - minVal || 1;
 
+  // Stats where lower = better — invert Y axis so best sits at top
+  const INVERTED_STATS = new Set(["defence_efficiency", "stars_conceded", "defence_pct"]);
+  const isInvertedStat = INVERTED_STATS.has(selectedStat);
+
   function xPos(season) {
     const idx = validSeasons.indexOf(season);
     return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
   }
   function yPos(val) {
     if (isRankStat) {
-      // Rank: lower index = better, so invert Y so best (0) is at top
       return PAD_T + (val / (CWL_RANK_ORDER_HIST.length)) * plotH;
+    }
+    if (isInvertedStat) {
+      // Invert: lower value = higher on chart (lower is better)
+      return PAD_T + ((val - minVal) / valRange) * plotH;
     }
     return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
   }
@@ -628,7 +636,11 @@ function PlayerPerformanceChart({ allData, seasons }) {
       ) : validSeasons.length === 0 ? (
         <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected players</div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          {isInvertedStat && (
+            <p className="text-[9px] text-blue-400/60 uppercase tracking-widest mb-1 text-right">↓ lower is better · chart inverted</p>
+          )}
+          <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
             {[0, 0.25, 0.5, 0.75, 1].map(pct => {
               const y = PAD_T + pct * plotH;
@@ -636,6 +648,10 @@ function PlayerPerformanceChart({ allData, seasons }) {
               if (isRankStat) {
                 const idx = Math.round(pct * (CWL_RANK_ORDER_HIST.length - 1));
                 label = CWL_RANK_ORDER_HIST[idx]?.replace(" I","I").replace(" II","II").replace(" III","III") || "";
+              } else if (isInvertedStat) {
+                // Inverted: top of chart = minVal (best), bottom = maxVal (worst)
+                const val = minVal + pct * valRange;
+                label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
               } else {
                 const val = maxVal - pct * valRange;
                 label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
@@ -672,16 +688,15 @@ function PlayerPerformanceChart({ allData, seasons }) {
               );
             })}
           </svg>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
 }
-
-// ── Clan Performance History Chart ────────────────────────────────────────────
 const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
 const CLAN_STAT_OPTIONS = [
-  { group: "Overall", key: "overall",                label: "Overall Rating" },
+  { group: "CGN Rating", key: "overall",                label: "CGN Rating" },
   { group: "Rank",    key: "cwl_rank",               label: "CWL Rank" },
   { group: "Attack",  key: "total_stars",             label: "Total Stars" },
   { group: "Attack",  key: "attack_efficiency",       label: "Attack Efficiency" },
@@ -713,35 +728,41 @@ function ClanPerformanceChart({ history }) {
   const [selectedStat, setSelectedStat] = useState("overall");
   const isRankStat = selectedStat === "cwl_rank";
 
-  // All unique clan names from history
-  const allClans = history ? [...new Set(history.map(r => r.clan_name))].sort() : [];
+  // All unique clans from history — keyed by clan_tag to avoid bundling
+  // clans that share a display name (e.g. old vs current Cognitive).
+  const allClanTags = history ? [...new Set(history.map(r => r.clan_tag || r.clan_name))] : [];
+  const clanNameByTag = {};
+  if (history) for (const r of history) {
+    const key = r.clan_tag || r.clan_name;
+    if (!clanNameByTag[key]) clanNameByTag[key] = r.clan_name;
+  }
+  const allClans = allClanTags.map(tag => clanNameByTag[tag]).sort();
 
-  // All seasons sorted chronologically
-  const allSeasons = history ? [...new Set(history.map(r => r.season))].sort((a, b) => {
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const [am, ay] = a.split(" "); const [bm, by] = b.split(" ");
-    return parseInt(ay) - parseInt(by) || months.indexOf(am) - months.indexOf(bm);
-  }) : [];
+  // All seasons — API returns oldest-first (ASC from season_registry join)
+  const allSeasons = history ? [...new Set(history.map(r => r.season))] : [];
 
   // Search
   useEffect(() => {
     if (!clanSearch.trim()) { setSearchResults([]); return; }
     const q = clanSearch.toLowerCase();
-    setSearchResults(allClans.filter(c =>
-      c.toLowerCase().includes(q) && !trackedClans.find(t => t.name === c)
+    setSearchResults(allClanTags.filter(tag =>
+      clanNameByTag[tag].toLowerCase().includes(q) && !trackedClans.find(t => t.tag === tag)
     ).slice(0, 6));
-  }, [clanSearch, allClans, trackedClans]);
+  }, [clanSearch, allClanTags, trackedClans]);
 
-  function buildClanData(clanName) {
+  function buildClanData(clanTag, stat) {
+    const statKey = stat || selectedStat;
+    const isRank = statKey === "cwl_rank";
     return allSeasons.map(season => {
-      const row = history?.find(r => r.clan_name === clanName && r.season === season);
+      const row = history?.find(r => (r.clan_tag || r.clan_name) === clanTag && r.season === season);
       if (!row) return { season, value: null, displayValue: null };
-      if (isRankStat || selectedStat === "cwl_rank") {
+      if (isRank) {
         const rank = row.cwl_rank;
+        if (!rank || rank === "Unknown") return { season, value: null, displayValue: null };
         const idx = CWL_RANK_LIST.indexOf(rank);
         return { season, value: idx === -1 ? null : idx, displayValue: rank || null };
       }
-      if (selectedStat === "overall") {
+      if (statKey === "overall") {
         const atk = parseFloat(row.attack_efficiency||0);
         const def = parseFloat(row.defence_efficiency||0);
         const wins = row.wars_won||0;
@@ -750,28 +771,31 @@ function ClanPerformanceChart({ history }) {
           : null;
         return { season, value: v, displayValue: v };
       }
-      const v = parseFloat(row[selectedStat]);
+      const v = parseFloat(row[statKey]);
       return { season, value: isNaN(v) ? null : v, displayValue: isNaN(v) ? null : v };
     });
   }
 
-  function addClan(clanName) {
+  function addClan(clanTag) {
     if (trackedClans.length >= 3) return;
-    if (trackedClans.find(c => c.name === clanName)) return;
-    setTrackedClans(prev => [...prev, { name: clanName, data: buildClanData(clanName) }]);
+    if (trackedClans.find(c => c.tag === clanTag)) return;
+    setTrackedClans(prev => [...prev, { tag: clanTag, name: clanNameByTag[clanTag], data: buildClanData(clanTag, selectedStat) }]);
     setClanSearch(""); setSearchResults([]);
   }
 
-  function removeClan(name) {
-    setTrackedClans(prev => prev.filter(c => c.name !== name));
+  function removeClan(tag) {
+    setTrackedClans(prev => prev.filter(c => c.tag !== tag));
   }
+
+  // Recompute clan data inline on every render — avoids stale closure crash on stat change
+  const trackedClansData = trackedClans.map(c => ({
+    ...c,
+    data: buildClanData(c.tag, selectedStat),
+  }));
 
   useEffect(() => {
     if (!history || trackedClans.length === 0) return;
-    setTrackedClans(prev => prev.map(c => ({
-      ...c,
-      data: buildClanData(c.name),
-    })));
+    setTrackedClans(prev => prev.map(c => ({ ...c })));
   }, [selectedStat, history]);
 
   // Auto-populate top 3 clans by attack_efficiency on first data load
@@ -785,12 +809,13 @@ function ClanPerformanceChart({ history }) {
       return ob - oa;
     });
     for (const r of sorted) {
-      if (seen.has(r.clan_name)) continue;
-      seen.add(r.clan_name);
-      top3.push(r.clan_name);
+      const tag = r.clan_tag || r.clan_name;
+      if (seen.has(tag)) continue;
+      seen.add(tag);
+      top3.push({ tag, name: r.clan_name });
       if (top3.length >= 3) break;
     }
-    setTrackedClans(top3.map(name => ({ name, data: buildClanData(name) })));
+    setTrackedClans(top3.map(({tag, name}) => ({ tag, name, data: buildClanData(tag, selectedStat) })));
   }, [history]);
 
   // Chart
@@ -800,29 +825,39 @@ function ClanPerformanceChart({ history }) {
   const plotH = CHART_H - PAD_T - PAD_B;
 
   const validSeasons = allSeasons.filter(s =>
-    trackedClans.some(c => c.data.find(d => d.season === s && d.value !== null))
+    trackedClansData.some(c => c.data.find(d => d.season === s && d.value !== null))
   );
   const xStep = validSeasons.length > 1 ? plotW / (validSeasons.length - 1) : plotW / 2;
 
-  const allVals = trackedClans.flatMap(c => c.data.map(d => d.value)).filter(v => v !== null);
+  const allVals = trackedClansData.flatMap(c => c.data.map(d => d.value)).filter(v => v !== null);
   const isOverallStat = selectedStat === "overall";
   const minVal = isOverallStat ? 0 : (allVals.length ? Math.min(...allVals) : 0);
   const maxVal = isOverallStat ? 3 : (allVals.length ? Math.max(...allVals) : 1);
   const valRange = maxVal - minVal || 1;
+
+  // Stats where lower = better — invert Y axis
+  const CLAN_INVERTED_STATS = new Set(["defence_efficiency", "total_stars_conceded", "avg_defence_pct"]);
+  const isInvertedStat = CLAN_INVERTED_STATS.has(selectedStat);
 
   function xPos(season) {
     const idx = validSeasons.indexOf(season);
     return PAD_L + (validSeasons.length > 1 ? idx * xStep : plotW / 2);
   }
   function yPos(val) {
+    if (val === null || val === undefined) return PAD_T + plotH / 2;
     if (selectedStat === "cwl_rank") {
-      return PAD_T + (val / (CWL_RANK_LIST.length - 1)) * plotH;
+      const listLen = CWL_RANK_LIST.length - 1;
+      return PAD_T + (val / (listLen || 1)) * plotH;
+    }
+    if (isInvertedStat) {
+      // Invert: lower value = higher on chart (lower is better)
+      return PAD_T + ((val - minVal) / valRange) * plotH;
     }
     return PAD_T + plotH - ((val - minVal) / valRange) * plotH;
   }
 
   // Group stat options for select
-  const groups = ["Overall", ...new Set(CLAN_STAT_OPTIONS.filter(o=>o.group!=="Overall").map(o => o.group))];
+  const groups = ["CGN Rating", ...new Set(CLAN_STAT_OPTIONS.filter(o=>o.group!=="CGN Rating").map(o => o.group))];
 
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
@@ -848,10 +883,10 @@ function ClanPerformanceChart({ history }) {
               className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {searchResults.length > 0 && (
               <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
-                {searchResults.map(c => (
-                  <button key={c} type="button" onClick={() => addClan(c)}
+                {searchResults.map(tag => (
+                  <button key={tag} type="button" onClick={() => addClan(tag)}
                     className="w-full px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
-                    {c}
+                    {clanNameByTag[tag]}
                   </button>
                 ))}
               </div>
@@ -863,10 +898,10 @@ function ClanPerformanceChart({ history }) {
       {trackedClans.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {trackedClans.map((c, i) => (
-            <div key={c.name} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+            <div key={c.tag} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CLAN_COLORS_CHART[i] }}/>
               <span className="text-xs text-slate-300 max-w-[100px] truncate">{c.name.split(" ")[0]}</span>
-              <button onClick={() => removeClan(c.name)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
+              <button onClick={() => removeClan(c.tag)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
             </div>
           ))}
         </div>
@@ -877,9 +912,13 @@ function ClanPerformanceChart({ history }) {
           Search for a clan above to begin tracking
         </div>
       ) : validSeasons.length === 0 ? (
-        <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected clans</div>
+        <div className="flex items-center justify-center h-32 text-slate-700 text-xs">No data for selected metric</div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          {isInvertedStat && (
+            <p className="text-[9px] text-blue-400/60 uppercase tracking-widest mb-1 text-right">↓ lower is better · chart inverted</p>
+          )}
+          <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full min-w-[280px]">
             {[0, 0.25, 0.5, 0.75, 1].map(pct => {
               const y = PAD_T + pct * plotH;
@@ -887,8 +926,10 @@ function ClanPerformanceChart({ history }) {
               if (selectedStat === "cwl_rank") {
                 const idx = Math.round(pct * (CWL_RANK_LIST.length - 1));
                 label = CWL_RANK_LIST[idx]?.replace(" I"," I").replace(" II"," II").replace(" III"," III") || "";
-                // Shorten
                 label = label.replace("Champion","Champ").replace("Crystal","Cryst").replace("Silver","Silv").replace("Bronze","Brnz").replace("Master","Mastr");
+              } else if (isInvertedStat) {
+                const val = minVal + pct * valRange;
+                label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
               } else {
                 const val = maxVal - pct * valRange;
                 label = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
@@ -905,14 +946,14 @@ function ClanPerformanceChart({ history }) {
                 {s.split(" ")[0].slice(0, 3)}
               </text>
             ))}
-            {trackedClans.map((c, ci) => {
+            {trackedClansData.map((c, ci) => {
               const color = CLAN_COLORS_CHART[ci];
               const pts = c.data.filter(d => d.value !== null && validSeasons.includes(d.season));
               if (!pts.length) return null;
-              const d = pts.map((pt, j) => `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`).join(" ");
+              const pathD = pts.map((pt, j) => `${j === 0 ? "M" : "L"} ${xPos(pt.season)} ${yPos(pt.value)}`).join(" ");
               return (
-                <g key={c.name}>
-                  <path d={d} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                <g key={c.tag}>
+                  <path d={pathD} fill="none" stroke={color} strokeWidth="2" opacity="0.9" strokeLinecap="round" strokeLinejoin="round"/>
                   {pts.map(pt => (
                     <g key={pt.season}>
                       <circle cx={xPos(pt.season)} cy={yPos(pt.value)} r="3.5" fill={color} opacity="0.9"/>
@@ -925,9 +966,333 @@ function ClanPerformanceChart({ history }) {
               );
             })}
           </svg>
-        </div>
+          </div>
+        </>
       )}
     </div>
+  );
+}
+
+function MatchupsPanel({ matchupData }) {
+  const sorted = [...(matchupData||[])].sort((a, b) => parseFloat(b.three_star_rate) - parseFloat(a.three_star_rate));
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">3★ Rate by TH Matchup</p>
+      <p className="text-[9px] text-slate-700 mb-4">Attacker TH → Defender TH · min 3 attacks</p>
+      {!matchupData?.length ? (
+        <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+      ) : (
+        <>
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1 rounded-2xl border border-green-500/20 bg-green-500/[0.06] px-3 py-2">
+              <p className="text-[9px] text-green-500/70 uppercase tracking-widest mb-1">Strength</p>
+              <p className="text-xs text-green-300 font-semibold">TH{best?.attacker_th} → TH{best?.defender_th}</p>
+              <p className="text-[10px] text-green-400">{parseFloat(best?.three_star_rate||0).toFixed(0)}% 3★ rate</p>
+            </div>
+            <div className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-3 py-2">
+              <p className="text-[9px] text-red-500/70 uppercase tracking-widest mb-1">Weakness</p>
+              <p className="text-xs text-red-300 font-semibold">TH{worst?.attacker_th} → TH{worst?.defender_th}</p>
+              <p className="text-[10px] text-red-400">{parseFloat(worst?.three_star_rate||0).toFixed(0)}% 3★ rate</p>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {matchupData.map((m, i) => {
+              const rate = parseFloat(m.three_star_rate || 0);
+              const colour = rate >= 80 ? "text-green-400" : rate >= 50 ? "text-amber-400" : "text-red-400";
+              const barColour = rate >= 80 ? "bg-green-500/60" : rate >= 50 ? "bg-amber-500/60" : "bg-red-500/60";
+              return (
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                  <span className="text-[10px] text-slate-400 w-20 shrink-0">TH{m.attacker_th} → TH{m.defender_th}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className={`h-full rounded-full ${barColour}`} style={{width:`${rate}%`}}/>
+                  </div>
+                  <span className={`text-[10px] font-semibold w-10 text-right shrink-0 ${colour}`}>{rate.toFixed(0)}%</span>
+                  <span className="text-[9px] text-slate-700 w-10 shrink-0">{m.total} atks</span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function WarMomentumChart({ dayAggregates }) {
+  let cumulative = 0;
+  const cumulativeData = dayAggregates.map(d => {
+    cumulative += parseFloat(d.avg_stars || 0);
+    return { day: d.war_day, value: parseFloat(cumulative.toFixed(2)) };
+  });
+  const maxCumulative = cumulativeData[cumulativeData.length - 1]?.value || 1;
+  const W = 280, H = 90, PAD_L = 28, PAD_R = 20, PAD_T = 16, PAD_B = 20;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+  const xStep = cumulativeData.length > 1 ? plotW / (cumulativeData.length - 1) : plotW;
+  const xPos = i => PAD_L + i * xStep;
+  const yPos = v => PAD_T + plotH - (v / maxCumulative) * plotH;
+  const path = cumulativeData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos(d.value)}`).join(" ");
+  const perfectLine = cumulativeData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos((i + 1) * (maxCumulative / cumulativeData.length))}`).join(" ");
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest">War Momentum</p>
+        <p className="text-[9px] text-slate-700">Cumulative avg ★ across days</p>
+      </div>
+      <div className="overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[220px]">
+          {[0, 0.5, 1].map(pct => (
+            <line key={pct} x1={PAD_L} y1={PAD_T + pct * plotH} x2={W - PAD_R} y2={PAD_T + pct * plotH} stroke="#1e293b" strokeWidth="1"/>
+          ))}
+          <path d={perfectLine} fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="3,3"/>
+          <path d={path} fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          {cumulativeData.map((d, i) => (
+            <g key={i}>
+              <circle cx={xPos(i)} cy={yPos(d.value)} r="3" fill="#a78bfa"/>
+              <text x={xPos(i)} y={H - 4} textAnchor="middle" fontSize="7" fill="#475569">D{d.day}</text>
+              <text x={xPos(i)} y={yPos(d.value) - 5} textAnchor="middle" fontSize="6.5" fill="#a78bfa">{d.value.toFixed(1)}</text>
+            </g>
+          ))}
+          <text x={PAD_L - 3} y={PAD_T + 3} textAnchor="end" fontSize="6" fill="#475569">{maxCumulative.toFixed(0)}</text>
+          <text x={PAD_L - 3} y={PAD_T + plotH / 2 + 3} textAnchor="end" fontSize="6" fill="#475569">{(maxCumulative / 2).toFixed(0)}</text>
+          <text x={PAD_L - 3} y={PAD_T + plotH + 3} textAnchor="end" fontSize="6" fill="#475569">0</text>
+        </svg>
+      </div>
+      <p className="text-[8px] text-slate-700 mt-1">Dashed line = even pace reference</p>
+    </div>
+  );
+}
+
+// ── War Intelligence View ────────────────────────────────────────────────────
+function WarIntelView({ onBack }) {
+  const [tab, setTab] = useState("days");
+  const [loading, setLoading] = useState(true);
+  const [dayData, setDayData] = useState(null);
+  const [matchupData, setMatchupData] = useState(null);
+  const [attendanceData, setAttendanceData] = useState(null);
+  const [clanData, setClanData] = useState(null);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState("all");
+  const [registeredClanTags, setRegisteredClanTags] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/war-intel/days").then(r => r.json()).catch(() => ({})).then(d => {
+      setDayData(d.days || []);
+      setSeasons(d.seasons || []);
+    });
+    // Registered clan tags — used to scope the "All Seasons" aggregate view
+    // of Days to currently-registered clans, matching the same rule applied
+    // to Clans/Matchups/Attendance when no specific season is selected.
+    fetch("/api/war-intel/clans").then(r => r.json()).catch(() => ({})).then(c => {
+      setRegisteredClanTags(new Set((c.clans || []).map(cl => cl.clan_tag)));
+    });
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const seasonParam = selectedSeason === "all" ? "" : `?season=${encodeURIComponent(selectedSeason)}`;
+    Promise.all([
+      fetch(`/api/war-intel/matchups${seasonParam}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/war-intel/attendance${seasonParam}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/war-intel/clans${seasonParam}`).then(r => r.json()).catch(() => ({})),
+    ]).then(([m, a, c]) => {
+      setMatchupData(m.matchups || []);
+      setAttendanceData(a.attendance || []);
+      setClanData(c.clans || []);
+      setLoading(false);
+    });
+  }, [selectedSeason]);
+
+  const TABS = [["days","Days"],["matchups","Matchups"],["attendance","Attendance"],["clans","Clans"]];
+
+  // Filter day data by season. "All Seasons" is an aggregate view, so it's
+  // scoped to currently-registered clans; a specific season is a snapshot
+  // and shows every clan that played that season, registered or not.
+  const filteredDays = selectedSeason === "all"
+    ? dayData?.filter(d => !registeredClanTags || registeredClanTags.has(d.clan_tag))
+    : dayData?.filter(d => d.season === selectedSeason);
+
+  // Aggregate days across seasons
+  const dayAggregates = (() => {
+    if (!filteredDays?.length) return [];
+    const map = {};
+    for (const d of filteredDays) {
+      if (!map[d.war_day]) map[d.war_day] = { war_day: d.war_day, _starSum: 0, _count: 0, wins: 0, losses: 0, draws: 0 };
+      const m = map[d.war_day];
+      m._starSum += parseFloat(d.avg_stars || 0);
+      m._count++;
+      if (d.war_result === "win") m.wins++;
+      else if (d.war_result === "loss") m.losses++;
+      else m.draws++;
+    }
+    return Object.values(map).sort((a, b) => a.war_day - b.war_day).map(m => ({
+      ...m,
+      avg_stars: m._count > 0 ? (m._starSum / m._count).toFixed(2) : null,
+    }));
+  })();
+
+  const maxStars = Math.max(...dayAggregates.map(d => parseFloat(d.avg_stars || 0)), 1);
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+
+      <AppHeader variant="bar"/>
+
+      {/* Hero card */}
+      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+        <h1 className="text-2xl font-thin tracking-widest mb-1">War Intel</h1>
+        <p className="text-slate-500 text-xs mb-4">Alliance war performance analytics</p>
+        <div className="flex items-center justify-center gap-4 mb-3">
+          <button onClick={onBack} className="text-slate-500 hover:text-slate-300 transition p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[80px] text-center">War Intel</span>
+          <span className="w-6 h-6"/>
+        </div>
+        <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
+          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          <option value="all">All Seasons</option>
+          {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
+      {/* Tab nav */}
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
+        {TABS.map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
+              tab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>{label}</button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3].map(i => <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] h-24 animate-pulse"/>)}
+        </div>
+      ) : (
+        <div className="relative z-10 space-y-4">
+
+          {/* ── DAYS TAB ── */}
+          {tab === "days" && (
+            <>
+              {/* War momentum cumulative chart — above bar chart */}
+              {dayAggregates.length >= 2 && <WarMomentumChart dayAggregates={dayAggregates} />}
+
+              {/* Avg stars bar chart */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Avg Stars Per War Day</p>
+                {dayAggregates.length === 0 ? (
+                  <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+                ) : (
+                  <div className="space-y-2">
+                    {dayAggregates.map(d => {
+                      const pct = maxStars > 0 ? (parseFloat(d.avg_stars) / maxStars) * 100 : 0;
+                      const stars = parseFloat(d.avg_stars || 0);
+                      const colour = stars >= 2.8 ? "bg-green-500/60" : stars >= 2.4 ? "bg-amber-500/60" : "bg-red-500/60";
+                      return (
+                        <div key={d.war_day} className="flex items-center gap-3">
+                          <span className="text-[10px] text-slate-500 w-10 shrink-0">Day {d.war_day}</span>
+                          <div className="flex-1 h-5 rounded-full bg-white/[0.04] overflow-hidden">
+                            <div className={`h-full rounded-full ${colour} transition-all`} style={{width:`${pct}%`}}/>
+                          </div>
+                          <span className="text-[10px] text-slate-300 w-8 text-right shrink-0">{d.avg_stars}★</span>
+                          <span className="text-[9px] text-slate-600 w-12 shrink-0">{d.wins}W-{d.losses}L{d.draws > 0 ? `-${d.draws}D` : ""}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* War momentum cumulative chart — moved above */}
+            </>
+          )}
+
+          {/* ── MATCHUPS TAB ── */}
+          {tab === "matchups" && (
+            <MatchupsPanel matchupData={matchupData} />
+          )}
+
+          {/* ── ATTENDANCE TAB ── */}
+          {tab === "attendance" && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Missed Attacks by Player</p>
+              {attendanceData.length === 0 ? (
+                <p className="text-slate-700 text-xs text-center py-6">No missed attacks on record</p>
+              ) : (
+                <div className="space-y-2">
+                  {attendanceData.map((a, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                      <span className="flex-1 text-xs text-slate-300 truncate">{a.player_name}</span>
+                      <span className="text-[9px] text-slate-500 shrink-0">{a.seasons_played} season{a.seasons_played !== 1 ? "s" : ""}</span>
+                      <span className={`text-sm font-semibold shrink-0 w-6 text-right ${a.missed > 2 ? "text-red-400" : a.missed > 0 ? "text-amber-400" : "text-slate-600"}`}>{a.missed}</span>
+                      <span className="text-[9px] text-slate-600 shrink-0">missed</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── CLANS TAB ── */}
+          {tab === "clans" && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Clan Comparison</p>
+              {clanData.length === 0 ? (
+                <p className="text-slate-700 text-xs text-center py-6">No data available</p>
+              ) : (
+                <div className="overflow-x-auto -mx-1">
+                  <table className="w-full text-xs min-w-[300px]">
+                    <thead>
+                      <tr>
+                        <th className="text-[9px] text-slate-600 uppercase tracking-widest font-normal pb-3 text-left px-1 w-24">Metric</th>
+                        {clanData.map((c, i) => (
+                          <th key={i} className="text-[9px] text-slate-400 font-semibold pb-3 text-center px-1 whitespace-nowrap">
+                            {c.clan_name?.split(" ")[0]}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.04]">
+                      {[
+                        { label: "Avg ★/Day",   key: "avg_stars",              fmt: v => parseFloat(v).toFixed(2) + "★", colour: "text-amber-300" },
+                        { label: "3★ Rate",      key: "three_star_rate",         fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-green-300" },
+                        { label: "Punch-Up",     key: "punch_up_rate",           fmt: v => parseFloat(v).toFixed(0) + "%",  colour: "text-blue-300" },
+                        { label: "Atk Eff",      key: "avg_attack_efficiency",   fmt: v => parseFloat(v).toFixed(2),        colour: "text-purple-300" },
+                        { label: "Def Eff",      key: "avg_defence_efficiency",  fmt: v => parseFloat(v).toFixed(2),        colour: "text-red-400" },
+                        { label: "★ Conceded",   key: "avg_stars_conceded",      fmt: v => parseFloat(v).toFixed(2),        colour: "text-red-300" },
+                        { label: "Wars Won",     key: "wins",                    fmt: v => v,                               colour: "text-purple-300" },
+                        { label: "Wars Lost",    key: "losses",                  fmt: v => v,                               colour: "text-red-400" },
+                        { label: "Total Wars",   key: "total_wars",              fmt: v => v,                               colour: "text-slate-400" },
+                      ].map(metric => (
+                        <tr key={metric.key}>
+                          <td className="py-2.5 px-1 text-[9px] text-slate-600 uppercase tracking-widest whitespace-nowrap">{metric.label}</td>
+                          {clanData.map((c, i) => (
+                            <td key={i} className={`py-2.5 px-1 text-center font-semibold text-sm ${metric.colour}`}>
+                              {c[metric.key] != null ? metric.fmt(c[metric.key]) : "—"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      )}
+      <AppFooter/>
+    </main>
   );
 }
 
@@ -950,24 +1315,30 @@ function HistoryView({ onBack }) {
     fetch("/api/leaderboard")
       .then(r => r.json())
       .then(async d => {
-        const allSeasons = (d.seasons || []).sort((a, b) => {
-          const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-          const [am, ay] = a.split(" "); const [bm, by] = b.split(" ");
-          return parseInt(ay) - parseInt(by) || months.indexOf(am) - months.indexOf(bm);
-        });
+        // Use API order reversed — API returns newest first, chart needs oldest first
+        const allSeasons = (d.seasons || []).slice().reverse();
         setSeasons(allSeasons);
+        // Linked accounts set — per-season fetches below now correctly
+        // include unlinked players (season-snapshot rule), so this
+        // cross-season player tracking chart must filter back down to
+        // linked accounts only.
+        const linkedRes = await fetch("/api/linked-accounts").then(r => r.json()).catch(() => ({ tags: [] }));
+        const linkedTags = new Set(linkedRes.tags || []);
         const rows = [];
         for (const s of allSeasons) {
           try {
             const r = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
             const sd = await r.json();
-            (sd.stats || []).forEach(p => rows.push({
-              ...p,
-              season: s,
-              overall: (p.attacks_used > 0 && p.attacks_available > 0)
-                ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
-                : null,
-            }));
+            (sd.stats || []).forEach(p => {
+              if (!linkedTags.has(p.player_tag)) return;
+              rows.push({
+                ...p,
+                season: s,
+                overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                  ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
+                  : null,
+              });
+            });
           } catch {}
         }
         setAllData(rows);
@@ -983,7 +1354,9 @@ function HistoryView({ onBack }) {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
 
-      {/* Hero card — flush to top, no back button */}
+      <AppHeader variant="bar"/>
+
+      {/* Hero card */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">History</h1>
         <p className="text-slate-500 text-xs mb-4">CWL performance records by season</p>
@@ -1031,6 +1404,7 @@ function HistoryView({ onBack }) {
           <PlayerPerformanceChart allData={allData} seasons={seasons}/>
         </div>
       )}
+      <AppFooter/>
     </main>
   );
 }
@@ -1041,13 +1415,163 @@ function HistoryView({ onBack }) {
 
 
 
-function PlayerCard({ p, rank, isExpanded, onToggle }) {
+function PlayerSparkline({ sparkData }) {
+  const minV = Math.min(...sparkData.map(d => d.value));
+  const maxV = Math.max(...sparkData.map(d => d.value));
+  const range = maxV - minV || 0.1;
+  const W = 200, H = 32, PAD = 4;
+  const xStep = (W - PAD * 2) / (sparkData.length - 1);
+  const xPos = i => PAD + i * xStep;
+  const yPos = v => H - PAD - ((v - minV) / range) * (H - PAD * 2);
+  const path = sparkData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos(d.value)}`).join(" ");
+  const trend = sparkData[sparkData.length - 1].value - sparkData[0].value;
+  const trendColour = trend > 0.05 ? "text-green-400" : trend < -0.05 ? "text-red-400" : "text-slate-500";
+  const trendLabel = trend > 0.05 ? "↑ Improving" : trend < -0.05 ? "↓ Declining" : "→ Stable";
+  return (
+    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest">Rating Trend</p>
+        <span className={`text-[9px] font-semibold ${trendColour}`}>{trendLabel}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <svg viewBox={`0 0 ${W} ${H}`} className="flex-1 h-8">
+          <path d={path} fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          {sparkData.map((d, i) => (
+            <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r="2" fill="#a78bfa"/>
+          ))}
+        </svg>
+        <div className="shrink-0 text-right">
+          <p className="text-xs font-bold text-purple-300">{sparkData[sparkData.length-1].value.toFixed(2)}</p>
+          <p className="text-[9px] text-slate-600">latest</p>
+        </div>
+      </div>
+      <div className="flex justify-between mt-0.5">
+        <span className="text-[8px] text-slate-700">{sparkData[0].season.split(" ")[0]}</span>
+        <span className="text-[8px] text-slate-700">{sparkData[sparkData.length-1].season.split(" ").slice(0,2).join(" ")}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tile definitions for dynamic leaderboard row stats ─────────────────────
+// Each tile knows how to render itself from a player row `p`.
+const TILE_DEFS = {
+  overall: {
+    key: "overall", label: "CGN Rating", colour: "text-purple-300", bg: "bg-purple-500/[0.08]", border: "border-purple-500/20", stroke: "#a78bfa",
+    icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
+    value: p => p.overall != null ? parseFloat(p.overall).toFixed(2) : (p.attacks_used > 0 && p.attacks_available > 0 ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2) : "—"),
+  },
+  efficiency: {
+    key: "efficiency", label: "Atk EFF", colour: "text-purple-300", bg: "bg-purple-500/[0.08]", border: "border-purple-500/20", stroke: "#a78bfa",
+    icon: "M13 10V3L4 14h7v7l9-11h-7z",
+    value: p => p.efficiency != null ? parseFloat(p.efficiency).toFixed(2) : "—",
+  },
+  stars_earned: {
+    key: "stars_earned", label: "Stars", colour: "text-green-300", bg: "bg-green-500/[0.08]", border: "border-green-500/20", stroke: "#86efac",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    value: p => p.stars_earned ?? "—",
+  },
+  destruction_pct: {
+    key: "destruction_pct", label: "Dest %", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    value: p => p.destruction_pct != null ? parseFloat(p.destruction_pct).toFixed(1)+"%" : "—",
+  },
+  attacks_used: {
+    key: "attacks_used", label: "Attacks", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+    value: p => `${p.attacks_used ?? "—"}/${p.attacks_available ?? "—"}`,
+  },
+  missed_attacks: {
+    key: "missed_attacks", label: "Missed", colour: p => p.missed_attacks > 0 ? "text-red-400" : "text-slate-500", bg: p => p.missed_attacks > 0 ? "bg-red-500/[0.08]" : "bg-white/[0.04]", border: p => p.missed_attacks > 0 ? "border-red-500/20" : "border-white/10", stroke: p => p.missed_attacks > 0 ? "#f87171" : "#94a3b8",
+    icon: "M6 18L18 6M6 6l12 12",
+    value: p => p.missed_attacks ?? "—",
+  },
+  defence_efficiency: {
+    key: "defence_efficiency", label: "Def EFF", colour: "text-blue-300", bg: "bg-blue-500/[0.08]", border: "border-blue-500/20", stroke: "#60a5fa",
+    icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+    value: p => p.defence_efficiency != null ? parseFloat(p.defence_efficiency).toFixed(2) : "—",
+  },
+  stars_conceded: {
+    key: "stars_conceded", label: "Stars Given", colour: "text-slate-400", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    value: p => p.stars_conceded ?? "—",
+  },
+  defence_pct: {
+    key: "defence_pct", label: "Def %", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    value: p => p.defence_pct != null ? parseFloat(p.defence_pct).toFixed(1)+"%" : "—",
+  },
+  attacks_available: {
+    key: "attacks_available", label: "Available", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+    value: p => p.attacks_available ?? "—",
+  },
+  avg_stars_per_attack: {
+    key: "avg_stars_per_attack", label: "Avg ★/Atk", colour: "text-amber-300", bg: "bg-amber-500/[0.08]", border: "border-amber-500/20", stroke: "#fbbf24",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    value: p => p.avg_stars_per_attack != null ? parseFloat(p.avg_stars_per_attack).toFixed(2) : "—",
+  },
+  three_star_rate: {
+    key: "three_star_rate", label: "3★ Rate", colour: "text-green-300", bg: "bg-green-500/[0.08]", border: "border-green-500/20", stroke: "#86efac",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    value: p => p.three_star_rate != null ? parseFloat(p.three_star_rate).toFixed(0)+"%" : "—",
+  },
+  punch_up_rate: {
+    key: "punch_up_rate", label: "Punch-Up", colour: "text-blue-300", bg: "bg-blue-500/[0.08]", border: "border-blue-500/20", stroke: "#60a5fa",
+    icon: "M5 10l7-7m0 0l7 7m-7-7v18",
+    value: p => p.punch_up_rate != null ? parseFloat(p.punch_up_rate).toFixed(0)+"%" : "—",
+  },
+  clutch_rate: {
+    key: "clutch_rate", label: "Clutch", colour: "text-purple-300", bg: "bg-purple-500/[0.08]", border: "border-purple-500/20", stroke: "#a78bfa",
+    icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",
+    value: p => p.clutch_rate != null ? parseFloat(p.clutch_rate).toFixed(2) : "—",
+  },
+  consistency_score: {
+    key: "consistency_score", label: "Consistency", colour: "text-slate-300", bg: "bg-white/[0.04]", border: "border-white/10", stroke: "#94a3b8",
+    icon: "M4 6h16M4 10h16M4 14h16M4 18h16",
+    value: p => p.consistency_score != null ? parseFloat(p.consistency_score).toFixed(2) : "—",
+  },
+};
+
+// Maps each sort option to the 4 tile keys shown on the leaderboard row.
+// Tile 1 is always the sorted stat; tiles 2-4 provide explanatory context.
+const SORT_TILE_MAP = {
+  overall:               ["overall", "efficiency", "defence_efficiency", "stars_earned"],
+  efficiency:            ["efficiency", "stars_earned", "three_star_rate", "attacks_used"],
+  stars_earned:          ["stars_earned", "efficiency", "defence_efficiency", "stars_conceded"],
+  destruction_pct:       ["destruction_pct", "efficiency", "three_star_rate", "stars_earned"],
+  attacks_used:          ["attacks_used", "missed_attacks", "efficiency", "stars_earned"],
+  missed_attacks:        ["missed_attacks", "attacks_used", "efficiency", "stars_earned"],
+  defence_efficiency:    ["defence_efficiency", "stars_conceded", "defence_pct", "efficiency"],
+  stars_conceded:        ["stars_conceded", "defence_efficiency", "attacks_available", "efficiency"],
+  defence_pct:           ["defence_pct", "defence_efficiency", "stars_conceded", "efficiency"],
+  avg_stars_per_attack:  ["avg_stars_per_attack", "three_star_rate", "punch_up_rate", "efficiency"],
+  three_star_rate:       ["three_star_rate", "avg_stars_per_attack", "stars_earned", "efficiency"],
+  punch_up_rate:         ["punch_up_rate", "three_star_rate", "avg_stars_per_attack", "efficiency"],
+  clutch_rate:           ["clutch_rate", "avg_stars_per_attack", "three_star_rate", "stars_earned"],
+  consistency_score:     ["consistency_score", "avg_stars_per_attack", "efficiency", "three_star_rate"],
+};
+
+function getRowTiles(sortBy) {
+  const keys = SORT_TILE_MAP[sortBy] || SORT_TILE_MAP.stars_earned;
+  return keys.map(k => TILE_DEFS[k]);
+}
+
+function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sortBy }) {
   const [cardView, setCardView] = useState("stats"); // "stats" | "breakdown"
 
   const rankBorderClass = rank === 1 ? "border-yellow-400/40 shadow-yellow-400/10"
     : rank === 2 ? "border-slate-300/30 shadow-slate-300/10"
     : rank === 3 ? "border-amber-600/40 shadow-amber-600/10"
     : "border-white/10";
+
+  // Build sparkline data oldest-first (seasons from API is newest-first)
+  const sparkData = ([...(seasons || [])].reverse()).map(season => {
+    const row = (allSeasonData || []).find(r => r.player_tag === p.player_tag && r.season === season);
+    if (!row || !row.attacks_used || !row.attacks_available) return { season, value: null };
+    const overall = parseFloat(((parseFloat(row.efficiency||0)*0.6)+((3-parseFloat(row.defence_efficiency||0))*0.4)).toFixed(2));
+    return { season, value: overall };
+  }).filter(d => d.value !== null);
 
   // When collapsed, reset to stats view
   const handleToggle = () => {
@@ -1074,11 +1598,21 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
             <p className="text-[10px] text-slate-500 truncate">{p.clan_name.split(" ")[0]}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <StatPill label="EFF" value={parseFloat(p.efficiency).toFixed(2)} colour="text-purple-300" />
-          <StatPill label="Stars" value={p.stars_earned} colour="text-green-300" />
-          <StatPill label="Def EFF" value={p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300" />
-          <StatPill label="Def ★" value={p.stars_conceded} colour="text-slate-400" />
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {getRowTiles(sortBy).map(tile => {
+            const colour = typeof tile.colour === "function" ? tile.colour(p) : tile.colour;
+            const bg = typeof tile.bg === "function" ? tile.bg(p) : tile.bg;
+            const border = typeof tile.border === "function" ? tile.border(p) : tile.border;
+            const stroke = typeof tile.stroke === "function" ? tile.stroke(p) : tile.stroke;
+            return (
+              <div key={tile.key} className={`flex flex-col items-center gap-0.5 rounded-lg ${bg} border ${border} px-1.5 sm:px-2 py-1 min-w-[34px] sm:min-w-[40px]`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke={stroke} strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+                </svg>
+                <span className={`text-[11px] sm:text-xs font-bold ${colour}`}>{tile.value(p)}</span>
+              </div>
+            );
+          })}
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
@@ -1092,107 +1626,92 @@ function PlayerCard({ p, rank, isExpanded, onToggle }) {
           {/* ── STATS VIEW ── */}
           {cardView === "stats" && (
             <div className="space-y-4 pt-2">
-              {/* Attack */}
+              {/* Attack — top row */}
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Efficiency</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-green-300">{p.stars_earned}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Stars</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Dest %</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center gap-0.5">
-                    <MiniPie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
-                    <p className="text-[9px] text-slate-600">Breakdown</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-slate-300">{p.attacks_used}<span className="text-slate-600 text-xs">/{p.attacks_available}</span></p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Attacks</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className={`text-sm font-bold ${p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}`}>{p.missed_attacks}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Missed</p>
-                  </div>
+                  <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Efficiency</p></div><p className="text-sm font-bold text-purple-300">{parseFloat(p.efficiency).toFixed(2)}</p></div>
+                  <div className="rounded-xl bg-green-500/[0.06] border border-green-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#86efac" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Stars</p></div><p className="text-sm font-bold text-green-300">{p.stars_earned}</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Dest %</p></div><p className="text-sm font-bold text-slate-300">{parseFloat(p.destruction_pct).toFixed(1)}%</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2 flex flex-col items-center justify-center gap-0.5"><MiniPie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/><p className="text-[8px] text-slate-500 uppercase tracking-widest">Breakdown</p></div>
                 </div>
               </div>
-              {/* Defence */}
+              {/* Defence — top row */}
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Def EFF</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-slate-400">{p.stars_conceded}</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Stars Given</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center">
-                    <p className="text-sm font-bold text-slate-400">{parseFloat(p.defence_pct).toFixed(1)}%</p>
-                    <p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-2 text-center flex flex-col items-center justify-center gap-0.5">
-                    <MiniPie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
-                    <p className="text-[9px] text-slate-600">Breakdown</p>
-                  </div>
+                  <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Def EFF</p></div><p className="text-sm font-bold text-blue-300">{p.defence_efficiency ? parseFloat(p.defence_efficiency).toFixed(2) : "—"}</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Stars Given</p></div><p className="text-sm font-bold text-slate-400">{p.stars_conceded}</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Dest Given</p></div><p className="text-sm font-bold text-slate-400">{parseFloat(p.defence_pct||0).toFixed(1)}%</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2 flex flex-col items-center justify-center gap-0.5"><MiniPie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/><p className="text-[8px] text-slate-500 uppercase tracking-widest">Breakdown</p></div>
                 </div>
               </div>
+              {/* Sparkline */}
+              {sparkData.length >= 2 && <PlayerSparkline sparkData={sparkData} />}
             </div>
           )}
 
           {/* ── BREAKDOWN VIEW ── */}
           {cardView === "breakdown" && (
-            <div className="space-y-5 pt-2">
-
-              {/* Attack breakdown */}
+            <div className="space-y-4 pt-2">
+              {/* Participation */}
               <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack Breakdown</span>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Participation</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="shrink-0">
-                    <LargePie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0} size={80}/>
-                  </div>
-                  <StarBars three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Attacks</p></div><p className="text-sm font-bold text-slate-300">{p.attacks_used}<span className="text-slate-600 text-xs">/{p.attacks_available}</span></p></div>
+                  <div className={`rounded-xl p-2 ${p.missed_attacks > 0 ? "bg-red-500/[0.06] border border-red-500/20" : "bg-white/[0.03] border border-white/10"}`}><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke={p.missed_attacks > 0 ? "#f87171" : "#94a3b8"} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Missed</p></div><p className={`text-sm font-bold ${p.missed_attacks > 0 ? "text-red-400" : "text-slate-500"}`}>{p.missed_attacks}</p></div>
                 </div>
               </div>
-
-              <div className="border-t border-white/10"/>
-
-              {/* Defence breakdown — inverse order (1★ 2★ 3★ = better to worse) */}
+              {/* War Metrics */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">War Metrics</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Avg ★/Atk</p></div><p className="text-sm font-bold text-amber-300">{p.avg_stars_per_attack != null ? parseFloat(p.avg_stars_per_attack).toFixed(2) : "—"}</p></div>
+                  <div className="rounded-xl bg-green-500/[0.06] border border-green-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#86efac" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">3★ Rate</p></div><p className="text-sm font-bold text-green-300">{p.three_star_rate != null ? `${parseFloat(p.three_star_rate).toFixed(0)}%` : "—"}</p></div>
+                  <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Clutch</p></div><p className="text-sm font-bold text-purple-300">{p.clutch_rate != null ? parseFloat(p.clutch_rate).toFixed(2) : "—"}</p></div>
+                  <div className="rounded-xl bg-blue-500/[0.06] border border-blue-500/20 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Punch-Up</p></div><p className="text-sm font-bold text-blue-300">{p.punch_up_rate != null ? `${parseFloat(p.punch_up_rate).toFixed(0)}%` : "—"}</p></div>
+                </div>
+              </div>
+              {/* Behavioural */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Behavioural</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">Consistency</p></div><p className="text-sm font-bold text-slate-300">{p.consistency_score != null ? parseFloat(p.consistency_score).toFixed(2) : "—"}</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#86efac" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">↑ Reaches</p></div><p className="text-sm font-bold text-green-400">{p.reaches ?? "—"}</p></div>
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-2"><div className="flex items-center gap-1 mb-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg><p className="text-[8px] text-slate-500 uppercase tracking-widest">↓ Dips</p></div><p className="text-sm font-bold text-slate-400">{p.dips ?? "—"}</p></div>
+                </div>
+              </div>
+              {/* Visual Breakdown */}
               <div>
                 <div className="flex items-center gap-1.5 mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Attack Breakdown</span>
+                </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <LargePie three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0} size={80}/>
+                  <StarBars three={p.three_stars||0} two={p.two_stars||0} one={p.one_stars||0} zero={p.zero_stars||0}/>
+                </div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Defence Breakdown</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="shrink-0">
-                    <LargePie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0} size={80}/>
-                  </div>
+                  <LargePie three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0} size={80}/>
                   <StarBars three={p.three_stars_conceded||0} two={p.two_stars_conceded||0} one={p.one_stars_conceded||0} zero={p.zero_stars_conceded||0}/>
                 </div>
               </div>
@@ -1390,6 +1909,7 @@ function FaqButton() {
       { q: "How do I disconnect Discord?", a: "Tap your Discord name pill at the top of the page and select Disconnect." },
     ]},
     { section: "Leaderboard", items: [
+      { q: "What is CGN Rating?", a: "A weighted performance score combining 60% attack efficiency and 40% defence efficiency. It rewards players who attack well and defend well." },
       { q: "What is Attack Efficiency?", a: "Average stars earned per attack. Maximum is 3.00 — every attack was a 3-star." },
       { q: "What is Defence Efficiency?", a: "Average stars conceded per defence. Lower is better." },
       { q: "What is Three Star Rate?", a: "Percentage of attacks that achieved full 3-star destruction." },
@@ -1492,12 +2012,109 @@ function ContrastToggle() {
 }
 
 
+function SeasonAwards({ stats }) {
+  if (!stats?.length) return null;
+  const withAttacks = stats.filter(p => p.attacks_used > 0);
+  const mostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
+  const bestClutch = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
+  const punchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
+  const ironDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
+
+  const awards = [
+    {
+      label: "Most 3★", player: mostThreeStars,
+      value: mostThreeStars ? `${mostThreeStars.three_stars} hits` : null,
+      colour: "text-amber-300",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>,
+      iconColour: "text-amber-400",
+    },
+    {
+      label: "Clutch King", player: bestClutch,
+      value: bestClutch ? `${parseFloat(bestClutch.clutch_rate).toFixed(2)} avg` : null,
+      colour: "text-purple-300",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>,
+      iconColour: "text-purple-400",
+    },
+    {
+      label: "Punch-Up King", player: punchUpKing,
+      value: punchUpKing ? `${parseFloat(punchUpKing.punch_up_rate).toFixed(0)}% punch-up` : null,
+      colour: "text-blue-300",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>,
+      iconColour: "text-blue-400",
+    },
+    {
+      label: "Iron Defence", player: ironDefence,
+      value: ironDefence ? `${parseFloat(ironDefence.defence_efficiency||0).toFixed(2)} Def EFF` : null,
+      colour: "text-green-300",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>,
+      iconColour: "text-green-400",
+    },
+  ].filter(a => a.player && a.value);
+
+  if (!awards.length) return null;
+
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season Awards</p>
+      <div className="grid grid-cols-2 gap-2">
+        {awards.map((award, i) => (
+          <a key={i} href={`/player/${award.player.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
+            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
+            <div className="flex items-center gap-1.5 mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${award.iconColour}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {award.icon}
+              </svg>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest">{award.label}</p>
+            </div>
+            <p className="text-xs font-semibold text-white truncate">{award.player.player_name}</p>
+            <p className={`text-sm font-bold ${award.colour}`}>{award.value}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AlliancePerformanceTile({ stats, totalAllianceStars }) {
+  const withAtks = (stats||[]).filter(p => p.attacks_used > 0);
+  const totalThreeStars = withAtks.reduce((s,p) => s+(p.three_stars||0), 0);
+  const totalAtks = withAtks.reduce((s,p) => s+(p.attacks_used||0), 0);
+  const allianceThreeStarRate = totalAtks > 0 ? (totalThreeStars/totalAtks*100).toFixed(0)+"%" : "—";
+  const punchUpPlayers = withAtks.filter(p => p.punch_up_rate != null);
+  const alliancePunchUp = punchUpPlayers.length ? (punchUpPlayers.reduce((s,p)=>s+parseFloat(p.punch_up_rate||0),0)/punchUpPlayers.length).toFixed(0)+"%" : "—";
+  const clutchPlayers = withAtks.filter(p => p.clutch_rate != null);
+  const allianceClutch = clutchPlayers.length ? (clutchPlayers.reduce((s,p)=>s+parseFloat(p.clutch_rate||0),0)/clutchPlayers.length).toFixed(2) : "—";
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance Performance</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
+          <p className="text-3xl font-thin text-amber-300">{totalAllianceStars}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Total Alliance Stars</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+          <p className="text-xl font-thin text-green-300">{totalThreeStars}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">3★ Hits ({allianceThreeStarRate})</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+          <p className="text-xl font-thin text-blue-300">{alliancePunchUp}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Punch-Up</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
+          <p className="text-xl font-thin text-purple-300">{allianceClutch}</p>
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Clutch Rate (Days 5-7)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Recap Share Card ────────────────────────────────────────────────────────
 // Rendered off-screen, snapshotted by html2canvas via lib/shareCard.js.
 // All graphics are inlined as raw SVG — no imported components.
 // 680px landscape, solid backgrounds, no backdrop-blur.
 
-function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason }) {
+function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason, totalAllianceStars, awardMostThreeStars, awardClutchKing, awardPunchUpKing, awardIronDefence }) {
   const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
 
@@ -1551,7 +2168,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
       {/* Card content — z-index 1, sits above background */}
       <div style={{ position: "relative", zIndex: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
-        {/* Left: season label */}
+        {/* Left: season label + total stars */}
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>
             Season Recap
@@ -1559,6 +2176,12 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
           <div style={{ fontSize: 18, fontWeight: 300, letterSpacing: "0.08em", color: "white" }}>
             {selectedSeason}
           </div>
+          {totalAllianceStars > 0 && (
+            <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 22, fontWeight: 300, color: "#fbbf24" }}>{totalAllianceStars}</span>
+              <span style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Alliance Stars</span>
+            </div>
+          )}
         </div>
 
         {/* Right: Top Clan */}
@@ -1587,7 +2210,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
               {[
                 { label: "Wins", value: topClan.wars_won, colour: "#86efac" },
                 { label: "Atk EFF", value: parseFloat(topClan.attack_efficiency).toFixed(2), colour: "#c4b5fd" },
-                { label: "Overall", value: topClan.overall.toFixed(2), colour: "#c4b5fd" },
+                { label: "CGN Rating", value: topClan.overall.toFixed(2), colour: "#c4b5fd" },
               ].map(({ label, value, colour }) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: colour }}>{value}</div>
@@ -1686,7 +2309,33 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         </div>
       </div>
 
-      {/* ── Row 3: Alliance War Record ── */}
+      {/* ── Row 3: Season Awards ── */}
+      {(awardMostThreeStars || awardClutchKing || awardPunchUpKing || awardIronDefence) && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Season Awards</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { label: "Most 3★",     player: awardMostThreeStars, value: awardMostThreeStars ? `${awardMostThreeStars.three_stars} hits` : null,                          colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+              { label: "Clutch King", player: awardClutchKing,     value: awardClutchKing     ? `${parseFloat(awardClutchKing.clutch_rate).toFixed(2)} avg` : null,          colour: "#c4b5fd", bg: "rgba(139,92,246,0.06)", border: "rgba(139,92,246,0.2)",  icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" },
+              { label: "Punch-Up",    player: awardPunchUpKing,    value: awardPunchUpKing    ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null,           colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: "M5 10l7-7m0 0l7 7m-7-7v18" },
+              { label: "Iron Defence",player: awardIronDefence,    value: awardIronDefence    ? `${parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2)} Def EFF` : null,                       colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+            ].filter(a => a.player && a.value).map((award, i) => (
+              <div key={i} style={{ background: award.bg, borderRadius: 10, border: `1px solid ${award.border}`, padding: "8px 10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={award.colour} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={award.icon}/>
+                  </svg>
+                  <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{award.label}</div>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{award.player.player_name}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: award.colour, marginTop: 2 }}>{award.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Row 4: Alliance War Record ── */}
       <div style={{
         background: "rgba(255,255,255,0.03)",
         borderRadius: 12,
@@ -1700,28 +2349,26 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         <div style={{ display: "flex", gap: 8 }}>
           {/* W/L/D summary */}
           <div style={{ display: "flex", gap: 8, marginRight: 8 }}>
-            {[
-              { label: "Won", value: totalWins, colour: "#86efac" },
-              { label: "Lost", value: totalLosses, colour: "#f87171" },
-              { label: "Drawn", value: totalDraws, colour: "#64748b" },
-            ].map(({ label, value, colour }) => (
-              <div key={label} style={{
-                background: "rgba(255,255,255,0.04)",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.07)",
-                padding: "6px 12px",
-                textAlign: "center",
-                minWidth: 44,
-              }}>
-                <div style={{ fontSize: 16, fontWeight: 300, color: colour }}>{value}</div>
-                <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 1 }}>{label}</div>
+          {[
+              { label: "Won",   value: totalWins,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.2)",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
+              { label: "Lost",  value: totalLosses, colour: "#f87171", bg: "rgba(239,68,68,0.06)",  border: "rgba(239,68,68,0.2)",  icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" },
+              { label: "Drawn", value: totalDraws,  colour: "#64748b", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+            ].map(({ label, value, colour, bg, border, icon }) => (
+              <div key={label} style={{ background: bg, borderRadius: 10, border: `1px solid ${border}`, padding: "8px 12px", minWidth: 44 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={colour} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={icon}/>
+                  </svg>
+                  <div style={{ fontSize: 7, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{label}</div>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: colour }}>{value}</div>
               </div>
             ))}
           </div>
           {/* Clan breakdown */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
             {clanWithOverall.slice(0, 4).map((c, i) => (
-              <div key={c.clan_name} style={{
+              <div key={c.clan_tag || c.clan_name} style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -1765,6 +2412,7 @@ function RecapView({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const recapCardRef = useRef(null);
 
   useEffect(() => {
@@ -1791,7 +2439,7 @@ function RecapView({ onBack }) {
     setLoading(true);
     Promise.all([
       fetch(`/api/leaderboard?season=${encodeURIComponent(selectedSeason)}`).then(r => r.json()),
-      fetch("/api/history").then(r => r.json()),
+      fetch(`/api/history?season=${encodeURIComponent(selectedSeason)}`).then(r => r.json()),
     ]).then(([lb, hist]) => {
       const withOverall = (lb.stats || []).map(p => ({
         ...p,
@@ -1824,12 +2472,35 @@ function RecapView({ onBack }) {
   })).sort((a,b) => b.overall - a.overall);
   const topClan = clanWithOverall[0];
 
+  // Total alliance stars
+  const totalAllianceStars = seasonHistory.reduce((s,r) => s + (r.total_stars||0), 0);
+
+  // Season awards for share card
+  const withAttacks = stats.filter(p => p.attacks_used > 0);
+  const awardMostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
+  const awardClutchKing = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
+  const awardPunchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
+  const awardIronDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
+
+  // Previous season delta
+  const selectedSeasonIdx = seasons.indexOf(selectedSeason);
+  const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
+  const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
+  const prevClanWithOverall = prevSeasonHistory.map(c => ({
+    ...c,
+    overall: parseFloat(((parseFloat(c.attack_efficiency||0)*0.5)+((3-parseFloat(c.defence_efficiency||0))*0.3)+((c.wars_won||0)/7*3*0.2)).toFixed(2))
+  })).sort((a,b) => b.overall - a.overall);
+  const prevTopClan = prevClanWithOverall[0];
+  const topClanDelta = topClan && prevTopClan ? parseFloat((topClan.overall - prevTopClan.overall).toFixed(2)) : null;
+
   const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
 
   async function handleShare() {
-    if (!recapCardRef.current || sharing) return;
+    if (sharing) return;
     setSharing(true);
+    setShowShareCard(true);
+    await new Promise(r => setTimeout(r, 100));
     try {
       const { shareCard } = await import("@/lib/shareCard");
       const result = await shareCard(recapCardRef.current, `cgn-recap-${(selectedSeason||"season").toLowerCase().replace(/\s+/g,"-")}.png`);
@@ -1841,15 +2512,16 @@ function RecapView({ onBack }) {
       console.error("Share failed", e);
     } finally {
       setSharing(false);
+      setShowShareCard(false);
     }
   }
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
 
-      {/* Hidden recap share card */}
-      <div ref={recapCardRef} style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1, pointerEvents: "none" }}>
-        {!loading && topClan && (
+      {/* Hidden recap share card — only mounted when Share is tapped */}
+      {showShareCard && topClan && (
+        <div ref={recapCardRef} style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1, pointerEvents: "none" }}>
           <RecapShareCard
             topClan={topClan}
             top3={top3}
@@ -1860,13 +2532,20 @@ function RecapView({ onBack }) {
             totalDraws={totalDraws}
             clanWithOverall={clanWithOverall}
             selectedSeason={selectedSeason}
+            totalAllianceStars={totalAllianceStars}
+            awardMostThreeStars={awardMostThreeStars}
+            awardClutchKing={awardClutchKing}
+            awardPunchUpKing={awardPunchUpKing}
+            awardIronDefence={awardIronDefence}
           />
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
+
+      <AppHeader variant="bar"/>
 
       {/* Header */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
@@ -1947,8 +2626,15 @@ function RecapView({ onBack }) {
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Overall</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
+                    {topClanDelta !== null && (
+                      <span className={`text-[9px] font-semibold ${topClanDelta > 0 ? "text-green-400" : topClanDelta < 0 ? "text-red-400" : "text-slate-500"}`}>
+                        {topClanDelta > 0 ? `↑${topClanDelta}` : topClanDelta < 0 ? `↓${Math.abs(topClanDelta)}` : "→"}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">CGN Rating</p>
                 </div>
               </div>
             </div>
@@ -1956,7 +2642,7 @@ function RecapView({ onBack }) {
 
           {/* Top 3 players */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Players · Overall Rating</p>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Players · CGN Rating</p>
             <div className="space-y-2">
               {top3.map((p, i) => (
                 <a key={p.player_tag} href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
@@ -2009,6 +2695,14 @@ function RecapView({ onBack }) {
             </div>
           </div>
 
+          {/* Category winners */}
+          <SeasonAwards stats={stats} />
+
+          {/* Alliance Performance */}
+          {stats.length > 0 && (
+            <AlliancePerformanceTile stats={stats} totalAllianceStars={totalAllianceStars} />
+          )}
+
           {/* Alliance war record */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance War Record</p>
@@ -2029,7 +2723,7 @@ function RecapView({ onBack }) {
             {/* Clan breakdown */}
             <div className="mt-3 space-y-1.5">
               {clanWithOverall.map((c, i) => (
-                <div key={c.clan_name} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                <div key={c.clan_tag || c.clan_name} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                   <div className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
@@ -2047,6 +2741,7 @@ function RecapView({ onBack }) {
           </div>
         </div>
       )}
+      <AppFooter/>
     </main>
   );
 }
@@ -2061,6 +2756,7 @@ function LeaderboardView({ onBack }) {
   const [selectedSeason, setSelectedSeason] = useState("all");
   const [clanFilter, setClanFilter] = useState("all");
   const [thFilter, setThFilter] = useState("all");
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [sortBy, setSortBy] = useState("overall");
   const [sortDir, setSortDir] = useState("desc");
   const [search, setSearch] = useState("");
@@ -2075,23 +2771,33 @@ function LeaderboardView({ onBack }) {
       .then(async d => {
         const allSeasons = d.seasons || [];
         setSeasons(allSeasons);
+        // Linked accounts set — per-season fetches below now correctly
+        // include unlinked players (season-snapshot rule), so this rollup
+        // must filter back down to linked accounts only before aggregating.
+        const linkedRes = await fetch("/api/linked-accounts").then(r => r.json()).catch(() => ({ tags: [] }));
+        const linkedTags = new Set(linkedRes.tags || []);
         const allData = [];
         for (const s of allSeasons) {
           try {
             const r2 = await fetch(`/api/leaderboard?season=${encodeURIComponent(s)}`);
             const d2 = await r2.json();
-            allData.push(...(d2.stats || []));
+            (d2.stats || []).forEach(p => { if (linkedTags.has(p.player_tag)) allData.push(p); });
           } catch {}
         }
         setAllSeasonData(allData);
       })
       .catch(() => {});
   }, []);
-    // Fetch clan history for clan leaderboard
-    fetch("/api/history")
+  // Fetch clan history for clan leaderboard — refetches per season so the
+  // season-snapshot rule (full clan list, registered or not) applies whenever
+  // a specific season is selected; "All Time" stays scoped to registered clans.
+  useEffect(() => {
+    const seasonParam = selectedSeason === "all" ? "" : `?season=${encodeURIComponent(selectedSeason)}`;
+    fetch(`/api/history${seasonParam}`)
       .then(r => r.json())
       .then(d => setClanHistory(d.history || []))
       .catch(() => setClanHistory([]));
+  }, [selectedSeason]);
 
   function toggleExpand(tag) {
     setExpandedTag(prev => prev === tag ? null : tag);
@@ -2101,7 +2807,7 @@ function LeaderboardView({ onBack }) {
   }
 
   const CLAN_SORT_OPTIONS = [
-    { key: "overall",              label: "Overall Rating", group: "Overall" },
+    { key: "overall",              label: "CGN Rating", group: "CGN Rating" },
     { key: "attack_efficiency",    label: "Atk Efficiency", group: "Attack" },
     { key: "total_stars",          label: "Total Stars",    group: "Attack" },
     { key: "avg_destruction_pct",  label: "Destruction %",  group: "Attack" },
@@ -2121,11 +2827,13 @@ function LeaderboardView({ onBack }) {
     if (!clanHistory) return [];
     const rows = selectedSeason === "all" ? clanHistory : clanHistory.filter(r => r.season === selectedSeason);
     if (selectedSeason !== "all") return rows;
-    // Aggregate across seasons
+    // Aggregate across seasons — keyed by clan_tag to avoid bundling clans
+    // that share a name but are actually different clans (old vs current).
     const map = {};
     for (const r of rows) {
-      if (!map[r.clan_name]) map[r.clan_name] = { clan_name: r.clan_name, cwl_rank: r.cwl_rank, wars_won:0,wars_lost:0,wars_drawn:0, total_stars:0,total_stars_conceded:0,total_attacks_used:0,total_attacks_available:0,total_attacks_missed:0, three_stars_clan:0,two_stars_clan:0,one_stars_clan:0,zero_stars_clan:0, _destSum:0,_defSum:0,_atkCount:0,_defCount:0,_threeStar:0,_totalAtk:0 };
-      const m = map[r.clan_name];
+      const key = r.clan_tag || r.clan_name; // fallback for any legacy row without a tag
+      if (!map[key]) map[key] = { clan_tag: r.clan_tag, clan_name: r.clan_name, cwl_rank: r.cwl_rank, wars_won:0,wars_lost:0,wars_drawn:0, total_stars:0,total_stars_conceded:0,total_attacks_used:0,total_attacks_available:0,total_attacks_missed:0, three_stars_clan:0,two_stars_clan:0,one_stars_clan:0,zero_stars_clan:0, _destSum:0,_defSum:0,_atkCount:0,_defCount:0,_threeStar:0,_totalAtk:0 };
+      const m = map[key];
       m.wars_won += r.wars_won||0; m.wars_lost += r.wars_lost||0; m.wars_drawn += r.wars_drawn||0;
       m.total_stars += r.total_stars||0; m.total_stars_conceded += r.total_stars_conceded||0;
       m.total_attacks_used += r.total_attacks_used||0; m.total_attacks_available += r.total_attacks_available||0; m.total_attacks_missed += r.total_attacks_missed||0;
@@ -2174,6 +2882,11 @@ function LeaderboardView({ onBack }) {
           three_stars: 0, two_stars: 0, one_stars: 0, zero_stars: 0,
           three_stars_conceded: 0, two_stars_conceded: 0, one_stars_conceded: 0, zero_stars_conceded: 0,
           _destSum: 0, _defSum: 0, _atkCount: 0, _defCount: 0,
+          // War metrics accumulators
+          _warMetricCount: 0,
+          _avgStarsSum: 0, _threeStarRateSum: 0, _punchUpRateSum: 0,
+          _clutchRateSum: 0, _consistencySum: 0,
+          dips: 0, reaches: 0,
         };
       }
       const m = map[tag];
@@ -2191,6 +2904,17 @@ function LeaderboardView({ onBack }) {
       m.one_stars_conceded += p.one_stars_conceded || 0;
       m.zero_stars_conceded += p.zero_stars_conceded || 0;
       if (p.attacks_used > 0) { m._destSum += parseFloat(p.destruction_pct||0) * p.attacks_used; m._atkCount += p.attacks_used; }
+      // Accumulate war metrics if present
+      if (p.avg_stars_per_attack != null) {
+        m._warMetricCount++;
+        m._avgStarsSum += parseFloat(p.avg_stars_per_attack || 0);
+        m._threeStarRateSum += parseFloat(p.three_star_rate || 0);
+        m._punchUpRateSum += parseFloat(p.punch_up_rate || 0);
+        m._clutchRateSum += parseFloat(p.clutch_rate || 0);
+        m._consistencySum += parseFloat(p.consistency_score || 0);
+        m.dips += parseInt(p.dips || 0);
+        m.reaches += parseInt(p.reaches || 0);
+      }
       if (p.attacks_available > 0) { m._defSum += parseFloat(p.defence_pct||0) * p.attacks_available; m._defCount += p.attacks_available; }
     }
     return Object.values(map).map(m => ({
@@ -2199,6 +2923,12 @@ function LeaderboardView({ onBack }) {
       defence_pct: m._defCount > 0 ? (m._defSum / m._defCount).toFixed(2) : "0.00",
       efficiency: m.attacks_used > 0 ? (m.stars_earned / m.attacks_used).toFixed(2) : "0.00",
       defence_efficiency: m.attacks_available > 0 ? (m.stars_conceded / m.attacks_available).toFixed(2) : "0.00",
+      // Average war metrics across seasons where data exists
+      avg_stars_per_attack: m._warMetricCount > 0 ? (m._avgStarsSum / m._warMetricCount).toFixed(2) : null,
+      three_star_rate: m._warMetricCount > 0 ? (m._threeStarRateSum / m._warMetricCount).toFixed(2) : null,
+      punch_up_rate: m._warMetricCount > 0 ? (m._punchUpRateSum / m._warMetricCount).toFixed(2) : null,
+      clutch_rate: m._warMetricCount > 0 ? (m._clutchRateSum / m._warMetricCount).toFixed(2) : null,
+      consistency_score: m._warMetricCount > 0 ? (m._consistencySum / m._warMetricCount).toFixed(2) : null,
     })).map(p => ({
       ...p,
       overall: (p.attacks_used > 0 && p.attacks_available > 0)
@@ -2222,7 +2952,7 @@ function LeaderboardView({ onBack }) {
   const sorted = [...filtered].sort((a, b) => {
     const av = parseFloat(a[sortBy]) || 0;
     const bv = parseFloat(b[sortBy]) || 0;
-    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency";
+    const invert = sortBy === "missed_attacks" || sortBy === "stars_conceded" || sortBy === "defence_efficiency" || sortBy === "consistency_score";
     const dir = invert ? (sortDir === "desc" ? 1 : -1) : (sortDir === "desc" ? -1 : 1);
     return (av - bv) * dir;
   });
@@ -2232,50 +2962,18 @@ function LeaderboardView({ onBack }) {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
+
+      <AppHeader variant="bar"/>
+
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-          <select value={selectedSeason} onChange={e => {
-            const val = e.target.value;
-            setSelectedSeason(val);
-            setExpandedTag(null);
-            setClanFilter("all");
-            if (val !== "all") {
-              setData(null);
-              fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
-                .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
-                ...p,
-                overall: (p.attacks_used > 0 && p.attacks_available > 0)
-                  ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
-                  : null,
-              })))).catch(()=>setData([]));
-            }
-          }} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-            <option value="all">All Time</option>
-            {seasons.map(s=><option key={s} value={s}>{s}</option>)}
-          </select>
-          {clans.length > 1 && (
-            <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              <option value="all">All Clans</option>
-              {clans.map(c=><option key={c} value={c}>{c}</option>)}
-            </select>
-          )}
-          {lbTab === "player" && (
-            <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
-              <option value="all">All TH</option>
-              {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
-                <option key={th} value={String(th)}>TH{th}</option>
-              ))}
-            </select>
-          )}
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             {lbTab === "player" ? (<>
-              <optgroup label="Overall">
-                <option value="overall">Overall Rating</option>
+              <optgroup label="CGN Rating">
+                <option value="overall">CGN Rating</option>
               </optgroup>
               <optgroup label="Attack">
                 <option value="efficiency">Atk Efficiency</option>
@@ -2289,8 +2987,15 @@ function LeaderboardView({ onBack }) {
                 <option value="stars_conceded">Stars Conceded</option>
                 <option value="defence_pct">Defence %</option>
               </optgroup>
+              <optgroup label="War Metrics">
+                <option value="avg_stars_per_attack">Avg Stars / Attack</option>
+                <option value="three_star_rate">3★ Rate</option>
+                <option value="punch_up_rate">Punch-Up Rate</option>
+                <option value="clutch_rate">Clutch Rate (Days 5-7)</option>
+                <option value="consistency_score">Consistency Score</option>
+              </optgroup>
             </>) : (<>
-              {["Overall","Attack","Defence","Record"].map(g=>(
+              {["CGN Rating","Attack","Defence","Record"].map(g=>(
                 <optgroup key={g} label={g}>
                   {CLAN_SORT_OPTIONS.filter(o=>o.group===g).map(o=>(
                     <option key={o.key} value={o.key}>{o.label}</option>
@@ -2300,10 +3005,130 @@ function LeaderboardView({ onBack }) {
             </>)}
           </select>
           <button type="button" onClick={()=>setSortDir(d=>d==="desc"?"asc":"desc")}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400 hover:text-white transition">
-            {sortDir === "desc" ? "↓ High–Low" : "↑ Low–High"}
+            title={sortDir === "desc" ? "High to low" : "Low to high"}
+            className="rounded-full border border-white/10 bg-white/[0.04] w-7 h-7 flex items-center justify-center text-slate-400 hover:text-white transition shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              {sortDir === "desc"
+                ? <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                : <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>}
+            </svg>
           </button>
+          {(() => {
+            const activeCount = (selectedSeason !== "all" ? 1 : 0) + (clanFilter !== "all" ? 1 : 0) + (lbTab === "player" && thFilter !== "all" ? 1 : 0);
+            return (
+              <button type="button" onClick={() => setShowFiltersModal(true)}
+                className={`relative rounded-full border px-3 py-1 text-xs flex items-center gap-1.5 transition ${activeCount > 0 ? "border-purple-500/40 bg-purple-500/[0.08] text-purple-300" : "border-white/10 bg-white/[0.04] text-slate-300 hover:text-white"}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filters
+                {activeCount > 0 && (
+                  <span className="ml-0.5 rounded-full bg-purple-500/30 text-purple-200 text-[10px] font-bold w-4 h-4 flex items-center justify-center">{activeCount}</span>
+                )}
+              </button>
+            );
+          })()}
         </div>
+
+        {/* Filters modal — rendered via portal to escape overflow-clipped ancestors */}
+        {showFiltersModal && typeof document !== "undefined" && createPortal(
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+            <div onClick={e => e.stopPropagation()}
+              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[75dvh] sm:max-h-[90vh]">
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
+                <h3 className="text-sm font-semibold text-white">Filters</h3>
+                <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-5 min-h-0">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
+                  <div className="sm:w-44">
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
+                    <select value={selectedSeason} onChange={e => {
+                      const val = e.target.value;
+                      setSelectedSeason(val);
+                      setExpandedTag(null);
+                      setClanFilter("all");
+                      if (val !== "all") {
+                        setData(null);
+                        fetch(`/api/leaderboard?season=${encodeURIComponent(val)}`)
+                          .then(r=>r.json()).then(d=>setData((d.stats||[]).map(p=>({
+                          ...p,
+                          overall: (p.attacks_used > 0 && p.attacks_available > 0)
+                            ? ((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2)
+                            : null,
+                        })))).catch(()=>setData([]));
+                      }
+                    }} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                      <option value="all">All Time</option>
+                      {seasons.map(s=><option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+
+                  {clans.length > 1 && (
+                    <div className="sm:w-44">
+                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Clan</p>
+                      <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                        <option value="all">All Clans</option>
+                        {clans.map(c=><option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {lbTab === "player" && (
+                    <div className="sm:w-44">
+                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Town Hall</p>
+                      <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                        <option value="all">All TH</option>
+                        {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
+                          <option key={th} value={String(th)}>TH{th}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
+                <button onClick={() => { setSelectedSeason("all"); setClanFilter("all"); setThFilter("all"); }}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition">
+                  Clear all
+                </button>
+                <button onClick={() => setShowFiltersModal(false)}
+                  className="rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-200 text-xs font-semibold px-4 py-1.5 hover:bg-purple-500/30 transition">
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Value reference legend — mirrors the row tiles for the active sort */}
+        {lbTab === "player" && (
+          <div className="flex items-center justify-center gap-3 mb-4 flex-wrap">
+            <span className="text-[9px] text-slate-600 uppercase tracking-widest">Showing</span>
+            {getRowTiles(sortBy).map(tile => {
+              const stroke = typeof tile.stroke === "function" ? tile.stroke({}) : tile.stroke;
+              return (
+                <div key={tile.key} className="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke={stroke} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+                  </svg>
+                  <span className="text-[10px] text-slate-400">{tile.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="relative max-w-xs mx-auto mb-4">
           <input type="text" placeholder={lbTab === "player" ? "Search player or tag…" : "Search clan…"} value={search} onChange={e=>setSearch(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
@@ -2339,6 +3164,9 @@ function LeaderboardView({ onBack }) {
           </div>
         ) : lbTab === "player" ? sorted.map((p, i) => (
           <PlayerCard key={p.player_tag} p={p} rank={i+1}
+            allSeasonData={allSeasonData}
+            seasons={seasons}
+            sortBy={sortBy}
             isExpanded={expandedTag === p.player_tag}
             onToggle={() => toggleExpand(p.player_tag)}/>
         )) : null}
@@ -2352,17 +3180,389 @@ function LeaderboardView({ onBack }) {
               <p className="text-slate-600 text-sm">{search ? "No clans match your search." : "No clan data yet."}</p>
             </div>
           ) : filteredClans.map((c, i) => (
-            <ClanCard key={c.clan_name} c={c} rank={i+1}
-              isExpanded={expandedClan === c.clan_name}
-              onToggle={() => toggleExpandClan(c.clan_name)}/>
+            <ClanCard key={c.clan_tag || c.clan_name} c={c} rank={i+1}
+              isExpanded={expandedClan === (c.clan_tag || c.clan_name)}
+              onToggle={() => toggleExpandClan(c.clan_tag || c.clan_name)}/>
           ))
         )}
       </div>
+      <AppFooter/>
     </main>
   );
 }
 
+// ─── Shared branded header + hamburger nav — used on every top-level view ──
+// Navigation uses direct hash changes (not a shared in-memory router), so
+// this works identically whether mounted inside the top-level Home component
+// or any other page (including the standalone player profile route).
+function AppHeader({ variant = "bar" }) {
+  const [navOpen, setNavOpen] = useState(false);
+  const items = [
+    { key: "", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    { key: "roster", label: "Signup / Rosters", icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" },
+    { key: "leaderboard", label: "Leaderboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+    { key: "history", label: "History", icon: "M7 17l4-8 4 5 2-3M3 3v18h18" },
+    { key: "recap", label: "Season Recap", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+    { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
+  ];
+
+  function go(key) {
+    setNavOpen(false);
+    if (typeof window === "undefined") return;
+    if (key === "") {
+      window.location.href = window.location.pathname;
+    } else {
+      window.location.hash = key;
+    }
+  }
+
+  return (
+    <>
+      {navOpen && (
+        <div className="fixed inset-0 z-50 flex" onClick={() => setNavOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+          <div onClick={e => e.stopPropagation()}
+            className="relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5">
+            <div className="flex items-center gap-2 mb-8">
+              <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
+              <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
+            </div>
+            <nav className="flex-1 space-y-1">
+              {items.map(item => (
+                <button key={item.key || "home"} onClick={() => go(item.key)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                  </svg>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 no-underline px-3 py-2 text-[11px] text-slate-500 hover:text-slate-300 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+              Join our Discord
+            </a>
+          </div>
+        </div>
+      )}
+      {variant === "bar" && (
+        <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
+          <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0" title="Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
+            <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
+          </div>
+          <DiscordWidget variant="corner" />
+        </div>
+      )}
+      {variant === "icon" && (
+        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1" title="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      )}
+    </>
+  );
+}
+
+// ─── Shared footer — home button, branded Discord server link, contrast
+// toggle + FAQ — used on every top-level view. onNavigateHome is optional;
+// when omitted, the home button navigates via a hard hash reset.
+function AppFooter({ onNavigateHome, showHome = true }) {
+  function goHome() {
+    if (onNavigateHome) { onNavigateHome(); return; }
+    if (typeof window !== "undefined") window.location.href = "/";
+  }
+  return (
+    <div className="relative z-10 w-full py-4 flex items-center px-4">
+      <div className="w-16 shrink-0 flex items-center">
+        {showHome && (
+          <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+          </button>
+        )}
+      </div>
+      <div className="flex-1 flex justify-center">
+        <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 no-underline">
+          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5"/>
+          <span className="text-[11px] text-slate-400 tracking-widest">Cognition {"{CGN}"}</span>
+        </a>
+      </div>
+      <div className="flex items-center gap-2">
+        <ContrastToggle />
+        <FaqButton />
+      </div>
+    </div>
+  );
+}
+
+// ─── CWL countdown — always counts to the 1st of next month, 00:00 UTC ─────
+// CWL war week begins on the 1st of every calendar month. If currently within
+// the first 8 days (live war week), shows a "live" state instead of counting
+// down to the same month's already-passed start.
+function CwlCountdown() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  // CWL war week begins exactly when the new season starts: the 1st of the
+  // month at 08:00 UTC (Clash of Clans' confirmed season-start time, not
+  // midnight). War week runs the 1st-8th, so within that window CWL is live.
+  const utcNow = new Date(now.toISOString());
+  const thisMonthStart = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), 1, 8, 0, 0));
+  const isLive = utcNow >= thisMonthStart && utcNow < new Date(thisMonthStart.getTime() + 8 * 24 * 60 * 60 * 1000);
+
+  let label, timeLeft;
+  if (isLive) {
+    label = "CWL War Week";
+    timeLeft = null;
+  } else {
+    const nextStart = utcNow < thisMonthStart
+      ? thisMonthStart
+      : new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 1, 8, 0, 0));
+    const msLeft = Math.max(0, nextStart - utcNow);
+    const totalSeconds = Math.floor(msLeft / 1000);
+    timeLeft = {
+      days: Math.floor(totalSeconds / 86400),
+      hours: Math.floor((totalSeconds % 86400) / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+    };
+    label = "Next CWL Starts In";
+  }
+
+  return (
+    <div className="flex flex-col items-center text-center">
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">{label}</p>
+      {isLive ? (
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+          <span className="text-3xl font-thin tracking-widest text-green-300">Live Now</span>
+        </div>
+      ) : (
+        <div className="flex items-baseline gap-3">
+          <div className="flex flex-col items-center">
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{timeLeft.days}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">days</span>
+          </div>
+          <span className="text-2xl text-slate-600 font-thin">:</span>
+          <div className="flex flex-col items-center">
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{String(timeLeft.hours).padStart(2,"0")}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">hrs</span>
+          </div>
+          <span className="text-2xl text-slate-600 font-thin">:</span>
+          <div className="flex flex-col items-center">
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{String(timeLeft.minutes).padStart(2,"0")}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">min</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Stats highlight reel — rotates featured stat each load ────────────────
+function StatsHighlightReel() {
+  const [data, setData] = useState(null);
+  const [featureType] = useState(() => {
+    const types = ["stars", "efficiency", "threeStarRate", "clutch"];
+    return types[Math.floor(Math.random() * types.length)];
+  });
+
+  useEffect(() => {
+    fetch("/api/leaderboard").then(r => r.json()).then(d => setData(d.stats || [])).catch(() => setData([]));
+  }, []);
+
+  if (!data) {
+    return <div className="h-24 rounded-2xl bg-white/[0.03] animate-pulse"/>;
+  }
+  if (data.length === 0) {
+    return <p className="text-slate-700 text-xs text-center py-4">No stats yet this season</p>;
+  }
+
+  const withAtks = data.filter(p => p.attacks_used > 0);
+  let featured, statLabel, statValue, statColour;
+  if (featureType === "efficiency" && withAtks.length) {
+    featured = [...withAtks].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0];
+    statLabel = "Top Atk EFF"; statValue = parseFloat(featured.efficiency).toFixed(2); statColour = "text-purple-300";
+  } else if (featureType === "threeStarRate" && withAtks.filter(p=>p.three_star_rate!=null).length) {
+    featured = [...withAtks].filter(p=>p.three_star_rate!=null).sort((a,b) => parseFloat(b.three_star_rate||0) - parseFloat(a.three_star_rate||0))[0];
+    statLabel = "Top 3★ Rate"; statValue = parseFloat(featured.three_star_rate).toFixed(0)+"%"; statColour = "text-green-300";
+  } else if (featureType === "clutch" && withAtks.filter(p=>p.clutch_rate!=null).length) {
+    featured = [...withAtks].filter(p=>p.clutch_rate!=null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
+    statLabel = "Clutch King"; statValue = parseFloat(featured.clutch_rate).toFixed(2); statColour = "text-purple-300";
+  } else {
+    featured = [...data].sort((a,b) => (b.stars_earned||0) - (a.stars_earned||0))[0];
+    statLabel = "Most Stars"; statValue = featured.stars_earned; statColour = "text-green-300";
+  }
+
+  if (!featured) return <p className="text-slate-700 text-xs text-center py-4">No stats yet this season</p>;
+
+  return (
+    <div>
+      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Season Highlight</p>
+      <div className="flex items-center gap-3 mb-3">
+        {TH_ICONS[String(featured.town_hall_level)] && (
+          <img src={TH_ICONS[String(featured.town_hall_level)]} alt="" className="w-9 h-9 shrink-0"/>
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white truncate">{featured.player_name}</p>
+          <p className="text-[10px] text-slate-500">{statLabel}</p>
+        </div>
+        <span className={`ml-auto text-xl font-thin ${statColour}`}>{statValue}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <p className="text-[7px] text-slate-500 uppercase tracking-widest">Atk EFF</p>
+          </div>
+          <p className="text-xs font-bold text-purple-300">{featured.efficiency != null ? parseFloat(featured.efficiency).toFixed(2) : "—"}</p>
+        </div>
+        <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+            <p className="text-[7px] text-slate-500 uppercase tracking-widest">Clutch</p>
+          </div>
+          <p className="text-xs font-bold text-purple-300">{featured.clutch_rate != null ? parseFloat(featured.clutch_rate).toFixed(2) : "—"}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const [page, setPage] = useState("home"); // "home" | "roster" | "leaderboard" | "history" | "recap" | "warintel"
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = decodeURIComponent(window.location.hash.replace("#", ""));
+      if (["roster","leaderboard","history","recap","warintel"].includes(hash)) {
+        setPage(hash);
+      } else {
+        setPage("home");
+      }
+    };
+    syncFromHash();
+    window.addEventListener("popstate", syncFromHash);
+    return () => window.removeEventListener("popstate", syncFromHash);
+  }, []);
+
+  function navigate(key) {
+    window.history.pushState({}, "", key === "home" ? window.location.pathname : `#${key}`);
+    setPage(key);
+  }
+
+  if (page === "roster") {
+    return <RosterHubView onNavigateHome={() => navigate("home")} />;
+  }
+  if (page === "leaderboard") {
+    return <LeaderboardView onBack={() => navigate("home")} />;
+  }
+  if (page === "history") {
+    return <HistoryView onBack={() => navigate("home")} />;
+  }
+  if (page === "recap") {
+    return <RecapView onBack={() => navigate("home")} />;
+  }
+  if (page === "warintel") {
+    return <WarIntelView onBack={() => navigate("home")} />;
+  }
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+
+      <AppHeader variant="bar"/>
+
+      {/* Brand hero */}
+      <div className="relative z-10 text-center mb-6">
+        <img src={BRANDING.cwlhub} alt="CWL Hub" className="w-40 h-40 mx-auto"/>
+      </div>
+
+      <div className="relative z-10 space-y-4 max-w-lg mx-auto">
+
+        {/* Countdown — standalone, centred */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+          <CwlCountdown/>
+        </div>
+
+        {/* Sign Up — explicit instruction + direct link */}
+        <a href="/signup"
+          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        {/* Rosters — explicit instruction + direct link to Roster hub */}
+        <button onClick={() => navigate("roster")}
+          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">View Published Rosters</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">See clan rosters &amp; league standings</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </button>
+
+        {/* Stats gateway — highlight reel signals depth, clearly tappable */}
+        <button onClick={() => navigate("leaderboard")}
+          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest">Stats &amp; Overview</span>
+            <span className="flex items-center gap-1 text-[10px] text-purple-400 group-hover:text-purple-300 transition">
+              View Leaderboard
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 group-hover:translate-x-0.5 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </div>
+          <StatsHighlightReel/>
+        </button>
+      </div>
+      <AppFooter showHome={false}/>
+    </main>
+  );
+}
+
+function RosterHubView({ onNavigateHome }) {
   const [players, setPlayers] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedClan, setSelectedClan] = useState(null);
@@ -2398,16 +3598,19 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   const handlePopState = () => {
     const hash = decodeURIComponent(window.location.hash.replace("#", ""));
 
-    // Stat tile views use reserved hash names; anything else is treated
-    // as a clan name (the original selectedClan behaviour).
-    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard" || hash === "recap") {
+    // Stat tile views use reserved hash names; "roster" or empty hash means
+    // this hub's own home state; anything else is treated as a clan name.
+    if (hash === "players" || hash === "clans" || hash === "avgth" || hash === "history" || hash === "leaderboard" || hash === "recap" || hash === "warintel") {
       setStatView(hash);
+      setSelectedClan(null);
+      setHighlightedAccount(null);
+    } else if (hash === "roster" || !hash) {
+      setStatView(null);
       setSelectedClan(null);
       setHighlightedAccount(null);
     } else {
       setStatView(null);
-      setSelectedClan(hash || null);
-      if (!hash) setHighlightedAccount(null);
+      setSelectedClan(hash);
     }
   };
 
@@ -2451,6 +3654,9 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
   if (statView === "leaderboard") {
     return <LeaderboardView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+  }
+  if (statView === "warintel") {
+    return <WarIntelView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
   }
   if (statView === "recap") {
     return <RecapView onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
@@ -2569,56 +3775,27 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
 
 </div>
 
-
+<AppHeader variant="bar"/>
 
     <motion.div
   initial={{ opacity: 0, y: 15 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.5 }}
-  className="
-    relative
-    z-10
-    mb-4
-    rounded-3xl
-    border
-    border-white/10
-    bg-white/[0.03]
-    backdrop-blur-xl
-    p-8
-    text-center
-  "
+  className="relative z-20 mb-4 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
 >
 
-  <img
-    src={BRANDING.cwlhub}
-    alt="CWL Hub"
-    className="w-28 h-28 mx-auto mb-5"
-  />
-
-  <h1 className="text-5xl font-bold tracking-tight">
+  <h1 className="text-2xl font-thin tracking-widest">
     {currentSeason || players[0]?.season || "CWL Hub"}
   </h1>
 
-  <p className="text-slate-300 mt-3 text-lg">
+  <p className="text-slate-500 text-xs mt-1">
     Cognition Collective
   </p>
 
-  <div className="mt-3 flex justify-center">
-    <DiscordWidget variant="center" />
-  </div>
-
-  <div className="mt-6">
+  <div className="mt-4">
     <Link
       href="/signup"
-      className="
-        inline-flex items-center gap-2
-        px-6 py-3 rounded-full
-        bg-transparent text-purple-400
-        border border-purple-500/60
-        shadow-[0_0_10px_rgba(168,85,247,0.15)]
-        hover:shadow-[0_0_18px_rgba(168,85,247,0.28)] hover:border-purple-400 hover:text-purple-300
-        transition font-semibold text-sm
-      "
+      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_18px_rgba(168,85,247,0.28)] hover:border-purple-400 hover:text-purple-300 transition font-semibold text-sm"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -2627,101 +3804,70 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
     </Link>
   </div>
 
+  <div className="mt-4 relative z-20 max-w-xs mx-auto text-left">
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="Search players..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"
+      />
+      {search && (
+        <button onClick={() => setSearch("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      )}
+      {search && searchResults.length > 0 && (
+        <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+          {searchResults.map(player => (
+            <div key={`${player.clan}-${player.account}-${player.position}`}
+              onClick={() => { window.history.pushState({}, "", `#${player.clan}`); setHighlightedAccount(player.playerTag); setSelectedClan(player.clan); setSearch(""); }}
+              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.05] transition border-b border-white/[0.04] last:border-0">
+              {TH_ICONS[String(player.townHall)] && (
+                <img src={TH_ICONS[String(player.townHall)]} alt={`TH${player.townHall}`} className="w-7 h-7 shrink-0"/>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{player.account}</p>
+                <p className="text-[10px] text-slate-500 truncate">{player.clan}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {player.status?.toLowerCase() === "confirmed" && (
+                  <span className="w-2 h-2 rounded-full bg-green-400 shrink-0"/>
+                )}
+                {player.status?.toLowerCase() === "substitute" && (
+                  <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0"/>
+                )}
+                {player.clanLink && (
+                  <a href={player.clanLink} target="_blank" rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/20 hover:bg-purple-600/40 hover:text-white transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Open
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {search && searchResults.length === 0 && (
+        <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
+          <p className="text-xs text-slate-600">No players found</p>
+        </div>
+      )}
+    </div>
+  </div>
+
 </motion.div>
 
-<div className="mb-4 relative z-20">
-  <div className="relative">
-    <input
-      type="text"
-      placeholder="Search players..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="w-full rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"
-    />
-    {search && (
-      <button onClick={() => setSearch("")}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:bg-white/[0.15] hover:text-white transition">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    )}
-    {search && searchResults.length > 0 && (
-      <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
-        {searchResults.map(player => (
-          <div key={`${player.clan}-${player.account}-${player.position}`}
-            onClick={() => { window.history.pushState({}, "", `#${player.clan}`); setHighlightedAccount(player.playerTag); setSelectedClan(player.clan); setSearch(""); }}
-            className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.05] transition border-b border-white/[0.04] last:border-0">
-            {TH_ICONS[String(player.townHall)] && (
-              <img src={TH_ICONS[String(player.townHall)]} alt={`TH${player.townHall}`} className="w-7 h-7 shrink-0"/>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{player.account}</p>
-              <p className="text-[10px] text-slate-500 truncate">{player.clan}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {player.status?.toLowerCase() === "confirmed" && (
-                <span className="w-2 h-2 rounded-full bg-green-400 shrink-0"/>
-              )}
-              {player.status?.toLowerCase() === "substitute" && (
-                <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0"/>
-              )}
-              {player.clanLink && (
-                <a href={player.clanLink} target="_blank" rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/20 hover:bg-purple-600/40 hover:text-white transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                  </svg>
-                  Open
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-    {search && searchResults.length === 0 && (
-      <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
-        <p className="text-xs text-slate-600">No players found</p>
-      </div>
-    )}
-  </div>
-</div>
-
     <div className="space-y-2 mb-8 relative z-10">
-      {/* Row 1: Leaderboard — full width */}
-      <div
-        onClick={() => { window.history.pushState({}, "", "#leaderboard"); setStatView("leaderboard"); }}
-        className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <div className="text-slate-400 text-xs uppercase tracking-widest">Leaderboard</div>
-      </div>
-
-      {/* Row 2: Season Recap + History */}
-      <div className="grid grid-cols-2 gap-2">
-        <div
-          onClick={() => { window.history.pushState({}, "", "#recap"); setStatView("recap"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-          </svg>
-          <div className="text-slate-400 text-xs uppercase tracking-widest">Season Recap</div>
-        </div>
-        <div
-          onClick={() => { window.history.pushState({}, "", "#history"); setStatView("history"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 min-h-[100px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l4-8 4 5 2-3" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
-          </svg>
-          <div className="text-slate-400 text-xs uppercase tracking-widest">History</div>
-        </div>
-      </div>
-
-      {/* Row 3: Players + Clans + Avg TH */}
+      {/* Players + Clans + Avg TH — not duplicated elsewhere in the app */}
       <div className="grid grid-cols-3 gap-2">
         <div
           onClick={() => { window.history.pushState({}, "", "#players"); setStatView("players"); }}
@@ -2855,19 +4001,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       </div>
 
 
-    <div className="relative w-full py-4 flex items-center px-4">
-      <div className="w-16 shrink-0"/>
-      <div className="flex-1 flex justify-center">
-        <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 no-underline">
-          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5"/>
-          <span className="text-[11px] text-slate-400 tracking-widest">Cognition {"{CGN}"}</span>
-        </a>
-      </div>
-      <div className="flex items-center gap-2">
-        <ContrastToggle />
-        <FaqButton />
-      </div>
-    </div>
+    <AppFooter onNavigateHome={onNavigateHome}/>
   </main>
 );}
