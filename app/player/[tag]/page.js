@@ -43,7 +43,7 @@ function AppHeader({ variant = "bar" }) {
         onClick={() => setNavOpen(false)}>
           <div className="absolute inset-0 bg-black/60"/>
           <div onClick={e => e.stopPropagation()}
-            className={`relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5 transition-transform duration-150 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
+            className={`relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424] border-r border-white/10 flex flex-col p-5 transition-transform duration-150 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
             <div className="flex items-center gap-2 mb-8 cursor-default select-none" onClick={handleBrandTap}>
               <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
               <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
