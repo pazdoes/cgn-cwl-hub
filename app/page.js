@@ -3326,50 +3326,35 @@ function AppFooter({ onNavigateHome, showHome = true }) {
 // CWL war week begins on the 1st of every calendar month. If currently within
 // the first 8 days (live war week), shows a "live" state instead of counting
 // down to the same month's already-passed start.
-// ─── Side Wars homepage tile ──────────────────────────────────────────────────
-// Fetches active side wars on mount. When active wars exist they replace the
-// Sign Up and Rosters tiles. Each tile supports three time display modes:
-//   calendar  — static readable date/time
-//   countdown — live single countdown to start_time
-//   recurring — live countdown that resets every 48h (24h prep + 24h battle)
+// ─── Side Wars time display — always countdown, recurring resets every 48h ───
 function SideWarTime({ war }) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
-    if (war.time_format === "calendar") return;
     const t = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(t);
-  }, [war.time_format]);
+  }, []);
 
-  if (war.time_format === "calendar" || !war.start_time) {
-    return (
-      <div>
-        <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Start Time</p>
-        <p className="text-sm font-semibold text-white">
-          {war.start_time
-            ? new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })
-            : "TBC"}
-        </p>
-      </div>
-    );
-  }
+  if (!war.start_time) return (
+    <div>
+      <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Start Time</p>
+      <p className="text-sm font-semibold text-slate-400">TBC</p>
+    </div>
+  );
 
   const start = new Date(war.start_time);
+  const isRecurring = war.time_format === "recurring";
   let target;
 
-  if (war.time_format === "recurring") {
-    // Find the next 48h cycle from start_time
-    const msNow = now.getTime();
-    const msStart = start.getTime();
+  if (isRecurring) {
     const cycle = 48 * 60 * 60 * 1000;
-    const elapsed = msNow - msStart;
+    const elapsed = now - start;
     if (elapsed < 0) {
       target = start;
     } else {
       const cyclesDone = Math.floor(elapsed / cycle);
-      target = new Date(msStart + (cyclesDone + 1) * cycle);
+      target = new Date(start.getTime() + (cyclesDone + 1) * cycle);
     }
   } else {
-    // countdown — single target
     target = start;
   }
 
@@ -3382,7 +3367,7 @@ function SideWarTime({ war }) {
   return (
     <div>
       <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">
-        {war.time_format === "recurring" ? "Next War Starts In" : "War Starts In"}
+        {isRecurring ? "Next War In" : "War Starts In"}
       </p>
       {isLive ? (
         <div className="flex items-center gap-1.5">
@@ -3391,12 +3376,10 @@ function SideWarTime({ war }) {
         </div>
       ) : (
         <div className="flex items-baseline gap-1.5">
-          {days > 0 && (
-            <>
-              <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{days}</span>
-              <span className="text-[10px] text-slate-500 mr-1">d</span>
-            </>
-          )}
+          {days > 0 && <>
+            <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{days}</span>
+            <span className="text-[10px] text-slate-500 mr-1">d</span>
+          </>}
           <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{String(hours).padStart(2,"0")}</span>
           <span className="text-[10px] text-slate-500">h</span>
           <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{String(mins).padStart(2,"0")}</span>
