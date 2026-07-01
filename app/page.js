@@ -627,7 +627,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
             </div>
           ))}
         </div>
-      
+      )}
 
       {trackedPlayers.length === 0 ? (
         <div className="flex items-center justify-center h-32 text-slate-700 text-xs text-center">

@@ -1021,6 +1021,7 @@ export default function PlayerProfilePage() {
             <OverallChart seasons={data.seasons}/>
           </div>
         </div>
+      )}
 
       {/* ── STATS VIEW ── */}
       {view === "stats" && (
