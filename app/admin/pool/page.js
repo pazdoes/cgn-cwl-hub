@@ -534,15 +534,22 @@ export default function AdminPoolPage() {
   async function doSetStatus(entry, status) {
     setStatusBusy(entry.player_tag);
     setStatusError(prev => ({ ...prev, [entry.player_tag]: null }));
+    // Optimistic update — apply immediately so the pill persists visually
+    // even before the API responds. Roll back only if the API returns an error.
+    const previousEntries = await new Promise(resolve => {
+      setEntries(prev => { resolve(prev); return prev.map(e => e.player_tag === entry.player_tag ? { ...e, status } : e); });
+    });
     try {
       const res = await fetch("/api/admin/status", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ tag: entry.player_tag, clan: entry.assigned_clan, status }) });
       const data = await res.json();
-      if (res.ok) {
-        setEntries(prev => prev.map(e => e.player_tag === entry.player_tag ? { ...e, status } : e));
-      } else {
+      if (!res.ok) {
+        setEntries(previousEntries);
         setStatusError(prev => ({ ...prev, [entry.player_tag]: data.error || "Status update failed" }));
       }
-    } catch { setStatusError(prev => ({ ...prev, [entry.player_tag]: "Network error" })); }
+    } catch {
+      setEntries(previousEntries);
+      setStatusError(prev => ({ ...prev, [entry.player_tag]: "Network error" }));
+    }
     finally { setStatusBusy(null); }
   }
 
@@ -706,12 +713,25 @@ export default function AdminPoolPage() {
 
   /* ─── main admin UI ─────────────────────────────────────── */
   const currentClan = clans[Math.min(activeClanIdx, clans.length - 1)] || null;
-  const currentClanEntries = currentClan ? assigned.filter(e => e.assigned_clan === currentClan).sort((a,b) => (b.town_hall_level??0)-(a.town_hall_level??0)) : [];
+  const STATUS_ORDER = { confirmed: 0, registered: 1, substitute: 2 };
+  const currentClanEntries = currentClan
+    ? assigned
+        .filter(e => e.assigned_clan === currentClan)
+        .sort((a, b) => {
+          const sa = STATUS_ORDER[a.status?.toLowerCase()] ?? 1;
+          const sb = STATUS_ORDER[b.status?.toLowerCase()] ?? 1;
+          if (sa !== sb) return sa - sb;
+          return (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0);
+        })
+    : [];
   const currentFormat = currentClan ? (clanFormats[currentClan] ?? 15) : 15;
+  // Only Confirmed players count against the CWL format cap.
+  // Substitute and Registered players sit outside the cap.
+  const confirmedCount = currentClanEntries.filter(e => e.status?.toLowerCase() === "confirmed").length;
   const rosterPct = currentFormat > 0
-    ? Math.min(100, Math.round(currentClanEntries.length / currentFormat * 100))
+    ? Math.min(100, Math.round(confirmedCount / currentFormat * 100))
     : 0;
-  const rosterFull = currentClanEntries.length >= currentFormat;
+  const rosterFull = confirmedCount >= currentFormat;
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
@@ -910,7 +930,7 @@ export default function AdminPoolPage() {
                     <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
                       <div className={`h-full rounded-full transition-all ${rosterFull ? "bg-green-500/60" : "bg-purple-500/60"}`} style={{width:`${rosterPct}%`}}/>
                     </div>
-                    <span className={`text-[10px] shrink-0 font-semibold ${rosterFull ? "text-green-400" : "text-slate-500"}`}>{currentClanEntries.length}/{currentFormat}</span>
+                    <span className={`text-[10px] shrink-0 font-semibold ${rosterFull ? "text-green-400" : "text-slate-500"}`}>{confirmedCount}/{currentFormat}</span>
                   </div>
                 )}
 
@@ -966,7 +986,8 @@ export default function AdminPoolPage() {
                     {/* Counter pill — centred below roster */}
                     <div className="flex justify-center mt-3">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
-                        {currentClanEntries.length}<span className="text-slate-600">/</span>{currentFormat}
+                        {confirmedCount}<span className="text-slate-600">/</span>{currentFormat}
+                        <span className="text-slate-600 font-normal">confirmed</span>
                       </span>
                     </div>
                   </>
