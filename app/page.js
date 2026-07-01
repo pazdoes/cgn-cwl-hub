@@ -3326,6 +3326,61 @@ function AppFooter({ onNavigateHome, showHome = true }) {
 // CWL war week begins on the 1st of every calendar month. If currently within
 // the first 8 days (live war week), shows a "live" state instead of counting
 // down to the same month's already-passed start.
+// ─── Side Wars homepage tile — only renders when active wars exist ────────────
+function SideWarsSection() {
+  const [wars, setWars] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/side-wars")
+      .then(r => r.json())
+      .then(d => setWars(d.wars || []))
+      .catch(() => setWars([]));
+  }, []);
+
+  if (wars.length === 0) return null;
+
+  function formatStartTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString("en-GB", {
+      weekday: "short", day: "numeric", month: "short",
+      hour: "2-digit", minute: "2-digit", timeZoneName: "short",
+    });
+  }
+
+  return (
+    <>
+      {wars.map(war => (
+        <div key={war.id}
+          className="rounded-3xl border border-pink-500/20 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          {/* Ore accent strip */}
+          <div className="relative h-16 bg-gradient-to-r from-pink-500/[0.08] to-purple-500/[0.08] flex items-center px-5 gap-3">
+            <img src="/icons/branding/war-shield.png" alt="Side War" className="w-10 h-10 shrink-0"/>
+            <div>
+              <p className="text-[9px] text-pink-400 uppercase tracking-widest font-semibold">Side War · Ore War</p>
+              <p className="text-sm font-semibold text-white leading-tight">{war.clan_name}</p>
+            </div>
+            <img src="/icons/branding/ores.png" alt="Ores" className="absolute right-0 bottom-0 h-16 w-auto opacity-90 pointer-events-none"/>
+          </div>
+          {/* War details */}
+          <div className="px-5 py-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Start Time</p>
+              <p className="text-xs text-slate-300">{formatStartTime(war.start_time)}</p>
+            </div>
+            <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition shrink-0">
+              Join Clan
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 function CwlCountdown() {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -3514,6 +3569,9 @@ export default function Home() {
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           <CwlCountdown/>
         </div>
+
+        {/* Side Wars — only renders when admin has activated one or more */}
+        <SideWarsSection/>
 
         {/* Sign Up — explicit instruction + direct link */}
         <a href="/signup"

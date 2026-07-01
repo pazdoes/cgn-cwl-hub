@@ -555,6 +555,56 @@ export default function AdminOverviewPage() {
   const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
   const [adminTab, setAdminTab] = useState("dashboard");
 
+  // ── Side Wars state ──────────────────────────────────────────────────────
+  const [sideWars, setSideWars] = useState([]);
+  const [swLoading, setSwLoading] = useState(false);
+  const [swForm, setSwForm] = useState({ clan_name: "", clan_tag: "", clan_link: "", start_time: "" });
+  const [swError, setSwError] = useState("");
+
+  useEffect(() => {
+    if (!authed || !pin) return;
+    fetch("/api/admin/side-wars", { headers: { "x-officer-pin": pin } })
+      .then(r => r.json())
+      .then(d => setSideWars(d.wars || []))
+      .catch(() => setSideWars([]));
+  }, [authed, pin]);
+
+  async function swCreate() {
+    setSwError("");
+    if (!swForm.clan_name || !swForm.clan_tag || !swForm.clan_link || !swForm.start_time) {
+      setSwError("All fields are required"); return;
+    }
+    setSwLoading(true);
+    try {
+      const res = await fetch("/api/admin/side-wars", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify(swForm),
+      });
+      const data = await res.json();
+      if (!res.ok) { setSwError(data.error || "Failed to create"); return; }
+      setSideWars(prev => [data.war, ...prev]);
+      setSwForm({ clan_name: "", clan_tag: "", clan_link: "", start_time: "" });
+    } catch { setSwError("Network error"); }
+    finally { setSwLoading(false); }
+  }
+
+  async function swToggle(war) {
+    const res = await fetch("/api/admin/side-wars", {
+      method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+      body: JSON.stringify({ id: war.id, is_active: !war.is_active }),
+    });
+    const data = await res.json();
+    if (res.ok) setSideWars(prev => prev.map(w => w.id === war.id ? data.war : w));
+  }
+
+  async function swDelete(id) {
+    await fetch("/api/admin/side-wars", {
+      method: "DELETE", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+      body: JSON.stringify({ id }),
+    });
+    setSideWars(prev => prev.filter(w => w.id !== id));
+  }
+
   if (!authed) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6">
@@ -610,7 +660,7 @@ export default function AdminOverviewPage() {
 
       {/* Tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["dashboard","Dashboard"],["directory","Directory"]].map(([key,label]) => (
+        {[["dashboard","Dashboard"],["directory","Directory"],["sidewars","Side Wars"]].map(([key,label]) => (
           <button key={key} onClick={() => setAdminTab(key)}
             className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               adminTab === key
@@ -774,6 +824,104 @@ export default function AdminOverviewPage() {
           </div>
 
           </>)} {/* end directory tab */}
+
+          {/* ── SIDE WARS TAB ── */}
+          {adminTab === "sidewars" && (<>
+
+          {/* Add new side war */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <img src="/icons/branding/war-shield.png" alt="" className="w-6 h-6"/>
+              <h2 className="text-sm font-semibold text-white">Add Side War Clan</h2>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Name</p>
+                  <input value={swForm.clan_name} onChange={e => setSwForm(p => ({...p, clan_name: e.target.value}))}
+                    placeholder="e.g. Cognition {CGN}"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                </div>
+                <div>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Tag</p>
+                  <input value={swForm.clan_tag} onChange={e => setSwForm(p => ({...p, clan_tag: e.target.value}))}
+                    placeholder="#2C8QQPCL2"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                </div>
+              </div>
+              <div>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Link</p>
+                <input value={swForm.clan_link} onChange={e => setSwForm(p => ({...p, clan_link: e.target.value}))}
+                  placeholder="https://link.clashofclans.com/..."
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              </div>
+              <div>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">War Start Time</p>
+                <input type="datetime-local" value={swForm.start_time} onChange={e => setSwForm(p => ({...p, start_time: e.target.value}))}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
+              </div>
+              {swError && <p className="text-[11px] text-red-400">{swError}</p>}
+              <button onClick={swCreate} disabled={swLoading}
+                className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition disabled:opacity-50">
+                {swLoading ? "Adding…" : "Add Side War"}
+              </button>
+            </div>
+          </div>
+
+          {/* Existing side wars */}
+          {sideWars.length === 0 ? (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+              <p className="text-slate-600 text-xs">No side wars configured yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sideWars.map(war => (
+                <div key={war.id} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{war.clan_name}</p>
+                        <p className="text-[10px] text-slate-500 font-mono">{war.clan_tag}</p>
+                        <p className="text-[10px] text-slate-600 mt-0.5">
+                          {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Active toggle */}
+                      <button onClick={() => swToggle(war)}
+                        className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition ${
+                          war.is_active
+                            ? "bg-pink-500/20 border-pink-500/60 text-pink-300"
+                            : "bg-transparent border-white/10 text-slate-500 hover:border-white/20"
+                        }`}>
+                        {war.is_active ? "Live" : "Off"}
+                      </button>
+                      {/* Delete */}
+                      <button onClick={() => swDelete(war.id)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center border border-white/10 text-slate-600 hover:border-red-500/40 hover:text-red-400 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  {war.is_active && (
+                    <div className="mt-3 pt-3 border-t border-pink-500/10 flex items-center justify-between">
+                      <p className="text-[10px] text-pink-400">Visible on homepage</p>
+                      <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
+                        className="text-[10px] text-slate-500 hover:text-slate-300 transition underline">
+                        View clan link
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          </>)} {/* end side wars tab */}
 
         </div>
       )}
