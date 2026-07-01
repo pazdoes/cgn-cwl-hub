@@ -41,7 +41,7 @@ function AppHeader({ variant = "bar" }) {
       <div
         className={`fixed inset-0 z-50 flex transition-opacity duration-150 ${navOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         onClick={() => setNavOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+          <div className="absolute inset-0 bg-black/60"/>
           <div onClick={e => e.stopPropagation()}
             className={`relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5 transition-transform duration-150 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
             <div className="flex items-center gap-2 mb-8 cursor-default select-none" onClick={handleBrandTap}>
