@@ -992,9 +992,12 @@ export default function AdminOverviewPage() {
                                 method: "PATCH",
                                 headers: { "Content-Type": "application/json", "x-officer-pin": pin },
                                 body: JSON.stringify({ id: warId, action: "set_format", time_format: fmt }),
-                              }).then(r => r.json()).then(data => {
-                                if (data.war) setSideWars(prev => prev.map(w => w.id === warId ? data.war : w));
-                              });
+                              }).then(r => r.text()).then(text => {
+                                try {
+                                  const data = JSON.parse(text);
+                                  if (data.war) setSideWars(prev => prev.map(w => w.id === warId ? data.war : w));
+                                } catch(e) { console.error("set_format parse error:", text); }
+                              }).catch(e => console.error("set_format fetch error:", e));
                             }}
                               className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-2xl text-[9px] font-semibold border transition ${
                                 active
