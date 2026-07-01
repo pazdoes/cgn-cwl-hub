@@ -1746,7 +1746,6 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sor
             </a>
           </div>
         </div>
-      )}
     </div>
   );
 }
@@ -3263,7 +3262,6 @@ function AppHeader({ variant = "bar" }) {
             </a>
           </div>
         </div>
-      )}
       {variant === "bar" && (
         <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
           <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0" title="Menu">

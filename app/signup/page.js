@@ -934,7 +934,6 @@ export default function SignupPage() {
             </ol>
           </div>
         </div>
-      )}
 
       {/* ── State C: Returning user — compact account dashboard ── */}
       {!loadingMine && isReturningUser && (
