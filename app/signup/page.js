@@ -42,11 +42,12 @@ function AppHeader({ variant = "bar" }) {
   }
   return (
     <>
-      {navOpen && (
-        <div className="fixed inset-0 z-50 flex" onClick={() => setNavOpen(false)}>
+      <div
+        className={`fixed inset-0 z-50 flex transition-opacity duration-150 ${navOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        onClick={() => setNavOpen(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
           <div onClick={e => e.stopPropagation()}
-            className="relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5">
+            className={`relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5 transition-transform duration-150 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
             <div className="flex items-center gap-2 mb-8 cursor-default select-none" onClick={handleBrandTap}>
               <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
               <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
@@ -71,7 +72,7 @@ function AppHeader({ variant = "bar" }) {
             </a>
           </div>
         </div>
-      )}
+      
       <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
         <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0" title="Menu">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
