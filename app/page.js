@@ -3197,23 +3197,20 @@ function LeaderboardView({ onBack }) {
 // or any other page (including the standalone player profile route).
 function AppHeader({ variant = "bar" }) {
   const [navOpen, setNavOpen] = useState(false);
-  const [tapCount, setTapCount] = useState(0);
+  const tapCount = useRef(0);
   const tapTimer = useRef(null);
 
   function handleBrandTap() {
-    setTapCount(prev => {
-      const next = prev + 1;
-      if (next >= 5) {
-        clearTimeout(tapTimer.current);
-        setNavOpen(false);
-        setTapCount(0);
-        window.location.href = "/admin";
-        return 0;
-      }
+    tapCount.current += 1;
+    if (tapCount.current >= 5) {
       clearTimeout(tapTimer.current);
-      tapTimer.current = setTimeout(() => setTapCount(0), 3000);
-      return next;
-    });
+      tapCount.current = 0;
+      setNavOpen(false);
+      window.location.href = "/admin";
+      return;
+    }
+    clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 3000);
   }
   const items = [
     { key: "", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
