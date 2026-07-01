@@ -532,14 +532,8 @@ export default function AdminPoolPage() {
   }
 
   async function doSetStatus(entry, status) {
-    console.log("[doSetStatus] called", { tag: entry?.player_tag, clan: entry?.assigned_clan, status, pin: pin ? "set" : "MISSING" });
     setStatusBusy(entry.player_tag);
     setStatusError(prev => ({ ...prev, [entry.player_tag]: null }));
-    // Optimistic update — capture current entries first, apply immediately,
-    // then roll back only if the API returns an error.
-    // Note: do NOT use the await-new-Promise-setEntries pattern here — React 18
-    // batching means the updater may not run synchronously, causing the fetch
-    // to never fire. Instead capture the snapshot before updating.
     let previousEntries;
     setEntries(prev => {
       previousEntries = prev;
@@ -552,7 +546,7 @@ export default function AdminPoolPage() {
         setEntries(previousEntries);
         setStatusError(prev => ({ ...prev, [entry.player_tag]: data.error || "Status update failed" }));
       }
-    } catch {
+    } catch (err) {
       setEntries(previousEntries);
       setStatusError(prev => ({ ...prev, [entry.player_tag]: "Network error" }));
     }
@@ -982,7 +976,7 @@ export default function AdminPoolPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <StatusToggle status={e.status} busy={statusBusy === e.player_tag} error={statusError[e.player_tag]} onSetStatus={status => { console.log("[StatusToggle] onSetStatus clicked", status, e.player_tag); doSetStatus(e, status); }}/>
+                              <StatusToggle status={e.status} busy={statusBusy === e.player_tag} error={statusError[e.player_tag]} onSetStatus={status => doSetStatus(e, status)}/>
                               <XButton onClick={() => doUnassign(e)} busy={unassigning === e.player_tag} title="Unassign"/>
                             </div>
                           </div>
