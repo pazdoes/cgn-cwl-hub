@@ -2114,9 +2114,76 @@ function AlliancePerformanceTile({ stats, totalAllianceStars }) {
 // All graphics are inlined as raw SVG — no imported components.
 // 680px landscape, solid backgrounds, no backdrop-blur.
 
-function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason, totalAllianceStars, awardMostThreeStars, awardClutchKing, awardPunchUpKing, awardIronDefence }) {
+function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason, totalAllianceStars, awardMostThreeStars, awardClutchKing, awardPunchUpKing, awardIronDefence, awardMostConsistent, seasonMvp }) {
   const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
   const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
+
+  const tiles = [
+    {
+      label: "Best Attacker",
+      player: bestAttacker,
+      value: bestAttacker ? parseFloat(bestAttacker.efficiency).toFixed(2) : null,
+      unit: "Atk EFF",
+      colour: "#c4b5fd", bg: "rgba(139,92,246,0.07)", border: "rgba(139,92,246,0.22)",
+      icon: "M13 10V3L4 14h7v7l9-11h-7z",
+    },
+    {
+      label: "3★ Machine",
+      player: awardMostThreeStars,
+      value: awardMostThreeStars ? String(awardMostThreeStars.three_stars) : null,
+      unit: "3-stars",
+      colour: "#fbbf24", bg: "rgba(251,191,36,0.07)", border: "rgba(251,191,36,0.22)",
+      icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    },
+    {
+      label: "Best Defender",
+      player: bestDefender,
+      value: bestDefender ? parseFloat(bestDefender.defence_efficiency).toFixed(2) : null,
+      unit: "Def EFF",
+      colour: "#93c5fd", bg: "rgba(59,130,246,0.07)", border: "rgba(59,130,246,0.22)",
+      icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+    },
+    {
+      label: "Brave Heart",
+      player: awardPunchUpKing,
+      value: awardPunchUpKing ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null,
+      unit: "Punch-Up",
+      colour: "#86efac", bg: "rgba(34,197,94,0.07)", border: "rgba(34,197,94,0.22)",
+      icon: "M5 10l7-7m0 0l7 7m-7-7v18",
+    },
+    {
+      label: "Clutch King",
+      player: awardClutchKing,
+      value: awardClutchKing ? parseFloat(awardClutchKing.clutch_rate).toFixed(2) : null,
+      unit: "Clutch Rate",
+      colour: "#f472b6", bg: "rgba(244,114,182,0.07)", border: "rgba(244,114,182,0.22)",
+      icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",
+    },
+    {
+      label: "Iron Wall",
+      player: awardIronDefence,
+      value: awardIronDefence ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2) : null,
+      unit: "Def EFF",
+      colour: "#34d399", bg: "rgba(52,211,153,0.07)", border: "rgba(52,211,153,0.22)",
+      icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+    },
+    {
+      label: "Season MVP",
+      player: seasonMvp,
+      value: seasonMvp ? parseFloat(seasonMvp.overall).toFixed(2) : null,
+      unit: "CGN Rating",
+      colour: "#D4AF37", bg: "rgba(212,175,55,0.07)", border: "rgba(212,175,55,0.22)",
+      icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
+    },
+    {
+      label: "Most Consistent",
+      player: awardMostConsistent,
+      value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score||0).toFixed(2) : null,
+      unit: "Consistency",
+      colour: "#a78bfa", bg: "rgba(167,139,250,0.07)", border: "rgba(167,139,250,0.22)",
+      icon: "M4 6h16M4 10h16M4 14h16M4 18h16",
+    },
+  ];
 
   return (
     <div style={{
@@ -2125,7 +2192,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
       background: "#070b17",
       borderRadius: 28,
       border: "1px solid rgba(212,175,55,0.35)",
-      padding: "28px 36px 24px",
+      padding: "26px 32px 22px",
       fontFamily: "ui-sans-serif, system-ui, sans-serif",
       color: "white",
       boxSizing: "border-box",
@@ -2155,48 +2222,46 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         <rect width="100%" height="100%" fill="url(#grain-recap)"/>
       </svg>
 
-      {/* Content — z-index 1 */}
       <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
 
-        {/* ── HEADER ROW ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        {/* ── HEADER ── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 11, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>Season Recap</div>
-            <div style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.06em", color: "white" }}>{selectedSeason}</div>
+            <div style={{ fontSize: 10, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 3 }}>Season Recap</div>
+            <div style={{ fontSize: 26, fontWeight: 300, letterSpacing: "0.06em", color: "white" }}>{selectedSeason}</div>
             {totalAllianceStars > 0 && (
-              <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 26, fontWeight: 300, color: "#fbbf24" }}>{totalAllianceStars}</span>
-                <span style={{ fontSize: 10, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Alliance Stars</span>
+              <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 22, fontWeight: 300, color: "#fbbf24" }}>{totalAllianceStars}</span>
+                <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Alliance Stars</span>
               </div>
             )}
           </div>
-          {/* Top Clan */}
           {topClan && (
             <div style={{
               background: "rgba(212,175,55,0.06)",
               border: "1px solid rgba(212,175,55,0.25)",
-              borderRadius: 16,
-              padding: "14px 20px",
+              borderRadius: 14,
+              padding: "12px 18px",
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: 14,
             }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
               </svg>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 300, letterSpacing: "0.1em", color: medalColours[1] }}>{topClan.clan_name.split(" ")[0]}</div>
-                <div style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 2 }}>{topClan.cwl_rank}</div>
+                <div style={{ fontSize: 16, fontWeight: 300, letterSpacing: "0.1em", color: medalColours[1] }}>{topClan.clan_name.split(" ")[0]}</div>
+                <div style={{ fontSize: 9, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 2 }}>{topClan.cwl_rank}</div>
               </div>
-              <div style={{ display: "flex", gap: 18, marginLeft: 8 }}>
+              <div style={{ display: "flex", gap: 16, marginLeft: 6 }}>
                 {[
                   { label: "Wins", value: topClan.wars_won, colour: "#86efac" },
                   { label: "Atk EFF", value: parseFloat(topClan.attack_efficiency).toFixed(2), colour: "#c4b5fd" },
                   { label: "CGN Rating", value: topClan.overall.toFixed(2), colour: "#c4b5fd" },
                 ].map(({ label, value, colour }) => (
                   <div key={label} style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: colour }}>{value}</div>
-                    <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: colour }}>{value}</div>
+                    <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
                   </div>
                 ))}
               </div>
@@ -2205,82 +2270,76 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         </div>
 
         {/* Divider */}
-        <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 18 }}/>
+        <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 16 }}/>
 
-        {/* ── MAIN TWO-COLUMN LAYOUT ── */}
-        <div style={{ display: "flex", gap: 20, flex: 1 }}>
+        {/* ── TWO-COLUMN BODY ── */}
+        <div style={{ display: "flex", gap: 18, flex: 1 }}>
 
-          {/* LEFT COLUMN — Top Players + War Record */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, width: 380, flexShrink: 0 }}>
+          {/* LEFT — Top Players + War Record */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 340, flexShrink: 0 }}>
 
             {/* Top 3 Players */}
             <div style={{
               background: "rgba(255,255,255,0.03)",
-              borderRadius: 14,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.07)",
-              padding: "14px 16px",
+              padding: "12px 14px",
               flex: 1,
             }}>
-              <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12 }}>Top Players</div>
+              <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>Top Players</div>
               {top3.map((p, i) => (
                 <div key={p.player_tag} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: i < 2 ? 10 : 0,
-                  paddingBottom: i < 2 ? 10 : 0,
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  marginBottom: i < 2 ? 8 : 0, paddingBottom: i < 2 ? 8 : 0,
                   borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
                     </svg>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: medalColours[i+1] }}>{p.player_name}</div>
-                      <div style={{ fontSize: 10, color: "#64748b" }}>{p.clan_name.split(" ")[0]}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: medalColours[i+1] }}>{p.player_name}</div>
+                      <div style={{ fontSize: 9, color: "#64748b" }}>{p.clan_name.split(" ")[0]}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "#c4b5fd" }}>{p.overall.toFixed(2)}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#c4b5fd" }}>{p.overall.toFixed(2)}</div>
                 </div>
               ))}
             </div>
 
-            {/* Alliance War Record */}
+            {/* War Record */}
             <div style={{
               background: "rgba(255,255,255,0.03)",
-              borderRadius: 14,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.07)",
-              padding: "14px 16px",
+              padding: "12px 14px",
             }}>
-              <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>Alliance War Record</div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Alliance War Record</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                 {[
                   { label: "Won",   value: totalWins,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)" },
                   { label: "Lost",  value: totalLosses, colour: "#f87171", bg: "rgba(239,68,68,0.06)",   border: "rgba(239,68,68,0.2)" },
                   { label: "Drawn", value: totalDraws,  colour: "#64748b", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)" },
                 ].map(({ label, value, colour, bg, border }) => (
-                  <div key={label} style={{ background: bg, borderRadius: 10, border: `1px solid ${border}`, padding: "8px 14px", flex: 1, textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: colour }}>{value}</div>
-                    <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
+                  <div key={label} style={{ background: bg, borderRadius: 8, border: `1px solid ${border}`, padding: "6px 10px", flex: 1, textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: colour }}>{value}</div>
+                    <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
                   </div>
                 ))}
               </div>
               {clanWithOverall.slice(0, 3).map((c, i) => (
                 <div key={c.clan_tag || c.clan_name} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingBottom: i < Math.min(clanWithOverall.length, 3) - 1 ? 6 : 0,
-                  marginBottom: i < Math.min(clanWithOverall.length, 3) - 1 ? 6 : 0,
-                  borderBottom: i < Math.min(clanWithOverall.length, 3) - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  paddingBottom: i < 2 ? 5 : 0, marginBottom: i < 2 ? 5 : 0,
+                  borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.04)" : "none",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
                     </svg>
-                    <span style={{ fontSize: 12, color: "white" }}>{c.clan_name.split(" ")[0]}</span>
+                    <span style={{ fontSize: 11, color: "white" }}>{c.clan_name.split(" ")[0]}</span>
                   </div>
-                  <div style={{ display: "flex", gap: 12, fontSize: 11 }}>
+                  <div style={{ display: "flex", gap: 10, fontSize: 10 }}>
                     <span style={{ color: "#86efac" }}>{c.wars_won}W</span>
                     <span style={{ color: "#f87171" }}>{c.wars_lost}L</span>
                     <span style={{ color: "#c4b5fd" }}>{parseFloat(c.attack_efficiency).toFixed(2)} EFF</span>
@@ -2290,80 +2349,49 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
             </div>
           </div>
 
-          {/* RIGHT COLUMN — Standout Performers + Season Awards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
-
-            {/* Standout Performers */}
-            <div style={{ display: "flex", gap: 14 }}>
-              {bestAttacker && (
-                <div style={{
-                  flex: 1,
-                  background: "rgba(139,92,246,0.06)",
-                  borderRadius: 14,
-                  border: "1px solid rgba(139,92,246,0.2)",
-                  padding: "14px 16px",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Best Attack</div>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>{bestAttacker.player_name}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#c4b5fd", marginTop: 4 }}>{parseFloat(bestAttacker.efficiency).toFixed(2)}</div>
+          {/* RIGHT — 8 highlight tiles in 2×4 grid */}
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 10 }}>
+            {tiles.map((tile, i) => tile.player && tile.value ? (
+              <div key={i} style={{
+                background: tile.bg,
+                borderRadius: 12,
+                border: `1px solid ${tile.border}`,
+                padding: "10px 12px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={tile.colour} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+                  </svg>
+                  <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{tile.label}</div>
                 </div>
-              )}
-              {bestDefender && (
-                <div style={{
-                  flex: 1,
-                  background: "rgba(59,130,246,0.06)",
-                  borderRadius: 14,
-                  border: "1px solid rgba(59,130,246,0.2)",
-                  padding: "14px 16px",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                    </svg>
-                    <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Best Defence</div>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>{bestDefender.player_name}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#93c5fd", marginTop: 4 }}>{parseFloat(bestDefender.defence_efficiency).toFixed(2)}</div>
-                </div>
-              )}
-            </div>
-
-            {/* Season Awards — 2x2 grid */}
-            {(awardMostThreeStars || awardClutchKing || awardPunchUpKing || awardIronDefence) && (
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>Season Awards</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: "calc(100% - 26px)" }}>
-                  {[
-                    { label: "Most 3★",      player: awardMostThreeStars, value: awardMostThreeStars ? `${awardMostThreeStars.three_stars} hits` : null,                                    colour: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
-                    { label: "Clutch King",   player: awardClutchKing,     value: awardClutchKing     ? `${parseFloat(awardClutchKing.clutch_rate).toFixed(2)} avg` : null,                 colour: "#c4b5fd", bg: "rgba(139,92,246,0.06)", border: "rgba(139,92,246,0.2)",  icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" },
-                    { label: "Punch-Up King", player: awardPunchUpKing,    value: awardPunchUpKing    ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%` : null,                  colour: "#93c5fd", bg: "rgba(59,130,246,0.06)",  border: "rgba(59,130,246,0.2)",  icon: "M5 10l7-7m0 0l7 7m-7-7v18" },
-                    { label: "Iron Defence",  player: awardIronDefence,    value: awardIronDefence    ? `${parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2)} Def EFF` : null,   colour: "#86efac", bg: "rgba(34,197,94,0.06)",   border: "rgba(34,197,94,0.2)",   icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-                  ].filter(a => a.player && a.value).map((award, i) => (
-                    <div key={i} style={{ background: award.bg, borderRadius: 12, border: `1px solid ${award.border}`, padding: "12px 14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke={award.colour} strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d={award.icon}/>
-                        </svg>
-                        <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{award.label}</div>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "white" }}>{award.player.player_name}</div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: award.colour, marginTop: 3 }}>{award.value}</div>
-                    </div>
-                  ))}
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "white", marginBottom: 2 }}>{tile.player.player_name}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: tile.colour, lineHeight: 1 }}>{tile.value}</div>
+                  {tile.unit && <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>{tile.unit}</div>}
                 </div>
               </div>
-            )}
+            ) : (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.02)",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.05)",
+                padding: "10px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <div style={{ fontSize: 9, color: "#1e293b", textTransform: "uppercase", letterSpacing: "0.1em" }}>No data</div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 9, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+        <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 8, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>
             cgnco.vercel.app · Cognition {"{CGN}"}
           </span>
         </div>
@@ -2450,6 +2478,7 @@ function RecapView({ onBack }) {
   const awardClutchKing = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
   const awardPunchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
   const awardIronDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
+  const awardMostConsistent = [...withAttacks].filter(p => p.consistency_score != null).sort((a,b) => parseFloat(b.consistency_score||0) - parseFloat(a.consistency_score||0))[0];
 
   // Previous season delta
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
@@ -2506,6 +2535,8 @@ function RecapView({ onBack }) {
             awardClutchKing={awardClutchKing}
             awardPunchUpKing={awardPunchUpKing}
             awardIronDefence={awardIronDefence}
+            awardMostConsistent={awardMostConsistent}
+            seasonMvp={top3[0]}
           />
         </div>
       )}
