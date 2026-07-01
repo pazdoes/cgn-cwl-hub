@@ -977,32 +977,37 @@ export default function AdminOverviewPage() {
                     <div className="border-t border-white/[0.06] pt-3 mt-3">
                       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Time Display</p>
                       <div className="flex gap-1.5">
-                        {[
-                          ["calendar", (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                          ), "Date"],
-                          ["countdown", (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                          ), "Countdown"],
-                          ["recurring", (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                          ), "Recurring"],
-                        ].map(([fmt, icon, label]) => (
-                          <button key={fmt} onClick={() => swSetFormat(war, fmt)}
-                            className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-2xl text-[9px] font-semibold border transition ${
-                              (war.time_format || "calendar") === fmt
-                                ? "bg-purple-500/20 border-purple-500/60 text-purple-300"
-                                : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
-                            }`}>
-                            {icon}{label}
-                          </button>
-                        ))}
+                        {(["calendar","countdown","recurring"]).map(fmt => {
+                          const warId = war.id;
+                          const active = (war.time_format || "calendar") === fmt;
+                          const labels = { calendar: "Date", countdown: "Countdown", recurring: "Recurring" };
+                          const icons = {
+                            calendar: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+                            countdown: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+                            recurring: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15",
+                          };
+                          return (
+                            <button key={fmt} onClick={() => {
+                              fetch("/api/admin/side-wars", {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+                                body: JSON.stringify({ id: warId, action: "set_format", time_format: fmt }),
+                              }).then(r => r.json()).then(data => {
+                                if (data.war) setSideWars(prev => prev.map(w => w.id === warId ? data.war : w));
+                              });
+                            }}
+                              className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-2xl text-[9px] font-semibold border transition ${
+                                active
+                                  ? "bg-purple-500/20 border-purple-500/60 text-purple-300"
+                                  : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
+                              }`}>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d={icons[fmt]}/>
+                              </svg>
+                              {labels[fmt]}
+                            </button>
+                          );
+                        })}
                       </div>
                       {war.time_format === "recurring" && (
                         <p className="text-[9px] text-slate-600 mt-1.5">Resets every 48h from start time</p>
