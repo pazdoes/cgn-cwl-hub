@@ -628,6 +628,15 @@ export default function AdminOverviewPage() {
     setSideWars(prev => prev.filter(w => w.id !== id));
   }
 
+  async function swSetFormat(war, time_format) {
+    const res = await fetch("/api/admin/side-wars", {
+      method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+      body: JSON.stringify({ id: war.id, action: "set_format", time_format }),
+    });
+    const data = await res.json();
+    if (res.ok) setSideWars(prev => prev.map(w => w.id === war.id ? data.war : w));
+  }
+
   if (!authed) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6">
@@ -965,6 +974,26 @@ export default function AdminOverviewPage() {
                     )}
                     {swTimeErrors[war.id] && (
                       <p className="text-[10px] text-red-400 mt-1">{swTimeErrors[war.id]}</p>
+                    )}
+                  </div>
+
+                  {/* Time format selector */}
+                  <div className="border-t border-white/[0.06] pt-3 mt-3">
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Time Display</p>
+                    <div className="flex gap-1.5">
+                      {[["calendar","📅 Date"],["countdown","⏱ Countdown"],["recurring","🔁 Recurring"]].map(([fmt, label]) => (
+                        <button key={fmt} onClick={() => swSetFormat(war, fmt)}
+                          className={`flex-1 py-1.5 rounded-2xl text-[9px] font-semibold border transition ${
+                            (war.time_format || "calendar") === fmt
+                              ? "bg-purple-500/20 border-purple-500/60 text-purple-300"
+                              : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
+                          }`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    {(war.time_format === "recurring" || !war.time_format) && war.time_format === "recurring" && (
+                      <p className="text-[9px] text-slate-600 mt-1.5">Resets every 48h from start time</p>
                     )}
                   </div>
 

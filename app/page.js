@@ -3326,9 +3326,89 @@ function AppFooter({ onNavigateHome, showHome = true }) {
 // CWL war week begins on the 1st of every calendar month. If currently within
 // the first 8 days (live war week), shows a "live" state instead of counting
 // down to the same month's already-passed start.
-// ─── Side Wars homepage tile — only renders when active wars exist ────────────
-function SideWarsSection() {
-  const [wars, setWars] = useState([]);
+// ─── Side Wars homepage tile ──────────────────────────────────────────────────
+// Fetches active side wars on mount. When active wars exist they replace the
+// Sign Up and Rosters tiles. Each tile supports three time display modes:
+//   calendar  — static readable date/time
+//   countdown — live single countdown to start_time
+//   recurring — live countdown that resets every 48h (24h prep + 24h battle)
+function SideWarTime({ war }) {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    if (war.time_format === "calendar") return;
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, [war.time_format]);
+
+  if (war.time_format === "calendar" || !war.start_time) {
+    return (
+      <div>
+        <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Start Time</p>
+        <p className="text-sm font-semibold text-white">
+          {war.start_time
+            ? new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })
+            : "TBC"}
+        </p>
+      </div>
+    );
+  }
+
+  const start = new Date(war.start_time);
+  let target;
+
+  if (war.time_format === "recurring") {
+    // Find the next 48h cycle from start_time
+    const msNow = now.getTime();
+    const msStart = start.getTime();
+    const cycle = 48 * 60 * 60 * 1000;
+    const elapsed = msNow - msStart;
+    if (elapsed < 0) {
+      target = start;
+    } else {
+      const cyclesDone = Math.floor(elapsed / cycle);
+      target = new Date(msStart + (cyclesDone + 1) * cycle);
+    }
+  } else {
+    // countdown — single target
+    target = start;
+  }
+
+  const msLeft = Math.max(0, target - now);
+  const days = Math.floor(msLeft / 86400000);
+  const hours = Math.floor((msLeft % 86400000) / 3600000);
+  const mins = Math.floor((msLeft % 3600000) / 60000);
+  const isLive = msLeft === 0;
+
+  return (
+    <div>
+      <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">
+        {war.time_format === "recurring" ? "Next War Starts In" : "War Starts In"}
+      </p>
+      {isLive ? (
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+          <span className="text-sm font-semibold text-green-300">Live Now</span>
+        </div>
+      ) : (
+        <div className="flex items-baseline gap-1.5">
+          {days > 0 && (
+            <>
+              <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{days}</span>
+              <span className="text-[10px] text-slate-500 mr-1">d</span>
+            </>
+          )}
+          <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{String(hours).padStart(2,"0")}</span>
+          <span className="text-[10px] text-slate-500">h</span>
+          <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{String(mins).padStart(2,"0")}</span>
+          <span className="text-[10px] text-slate-500">m</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SideWarsSection({ onNavigate }) {
+  const [wars, setWars] = useState(null);
 
   useEffect(() => {
     fetch("/api/side-wars")
@@ -3337,23 +3417,63 @@ function SideWarsSection() {
       .catch(() => setWars([]));
   }, []);
 
-  if (wars.length === 0) return null;
+  // null = still loading, don't render anything yet
+  if (wars === null) return null;
+  // no active wars — render the default Sign Up + Rosters tiles
+  if (wars.length === 0) return (
+    <>
+      {/* Sign Up */}
+      <a href="/signup"
+        className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
 
-  function formatStartTime(iso) {
-    const d = new Date(iso);
-    return d.toLocaleString("en-GB", {
-      weekday: "short", day: "numeric", month: "short",
-      hour: "2-digit", minute: "2-digit", timeZoneName: "short",
-    });
-  }
+      {/* Rosters */}
+      <button onClick={() => onNavigate("roster")}
+        className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">View Published Rosters</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">See clan rosters &amp; league standings</p>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </button>
+    </>
+  );
 
+  // Active wars — replace Sign Up + Rosters with war tiles
   return (
     <>
       {wars.map(war => (
         <div key={war.id}
           className="rounded-3xl border border-pink-500/20 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          {/* Ore accent strip */}
-          <div className="relative h-16 bg-gradient-to-r from-pink-500/[0.08] to-purple-500/[0.08] flex items-center px-5 gap-3">
+          {/* Header strip */}
+          <div className="relative h-16 bg-gradient-to-r from-pink-500/[0.08] to-purple-500/[0.08] flex items-center px-5 gap-3 overflow-hidden">
             <img src="/icons/branding/war-shield.png" alt="Side War" className="w-10 h-10 shrink-0"/>
             <div>
               <p className="text-[9px] text-pink-400 uppercase tracking-widest font-semibold">Side War · Ore War</p>
@@ -3361,12 +3481,9 @@ function SideWarsSection() {
             </div>
             <img src="/icons/branding/ores.png" alt="Ores" className="absolute right-0 bottom-0 h-14 w-auto object-contain opacity-90 pointer-events-none"/>
           </div>
-          {/* War details */}
+          {/* Time + CTA */}
           <div className="px-5 py-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Start Time</p>
-              <p className="text-xs text-slate-300">{formatStartTime(war.start_time)}</p>
-            </div>
+            <SideWarTime war={war}/>
             <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition shrink-0">
               Join Clan
@@ -3570,52 +3687,10 @@ export default function Home() {
           <CwlCountdown/>
         </div>
 
-        {/* Side Wars — only renders when admin has activated one or more */}
-        <SideWarsSection/>
+        {/* Side Wars when active, otherwise Sign Up + Rosters */}
+        <SideWarsSection onNavigate={navigate}/>
 
-        {/* Sign Up — explicit instruction + direct link */}
-        <a href="/signup"
-          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </a>
-
-        {/* Rosters — explicit instruction + direct link to Roster hub */}
-        <button onClick={() => navigate("roster")}
-          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">View Published Rosters</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">See clan rosters &amp; league standings</p>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </button>
-
-        {/* Stats gateway — highlight reel signals depth, clearly tappable */}
+        {/* Stats gateway */}
         <button onClick={() => navigate("leaderboard")}
           className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
           <div className="flex items-center justify-between mb-3">

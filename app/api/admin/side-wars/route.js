@@ -6,7 +6,6 @@ function checkPin(request) {
   return pin === process.env.OFFICER_PIN;
 }
 
-// GET — list all saved side war clans for admin UI
 export async function GET(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const sql = getDb();
@@ -14,7 +13,6 @@ export async function GET(request) {
   return NextResponse.json({ wars: rows });
 }
 
-// POST — save a clan (start_time optional)
 export async function POST(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const { clan_name, clan_tag, clan_link, start_time } = await request.json().catch(() => ({}));
@@ -30,8 +28,6 @@ export async function POST(request) {
   return NextResponse.json({ war: row });
 }
 
-// PATCH — update fields or toggle active
-// Handles: set start_time, toggle is_active, update clan details
 export async function PATCH(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const body = await request.json().catch(() => ({}));
@@ -40,7 +36,6 @@ export async function PATCH(request) {
   const sql = getDb();
 
   if (action === "toggle") {
-    // Check if start_time is set before allowing activation
     const [current] = await sql`SELECT * FROM side_wars WHERE id = ${id}`;
     if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (!current.is_active && !current.start_time) {
@@ -60,11 +55,21 @@ export async function PATCH(request) {
     return NextResponse.json({ war: row });
   }
 
+  if (action === "set_format") {
+    const { time_format } = fields;
+    if (!["calendar", "countdown", "recurring"].includes(time_format)) {
+      return NextResponse.json({ error: "Invalid time_format" }, { status: 400 });
+    }
+    const [row] = await sql`
+      UPDATE side_wars SET time_format = ${time_format} WHERE id = ${id} RETURNING *
+    `;
+    return NextResponse.json({ war: row });
+  }
+
   if (action === "update") {
     const { clan_name, clan_tag, clan_link } = fields;
     const [row] = await sql`
-      UPDATE side_wars
-      SET clan_name = ${clan_name}, clan_tag = ${clan_tag}, clan_link = ${clan_link}
+      UPDATE side_wars SET clan_name = ${clan_name}, clan_tag = ${clan_tag}, clan_link = ${clan_link}
       WHERE id = ${id} RETURNING *
     `;
     return NextResponse.json({ war: row });
@@ -73,7 +78,6 @@ export async function PATCH(request) {
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
-// DELETE — remove a saved clan entirely
 export async function DELETE(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const { id } = await request.json().catch(() => ({}));
