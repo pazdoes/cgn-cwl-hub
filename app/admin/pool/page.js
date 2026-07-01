@@ -534,10 +534,15 @@ export default function AdminPoolPage() {
   async function doSetStatus(entry, status) {
     setStatusBusy(entry.player_tag);
     setStatusError(prev => ({ ...prev, [entry.player_tag]: null }));
-    // Optimistic update — apply immediately so the pill persists visually
-    // even before the API responds. Roll back only if the API returns an error.
-    const previousEntries = await new Promise(resolve => {
-      setEntries(prev => { resolve(prev); return prev.map(e => e.player_tag === entry.player_tag ? { ...e, status } : e); });
+    // Optimistic update — capture current entries first, apply immediately,
+    // then roll back only if the API returns an error.
+    // Note: do NOT use the await-new-Promise-setEntries pattern here — React 18
+    // batching means the updater may not run synchronously, causing the fetch
+    // to never fire. Instead capture the snapshot before updating.
+    let previousEntries;
+    setEntries(prev => {
+      previousEntries = prev;
+      return prev.map(e => e.player_tag === entry.player_tag ? { ...e, status } : e);
     });
     try {
       const res = await fetch("/api/admin/status", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ tag: entry.player_tag, clan: entry.assigned_clan, status }) });
