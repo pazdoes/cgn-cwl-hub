@@ -12,6 +12,24 @@ import DiscordWidget from "../components/DiscordWidget";
 // this route can't share component definitions with the main app file ───
 function AppHeader({ variant = "bar" }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+  const tapTimer = useRef(null);
+
+  function handleBrandTap() {
+    setTapCount(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        clearTimeout(tapTimer.current);
+        setNavOpen(false);
+        setTapCount(0);
+        window.location.href = "/admin";
+        return 0;
+      }
+      clearTimeout(tapTimer.current);
+      tapTimer.current = setTimeout(() => setTapCount(0), 3000);
+      return next;
+    });
+  }
   const items = [
     { key: "", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
     { key: "roster", label: "Signup / Rosters", icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" },
@@ -32,7 +50,7 @@ function AppHeader({ variant = "bar" }) {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
           <div onClick={e => e.stopPropagation()}
             className="relative z-10 w-72 max-w-[80vw] h-full bg-[#0d1424]/95 backdrop-blur-xl border-r border-white/10 flex flex-col p-5">
-            <div className="flex items-center gap-2 mb-8">
+            <div className="flex items-center gap-2 mb-8 cursor-default select-none" onClick={handleBrandTap}>
               <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
               <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
             </div>
