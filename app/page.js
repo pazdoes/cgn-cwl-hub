@@ -3354,12 +3354,12 @@ function SideWarsSection() {
           className="rounded-3xl border border-pink-500/20 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           {/* Ore accent strip */}
           <div className="relative h-16 bg-gradient-to-r from-pink-500/[0.08] to-purple-500/[0.08] flex items-center px-5 gap-3">
-            <img src="/icons/branding/war-shield.png" alt="Side War" className="w-10 h-10 shrink-0"/>
+            <img src={BRANDING.warshield} alt="Side War" className="w-10 h-10 shrink-0"/>
             <div>
               <p className="text-[9px] text-pink-400 uppercase tracking-widest font-semibold">Side War · Ore War</p>
               <p className="text-sm font-semibold text-white leading-tight">{war.clan_name}</p>
             </div>
-            <img src="/icons/branding/ores.png" alt="Ores" className="absolute right-0 bottom-0 h-16 w-auto opacity-90 pointer-events-none"/>
+            <img src={BRANDING.ores} alt="Ores" className="absolute right-0 bottom-0 h-14 w-auto object-contain opacity-90 pointer-events-none"/>
           </div>
           {/* War details */}
           <div className="px-5 py-4 flex items-center justify-between gap-3">
