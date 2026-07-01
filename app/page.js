@@ -2748,6 +2748,68 @@ function RecapView({ onBack }) {
 
 
 
+// ─── Leaderboard metric info modal ───────────────────────────────────────────
+const LB_METRIC_INFO = [
+  { key: "overall",            label: "CGN Rating",    stroke: "#a78bfa", icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z", tip: "Weighted overall score: 60% Attack EFF + 40% Defence EFF. Higher is better." },
+  { key: "efficiency",         label: "Atk EFF",       stroke: "#a78bfa", icon: "M13 10V3L4 14h7v7l9-11h-7z",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         tip: "Average stars earned per attack. Max is 3.00 — every attack was a 3-star." },
+  { key: "defence_efficiency", label: "Def EFF",        stroke: "#60a5fa", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",                                                                                                                                                                                                                                                                                                     tip: "Average stars conceded per defence. Lower is better — 0.00 means no stars given away." },
+  { key: "stars_earned",       label: "Stars",          stroke: "#86efac", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",                                                                                                                     tip: "Total stars earned across all attacks in the selected period." },
+  { key: "stars_conceded",     label: "Stars Given",    stroke: "#94a3b8", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",                                                                                                                     tip: "Total stars conceded to opponents across all defences." },
+  { key: "three_star_rate",    label: "3★ Rate",        stroke: "#86efac", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",                                                                                                                     tip: "Percentage of attacks that achieved full 3-star destruction." },
+  { key: "avg_stars_per_attack", label: "Avg ★/Atk",   stroke: "#fbbf24", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",                                                                                                                                                                                                                                                                                     tip: "Mean stars per attack across all wars. Similar to Atk EFF but expressed as a raw average." },
+  { key: "punch_up_rate",      label: "Punch-Up",       stroke: "#60a5fa", icon: "M5 10l7-7m0 0l7 7m-7-7v18",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         tip: "Percentage of attacks made against a higher Town Hall level than the attacker's own." },
+  { key: "clutch_rate",        label: "Clutch",         stroke: "#a78bfa", icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",                                                                                                                                                                                                                                                                                                                                                 tip: "Efficiency on same-TH or higher attacks — measures skill independent of match-up advantage." },
+  { key: "missed_attacks",     label: "Missed",         stroke: "#f87171", icon: "M6 18L18 6M6 6l12 12",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               tip: "Number of available attacks not used in war. Highlighted red when greater than zero." },
+  { key: "attacks_used",       label: "Attacks",        stroke: "#94a3b8", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",                                                                                                                                                                                                                                                                                                                                                               tip: "Attacks used out of total available (e.g. 14/14). Shows participation level." },
+  { key: "destruction_pct",    label: "Dest %",         stroke: "#94a3b8", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",                                                                                                                                                                                                                                                                                     tip: "Average percentage destruction per attack across all wars." },
+  { key: "defence_pct",        label: "Def %",          stroke: "#94a3b8", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",                                                                                                                                                                                                                                                                                     tip: "Average percentage destruction conceded per defence." },
+  { key: "consistency_score",  label: "Consistency",    stroke: "#94a3b8", icon: "M4 6h16M4 10h16M4 14h16M4 18h16",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   tip: "How reliably a player performs at or above their average — rewards steady performers over streaky ones." },
+];
+
+function LbInfoButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(v => !v)}
+        className={`w-4 h-4 rounded-full flex items-center justify-center border transition text-[8px] font-bold shrink-0 ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/20 text-slate-500 hover:border-purple-500/40 hover:text-purple-400"}`}>
+        i
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
+          <div className="fixed bottom-0 left-0 right-0 z-50 sm:static sm:absolute sm:bottom-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-full sm:mt-2 sm:w-[340px]">
+            <div className="rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424]/98 backdrop-blur-xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-widest">Stat Reference</p>
+                <button type="button" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-300 transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <div className="px-4 py-3 space-y-1 max-h-[60vh] overflow-y-auto">
+                {LB_METRIC_INFO.map(m => (
+                  <div key={m.key} className="flex items-start gap-3 px-2 py-2.5 rounded-2xl hover:bg-white/[0.03] transition">
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.04] border border-white/[0.06] mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke={m.stroke} strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d={m.icon}/>
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-white">{m.label}</p>
+                      <p className="text-[10px] text-slate-500 leading-relaxed mt-0.5">{m.tip}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 function LeaderboardView({ onBack }) {
   const [lbTab, setLbTab] = useState("player"); // "player" | "clan"
   const [data, setData] = useState(null);
@@ -3126,6 +3188,7 @@ function LeaderboardView({ onBack }) {
                 </div>
               );
             })}
+            <LbInfoButton/>
           </div>
         )}
 
