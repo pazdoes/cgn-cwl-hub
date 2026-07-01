@@ -3084,6 +3084,7 @@ function LeaderboardView({ onBack }) {
           {(() => {
             const activeCount = (selectedSeason !== "all" ? 1 : 0) + (clanFilter !== "all" ? 1 : 0) + (lbTab === "player" && thFilter !== "all" ? 1 : 0);
             return (
+              <>
               <button type="button" onClick={() => setShowFiltersModal(true)}
                 className={`relative rounded-full border px-3 py-1 text-xs flex items-center gap-1.5 transition ${activeCount > 0 ? "border-purple-500/40 bg-purple-500/[0.08] text-purple-300" : "border-white/10 bg-white/[0.04] text-slate-300 hover:text-white"}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -3095,6 +3096,7 @@ function LeaderboardView({ onBack }) {
                 )}
               </button>
               <LbInfoButton/>
+            </>
             );
           })()}
         </div>
