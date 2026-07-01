@@ -6,7 +6,7 @@ function checkPin(request) {
   return pin === process.env.OFFICER_PIN;
 }
 
-// GET — list all side wars (active + inactive) for admin UI
+// GET — list all saved side war clans for admin UI
 export async function GET(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const sql = getDb();
@@ -14,39 +14,66 @@ export async function GET(request) {
   return NextResponse.json({ wars: rows });
 }
 
-// POST — create a new side war entry
+// POST — save a clan (start_time optional)
 export async function POST(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const { clan_name, clan_tag, clan_link, start_time } = await request.json().catch(() => ({}));
-  if (!clan_name || !clan_tag || !clan_link || !start_time) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  if (!clan_name || !clan_tag || !clan_link) {
+    return NextResponse.json({ error: "Clan name, tag and link are required" }, { status: 400 });
   }
   const sql = getDb();
   const [row] = await sql`
     INSERT INTO side_wars (clan_name, clan_tag, clan_link, start_time)
-    VALUES (${clan_name}, ${clan_tag}, ${clan_link}, ${start_time})
+    VALUES (${clan_name}, ${clan_tag}, ${clan_link}, ${start_time || null})
     RETURNING *
   `;
   return NextResponse.json({ war: row });
 }
 
-// PATCH — update a side war entry (toggle active, update fields)
+// PATCH — update fields or toggle active
+// Handles: set start_time, toggle is_active, update clan details
 export async function PATCH(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  const { id, ...fields } = await request.json().catch(() => ({}));
+  const body = await request.json().catch(() => ({}));
+  const { id, action, ...fields } = body;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   const sql = getDb();
-  const allowed = ["clan_name", "clan_tag", "clan_link", "start_time", "is_active"];
-  const updates = Object.fromEntries(Object.entries(fields).filter(([k]) => allowed.includes(k)));
-  if (Object.keys(updates).length === 0) return NextResponse.json({ error: "No valid fields" }, { status: 400 });
 
-  const [row] = await sql`
-    UPDATE side_wars SET ${sql(updates)} WHERE id = ${id} RETURNING *
-  `;
-  return NextResponse.json({ war: row });
+  if (action === "toggle") {
+    // Check if start_time is set before allowing activation
+    const [current] = await sql`SELECT * FROM side_wars WHERE id = ${id}`;
+    if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!current.is_active && !current.start_time) {
+      return NextResponse.json({ error: "Set a start time before activating" }, { status: 400 });
+    }
+    const [row] = await sql`
+      UPDATE side_wars SET is_active = ${!current.is_active} WHERE id = ${id} RETURNING *
+    `;
+    return NextResponse.json({ war: row });
+  }
+
+  if (action === "set_time") {
+    const { start_time } = fields;
+    const [row] = await sql`
+      UPDATE side_wars SET start_time = ${start_time || null} WHERE id = ${id} RETURNING *
+    `;
+    return NextResponse.json({ war: row });
+  }
+
+  if (action === "update") {
+    const { clan_name, clan_tag, clan_link } = fields;
+    const [row] = await sql`
+      UPDATE side_wars
+      SET clan_name = ${clan_name}, clan_tag = ${clan_tag}, clan_link = ${clan_link}
+      WHERE id = ${id} RETURNING *
+    `;
+    return NextResponse.json({ war: row });
+  }
+
+  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
-// DELETE — remove a side war entry
+// DELETE — remove a saved clan entirely
 export async function DELETE(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const { id } = await request.json().catch(() => ({}));

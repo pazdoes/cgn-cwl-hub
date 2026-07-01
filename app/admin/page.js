@@ -558,8 +558,10 @@ export default function AdminOverviewPage() {
   // ── Side Wars state ──────────────────────────────────────────────────────
   const [sideWars, setSideWars] = useState([]);
   const [swLoading, setSwLoading] = useState(false);
-  const [swForm, setSwForm] = useState({ clan_name: "", clan_tag: "", clan_link: "", start_time: "" });
+  const [swForm, setSwForm] = useState({ clan_name: "", clan_tag: "", clan_link: "" });
   const [swError, setSwError] = useState("");
+  const [swTimes, setSwTimes] = useState({}); // { [id]: datetime string } — pending time inputs
+  const [swTimeErrors, setSwTimeErrors] = useState({}); // { [id]: error string }
 
   useEffect(() => {
     if (!authed || !pin) return;
@@ -571,8 +573,8 @@ export default function AdminOverviewPage() {
 
   async function swCreate() {
     setSwError("");
-    if (!swForm.clan_name || !swForm.clan_tag || !swForm.clan_link || !swForm.start_time) {
-      setSwError("All fields are required"); return;
+    if (!swForm.clan_name || !swForm.clan_tag || !swForm.clan_link) {
+      setSwError("Clan name, tag and link are required"); return;
     }
     setSwLoading(true);
     try {
@@ -581,20 +583,41 @@ export default function AdminOverviewPage() {
         body: JSON.stringify(swForm),
       });
       const data = await res.json();
-      if (!res.ok) { setSwError(data.error || "Failed to create"); return; }
+      if (!res.ok) { setSwError(data.error || "Failed to save"); return; }
       setSideWars(prev => [data.war, ...prev]);
-      setSwForm({ clan_name: "", clan_tag: "", clan_link: "", start_time: "" });
+      setSwForm({ clan_name: "", clan_tag: "", clan_link: "" });
     } catch { setSwError("Network error"); }
     finally { setSwLoading(false); }
   }
 
-  async function swToggle(war) {
+  async function swSetTime(war) {
+    const t = swTimes[war.id];
+    if (!t) { setSwTimeErrors(p => ({...p, [war.id]: "Pick a date and time first"})); return; }
+    setSwTimeErrors(p => ({...p, [war.id]: ""}));
     const res = await fetch("/api/admin/side-wars", {
       method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-      body: JSON.stringify({ id: war.id, is_active: !war.is_active }),
+      body: JSON.stringify({ id: war.id, action: "set_time", start_time: t }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setSideWars(prev => prev.map(w => w.id === war.id ? data.war : w));
+      setSwTimes(p => ({...p, [war.id]: ""}));
+    }
+  }
+
+  async function swToggle(war) {
+    if (!war.is_active && !war.start_time) {
+      setSwTimeErrors(p => ({...p, [war.id]: "Set a start time before activating"}));
+      return;
+    }
+    setSwTimeErrors(p => ({...p, [war.id]: ""}));
+    const res = await fetch("/api/admin/side-wars", {
+      method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+      body: JSON.stringify({ id: war.id, action: "toggle" }),
     });
     const data = await res.json();
     if (res.ok) setSideWars(prev => prev.map(w => w.id === war.id ? data.war : w));
+    else setSwTimeErrors(p => ({...p, [war.id]: data.error || "Failed to toggle"}));
   }
 
   async function swDelete(id) {
@@ -828,11 +851,14 @@ export default function AdminOverviewPage() {
           {/* ── SIDE WARS TAB ── */}
           {adminTab === "sidewars" && (<>
 
-          {/* Add new side war */}
+          {/* Save a clan to the registry — no start time needed */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <img src="/icons/branding/war-shield.png" alt="" className="w-6 h-6"/>
-              <h2 className="text-sm font-semibold text-white">Add Side War Clan</h2>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Save a Clan</h2>
+                <p className="text-[10px] text-slate-500">Store frequently used side war clans for quick scheduling</p>
+              </div>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -855,46 +881,42 @@ export default function AdminOverviewPage() {
                   placeholder="https://link.clashofclans.com/..."
                   className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">War Start Time</p>
-                <input type="datetime-local" value={swForm.start_time} onChange={e => setSwForm(p => ({...p, start_time: e.target.value}))}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
-              </div>
               {swError && <p className="text-[11px] text-red-400">{swError}</p>}
               <button onClick={swCreate} disabled={swLoading}
                 className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition disabled:opacity-50">
-                {swLoading ? "Adding…" : "Add Side War"}
+                {swLoading ? "Saving…" : "Save Clan"}
               </button>
             </div>
           </div>
 
-          {/* Existing side wars */}
+          {/* Saved clans — schedule + activate individually */}
           {sideWars.length === 0 ? (
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-              <p className="text-slate-600 text-xs">No side wars configured yet</p>
+              <p className="text-slate-600 text-xs">No clans saved yet — add one above</p>
             </div>
           ) : (
             <div className="space-y-3">
               {sideWars.map(war => (
                 <div key={war.id} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
-                  <div className="flex items-start justify-between gap-3">
+
+                  {/* Clan identity row */}
+                  <div className="flex items-center justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-white truncate">{war.clan_name}</p>
                         <p className="text-[10px] text-slate-500 font-mono">{war.clan_tag}</p>
-                        <p className="text-[10px] text-slate-600 mt-0.5">
-                          {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Active toggle */}
+                      {/* Live/Off toggle */}
                       <button onClick={() => swToggle(war)}
                         className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition ${
                           war.is_active
                             ? "bg-pink-500/20 border-pink-500/60 text-pink-300"
-                            : "bg-transparent border-white/10 text-slate-500 hover:border-white/20"
+                            : war.start_time
+                              ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300"
+                              : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"
                         }`}>
                         {war.is_active ? "Live" : "Off"}
                       </button>
@@ -907,6 +929,45 @@ export default function AdminOverviewPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Schedule row */}
+                  <div className="border-t border-white/[0.06] pt-3">
+                    {war.start_time ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
+                          <p className="text-[11px] text-slate-300">
+                            {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setSwTimes(p => ({...p, [war.id]: p[war.id] === undefined ? "" : undefined}))}
+                          className="text-[10px] text-slate-600 hover:text-slate-400 transition underline">
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-600 mb-2">No start time set — schedule before activating</p>
+                    )}
+
+                    {/* Time picker — always shown if no time set, or toggled via Change */}
+                    {(swTimes[war.id] !== undefined || !war.start_time) && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input type="datetime-local"
+                          value={swTimes[war.id] || ""}
+                          onChange={e => setSwTimes(p => ({...p, [war.id]: e.target.value}))}
+                          className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
+                        <button onClick={() => swSetTime(war)}
+                          className="px-3 py-1.5 rounded-2xl text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
+                          Set
+                        </button>
+                      </div>
+                    )}
+                    {swTimeErrors[war.id] && (
+                      <p className="text-[10px] text-red-400 mt-1">{swTimeErrors[war.id]}</p>
+                    )}
+                  </div>
+
                   {war.is_active && (
                     <div className="mt-3 pt-3 border-t border-pink-500/10 flex items-center justify-between">
                       <p className="text-[10px] text-pink-400">Visible on homepage</p>
