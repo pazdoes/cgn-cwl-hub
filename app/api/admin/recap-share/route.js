@@ -11,9 +11,12 @@ export async function POST(request) {
     }
 
     const formData = await request.formData();
-    const webhookId = formData.get("webhookId");
-    const image = formData.get("image"); // File/Blob
-    const season = formData.get("season") || "Season Recap";
+    const { webhookId, season, rolePing } = Object.fromEntries([
+      ["webhookId", formData.get("webhookId")],
+      ["season", formData.get("season") || "Season Recap"],
+      ["rolePing", formData.get("rolePing") || ""],
+    ]);
+    const image = formData.get("image");
 
     if (!webhookId || !image) {
       return NextResponse.json({ error: "webhookId and image required" }, { status: 400 });
@@ -26,14 +29,14 @@ export async function POST(request) {
     const rawUrl = webhook.webhook_url ?? webhook.webhookUrl;
     if (!rawUrl) return NextResponse.json({ error: "Webhook URL missing" }, { status: 500 });
 
-    // Forward as multipart to Discord
+    // Forward as multipart to Discord — image only, no caption text
     const CGN_AVATAR = "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a477755&is=6a4625d5&hm=439a8a5863af157f40fc94811e8f195e2a2a0cf649c94c2a24bf2c857c15e6d3&";
     const discordForm = new FormData();
     discordForm.append("file", image, `cgn-recap-${season.toLowerCase().replace(/\s+/g, "-")}.png`);
     discordForm.append("payload_json", JSON.stringify({
-      content: `📊 **${season}** — CGN Alliance Season Recap`,
       username: "Cognition {CGN}",
       avatar_url: CGN_AVATAR,
+      ...(rolePing ? { content: rolePing } : {}),
     }));
 
     const discordRes = await fetch(rawUrl.replace(/\?.*$/, ""), {

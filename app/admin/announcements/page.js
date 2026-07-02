@@ -886,6 +886,10 @@ export default function AnnouncementsPage() {
   const [recapPostResult, setRecapPostResult] = useState(null);
   const [showRecapCard, setShowRecapCard] = useState(false);
   const recapCardRef = useRef(null);
+  const [recapRolePing, setRecapRolePing] = useState("");
+  const [recapScheduleAt, setRecapScheduleAt] = useState("");
+  const [recapRecurring, setRecapRecurring] = useState(false);
+  const [recapScheduleResult, setRecapScheduleResult] = useState(null);
   const [composeMode, setComposeMode] = useState("quick");
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
@@ -1057,6 +1061,7 @@ export default function AnnouncementsPage() {
       form.append("webhookId", recapWebhookId);
       form.append("season", recapSeason || recapData.currentSeason || "Season Recap");
       form.append("image", blob, "cgn-recap.png");
+      if (recapRolePing) form.append("rolePing", recapRolePing);
       const res = await fetch("/api/admin/recap-share", {
         method: "POST",
         headers: { "x-officer-pin": pin },
@@ -1071,6 +1076,30 @@ export default function AnnouncementsPage() {
       setRecapPosting(false);
       setShowRecapCard(false);
     }
+  }
+
+  async function handleScheduleRecap() {
+    if (!recapWebhookId || !recapScheduleAt) return;
+    setRecapScheduleResult(null);
+    const utcTime = new Date(recapScheduleAt).toISOString();
+    try {
+      const res = await fetch("/api/admin/announcements/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({
+          webhookId: recapWebhookId,
+          embed: { title: `${recapSeason || "Season"} Recap`, description: "CGN Alliance Season Recap" },
+          content: recapRolePing ? recapRolePing : undefined,
+          sendAt: utcTime,
+          recurrence: recapRecurring ? "monthly" : null,
+          isRecapImage: true,
+          recapSeason: recapSeason,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) setRecapScheduleResult({ ok: true, message: "Scheduled ✓" });
+      else setRecapScheduleResult({ ok: false, message: data.error || "Failed to schedule" });
+    } catch { setRecapScheduleResult({ ok: false, message: "Network error" }); }
   }
 
   async function handleSend() {
@@ -1973,6 +2002,98 @@ export default function AnnouncementsPage() {
           )}
         </div>
 
+        {/* Recap Share */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => {
+            if (manageTab !== "recap") {
+              setManageTab("recap");
+              if (!recapData && !recapLoading) fetchRecapData("");
+            } else { setManageTab(""); }
+          }} className="w-full flex items-center justify-between px-5 py-4">
+            <div className="text-left">
+              <p className="text-sm font-semibold text-slate-300">Season Recap Share Card</p>
+              <p className="text-[10px] text-slate-600 mt-0.5">Post the recap image to Discord</p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="recap"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {manageTab === "recap" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
+
+              {/* Season */}
+              <div>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
+                <div className="flex gap-2">
+                  <select value={recapSeason} onChange={e => { setRecapSeason(e.target.value); fetchRecapData(e.target.value); }}
+                    className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]">
+                    {recapSeasons.length === 0 && <option value="">Loading…</option>}
+                    {recapSeasons.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <button onClick={() => fetchRecapData(recapSeason)} className="px-3 py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Webhook */}
+              <div>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Post to</p>
+                <select value={recapWebhookId} onChange={e => setRecapWebhookId(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]">
+                  <option value="">Select webhook…</option>
+                  {webhooks.map(w => <option key={w.id} value={w.id}>{w.label}{w.channel ? ` · #${w.channel}` : ""}</option>)}
+                </select>
+              </div>
+
+              {/* Role ping */}
+              <div>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Role Ping <span className="normal-case text-slate-700">(optional)</span></p>
+                <input type="text" placeholder="e.g. <@&1234567890>" value={recapRolePing} onChange={e => setRecapRolePing(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <p className="text-[9px] text-slate-700 mt-1">Members with this role will be notified. Copy the mention from Discord.</p>
+              </div>
+
+              {/* Season data status */}
+              {recapLoading && <p className="text-[10px] text-slate-500 text-center py-2">Loading season data…</p>}
+              {recapData && !recapLoading && (
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+                  <p className="text-[10px] text-slate-400">
+                    <span className="text-white font-semibold">{recapData.currentSeason}</span>
+                    {" · "}{(recapData.stats || []).filter(p => p.attacks_used > 0).length} players with data
+                    {" · "}{recapData.clanWithOverall?.length || 0} clans
+                  </p>
+                </div>
+              )}
+
+              {/* Post now */}
+              <button onClick={handlePostRecap} disabled={recapPosting || !recapWebhookId || !recapData || recapLoading}
+                className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                {recapPosting ? "Generating & posting…" : "Post Recap Now"}
+              </button>
+
+              {recapPostResult && <p className={"text-xs text-center " + (recapPostResult.ok ? "text-green-400" : "text-red-400")}>{recapPostResult.message}</p>}
+
+              {/* Schedule */}
+              <div className="border-t border-white/[0.06] pt-3 space-y-2">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Schedule</p>
+                <input type="datetime-local" value={recapScheduleAt} onChange={e => setRecapScheduleAt(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
+                <button onClick={() => setRecapRecurring(v => !v)}
+                  className={"flex items-center gap-2 px-3 py-1.5 rounded-2xl text-[10px] font-semibold border transition " + (recapRecurring ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300")}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Recurring · {recapRecurring ? "Monthly" : "Off"}
+                </button>
+                {recapRecurring && <p className="text-[9px] text-slate-600">Repeats on the same date each month</p>}
+                <button onClick={handleScheduleRecap} disabled={!recapWebhookId || !recapScheduleAt}
+                  className="w-full py-2 rounded-2xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-purple-300 hover:border-purple-500/40 transition disabled:opacity-40">
+                  Schedule Post
+                </button>
+                {recapScheduleResult && <p className={"text-xs text-center " + (recapScheduleResult.ok ? "text-green-400" : "text-red-400")}>{recapScheduleResult.message}</p>}
+              </div>
+
+            </div>
+          )}
+        </div>
+
         {/* Webhooks */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setManageTab(manageTab==="webhooks"?"":"webhooks")} className="w-full flex items-center justify-between px-5 py-4">
@@ -2002,84 +2123,6 @@ export default function AnnouncementsPage() {
           )}
         </div>
 
-        {/* Recap Share */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => {
-            if (manageTab !== "recap") {
-              setManageTab("recap");
-              if (!recapData && !recapLoading) fetchRecapData("");
-            } else {
-              setManageTab("");
-            }
-          }} className="w-full flex items-center justify-between px-5 py-4">
-            <div className="text-left">
-              <p className="text-sm font-semibold text-slate-300">Season Recap Share Card</p>
-              <p className="text-[10px] text-slate-600 mt-0.5">Post the recap image to Discord</p>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="recap"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          {manageTab === "recap" && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
-              {/* Season selector */}
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
-                <div className="flex gap-2">
-                  <select
-                    value={recapSeason}
-                    onChange={e => { setRecapSeason(e.target.value); fetchRecapData(e.target.value); }}
-                    className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]">
-                    {recapSeasons.length === 0 && <option value="">Loading…</option>}
-                    {recapSeasons.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <button onClick={() => fetchRecapData(recapSeason)}
-                    className="px-3 py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Webhook selector */}
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Post to</p>
-                <select
-                  value={recapWebhookId}
-                  onChange={e => setRecapWebhookId(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]">
-                  <option value="">Select webhook…</option>
-                  {webhooks.map(w => <option key={w.id} value={w.id}>{w.label}{w.channel ? ` · #${w.channel}` : ""}</option>)}
-                </select>
-              </div>
-
-              {/* Status */}
-              {recapLoading && <p className="text-[10px] text-slate-500 text-center py-2">Loading season data…</p>}
-              {recapData && !recapLoading && (
-                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-                  <p className="text-[10px] text-slate-400">
-                    <span className="text-white font-semibold">{recapData.currentSeason}</span>
-                    {" · "}{(recapData.stats || []).filter(p => p.attacks_used > 0).length} players with data
-                    {" · "}{recapData.clanWithOverall?.length || 0} clans
-                  </p>
-                </div>
-              )}
-
-              {/* Post button */}
-              <button
-                onClick={handlePostRecap}
-                disabled={recapPosting || !recapWebhookId || !recapData || recapLoading}
-                className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
-                {recapPosting ? "Generating & posting…" : "Post Recap to Discord"}
-              </button>
-
-              {recapPostResult && (
-                <p className={`text-xs text-center ${recapPostResult.ok ? "text-green-400" : "text-red-400"}`}>
-                  {recapPostResult.message}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
 
         </>)} {/* end manage tab */}
 
