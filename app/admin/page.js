@@ -932,9 +932,13 @@ export default function AdminOverviewPage() {
                           <button onClick={() => {
                             if (!pendingTime) { setSwTimeErrors(p => ({...p, [warId]: "Pick a date and time first"})); return; }
                             setSwTimeErrors(p => ({...p, [warId]: ""}));
+                            // datetime-local gives a local time string with no tz info.
+                            // new Date() interprets it as local time, then .toISOString()
+                            // converts it to UTC — so 17:00 BST becomes 16:00 UTC correctly.
+                            const utcTime = new Date(pendingTime).toISOString();
                             fetch("/api/admin/side-wars", {
                               method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-                              body: JSON.stringify({ id: warId, action: "set_time", start_time: pendingTime }),
+                              body: JSON.stringify({ id: warId, action: "set_time", start_time: utcTime }),
                             }).then(r => r.json()).then(data => {
                               if (data.war) {
                                 setSideWars(prev => prev.map(w => w.id === warId ? data.war : w));
