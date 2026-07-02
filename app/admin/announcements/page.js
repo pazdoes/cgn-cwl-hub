@@ -283,8 +283,7 @@ function renderDiscordMarkdown(text) {
     // Links
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" style="color:#00a8fc" target="_blank">$1</a>')
     // Newlines
-    .replace(/
-/g, "<br/>");
+    .replace(/\n/g, "<br/>");
   return html;
 }
 
