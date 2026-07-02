@@ -908,7 +908,7 @@ export default function AdminOverviewPage() {
                           <div>
                             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
                             <p className="text-[11px] text-slate-300">
-                              {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
                             </p>
                           </div>
                           <button onClick={() => setSwTimes(p => ({...p, [warId]: ""}))}
