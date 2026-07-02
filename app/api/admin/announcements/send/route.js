@@ -79,15 +79,22 @@ export async function POST(request) {
       return NextResponse.json({ error: `Discord rejected: ${err}` }, { status: 502 });
     }
 
+    // Capture message_id from Discord response (?wait=true ensures we get it)
+    let discordMessageId = null;
+    try {
+      const discordData = await discordRes.json();
+      discordMessageId = discordData.id || null;
+    } catch { /* non-fatal */ }
+
     let sentBy = null;
     try {
       const session = await auth();
       sentBy = session?.user?.name || null;
     } catch { /* non-fatal */ }
 
-    await logAnnouncement(Number(webhookId), embed.title || null, embed, sentBy);
+    await logAnnouncement(Number(webhookId), embed.title || null, embed, sentBy, discordMessageId);
 
-    return NextResponse.json({ sent: true });
+    return NextResponse.json({ sent: true, messageId: discordMessageId });
 
   } catch (e) {
     console.error("Unhandled error in send route:", e.message, e.stack);

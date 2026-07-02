@@ -550,6 +550,10 @@ export default function AnnouncementsPage() {
   const [newEmoji, setNewEmoji] = useState({ id: "", name: "" });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [templateOverwriteId, setTemplateOverwriteId] = useState(null);
+  const [expandedTemplate, setExpandedTemplate] = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editResult, setEditResult] = useState(null);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [saveTemplateResult, setSaveTemplateResult] = useState(null);
 
@@ -727,21 +731,60 @@ export default function AnnouncementsPage() {
     finally { setScheduling(false); }
   }
 
+  async function handleEditMessage(h) {
+    if (!h.embed_json) return;
+    const embedData = typeof h.embed_json === "string" ? JSON.parse(h.embed_json) : h.embed_json;
+    setEmbed({ ...DEFAULT_EMBED, ...embedData });
+    if (h.webhook_id) setSelectedWebhookId(String(h.webhook_id));
+    setEditingMessageId(h.discord_message_id);
+    setEditResult(null);
+    setMainTab("compose");
+  }
+
+  async function handleSendEdit() {
+    if (!selectedWebhookId || !editingMessageId) return;
+    setSending(true); setEditResult(null);
+    const { embed: finalEmbed } = buildPayload();
+    try {
+      const res = await fetch("/api/admin/announcements/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ webhookId: selectedWebhookId, messageId: editingMessageId, embed: finalEmbed }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditResult({ ok: true, message: "Discord message updated ✓" });
+        setEditingMessageId(null);
+        setEmbed({ ...DEFAULT_EMBED }); setContent("");
+      } else { setEditResult({ ok: false, message: data.error || "Edit failed" }); }
+    } catch { setEditResult({ ok: false, message: "Network error" }); }
+    finally { setSending(false); }
+  }
+
   async function handleSaveTemplate(e) {
     e.preventDefault();
     if (!templateName.trim()) return;
     setSavingTemplate(true); setSaveTemplateResult(null);
     const { embed: finalEmbed } = buildPayload();
     try {
+      const method = templateOverwriteId ? "PATCH" : "POST";
+      const fetchBody = templateOverwriteId
+        ? { id: templateOverwriteId, name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl }
+        : { name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl };
       const res = await fetch("/api/admin/announcements/templates", {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-        body: JSON.stringify({ name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl }),
+        body: JSON.stringify(fetchBody),
       });
       const data = await res.json();
       if (res.ok) {
-        setSaveTemplateResult({ ok: true, message: "Template saved ✓" });
-        setTemplates(prev => [data.template, ...prev]);
+        if (templateOverwriteId) {
+          setTemplates(prev => prev.map(t => t.id === templateOverwriteId ? data.template : t));
+          setTemplateOverwriteId(null);
+        } else {
+          setTemplates(prev => [data.template, ...prev]);
+        }
+        setSaveTemplateResult({ ok: true, message: templateOverwriteId ? "Template updated ✓" : "Template saved ✓" });
         setTemplateName(""); setShowSaveTemplate(false);
       } else { setSaveTemplateResult({ ok: false, message: data.error || "Failed to save" }); }
     } catch { setSaveTemplateResult({ ok: false, message: "Network error" }); }
@@ -1159,11 +1202,29 @@ export default function AnnouncementsPage() {
 
           {/* Send section */}
           <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
-            <button type="button" onClick={handleSend} disabled={sending || !selectedWebhookId}
-              className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
-              {sending ? "Sending…" : "Post to Discord"}
-            </button>
-            {sendResult && <p className={`text-xs text-center ${sendResult.ok ? "text-green-400" : "text-red-400"}`}>{sendResult.message}</p>}
+            {editingMessageId && (
+              <div className="mb-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-amber-300">Editing existing post</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Changes will update the original Discord message in place</p>
+                </div>
+                <button type="button" onClick={() => { setEditingMessageId(null); setEmbed({...DEFAULT_EMBED}); setContent(""); setEditResult(null); }}
+                  className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1 transition shrink-0">Cancel</button>
+              </div>
+            )}
+            {editResult && <p className={"text-xs text-center mb-2 " + (editResult.ok ? "text-green-400" : "text-red-400")}>{editResult.message}</p>}
+            {editingMessageId ? (
+              <button type="button" onClick={handleSendEdit} disabled={sending || !selectedWebhookId}
+                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-amber-400 border border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.12)] hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40">
+                {sending ? "Updating…" : "Update Message"}
+              </button>
+            ) : (
+              <button type="button" onClick={handleSend} disabled={sending || !selectedWebhookId}
+                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
+                {sending ? "Sending…" : "Post to Discord"}
+              </button>
+            )}
+            {sendResult && !editingMessageId && <p className={`text-xs text-center ${sendResult.ok ? "text-green-400" : "text-red-400"}`}>{sendResult.message}</p>}
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
               <button type="button" onClick={() => setShowSchedule(v => !v)}
                 className="w-full flex items-center justify-between px-4 py-2.5">
@@ -1331,10 +1392,25 @@ export default function AnnouncementsPage() {
               </div>
               <div className="space-y-1.5">
                 {templates.map(t => (
-                  <div key={t.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                    <button type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }} className="flex-1 text-left text-xs text-slate-300 hover:text-white truncate">{t.name}</button>
-                    {t.use_count > 0 && <span className="text-[9px] text-slate-700">{t.use_count}×</span>}
-                    {templateEditMode && <button type="button" onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>}
+                  <div key={t.id} className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <button type="button" onClick={() => setExpandedTemplate(expandedTemplate === t.id ? null : t.id)}
+                        className="flex-1 text-left text-xs text-slate-300 hover:text-white flex items-center gap-2 min-w-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className={"w-3 h-3 text-slate-600 shrink-0 transition-transform " + (expandedTemplate === t.id ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        <span className="truncate">{t.name}</span>
+                      </button>
+                      {t.use_count > 0 && <span className="text-[9px] text-slate-700 shrink-0">{t.use_count}×</span>}
+                      <button type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
+                        className="text-[10px] text-purple-400 hover:text-purple-300 border border-purple-500/30 hover:border-purple-400 rounded-full px-2 py-0.5 transition shrink-0">Use</button>
+                      <button type="button" onClick={() => { setTemplateOverwriteId(t.id); setTemplateName(t.name); setShowSaveTemplate(true); }}
+                        className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 hover:border-white/20 rounded-full px-2 py-0.5 transition shrink-0">Edit</button>
+                      {templateEditMode && <button type="button" onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 text-xs shrink-0">✕</button>}
+                    </div>
+                    {expandedTemplate === t.id && t.embed_json && (
+                      <div className="border-t border-white/[0.06] px-3 py-3 bg-black/20">
+                        <EmbedPreview embed={typeof t.embed_json === "string" ? JSON.parse(t.embed_json) : t.embed_json} username={t.username} avatarUrl={t.avatar_url}/>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1343,17 +1419,18 @@ export default function AnnouncementsPage() {
           <div className="pt-3 border-t border-white/[0.06] mt-3">
             {showSaveTemplate ? (
               <div className="space-y-2">
+                {templateOverwriteId && <p className="text-[10px] text-amber-400">Overwriting existing template</p>}
                 <input type="text" placeholder="Template name" value={templateName} onChange={e => setTemplateName(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 <div className="flex gap-2">
                   <button type="button" onClick={handleSaveTemplate} disabled={savingTemplate||!templateName.trim()}
-                    className="flex-1 py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{savingTemplate?"Saving…":"Save"}</button>
-                  <button type="button" onClick={() => {setShowSaveTemplate(false);setTemplateName("");}} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
+                    className="flex-1 py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{savingTemplate ? (templateOverwriteId ? "Updating…" : "Saving…") : (templateOverwriteId ? "Update Template" : "Save")}</button>
+                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); setTemplateOverwriteId(null); }} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
                 </div>
                 {saveTemplateResult && <p className={`text-xs text-center ${saveTemplateResult.ok?"text-green-400":"text-red-400"}`}>{saveTemplateResult.message}</p>}
               </div>
             ) : (
-              <button type="button" onClick={() => setShowSaveTemplate(true)}
+              <button type="button" onClick={() => { setShowSaveTemplate(true); setTemplateOverwriteId(null); }}
                 className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">+ Save current as template</button>
             )}
           </div>
@@ -1429,10 +1506,17 @@ export default function AnnouncementsPage() {
             <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
               {history.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No history yet</p> : history.slice(0,10).map((h,i) => (
                 <div key={i} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-white truncate">{h.title||"Untitled"}</p>
                     <p className="text-[10px] text-slate-600">{h.sent_by||"Unknown"}{h.sent_at ? ` · ${new Date(h.sent_at).toLocaleDateString()}` : ""}</p>
                   </div>
+                  {h.discord_message_id && h.embed_json && (
+                    <button type="button" onClick={() => handleEditMessage(h)}
+                      className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-purple-300 border border-white/10 hover:border-purple-500/40 rounded-full px-2.5 py-1 transition shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      Edit
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
