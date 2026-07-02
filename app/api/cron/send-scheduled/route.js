@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getPendingScheduled, markScheduledSent, logAnnouncement, scheduleAnnouncement, getDb } from "@/lib/pool";
+import { getPendingScheduled, markScheduledSent, logAnnouncement, scheduleAnnouncement } from "@/lib/pool";
+import { getDb } from "@/lib/db";
 
 const CGN_AVATAR = "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a477755&is=6a4625d5&hm=439a8a5863af157f40fc94811e8f195e2a2a0cf649c94c2a24bf2c857c15e6d3&";
 
