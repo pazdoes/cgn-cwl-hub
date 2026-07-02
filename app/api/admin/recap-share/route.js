@@ -27,11 +27,13 @@ export async function POST(request) {
     if (!rawUrl) return NextResponse.json({ error: "Webhook URL missing" }, { status: 500 });
 
     // Forward as multipart to Discord
+    const CGN_AVATAR = "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a477755&is=6a4625d5&hm=439a8a5863af157f40fc94811e8f195e2a2a0cf649c94c2a24bf2c857c15e6d3&";
     const discordForm = new FormData();
     discordForm.append("file", image, `cgn-recap-${season.toLowerCase().replace(/\s+/g, "-")}.png`);
-    // Optional content message above the image
     discordForm.append("payload_json", JSON.stringify({
       content: `📊 **${season}** — CGN Alliance Season Recap`,
+      username: "Cognition {CGN}",
+      avatar_url: CGN_AVATAR,
     }));
 
     const discordRes = await fetch(rawUrl.replace(/\?.*$/, ""), {
