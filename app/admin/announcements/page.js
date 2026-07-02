@@ -1088,16 +1088,17 @@ export default function AnnouncementsPage() {
         headers: { "Content-Type": "application/json", "x-officer-pin": pin },
         body: JSON.stringify({
           webhookId: recapWebhookId,
-          embed: { title: `${recapSeason || "Season"} Recap`, description: "CGN Alliance Season Recap" },
-          content: recapRolePing ? recapRolePing : undefined,
+          embed: { title: "Season Recap" },
+          content: recapRolePing || undefined,
           sendAt: utcTime,
           recurrence: recapRecurring ? "monthly" : null,
           isRecapImage: true,
-          recapSeason: recapSeason,
+          rolePing: recapRolePing || null,
+          title: "Season Recap (Auto)",
         }),
       });
       const data = await res.json();
-      if (res.ok) setRecapScheduleResult({ ok: true, message: "Scheduled ✓" });
+      if (res.ok) setRecapScheduleResult({ ok: true, message: recapRecurring ? "Recurring monthly recap scheduled ✓" : "Recap scheduled ✓" });
       else setRecapScheduleResult({ ok: false, message: data.error || "Failed to schedule" });
     } catch { setRecapScheduleResult({ ok: false, message: "Network error" }); }
   }
