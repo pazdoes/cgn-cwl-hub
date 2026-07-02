@@ -261,6 +261,33 @@ function AdminNav_REMOVED() {
 }
 
 /* ─── Discord embed preview ───────────────────────────────── */
+function renderDiscordMarkdown(text) {
+  if (!text) return "";
+  let html = text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    // Bold italic
+    .replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>")
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    // Italic
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/_(.*?)_/g, "<em>$1</em>")
+    // Underline
+    .replace(/__(.*?)__/g, "<u>$1</u>")
+    // Strikethrough
+    .replace(/~~(.*?)~~/g, "<s>$1</s>")
+    // Spoiler
+    .replace(/\|\|(.*?)\|\|/g, '<span style="background:#202225;color:#202225;border-radius:3px;padding:0 2px">$1</span>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code style="background:#202225;border-radius:3px;padding:1px 4px;font-family:monospace;font-size:0.85em">$1</code>')
+    // Links
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" style="color:#00a8fc" target="_blank">$1</a>')
+    // Newlines
+    .replace(/
+/g, "<br/>");
+  return html;
+}
+
 function EmbedPreview({ embed, username, avatarUrl }) {
   if (!embed) return null;
   const colour = embed.color ? intToHex(embed.color) : "#a78bfa";
@@ -292,14 +319,14 @@ function EmbedPreview({ embed, username, avatarUrl }) {
             </div>
           )}
           {embed.description && (
-            <div className="text-[#dbdee1] text-sm mb-2 whitespace-pre-wrap leading-relaxed">{embed.description}</div>
+            <div className="text-[#dbdee1] text-sm mb-2 leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(embed.description) }}/>
           )}
           {embed.fields?.length > 0 && (
             <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: embed.fields.some(f => f.inline) ? "repeat(3, 1fr)" : "1fr" }}>
               {embed.fields.map((f, i) => (
                 <div key={i} className={f.inline ? "" : "col-span-full"}>
                   <div className="text-white text-xs font-semibold mb-0.5">{f.name}</div>
-                  <div className="text-[#dbdee1] text-xs">{f.value}</div>
+                  <div className="text-[#dbdee1] text-xs" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(f.value || "") }}/>
                 </div>
               ))}
             </div>
@@ -551,6 +578,9 @@ export default function AnnouncementsPage() {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templateOverwriteId, setTemplateOverwriteId] = useState(null);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateManageMode, setTemplateManageMode] = useState(false);
+  const [templateDeleteConfirm, setTemplateDeleteConfirm] = useState({}); // { [id]: confirmText }
   const [expandedTemplate, setExpandedTemplate] = useState(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editResult, setEditResult] = useState(null);
@@ -1319,7 +1349,7 @@ export default function AnnouncementsPage() {
                     )}
                     {/* Description */}
                     {previewEmbed.description && (
-                      <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{renderDiscordMarkdown(previewEmbed.description)}</p>
+                      <div className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(previewEmbed.description) }}/>
                     )}
                   </div>
                   {/* Thumbnail — top right, 80x80 */}
@@ -1335,7 +1365,7 @@ export default function AnnouncementsPage() {
                     {previewEmbed.fields.map((f,i) => (
                       <div key={i} className={f.inline ? "" : "col-span-3"}>
                         <p className="text-white text-xs font-semibold mb-0.5">{f.name}</p>
-                        <p className="text-[#dbdee1] text-xs whitespace-pre-wrap">{renderDiscordMarkdown(f.value)}</p>
+                        <p className="text-[#dbdee1] text-xs whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(f.value) }}/>
                       </div>
                     ))}
                   </div>
@@ -1375,47 +1405,89 @@ export default function AnnouncementsPage() {
         {/* ── TEMPLATES TAB ── */}
         {mainTab === "templates" && (<>
 
-        {/* Templates */}
+        {/* Favourites — top 3 most used */}
+        {templates.filter(t => t.use_count > 0).sort((a,b) => (b.use_count||0)-(a.use_count||0)).slice(0,3).length > 0 && (
+          <Card>
+            <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-3">Favourites</p>
+            <div className="flex flex-wrap gap-2">
+              {templates.filter(t => t.use_count > 0).sort((a,b) => (b.use_count||0)-(a.use_count||0)).slice(0,3).map(t => (
+                <button key={t.id} type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/30 hover:text-purple-300 hover:border-purple-400 transition flex items-center gap-1.5">
+                  {t.name}
+                  <span className="text-[9px] text-purple-600">{t.use_count}×</span>
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Saved templates */}
         <Card>
-          <p className="text-[10px] text-slate-600 mb-3">Quick templates</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {[["season-open","Season Open"],["rosters-final","Rosters Final"],["season-closing","Season Closing"]].map(([type,label]) => (
-              <button key={type} type="button" onClick={() => { applyTemplate(type); setMainTab("compose"); }}
-                className="px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">{label}</button>
-            ))}
+          {/* Header row: search + manage */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative flex-1">
+              <input type="text" placeholder="Search templates…" value={templateSearch} onChange={e => setTemplateSearch(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] pl-3 pr-7 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              {templateSearch && (
+                <button onClick={() => setTemplateSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-300 text-xs">✕</button>
+              )}
+            </div>
+            <button onClick={() => { setTemplateManageMode(v => !v); setTemplateDeleteConfirm({}); }}
+              className={"px-3 py-1.5 rounded-full text-[10px] font-semibold border transition " + (templateManageMode ? "bg-red-500/10 border-red-500/40 text-red-400" : "border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20")}>
+              {templateManageMode ? "Done" : "Manage"}
+            </button>
           </div>
-          {templates.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] text-slate-600">Saved</p>
-                <button onClick={() => setTemplateEditMode(v => !v)} className="text-[10px] text-slate-600 hover:text-slate-400">{templateEditMode?"Done":"Edit"}</button>
-              </div>
-              <div className="space-y-1.5">
-                {templates.map(t => (
-                  <div key={t.id} className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2">
-                      <button type="button" onClick={() => setExpandedTemplate(expandedTemplate === t.id ? null : t.id)}
-                        className="flex-1 text-left text-xs text-slate-300 hover:text-white flex items-center gap-2 min-w-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" className={"w-3 h-3 text-slate-600 shrink-0 transition-transform " + (expandedTemplate === t.id ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                        <span className="truncate">{t.name}</span>
-                      </button>
-                      {t.use_count > 0 && <span className="text-[9px] text-slate-700 shrink-0">{t.use_count}×</span>}
+
+          {templates.length === 0 ? (
+            <p className="text-slate-700 text-xs text-center py-4">No saved templates yet</p>
+          ) : (
+            <div className="space-y-1.5">
+              {templates
+                .filter(t => !templateSearch || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+                .map(t => (
+                <div key={t.id} className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <button type="button" onClick={() => setExpandedTemplate(expandedTemplate === t.id ? null : t.id)}
+                      className="flex-1 text-left text-xs text-slate-300 hover:text-white flex items-center gap-2 min-w-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className={"w-3 h-3 text-slate-600 shrink-0 transition-transform " + (expandedTemplate === t.id ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                      <span className="truncate">{t.name}</span>
+                    </button>
+                    {t.use_count > 0 && <span className="text-[9px] text-slate-700 shrink-0">{t.use_count}×</span>}
+                    {!templateManageMode && <>
                       <button type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
                         className="text-[10px] text-purple-400 hover:text-purple-300 border border-purple-500/30 hover:border-purple-400 rounded-full px-2 py-0.5 transition shrink-0">Use</button>
                       <button type="button" onClick={() => { setTemplateOverwriteId(t.id); setTemplateName(t.name); setShowSaveTemplate(true); }}
                         className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 hover:border-white/20 rounded-full px-2 py-0.5 transition shrink-0">Edit</button>
-                      {templateEditMode && <button type="button" onClick={() => handleDeleteTemplate(t.id)} className="text-slate-600 hover:text-red-400 text-xs shrink-0">✕</button>}
-                    </div>
-                    {expandedTemplate === t.id && t.embed_json && (
-                      <div className="border-t border-white/[0.06] px-3 py-3 bg-black/20">
-                        <EmbedPreview embed={typeof t.embed_json === "string" ? JSON.parse(t.embed_json) : t.embed_json} username={t.username} avatarUrl={t.avatar_url}/>
-                      </div>
-                    )}
+                    </>}
                   </div>
-                ))}
-              </div>
+                  {/* Template embed preview */}
+                  {expandedTemplate === t.id && t.embed_json && (
+                    <div className="border-t border-white/[0.06] px-3 py-3 bg-black/20">
+                      <EmbedPreview embed={typeof t.embed_json === "string" ? JSON.parse(t.embed_json) : t.embed_json} username={t.username} avatarUrl={t.avatar_url}/>
+                    </div>
+                  )}
+                  {/* Manage mode: confirm delete */}
+                  {templateManageMode && (
+                    <div className="border-t border-red-500/10 bg-red-500/[0.03] px-3 py-2.5 flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder='Type "CONFIRM" to delete'
+                        value={templateDeleteConfirm[t.id] || ""}
+                        onChange={e => setTemplateDeleteConfirm(p => ({...p, [t.id]: e.target.value}))}
+                        className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/40 transition"/>
+                      <button type="button"
+                        disabled={templateDeleteConfirm[t.id] !== "CONFIRM"}
+                        onClick={() => { handleDeleteTemplate(t.id); setTemplateDeleteConfirm(p => { const n={...p}; delete n[t.id]; return n; }); }}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold text-red-400 border border-red-500/30 hover:border-red-500/60 hover:bg-red-500/10 transition disabled:opacity-30 disabled:cursor-not-allowed shrink-0">
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
+
           <div className="pt-3 border-t border-white/[0.06] mt-3">
             {showSaveTemplate ? (
               <div className="space-y-2">
@@ -1441,31 +1513,29 @@ export default function AnnouncementsPage() {
         {/* ── MANAGE TAB ── */}
         {mainTab === "manage" && (<>
 
-        {/* Webhooks */}
+        {/* History */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setManageTab(manageTab==="webhooks"?"":"webhooks")} className="w-full flex items-center justify-between px-5 py-4">
-            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="webhooks"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          <button onClick={() => setManageTab(manageTab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          {manageTab === "webhooks" && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
-              {webhooks.map(w => (
-                <div key={w.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                  <div className="min-w-0"><p className="text-xs font-semibold text-white truncate">{w.label}</p>{w.channel && <p className="text-[10px] text-slate-600">#{w.channel}</p>}</div>
-                  <button type="button" onClick={() => handleDeleteWebhook(w.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>
+          {manageTab === "history" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
+              {history.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No history yet</p> : history.slice(0,10).map((h,i) => (
+                <div key={i} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-white truncate">{h.title||"Untitled"}</p>
+                    <p className="text-[10px] text-slate-600">{h.sent_by||"Unknown"}{h.sent_at ? ` · ${new Date(h.sent_at).toLocaleDateString()}` : ""}</p>
+                  </div>
+                  {h.discord_message_id && h.embed_json && (
+                    <button type="button" onClick={() => handleEditMessage(h)}
+                      className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-purple-300 border border-white/10 hover:border-purple-500/40 rounded-full px-2.5 py-1 transition shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      Edit
+                    </button>
+                  )}
                 </div>
               ))}
-              <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-                <input type="text" placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                <input type="text" placeholder="Webhook URL" value={newUrl} onChange={e => setNewUrl(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                <input type="text" placeholder="Channel name (optional)" value={newChannel} onChange={e => setNewChannel(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                <button type="button" onClick={handleAddWebhook} disabled={addingWebhook||!newLabel||!newUrl}
-                  className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{addingWebhook?"Adding…":"Add Webhook"}</button>
-                {webhookResult && <p className={`text-xs text-center ${webhookResult.ok?"text-green-400":"text-red-400"}`}>{webhookResult.message}</p>}
-              </div>
             </div>
           )}
         </div>
@@ -1496,29 +1566,31 @@ export default function AnnouncementsPage() {
           )}
         </div>
 
-        {/* History */}
+        {/* Webhooks */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setManageTab(manageTab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
-            <div className="text-left"><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          <button onClick={() => setManageTab(manageTab==="webhooks"?"":"webhooks")} className="w-full flex items-center justify-between px-5 py-4">
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="webhooks"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          {manageTab === "history" && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
-              {history.length === 0 ? <p className="text-slate-700 text-xs text-center py-4">No history yet</p> : history.slice(0,10).map((h,i) => (
-                <div key={i} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs text-white truncate">{h.title||"Untitled"}</p>
-                    <p className="text-[10px] text-slate-600">{h.sent_by||"Unknown"}{h.sent_at ? ` · ${new Date(h.sent_at).toLocaleDateString()}` : ""}</p>
-                  </div>
-                  {h.discord_message_id && h.embed_json && (
-                    <button type="button" onClick={() => handleEditMessage(h)}
-                      className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-purple-300 border border-white/10 hover:border-purple-500/40 rounded-full px-2.5 py-1 transition shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                      Edit
-                    </button>
-                  )}
+          {manageTab === "webhooks" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
+              {webhooks.map(w => (
+                <div key={w.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <div className="min-w-0"><p className="text-xs font-semibold text-white truncate">{w.label}</p>{w.channel && <p className="text-[10px] text-slate-600">#{w.channel}</p>}</div>
+                  <button type="button" onClick={() => handleDeleteWebhook(w.id)} className="text-slate-600 hover:text-red-400 text-xs">✕</button>
                 </div>
               ))}
+              <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                <input type="text" placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <input type="text" placeholder="Webhook URL" value={newUrl} onChange={e => setNewUrl(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <input type="text" placeholder="Channel name (optional)" value={newChannel} onChange={e => setNewChannel(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <button type="button" onClick={handleAddWebhook} disabled={addingWebhook||!newLabel||!newUrl}
+                  className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{addingWebhook?"Adding…":"Add Webhook"}</button>
+                {webhookResult && <p className={`text-xs text-center ${webhookResult.ok?"text-green-400":"text-red-400"}`}>{webhookResult.message}</p>}
+              </div>
             </div>
           )}
         </div>
