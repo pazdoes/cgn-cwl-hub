@@ -3398,6 +3398,126 @@ function AppFooter({ onNavigateHome, showHome = true }) {
 // the first 8 days (live war week), shows a "live" state instead of counting
 // down to the same month's already-passed start.
 // ─── Side Wars time display — always countdown, recurring resets every 48h ───
+// ─── CWL Progress Tile ───────────────────────────────────────────────────────
+// Auto-appears when round 1 data is captured, replaces Stats & Overview tile.
+// Hidden during prep/sign-up week when attacks_used is 0 for all players.
+function CwlProgressTile({ onNavigate }) {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/cwl-progress")
+      .then(r => r.json())
+      .then(d => setData(d))
+      .catch(() => setData({ active: false }));
+  }, []);
+
+  if (!data || !data.active) return null;
+
+  const { season, isComplete, currentRound, totals, clans, topAttackers, topDefender } = data;
+  const allianceEff = totals.totalAttacks > 0
+    ? (totals.totalStars / totals.totalAttacks).toFixed(2)
+    : "—";
+  const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
+  const medalColours = ["#D4AF37", "#A7A7AD", "#CD7F32"];
+
+  return (
+    <div className="rounded-3xl border border-purple-500/20 bg-white/[0.04] overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-500/[0.08] to-indigo-500/[0.06] px-5 py-4 flex items-center justify-between">
+        <div>
+          <p className="text-[9px] text-purple-400 uppercase tracking-widest font-semibold mb-0.5">
+            {isComplete ? "Season Complete" : `Round ${currentRound} of 7`}
+          </p>
+          <p className="text-sm font-semibold text-white">{season} · CWL</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-2xl font-thin text-purple-300 tabular-nums">{totals.totalStars}</p>
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest">Alliance Stars</p>
+          </div>
+          {!isComplete && (
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+              <span className="text-[10px] text-green-300">Live</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Clan standings */}
+      {clans.length > 0 && (
+        <div className="px-5 pt-4 pb-3 border-b border-white/[0.06]">
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2.5">Clan Standings</p>
+          <div className="space-y-2">
+            {clans.map((c, i) => (
+              <div key={c.clan_name} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i] || "#475569"} strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+                  </svg>
+                  <span className="text-xs text-white truncate">{c.clan_name.split(" ")[0]}</span>
+                  {c.cwl_rank && <span className="text-[9px] text-slate-600 shrink-0">{c.cwl_rank}</span>}
+                </div>
+                <div className="flex items-center gap-3 shrink-0 text-[11px]">
+                  <span className="text-green-400 font-semibold">{c.wars_won ?? "—"}W</span>
+                  <span className="text-red-400">{c.wars_lost ?? "—"}L</span>
+                  <span className="text-purple-300 tabular-nums">{c.attack_efficiency ? parseFloat(c.attack_efficiency).toFixed(2) : "—"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Top attackers */}
+      {topAttackers.length > 0 && (
+        <div className="px-5 py-3 border-b border-white/[0.06]">
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2.5">Top Attackers</p>
+          <div className="space-y-1.5">
+            {topAttackers.slice(0, 3).map((p, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[9px] text-slate-600 w-3 shrink-0">{i + 1}</span>
+                  <span className="text-xs text-white truncate">{p.player_name}</span>
+                  <span className="text-[9px] text-slate-600 shrink-0">{p.clan_name.split(" ")[0]}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-semibold text-purple-300 tabular-nums">{parseFloat(p.efficiency).toFixed(2)}</span>
+                  <span className="text-[9px] text-slate-600">{p.attacks_used}atk</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Footer: alliance EFF + best defence + CTA */}
+      <div className="px-5 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <div>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Alliance EFF</p>
+            <p className="text-lg font-semibold text-purple-300 tabular-nums">{allianceEff}</p>
+          </div>
+          {topDefender && (
+            <div>
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Best Defence</p>
+              <p className="text-xs font-semibold text-blue-300">{topDefender.player_name}</p>
+              <p className="text-[10px] text-slate-500 tabular-nums">{parseFloat(topDefender.defence_efficiency).toFixed(2)} Def EFF</p>
+            </div>
+          )}
+        </div>
+        <button onClick={() => onNavigate("leaderboard")}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-400 transition shrink-0">
+          Full Stats
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SideWarTime({ war }) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -3685,7 +3805,16 @@ function StatsHighlightReel() {
 }
 
 export default function Home() {
-  const [page, setPage] = useState("home"); // "home" | "roster" | "leaderboard" | "history" | "recap" | "warintel"
+  const [page, setPage] = useState("home");
+  const [cwlActive, setCwlActive] = useState(false);
+
+  useEffect(() => {
+    // Check if CWL progress data exists to toggle Stats tile visibility
+    fetch("/api/cwl-progress")
+      .then(r => r.json())
+      .then(d => setCwlActive(d.active === true))
+      .catch(() => setCwlActive(false));
+  }, []);
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
@@ -3744,7 +3873,11 @@ export default function Home() {
         {/* Side Wars when active, otherwise Sign Up + Rosters */}
         <SideWarsSection onNavigate={navigate}/>
 
-        {/* Stats gateway */}
+        {/* CWL Progress — replaces Stats tile during CWL week */}
+        <CwlProgressTile onNavigate={navigate}/>
+
+        {/* Stats gateway — hidden during CWL week (CwlProgressTile takes over) */}
+        {!cwlActive && (
         <button onClick={() => navigate("leaderboard")}
           className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
           <div className="flex items-center justify-between mb-3">
@@ -3758,6 +3891,7 @@ export default function Home() {
           </div>
           <StatsHighlightReel/>
         </button>
+        )}
       </div>
       <AppFooter showHome={false}/>
     </main>
