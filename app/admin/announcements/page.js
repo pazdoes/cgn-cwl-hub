@@ -820,6 +820,9 @@ export default function AnnouncementsPage() {
   }, [discordStatus]);
 
   const [webhooks, setWebhooks] = useState([]);
+  const [discordChannels, setDiscordChannels] = useState([]);
+  const [discordCategories, setDiscordCategories] = useState({});
+  const [discordRoles, setDiscordRoles] = useState([]);
   const [history, setHistory] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [scheduled, setScheduled] = useState([]);
@@ -1581,9 +1584,32 @@ export default function AnnouncementsPage() {
               </div>
             </div>
             <div>
-              <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Ping / Content <span className="text-slate-700 normal-case">(outside embed)</span></label>
-              <input type="text" value={content} onChange={e => setContent(e.target.value)} placeholder="@everyone or leave blank"
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Role Ping <span className="text-slate-700 normal-case">(outside embed, optional)</span></label>
+              {discordMeta.roles.length > 0 ? (
+                <div className="space-y-1.5">
+                  <select
+                    value={content === "@everyone" ? "everyone" : content === "@here" ? "here" : content.match(/<@&(\d+)>/)?.[1] || ""}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (!v) setContent("");
+                      else if (v === "everyone") setContent("@everyone");
+                      else if (v === "here") setContent("@here");
+                      else setContent(`<@&${v}>`);
+                    }}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]">
+                    <option value="">No ping</option>
+                    <option value="everyone">@everyone</option>
+                    <option value="here">@here</option>
+                    {discordMeta.roles.map(r => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                  {content && <p className="text-[10px] text-slate-600 font-mono">{content}</p>}
+                </div>
+              ) : (
+                <input type="text" value={content} onChange={e => setContent(e.target.value)} placeholder="@everyone or leave blank"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              )}
             </div>
           </div>
 
@@ -2048,9 +2074,30 @@ export default function AnnouncementsPage() {
               {/* Role ping */}
               <div>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Role Ping <span className="normal-case text-slate-700">(optional)</span></p>
-                <input type="text" placeholder="e.g. <@&1234567890>" value={recapRolePing} onChange={e => setRecapRolePing(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                <p className="text-[9px] text-slate-700 mt-1">Members with this role will be notified. Copy the mention from Discord.</p>
+                {discordMeta.roles.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <select
+                      value={recapRolePing === "@everyone" ? "everyone" : recapRolePing === "@here" ? "here" : recapRolePing.match(/<@&(\d+)>/)?.[1] || ""}
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (!v) setRecapRolePing("");
+                        else if (v === "everyone") setRecapRolePing("@everyone");
+                        else if (v === "here") setRecapRolePing("@here");
+                        else setRecapRolePing(`<@&${v}>`);
+                      }}
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]">
+                      <option value="">No ping</option>
+                      <option value="everyone">@everyone</option>
+                      <option value="here">@here</option>
+                      {discordMeta.roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                    {recapRolePing && <p className="text-[10px] text-slate-600 font-mono">{recapRolePing}</p>}
+                  </div>
+                ) : (
+                  <input type="text" placeholder="e.g. <@&1234567890>" value={recapRolePing} onChange={e => setRecapRolePing(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                )}
+                <p className="text-[9px] text-slate-700 mt-1">Members with this role will be notified.</p>
               </div>
 
               {/* Season data status */}
