@@ -11,6 +11,12 @@ export async function GET(request) {
   // If bot is configured, fetch live from Discord and sync to DB
   if (guildId && token) {
     try {
+      // First check what guilds the bot can see
+      const guildsRes = await fetch(`https://discord.com/api/v10/users/@me/guilds`, {
+        headers: { Authorization: `Bot ${token}` },
+      });
+      const guildsDebug = guildsRes.ok ? await guildsRes.json() : await guildsRes.text();
+
       const [channelsRes, rolesRes] = await Promise.all([
         fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, {
           headers: { Authorization: `Bot ${token}` },
@@ -33,7 +39,7 @@ export async function GET(request) {
         ]);
         return NextResponse.json({
           roles: dbRoles, channels: dbChannels, emojis: dbEmojis,
-          _debug: { channelsStatus: channelsRes.status, channelsError: chErr, rolesStatus: rolesRes.status, rolesError: roErr, guildIdUsed: guildId, guildIdLength: guildId?.length }
+          _debug: { channelsStatus: channelsRes.status, channelsError: chErr, rolesStatus: rolesRes.status, rolesError: roErr, guildIdUsed: guildId, guildIdLength: guildId?.length, botGuilds: guildsDebug }
         });
       }
 
