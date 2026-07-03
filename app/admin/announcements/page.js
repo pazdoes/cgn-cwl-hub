@@ -1593,14 +1593,14 @@ export default function AnnouncementsPage() {
                 <input
                   type="text"
                   placeholder={discordMeta.roles.length > 0 ? "Search roles… or type @everyone" : "@everyone or leave blank"}
-                  value={roleSearch || content}
+                  value={roleSearch}
                   onChange={e => {
                     const v = e.target.value;
                     setRoleSearch(v);
-                    setContent(v);
+                    if (!v) setContent("");
                     setRoleSearchOpen(true);
                   }}
-                  onFocus={() => setRoleSearchOpen(true)}
+                  onFocus={() => { setRoleSearch(""); setRoleSearchOpen(true); }}
                   onBlur={() => setTimeout(() => setRoleSearchOpen(false), 150)}
                   className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 {roleSearchOpen && roleSearch && discordMeta.roles.length > 0 && (() => {
@@ -2098,14 +2098,14 @@ export default function AnnouncementsPage() {
                   <input
                     type="text"
                     placeholder={discordMeta.roles.length > 0 ? "Search roles…" : "e.g. <@&1234567890>"}
-                    value={recapRoleSearch || recapRolePing}
+                    value={recapRoleSearch}
                     onChange={e => {
                       const v = e.target.value;
                       setRecapRoleSearch(v);
-                      setRecapRolePing(v);
+                      if (!v) setRecapRolePing("");
                       setRecapRoleSearchOpen(true);
                     }}
-                    onFocus={() => setRecapRoleSearchOpen(true)}
+                    onFocus={() => { setRecapRoleSearch(""); setRecapRoleSearchOpen(true); }}
                     onBlur={() => setTimeout(() => setRecapRoleSearchOpen(false), 150)}
                     className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                   {recapRoleSearchOpen && recapRoleSearch && discordMeta.roles.length > 0 && (() => {
