@@ -1610,11 +1610,13 @@ export default function AnnouncementsPage() {
                   ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
                   ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
                   ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
-                ].slice(0, 8);
+                ].slice(0, 12);
                 if (!matches.length || !roleSearchRef.current) return null;
                 const rect = roleSearchRef.current.getBoundingClientRect();
+                const top = rect.bottom + window.scrollY + 4;
+                const left = rect.left + window.scrollX;
                 return createPortal(
-                  <div style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 }}
+                  <div style={{ position: "absolute", top, left, width: rect.width, zIndex: 9999 }}
                     className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
                     {matches.map(r => (
                       <button key={r.id} type="button"
@@ -2108,11 +2110,13 @@ export default function AnnouncementsPage() {
                     ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
                     ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
                     ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
-                  ].slice(0, 8);
+                  ].slice(0, 12);
                   if (!matches.length || !recapRoleSearchRef.current) return null;
                   const rect = recapRoleSearchRef.current.getBoundingClientRect();
+                  const top = rect.bottom + window.scrollY + 4;
+                  const left = rect.left + window.scrollX;
                   return createPortal(
-                    <div style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 }}
+                    <div style={{ position: "absolute", top, left, width: rect.width, zIndex: 9999 }}
                       className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
                       {matches.map(r => (
                         <button key={r.id} type="button"
