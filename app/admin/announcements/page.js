@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -827,6 +828,8 @@ export default function AnnouncementsPage() {
   const [roleSearchOpen, setRoleSearchOpen] = useState(false);
   const [recapRoleSearch, setRecapRoleSearch] = useState("");
   const [recapRoleSearchOpen, setRecapRoleSearchOpen] = useState(false);
+  const roleSearchRef = useRef(null);
+  const recapRoleSearchRef = useRef(null);
   const [history, setHistory] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [scheduled, setScheduled] = useState([]);
@@ -1591,45 +1594,40 @@ export default function AnnouncementsPage() {
               <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Role Ping <span className="text-slate-700 normal-case">(outside embed, optional)</span></label>
               <div className="relative">
                 <input
+                  ref={roleSearchRef}
                   type="text"
                   placeholder={discordMeta.roles.length > 0 ? "Search roles… or type @everyone" : "@everyone or leave blank"}
                   value={roleSearch}
-                  onChange={e => {
-                    const v = e.target.value;
-                    setRoleSearch(v);
-                    if (!v) setContent("");
-                    setRoleSearchOpen(true);
-                  }}
+                  onChange={e => { setRoleSearch(e.target.value); if (!e.target.value) setContent(""); setRoleSearchOpen(true); }}
                   onFocus={() => { setRoleSearch(""); setRoleSearchOpen(true); }}
                   onBlur={() => setTimeout(() => setRoleSearchOpen(false), 150)}
                   className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                {roleSearchOpen && roleSearch && discordMeta.roles.length > 0 && (() => {
-                  const q = roleSearch.toLowerCase().replace(/^@/, "");
-                  const matches = [
-                    ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
-                    ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
-                    ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
-                  ].slice(0, 8);
-                  return matches.length > 0 ? (
-                    <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-2xl border border-white/10 bg-[#0d1424] shadow-xl overflow-hidden">
-                      {matches.map(r => (
-                        <button key={r.id} type="button"
-                          onMouseDown={() => {
-                            const val = r.id === "everyone" ? "@everyone" : r.id === "here" ? "@here" : `<@&${r.id}>`;
-                            setContent(val);
-                            setRoleSearch(r.name);
-                            setRoleSearchOpen(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.06] transition">
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.colour || "#a78bfa" }}/>
-                          <span className="text-xs text-white">{r.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null;
-                })()}
               </div>
               {content && <p className="text-[10px] text-slate-600 font-mono mt-1">{content}</p>}
+              {roleSearchOpen && roleSearch && discordMeta.roles.length > 0 && typeof document !== "undefined" && (() => {
+                const q = roleSearch.toLowerCase().replace(/^@/, "");
+                const matches = [
+                  ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
+                  ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
+                  ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
+                ].slice(0, 8);
+                if (!matches.length || !roleSearchRef.current) return null;
+                const rect = roleSearchRef.current.getBoundingClientRect();
+                return createPortal(
+                  <div style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 }}
+                    className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
+                    {matches.map(r => (
+                      <button key={r.id} type="button"
+                        onMouseDown={() => { const val = r.id === "everyone" ? "@everyone" : r.id === "here" ? "@here" : `<@&${r.id}>`; setContent(val); setRoleSearch(r.name); setRoleSearchOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.06] transition">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.colour || "#a78bfa" }}/>
+                        <span className="text-xs text-white">{r.name}</span>
+                      </button>
+                    ))}
+                  </div>,
+                  document.body
+                );
+              })()}
             </div>
           </div>
 
@@ -2094,47 +2092,40 @@ export default function AnnouncementsPage() {
               {/* Role ping */}
               <div>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Role Ping <span className="normal-case text-slate-700">(optional)</span></p>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={discordMeta.roles.length > 0 ? "Search roles…" : "e.g. <@&1234567890>"}
-                    value={recapRoleSearch}
-                    onChange={e => {
-                      const v = e.target.value;
-                      setRecapRoleSearch(v);
-                      if (!v) setRecapRolePing("");
-                      setRecapRoleSearchOpen(true);
-                    }}
-                    onFocus={() => { setRecapRoleSearch(""); setRecapRoleSearchOpen(true); }}
-                    onBlur={() => setTimeout(() => setRecapRoleSearchOpen(false), 150)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                  {recapRoleSearchOpen && recapRoleSearch && discordMeta.roles.length > 0 && (() => {
-                    const q = recapRoleSearch.toLowerCase().replace(/^@/, "");
-                    const matches = [
-                      ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
-                      ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
-                      ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
-                    ].slice(0, 8);
-                    return matches.length > 0 ? (
-                      <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-2xl border border-white/10 bg-[#0d1424] shadow-xl overflow-hidden">
-                        {matches.map(r => (
-                          <button key={r.id} type="button"
-                            onMouseDown={() => {
-                              const val = r.id === "everyone" ? "@everyone" : r.id === "here" ? "@here" : `<@&${r.id}>`;
-                              setRecapRolePing(val);
-                              setRecapRoleSearch(r.name);
-                              setRecapRoleSearchOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.06] transition">
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.colour || "#a78bfa" }}/>
-                            <span className="text-xs text-white">{r.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
+                <input
+                  ref={recapRoleSearchRef}
+                  type="text"
+                  placeholder={discordMeta.roles.length > 0 ? "Search roles…" : "e.g. <@&1234567890>"}
+                  value={recapRoleSearch}
+                  onChange={e => { setRecapRoleSearch(e.target.value); if (!e.target.value) setRecapRolePing(""); setRecapRoleSearchOpen(true); }}
+                  onFocus={() => { setRecapRoleSearch(""); setRecapRoleSearchOpen(true); }}
+                  onBlur={() => setTimeout(() => setRecapRoleSearchOpen(false), 150)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 {recapRolePing && <p className="text-[10px] text-slate-600 font-mono mt-1">{recapRolePing}</p>}
+                {recapRoleSearchOpen && recapRoleSearch && discordMeta.roles.length > 0 && typeof document !== "undefined" && (() => {
+                  const q = recapRoleSearch.toLowerCase().replace(/^@/, "");
+                  const matches = [
+                    ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
+                    ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
+                    ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
+                  ].slice(0, 8);
+                  if (!matches.length || !recapRoleSearchRef.current) return null;
+                  const rect = recapRoleSearchRef.current.getBoundingClientRect();
+                  return createPortal(
+                    <div style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 }}
+                      className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
+                      {matches.map(r => (
+                        <button key={r.id} type="button"
+                          onMouseDown={() => { const val = r.id === "everyone" ? "@everyone" : r.id === "here" ? "@here" : `<@&${r.id}>`; setRecapRolePing(val); setRecapRoleSearch(r.name); setRecapRoleSearchOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.06] transition">
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.colour || "#a78bfa" }}/>
+                          <span className="text-xs text-white">{r.name}</span>
+                        </button>
+                      ))}
+                    </div>,
+                    document.body
+                  );
+                })()}
                 <p className="text-[9px] text-slate-700 mt-1">Members with this role will be notified.</p>
               </div>
 
