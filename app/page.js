@@ -3555,15 +3555,40 @@ function SideWarTime({ war }) {
   const mins = Math.floor((msLeft % 3600000) / 60000);
   const isLive = msLeft === 0;
 
+  // For recurring wars that are live, calculate next cycle (current target + 48h)
+  const nextMs = isRecurring && isLive
+    ? Math.max(0, new Date(target.getTime() + 48 * 60 * 60 * 1000) - now)
+    : null;
+  const nextDays = nextMs != null ? Math.floor(nextMs / 86400000) : null;
+  const nextHours = nextMs != null ? Math.floor((nextMs % 86400000) / 3600000) : null;
+  const nextMins = nextMs != null ? Math.floor((nextMs % 3600000) / 60000) : null;
+
   return (
     <div>
       <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">
         {isRecurring ? "Next War In" : "War Starts In"}
       </p>
       {isLive ? (
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
-          <span className="text-sm font-semibold text-green-300">Live Now</span>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+            <span className="text-sm font-semibold text-green-300">Live Now</span>
+          </div>
+          {nextMs != null && (
+            <div>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Next Round In</p>
+              <div className="flex items-baseline gap-1.5">
+                {nextDays > 0 && <>
+                  <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums">{nextDays}</span>
+                  <span className="text-[10px] text-slate-500 mr-1">d</span>
+                </>}
+                <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums">{String(nextHours).padStart(2,"0")}</span>
+                <span className="text-[10px] text-slate-500">h</span>
+                <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums">{String(nextMins).padStart(2,"0")}</span>
+                <span className="text-[10px] text-slate-500">m</span>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex items-baseline gap-1.5">
