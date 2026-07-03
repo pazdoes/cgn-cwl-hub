@@ -20,6 +20,23 @@ export async function GET(request) {
         }),
       ]);
 
+      // Surface Discord errors for debugging
+      if (!channelsRes.ok || !rolesRes.ok) {
+        const chErr = !channelsRes.ok ? await channelsRes.text() : "ok";
+        const roErr = !rolesRes.ok ? await rolesRes.text() : "ok";
+        console.error("Discord API error — channels:", channelsRes.status, chErr, "roles:", rolesRes.status, roErr);
+        // Return error details so we can diagnose
+        const [dbRoles, dbChannels, dbEmojis] = await Promise.all([
+          sql`SELECT id, name, colour FROM discord_roles ORDER BY name`,
+          sql`SELECT id, name FROM discord_channels ORDER BY name`,
+          sql`SELECT id, name FROM discord_emojis ORDER BY name`,
+        ]);
+        return NextResponse.json({
+          roles: dbRoles, channels: dbChannels, emojis: dbEmojis,
+          _debug: { channelsStatus: channelsRes.status, channelsError: chErr, rolesStatus: rolesRes.status, rolesError: roErr }
+        });
+      }
+
       if (channelsRes.ok && rolesRes.ok) {
         const rawChannels = await channelsRes.json();
         const rawRoles = await rolesRes.json();
