@@ -33,7 +33,7 @@ export async function GET(request) {
         ]);
         return NextResponse.json({
           roles: dbRoles, channels: dbChannels, emojis: dbEmojis,
-          _debug: { channelsStatus: channelsRes.status, channelsError: chErr, rolesStatus: rolesRes.status, rolesError: roErr }
+          _debug: { channelsStatus: channelsRes.status, channelsError: chErr, rolesStatus: rolesRes.status, rolesError: roErr, guildIdUsed: guildId, guildIdLength: guildId?.length }
         });
       }
 
