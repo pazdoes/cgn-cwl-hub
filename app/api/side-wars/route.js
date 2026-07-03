@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const sql = getDb();
     const rows = await sql`
-      SELECT id, clan_name, clan_tag, clan_link, start_time
+      SELECT id, clan_name, clan_tag, clan_link, start_time, time_format
       FROM side_wars
       WHERE is_active = true
       ORDER BY start_time ASC
