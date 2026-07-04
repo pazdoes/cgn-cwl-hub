@@ -765,7 +765,7 @@ function EquipmentTile({ eq }) {
           className="w-full h-full object-cover"
           onError={e => { e.target.style.display = "none"; }}/>
       </div>
-      <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold py-px ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/70 text-white"}`}>
+      <span className={`absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-sm text-[8px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
         {eq.level}
       </span>
     </div>
@@ -782,7 +782,7 @@ function UnitTile({ unit, folder }) {
           className="w-full h-full object-cover"
           onError={e => { e.target.style.display = "none"; }}/>
       </div>
-      <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold py-px ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/70 text-white"}`}>
+      <span className={`absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-sm text-[8px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
         {unit.level}
       </span>
     </div>
@@ -1178,7 +1178,7 @@ export default function PlayerProfilePage() {
                                     className="w-full h-full object-cover"
                                     onError={e => { e.target.style.display = "none"; }}/>
                                 </div>
-                                <span className={`absolute bottom-0 left-0 right-0 text-center text-[9px] font-bold py-0.5 ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/60 text-white"}`}>
+                                <span className={`absolute top-0.5 right-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-sm text-[9px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
                                   {hero.level}
                                 </span>
                               </button>
@@ -1203,7 +1203,7 @@ export default function PlayerProfilePage() {
                                     className="w-full h-full object-cover"
                                     onError={e => { e.target.style.display = "none"; }}/>
                                 </div>
-                                <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold py-0.5 ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/60 text-white"}`}>
+                                <span className={`absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-sm text-[8px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
                                   {pet.level}
                                 </span>
                               </div>
@@ -1260,7 +1260,13 @@ export default function PlayerProfilePage() {
                           filtered = [...filtered].sort((a, b) => {
                             const ha = heroOrder.indexOf(EQUIPMENT_LOOKUP[a.name]?.hero || "");
                             const hb = heroOrder.indexOf(EQUIPMENT_LOOKUP[b.name]?.hero || "");
-                            return ha - hb;
+                            if (ha !== hb) return ha - hb;
+                            // Within same hero: Common first, then Epic
+                            const ra = EQUIPMENT_LOOKUP[a.name]?.rarity === "Epic" ? 1 : 0;
+                            const rb = EQUIPMENT_LOOKUP[b.name]?.rarity === "Epic" ? 1 : 0;
+                            if (ra !== rb) return ra - rb;
+                            // Within same rarity: use order field
+                            return (EQUIPMENT_LOOKUP[a.name]?.order ?? 99) - (EQUIPMENT_LOOKUP[b.name]?.order ?? 99);
                           });
                         }
                       }
@@ -1291,6 +1297,37 @@ export default function PlayerProfilePage() {
                         );
                       }
 
+                      // For hero-filtered view: sort Common first then Epic
+                      if (armySelectedHero) {
+                        filtered = [...filtered].sort((a, b) => {
+                          const ra = EQUIPMENT_LOOKUP[a.name]?.rarity === "Epic" ? 1 : 0;
+                          const rb = EQUIPMENT_LOOKUP[b.name]?.rarity === "Epic" ? 1 : 0;
+                          if (ra !== rb) return ra - rb;
+                          return (EQUIPMENT_LOOKUP[a.name]?.order ?? 99) - (EQUIPMENT_LOOKUP[b.name]?.order ?? 99);
+                        });
+                        const common = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity !== "Epic");
+                        const epic = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic");
+                        return (
+                          <div className="space-y-2">
+                            {common.length > 0 && (
+                              <div>
+                                <p className="text-[7px] text-slate-600 uppercase tracking-widest mb-1">Common</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {common.map(e => <EquipmentTile key={e.name} eq={e}/>)}
+                                </div>
+                              </div>
+                            )}
+                            {epic.length > 0 && (
+                              <div>
+                                <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {epic.map(e => <EquipmentTile key={e.name} eq={e}/>)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
                       return (
                         <div className="flex flex-wrap gap-1">
                           {filtered.map(e => <EquipmentTile key={e.name} eq={e}/>)}
