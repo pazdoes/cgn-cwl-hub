@@ -714,6 +714,10 @@ export default function PlayerProfilePage() {
   const [error, setError] = useState(null);
   const [view, setView] = useState("overview");
   const [sharing, setSharing] = useState(false);
+  const [armyData, setArmyData] = useState(null);
+  const [armyLoading, setArmyLoading] = useState(false);
+  const [armyError, setArmyError] = useState(null);
+  const [armyCachedAt, setArmyCachedAt] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(null);
@@ -836,6 +840,20 @@ export default function PlayerProfilePage() {
     ? (seasonsWithThreeStarRate.reduce((s,r)=>s+parseFloat(r.three_star_rate||0),0)/seasonsWithThreeStarRate.length).toFixed(0)+"%" : null;
 
   const heroBorderStyle = rank === 1 ? `1px solid rgba(212,175,55,0.4)` : rank === 2 ? `1px solid rgba(167,167,173,0.4)` : rank === 3 ? `1px solid rgba(205,127,50,0.4)` : null;
+
+  async function fetchArmy() {
+    if (armyData) return; // already loaded
+    setArmyLoading(true); setArmyError(null);
+    try {
+      const tag = (data?.player_tag || "").replace("#", "");
+      const res = await fetch(`/api/army/${tag}`);
+      const json = await res.json();
+      if (!res.ok) { setArmyError(json.error || "Failed to load"); return; }
+      setArmyData(json.army);
+      setArmyCachedAt(json.cachedAt);
+    } catch { setArmyError("Network error"); }
+    finally { setArmyLoading(false); }
+  }
 
   async function handleShare() {
     if (sharing) return;
@@ -967,15 +985,19 @@ export default function PlayerProfilePage() {
 
         {/* Tab toggle */}
         <div className="flex items-center justify-center gap-4 pt-4 mt-3 border-t border-white/[0.04]">
-          <button onClick={() => setView("overview")} className="text-slate-500 hover:text-slate-300 transition p-1">
+          <button onClick={() => setView(view === "stats" ? "overview" : view === "army" ? "stats" : "overview")} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[60px] text-center">
-            {view === "overview" ? "Overview" : "Stats"}
+            {view === "overview" ? "Overview" : view === "stats" ? "Stats" : "Army"}
           </span>
-          <button onClick={() => setView("stats")} className="text-slate-500 hover:text-slate-300 transition p-1">
+          <button onClick={() => {
+            if (view === "overview") setView("stats");
+            else if (view === "stats") { setView("army"); fetchArmy(); }
+            else setView("overview");
+          }} className="text-slate-500 hover:text-slate-300 transition p-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
             </svg>
@@ -1020,6 +1042,170 @@ export default function PlayerProfilePage() {
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">CGN Rating Trend</p>
             <OverallChart seasons={data.seasons}/>
           </div>
+        </div>
+      )}
+
+      {/* ── ARMY VIEW ── */}
+      {view === "army" && (
+        <div className="relative z-10 space-y-4">
+          {armyLoading && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+              <p className="text-slate-600 text-xs animate-pulse">Loading army data…</p>
+            </div>
+          )}
+          {armyError && (
+            <div className="rounded-3xl border border-red-500/20 bg-white/[0.04] p-8 text-center">
+              <p className="text-red-400 text-xs">{armyError}</p>
+            </div>
+          )}
+          {armyData && !armyLoading && (
+            <>
+              {/* Heroes & Equipment */}
+              {armyData.heroes?.length > 0 && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Heroes</p>
+                  <div className="space-y-3">
+                    {armyData.heroes.map(hero => (
+                      <div key={hero.name} className="flex items-start gap-3">
+                        {/* Hero icon placeholder */}
+                        <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center shrink-0 overflow-hidden">
+                          <img
+                            src={`/icons/heroes/${hero.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
+                            alt={hero.name}
+                            className="w-10 h-10 object-contain"
+                            onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+                          />
+                          <div className="hidden w-10 h-10 items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-sm font-semibold text-white">{hero.name}</span>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${hero.level >= hero.maxLevel ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" : "bg-white/[0.06] text-slate-400 border border-white/10"}`}>
+                              {hero.level}/{hero.maxLevel}
+                            </span>
+                          </div>
+                          {/* Equipment for this hero */}
+                          {armyData.heroEquipment?.filter(eq => eq.heroName === hero.name || !eq.heroName).slice(0, 2).length > 0 ? (
+                            <div className="flex gap-2 flex-wrap">
+                              {armyData.heroEquipment
+                                .filter(eq => eq.heroName === hero.name)
+                                .map(eq => (
+                                  <div key={eq.name} className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                                    <div className="w-5 h-5 rounded-lg overflow-hidden bg-white/[0.04] flex items-center justify-center shrink-0">
+                                      <img
+                                        src={`/icons/equipment/${eq.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
+                                        alt={eq.name}
+                                        className="w-4 h-4 object-contain"
+                                        onError={e => { e.target.style.display = "none"; }}
+                                      />
+                                    </div>
+                                    <span className="text-[10px] text-slate-400">{eq.name}</span>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${eq.level >= eq.maxLevel ? "bg-amber-500/20 text-amber-300" : "bg-white/[0.06] text-slate-500"}`}>
+                                      {eq.level}
+                                    </span>
+                                  </div>
+                                ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pets */}
+              {armyData.pets?.length > 0 && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Pets</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {armyData.pets.map(pet => (
+                      <div key={pet.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${pet.level >= pet.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
+                          <img src={`/icons/pets/${pet.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={pet.name}
+                            className="w-9 h-9 object-contain"
+                            onError={e => { e.target.style.display = "none"; }}/>
+                        </div>
+                        <span className="text-[8px] text-slate-500 text-center leading-tight">{pet.name}</span>
+                        <span className={`text-[9px] font-bold ${pet.level >= pet.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{pet.level}/{pet.maxLevel}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Troops */}
+              {armyData.troops?.length > 0 && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Troops</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {armyData.troops.map(t => (
+                      <div key={t.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${t.level >= t.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
+                          <img src={`/icons/troops/${t.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={t.name}
+                            className="w-8 h-8 object-contain"
+                            onError={e => { e.target.style.display = "none"; }}/>
+                        </div>
+                        <span className="text-[7px] text-slate-500 text-center leading-tight truncate w-full text-center">{t.name}</span>
+                        <span className={`text-[9px] font-bold ${t.level >= t.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{t.level}/{t.maxLevel}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Spells */}
+              {armyData.spells?.length > 0 && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Spells</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {armyData.spells.map(s => (
+                      <div key={s.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${s.level >= s.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
+                          <img src={`/icons/spells/${s.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={s.name}
+                            className="w-8 h-8 object-contain"
+                            onError={e => { e.target.style.display = "none"; }}/>
+                        </div>
+                        <span className="text-[7px] text-slate-500 text-center leading-tight truncate w-full text-center">{s.name}</span>
+                        <span className={`text-[9px] font-bold ${s.level >= s.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{s.level}/{s.maxLevel}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Siege Machines */}
+              {armyData.siegeMachines?.length > 0 && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Siege Machines</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {armyData.siegeMachines.map(s => (
+                      <div key={s.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${s.level >= s.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
+                          <img src={`/icons/siege/${s.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={s.name}
+                            className="w-9 h-9 object-contain"
+                            onError={e => { e.target.style.display = "none"; }}/>
+                        </div>
+                        <span className="text-[7px] text-slate-500 text-center leading-tight">{s.name}</span>
+                        <span className={`text-[9px] font-bold ${s.level >= s.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{s.level}/{s.maxLevel}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Cache info */}
+              {armyCachedAt && (
+                <p className="text-[9px] text-slate-700 text-center">
+                  Data from {new Date(armyCachedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · refreshes every 24h
+                </p>
+              )}
+            </>
+          )}
         </div>
       )}
 
