@@ -41,10 +41,10 @@ export async function GET() {
     // clan_season_history for W/L/D
     const clans = await sql`
       SELECT clan_name, cwl_rank, wars_won, wars_lost, wars_drawn,
-             attack_efficiency, overall
+             attack_efficiency
       FROM clan_season_history
       WHERE season = ${season}
-      ORDER BY overall DESC NULLS LAST
+      ORDER BY attack_efficiency DESC NULLS LAST
     `;
 
     // Top 5 attackers (linked accounts only)
