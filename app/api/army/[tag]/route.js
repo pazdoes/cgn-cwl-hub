@@ -12,8 +12,15 @@ const SIEGE_MACHINES = new Set([
 const PET_NAMES = new Set([
   "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
   "Diggy", "Poison Lizard", "Phoenix", "Spirit Fox", "Angry Jelly",
-  "Sneezy", "Gorilla", "Capybara", "Skeletal Dragon",
+  "Sneezy", "Greedy Raven",
 ]);
+
+// Canonical pet display order
+const PET_ORDER = [
+  "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
+  "Diggy", "Poison Lizard", "Phoenix", "Spirit Fox", "Angry Jelly",
+  "Sneezy", "Greedy Raven",
+];
 
 function isSiegeMachine(name) { return SIEGE_MACHINES.has(name); }
 function isPet(name) { return PET_NAMES.has(name); }
@@ -60,7 +67,14 @@ export async function GET(request, { params }) {
       superTroops: allHomeTroops.filter(t => t.superTroopIsActive),
       spells: (player.spells || []).filter(s => s.village === "home"),
       siegeMachines: allHomeTroops.filter(t => isSiegeMachine(t.name)),
-      pets: allHomeTroops.filter(t => isPet(t.name)),
+      pets: (() => {
+        const raw = allHomeTroops.filter(t => isPet(t.name));
+        return [...raw].sort((a, b) => {
+          const oa = PET_ORDER.indexOf(a.name);
+          const ob = PET_ORDER.indexOf(b.name);
+          return (oa === -1 ? 99 : oa) - (ob === -1 ? 99 : ob);
+        });
+      })(),
     };
 
     // Store in cache (insert — never overwrite)

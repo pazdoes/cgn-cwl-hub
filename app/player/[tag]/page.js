@@ -709,57 +709,49 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
 
 // ─── Static equipment lookup — hero pairing + rarity ─────────────────────────
 const EQUIPMENT_LOOKUP = {
-  // ── Barbarian King ──────────────────────────────────────────────
-  "Barbarian Puppet":       { hero: "Barbarian King",  rarity: "Common" },
-  "Rage Vial":              { hero: "Barbarian King",  rarity: "Common" },
-  "Earthquake Boots":       { hero: "Barbarian King",  rarity: "Common" },
-  "Vampstache":             { hero: "Barbarian King",  rarity: "Common" },
-  "Snake Bracelet":         { hero: "Barbarian King",  rarity: "Common" },
-  "Sneaky Goblin Puppet":   { hero: "Barbarian King",  rarity: "Common" },
-  "Giant Gauntlet":         { hero: "Barbarian King",  rarity: "Epic"   },
-  "Spiky Ball":             { hero: "Barbarian King",  rarity: "Epic"   },
-  "Stick Horse":            { hero: "Barbarian King",  rarity: "Epic"   },
-  // ── Archer Queen ────────────────────────────────────────────────
-  "Archer Puppet":          { hero: "Archer Queen",    rarity: "Common" },
-  "Invisibility Vial":      { hero: "Archer Queen",    rarity: "Common" },
-  "Giant Arrow":            { hero: "Archer Queen",    rarity: "Common" },
-  "Healer Puppet":          { hero: "Archer Queen",    rarity: "Common" },
-  "Frozen Arrow":           { hero: "Archer Queen",    rarity: "Epic"   },
-  "Magic Mirror":           { hero: "Archer Queen",    rarity: "Epic"   },
-  "Action Figure":          { hero: "Archer Queen",    rarity: "Epic"   },
-  "Monolith Arrow":         { hero: "Archer Queen",    rarity: "Epic"   },
-  // ── Grand Warden ────────────────────────────────────────────────
-  "Eternal Tome":           { hero: "Grand Warden",    rarity: "Common" },
-  "Life Gem":               { hero: "Grand Warden",    rarity: "Common" },
-  "Rage Gem":               { hero: "Grand Warden",    rarity: "Common" },
-  "Healing Tome":           { hero: "Grand Warden",    rarity: "Common" },
-  "Haste Vial":             { hero: "Grand Warden",    rarity: "Common" },
-  "Fireball":               { hero: "Grand Warden",    rarity: "Epic"   },
-  "Lavaloon Puppet":        { hero: "Grand Warden",    rarity: "Epic"   },
-  "Electro Boots":          { hero: "Grand Warden",    rarity: "Epic"   },
-  // ── Royal Champion ──────────────────────────────────────────────
-  "Seeking Shield":         { hero: "Royal Champion",  rarity: "Common" },
-  "Royal Gem":              { hero: "Royal Champion",  rarity: "Common" },
-  "Haste Potion":           { hero: "Royal Champion",  rarity: "Common" },
-  "Mirror":                 { hero: "Royal Champion",  rarity: "Common" },
-  "Frost Flake":            { hero: "Royal Champion",  rarity: "Common" },
-  "Hog Rider Puppet":       { hero: "Royal Champion",  rarity: "Epic"   },
-  "Rocket Spear":           { hero: "Royal Champion",  rarity: "Epic"   },
-  "Electro Hammer":         { hero: "Royal Champion",  rarity: "Epic"   },
-  // ── Minion Prince ───────────────────────────────────────────────
-  "Dark Orb":               { hero: "Minion Prince",   rarity: "Common" },
-  "Henchmen Puppet":        { hero: "Minion Prince",   rarity: "Common" },
-  "Metal Pants":            { hero: "Minion Prince",   rarity: "Common" },
-  "Noble Iron":             { hero: "Minion Prince",   rarity: "Common" },
-  "Dark Crown":             { hero: "Minion Prince",   rarity: "Epic"   },
-  "Meteor Staff":           { hero: "Minion Prince",   rarity: "Epic"   },
-  // ── Dragon Duke ─────────────────────────────────────────────────
-  "Fire Heart":             { hero: "Dragon Duke",     rarity: "Common" },
-  "Flame Blower":           { hero: "Dragon Duke",     rarity: "Common" },
-  "Electro Fangs":          { hero: "Dragon Duke",     rarity: "Common" },
-  "Stun Blaster":           { hero: "Dragon Duke",     rarity: "Common" },
-  "Rocket Backpack":        { hero: "Dragon Duke",     rarity: "Epic"   },
-  "Heroic Torch":           { hero: "Dragon Duke",     rarity: "Epic"   },
+  // ── Common equipment — display order ────────────────────────────
+  "Barbarian Puppet":     { hero: "Barbarian King",  rarity: "Common", order: 1  },
+  "Rage Vial":            { hero: "Barbarian King",  rarity: "Common", order: 2  },
+  "Earthquake Boots":     { hero: "Barbarian King",  rarity: "Common", order: 3  },
+  "Vampstache":           { hero: "Barbarian King",  rarity: "Common", order: 4  },
+  "Archer Puppet":        { hero: "Archer Queen",    rarity: "Common", order: 5  },
+  "Invisibility Vial":    { hero: "Archer Queen",    rarity: "Common", order: 6  },
+  "Giant Arrow":          { hero: "Archer Queen",    rarity: "Common", order: 7  },
+  "Healer Puppet":        { hero: "Archer Queen",    rarity: "Common", order: 8  },
+  "Henchmen Puppet":      { hero: "Minion Prince",   rarity: "Common", order: 9  },
+  "Dark Orb":             { hero: "Minion Prince",   rarity: "Common", order: 10 },
+  "Metal Pants":          { hero: "Minion Prince",   rarity: "Common", order: 11 },
+  "Noble Iron":           { hero: "Minion Prince",   rarity: "Common", order: 12 },
+  "Eternal Tome":         { hero: "Grand Warden",    rarity: "Common", order: 13 },
+  "Life Gem":             { hero: "Grand Warden",    rarity: "Common", order: 14 },
+  "Rage Gem":             { hero: "Grand Warden",    rarity: "Common", order: 15 },
+  "Healing Tome":         { hero: "Grand Warden",    rarity: "Common", order: 16 },
+  "Seeking Shield":       { hero: "Royal Champion",  rarity: "Common", order: 17 },
+  "Royal Gem":            { hero: "Royal Champion",  rarity: "Common", order: 18 },
+  "Hog Rider Puppet":     { hero: "Royal Champion",  rarity: "Common", order: 19 },
+  "Haste Vial":           { hero: "Royal Champion",  rarity: "Common", order: 20 },
+  "Fire Heart":           { hero: "Dragon Duke",     rarity: "Common", order: 21 },
+  "Flame Blower":         { hero: "Dragon Duke",     rarity: "Common", order: 22 },
+  "Stun Blaster":         { hero: "Dragon Duke",     rarity: "Common", order: 23 },
+  "Electro Fangs":        { hero: "Dragon Duke",     rarity: "Common", order: 24 },
+  // ── Epic equipment — display order ──────────────────────────────
+  "Giant Gauntlet":       { hero: "Barbarian King",  rarity: "Epic",   order: 25 },
+  "Spiky Ball":           { hero: "Barbarian King",  rarity: "Epic",   order: 26 },
+  "Snake Bracelet":       { hero: "Barbarian King",  rarity: "Epic",   order: 27 },
+  "Stick Horse":          { hero: "Barbarian King",  rarity: "Epic",   order: 28 },
+  "Frozen Arrow":         { hero: "Archer Queen",    rarity: "Epic",   order: 29 },
+  "Monolith Arrow":       { hero: "Archer Queen",    rarity: "Epic",   order: 30 },
+  "Magic Mirror":         { hero: "Archer Queen",    rarity: "Epic",   order: 31 },
+  "Action Figure":        { hero: "Archer Queen",    rarity: "Epic",   order: 32 },
+  "Dark Crown":           { hero: "Minion Prince",   rarity: "Epic",   order: 33 },
+  "Meteor Staff":         { hero: "Minion Prince",   rarity: "Epic",   order: 34 },
+  "Heroic Torch":         { hero: "Grand Warden",    rarity: "Epic",   order: 35 },
+  "Fireball":             { hero: "Grand Warden",    rarity: "Epic",   order: 36 },
+  "Lavaloon Puppet":      { hero: "Grand Warden",    rarity: "Epic",   order: 37 },
+  "Rocket Spear":         { hero: "Royal Champion",  rarity: "Epic",   order: 38 },
+  "Electro Boots":        { hero: "Royal Champion",  rarity: "Epic",   order: 39 },
+  "Frost Flake":          { hero: "Royal Champion",  rarity: "Epic",   order: 40 },
+  "Rocket Backpack":      { hero: "Dragon Duke",     rarity: "Epic",   order: 41 },
 };
 
 function EquipmentTile({ eq }) {
@@ -1165,7 +1157,10 @@ export default function PlayerProfilePage() {
                       <div>
                         <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1.5">Heroes</p>
                         <div className="flex flex-wrap gap-1.5">
-                          {armyData.heroes.map(hero => {
+                          {[...armyData.heroes].sort((a, b) => {
+                      const order = ["Barbarian King","Archer Queen","Minion Prince","Grand Warden","Royal Champion","Dragon Duke"];
+                      return order.indexOf(a.name) - order.indexOf(b.name);
+                    }).map(hero => {
                             const slug = hero.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
                             const isMaxed = hero.level >= hero.maxLevel;
                             return (
@@ -1256,12 +1251,12 @@ export default function PlayerProfilePage() {
                       if (!armySelectedHero) {
                         if (armyEqSort === "rarity") {
                           filtered = [...filtered].sort((a, b) => {
-                            const ra = EQUIPMENT_LOOKUP[a.name]?.rarity === "Epic" ? 0 : 1;
-                            const rb = EQUIPMENT_LOOKUP[b.name]?.rarity === "Epic" ? 0 : 1;
-                            return ra - rb;
+                            const oa = EQUIPMENT_LOOKUP[a.name]?.order ?? 99;
+                            const ob = EQUIPMENT_LOOKUP[b.name]?.order ?? 99;
+                            return oa - ob;
                           });
                         } else {
-                          const heroOrder = ["Barbarian King","Archer Queen","Grand Warden","Royal Champion","Minion Prince","Dragon Duke"];
+                          const heroOrder = ["Barbarian King","Archer Queen","Minion Prince","Grand Warden","Royal Champion","Dragon Duke"];
                           filtered = [...filtered].sort((a, b) => {
                             const ha = heroOrder.indexOf(EQUIPMENT_LOOKUP[a.name]?.hero || "");
                             const hb = heroOrder.indexOf(EQUIPMENT_LOOKUP[b.name]?.hero || "");
@@ -1272,23 +1267,23 @@ export default function PlayerProfilePage() {
 
                       // Group by rarity when in rarity mode
                       if (!armySelectedHero && armyEqSort === "rarity") {
-                        const epic = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic");
                         const common = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity !== "Epic");
+                        const epic = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic");
                         return (
                           <div className="space-y-2">
-                            {epic.length > 0 && (
-                              <div>
-                                <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {epic.map(e => <EquipmentTile key={e.name} eq={e}/>)}
-                                </div>
-                              </div>
-                            )}
                             {common.length > 0 && (
                               <div>
                                 <p className="text-[7px] text-slate-600 uppercase tracking-widest mb-1">Common</p>
                                 <div className="flex flex-wrap gap-1">
                                   {common.map(e => <EquipmentTile key={e.name} eq={e}/>)}
+                                </div>
+                              </div>
+                            )}
+                            {epic.length > 0 && (
+                              <div>
+                                <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {epic.map(e => <EquipmentTile key={e.name} eq={e}/>)}
                                 </div>
                               </div>
                             )}
