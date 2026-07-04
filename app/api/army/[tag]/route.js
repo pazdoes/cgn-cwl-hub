@@ -34,21 +34,20 @@ export async function GET(request, { params }) {
     }
 
     // Extract only home village units
+    const allHomeTroops = (player.troops || []).filter(t => t.village === "home");
+
     const army = {
       name: player.name,
       tag: player.tag,
       townHallLevel: player.townHallLevel,
       heroes: (player.heroes || []).filter(h => h.village === "home"),
       heroEquipment: player.heroEquipment || [],
-      troops: (player.troops || []).filter(t => t.village === "home" && !t.superTroopIsActive),
-      superTroops: (player.troops || []).filter(t => t.village === "home" && t.superTroopIsActive),
+      troops: allHomeTroops.filter(t => !t.superTroopIsActive && !isSiegeMachine(t.name) && !isPet(t.name)),
+      superTroops: allHomeTroops.filter(t => t.superTroopIsActive),
       spells: (player.spells || []).filter(s => s.village === "home"),
-      siegeMachines: (player.troops || []).filter(t => t.village === "home" && isSiegeMachine(t.name)),
-      pets: player.pets || [],
+      siegeMachines: allHomeTroops.filter(t => isSiegeMachine(t.name)),
+      pets: allHomeTroops.filter(t => isPet(t.name)),
     };
-
-    // Remove siege machines from troops
-    army.troops = army.troops.filter(t => !isSiegeMachine(t.name));
 
     // Store in cache (insert — never overwrite)
     await sql`
@@ -64,11 +63,16 @@ export async function GET(request, { params }) {
   }
 }
 
-const SIEGE_MACHINES = new Set([
-  "Wall Wrecker", "Battle Blimp", "Stone Slammer", "Siege Barracks",
-  "Log Launcher", "Flame Flinger", "Battle Drill",
+const PET_NAMES = new Set([
+  "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
+  "Diggy", "Poison Lizard", "Phoenix", "Spirit Fox", "Angry Jelly",
+  "Sneezy", "Gorilla", "Capybara", "Skeletal Dragon",
 ]);
 
 function isSiegeMachine(name) {
   return SIEGE_MACHINES.has(name);
+}
+
+function isPet(name) {
+  return PET_NAMES.has(name);
 }
