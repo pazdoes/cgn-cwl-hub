@@ -707,6 +707,90 @@ function ShareCard({ data, latestOverall, rank, rankColour, avgEfficiency, avgDe
   );
 }
 
+// ─── Static equipment lookup — hero pairing + rarity ─────────────────────────
+const EQUIPMENT_LOOKUP = {
+  // Barbarian King — Epic
+  "Giant Gauntlet":      { hero: "Barbarian King",  rarity: "Epic"   },
+  "Spiky Ball":          { hero: "Barbarian King",  rarity: "Epic"   },
+  "Rage Vial":           { hero: "Barbarian King",  rarity: "Common" },
+  "Earthquake Boots":    { hero: "Barbarian King",  rarity: "Common" },
+  "Vampstache":          { hero: "Barbarian King",  rarity: "Common" },
+  "Barbarian Puppet":    { hero: "Barbarian King",  rarity: "Common" },
+  "Giant Crusher":       { hero: "Barbarian King",  rarity: "Epic"   },
+  "Sneaky Goblin Puppet":{ hero: "Barbarian King",  rarity: "Common" },
+  // Archer Queen — Epic
+  "Frozen Arrow":        { hero: "Archer Queen",    rarity: "Epic"   },
+  "Magic Mirror":        { hero: "Archer Queen",    rarity: "Epic"   },
+  "Archer Puppet":       { hero: "Archer Queen",    rarity: "Common" },
+  "Invisibility Vial":   { hero: "Archer Queen",    rarity: "Common" },
+  "Giant Arrow":         { hero: "Archer Queen",    rarity: "Common" },
+  "Healer Puppet":       { hero: "Archer Queen",    rarity: "Common" },
+  "Action Figure":       { hero: "Archer Queen",    rarity: "Epic"   },
+  "Rocket Spear":        { hero: "Archer Queen",    rarity: "Epic"   },
+  // Grand Warden — Epic
+  "Eternal Tome":        { hero: "Grand Warden",    rarity: "Epic"   },
+  "Life Gem":            { hero: "Grand Warden",    rarity: "Epic"   },
+  "Rage Gem":            { hero: "Grand Warden",    rarity: "Common" },
+  "Healing Tome":        { hero: "Grand Warden",    rarity: "Common" },
+  "Fireball":            { hero: "Grand Warden",    rarity: "Epic"   },
+  "Lavaloon Puppet":     { hero: "Grand Warden",    rarity: "Epic"   },
+  "Electro Boots":       { hero: "Grand Warden",    rarity: "Epic"   },
+  "Haste Vial":          { hero: "Grand Warden",    rarity: "Common" },
+  // Royal Champion — Epic
+  "Hog Rider Puppet":    { hero: "Royal Champion",  rarity: "Epic"   },
+  "Angry Jelly Fish":    { hero: "Royal Champion",  rarity: "Epic"   },
+  "Seeking Shield":      { hero: "Royal Champion",  rarity: "Common" },
+  "Royal Gem":           { hero: "Royal Champion",  rarity: "Common" },
+  "Haste Potion":        { hero: "Royal Champion",  rarity: "Common" },
+  "Mirror":              { hero: "Royal Champion",  rarity: "Common" },
+  "Electro Hammer":      { hero: "Royal Champion",  rarity: "Epic"   },
+  "Noble Iron":          { hero: "Royal Champion",  rarity: "Epic"   },
+  // Minion Prince
+  "Dark Orb":            { hero: "Minion Prince",   rarity: "Epic"   },
+  "Henchmen Puppet":     { hero: "Minion Prince",   rarity: "Common" },
+  "Metal Pants":         { hero: "Minion Prince",   rarity: "Common" },
+  "Minion Prince Ep 1":  { hero: "Minion Prince",   rarity: "Epic"   },
+  // Dragon Duke
+  "Flame Orb":           { hero: "Dragon Duke",     rarity: "Epic"   },
+  "Dragon Claws":        { hero: "Dragon Duke",     rarity: "Common" },
+  "Dragon Armor":        { hero: "Dragon Duke",     rarity: "Common" },
+};
+
+function EquipmentTile({ eq }) {
+  const slug = eq.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const isMaxed = eq.level >= eq.maxLevel;
+  const isEpic = EQUIPMENT_LOOKUP[eq.name]?.rarity === "Epic";
+  return (
+    <div className={`relative w-10 h-10 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : isEpic ? "border-purple-500/30" : "border-white/[0.08]"}`}>
+      <div className="w-full h-full bg-white/[0.05] flex items-center justify-center">
+        <img src={`/icons/equipment/${slug}.png`} alt={eq.name}
+          className="w-full h-full object-cover"
+          onError={e => { e.target.style.display = "none"; }}/>
+      </div>
+      <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold py-px ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/70 text-white"}`}>
+        {eq.level}
+      </span>
+    </div>
+  );
+}
+
+function UnitTile({ unit, folder }) {
+  const slug = unit.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const isMaxed = unit.level >= unit.maxLevel;
+  return (
+    <div className={`relative w-10 h-10 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : "border-white/[0.08]"}`}>
+      <div className="w-full h-full bg-white/[0.05] flex items-center justify-center">
+        <img src={`/icons/${folder}/${slug}.png`} alt={unit.name}
+          className="w-full h-full object-cover"
+          onError={e => { e.target.style.display = "none"; }}/>
+      </div>
+      <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold py-px ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/70 text-white"}`}>
+        {unit.level}
+      </span>
+    </div>
+  );
+}
+
 export default function PlayerProfilePage() {
   const { tag } = useParams();
   const [data, setData] = useState(null);
@@ -718,6 +802,9 @@ export default function PlayerProfilePage() {
   const [armyLoading, setArmyLoading] = useState(false);
   const [armyError, setArmyError] = useState(null);
   const [armyCachedAt, setArmyCachedAt] = useState(null);
+  const [armySelectedHero, setArmySelectedHero] = useState(null);
+  const [armyEqSort, setArmyEqSort] = useState("rarity");
+  const [armyShowTroops, setArmyShowTroops] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(null);
@@ -1045,9 +1132,10 @@ export default function PlayerProfilePage() {
         </div>
       )}
 
+
       {/* ── ARMY VIEW ── */}
       {view === "army" && (
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 space-y-3">
           {armyLoading && (
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
               <p className="text-slate-600 text-xs animate-pulse">Loading army data…</p>
@@ -1060,142 +1148,200 @@ export default function PlayerProfilePage() {
           )}
           {armyData && !armyLoading && (
             <>
-              {/* Heroes */}
-              {armyData.heroes?.length > 0 && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Heroes</p>
-                  <div className="space-y-3">
-                    {armyData.heroes.map(hero => (
-                      <div key={hero.name} className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center shrink-0 overflow-hidden">
-                          <img
-                            src={`/icons/heroes/${hero.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
-                            alt={hero.name}
-                            className="w-10 h-10 object-contain"
-                            onError={e => { e.target.style.display = "none"; }}
-                          />
+              {/* ── HEROES + PETS + EQUIPMENT CARD ── */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                <div className="flex gap-3">
+
+                  {/* LEFT — Heroes stacked above Pets */}
+                  <div className="flex flex-col gap-2 shrink-0" style={{width: "38%"}}>
+                    {/* Heroes */}
+                    {armyData.heroes?.length > 0 && (
+                      <div>
+                        <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1.5">Heroes</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {armyData.heroes.map(hero => {
+                            const slug = hero.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                            const isMaxed = hero.level >= hero.maxLevel;
+                            return (
+                              <button key={hero.name} type="button"
+                                onClick={() => setArmySelectedHero(armySelectedHero === hero.name ? null : hero.name)}
+                                className={`relative shrink-0 w-14 h-14 rounded-2xl overflow-hidden border-2 transition ${
+                                  armySelectedHero === hero.name
+                                    ? "border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                                    : isMaxed
+                                      ? "border-amber-500/60"
+                                      : "border-white/10"
+                                }`}>
+                                <div className="w-full h-full bg-white/[0.06] flex items-center justify-center">
+                                  <img src={`/icons/heroes/${slug}.png`} alt={hero.name}
+                                    className="w-full h-full object-cover"
+                                    onError={e => { e.target.style.display = "none"; }}/>
+                                </div>
+                                <span className={`absolute bottom-0 left-0 right-0 text-center text-[9px] font-bold py-0.5 ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/60 text-white"}`}>
+                                  {hero.level}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-white">{hero.name}</span>
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${hero.level >= hero.maxLevel ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" : "bg-white/[0.06] text-slate-400 border border-white/10"}`}>
-                              {hero.level}/{hero.maxLevel}
-                            </span>
+                      </div>
+                    )}
+
+                    {/* Pets */}
+                    {armyData.pets?.length > 0 && (
+                      <div>
+                        <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1.5">Pets</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {armyData.pets.map(pet => {
+                            const slug = pet.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                            const isMaxed = pet.level >= pet.maxLevel;
+                            return (
+                              <div key={pet.name} className={`relative w-11 h-11 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : "border-white/10"}`}>
+                                <div className="w-full h-full bg-white/[0.06] flex items-center justify-center">
+                                  <img src={`/icons/pets/${slug}.png`} alt={pet.name}
+                                    className="w-full h-full object-cover"
+                                    onError={e => { e.target.style.display = "none"; }}/>
+                                </div>
+                                <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold py-0.5 ${isMaxed ? "bg-amber-500/80 text-white" : "bg-black/60 text-white"}`}>
+                                  {pet.level}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-px bg-white/[0.06] shrink-0"/>
+
+                  {/* RIGHT — Equipment panel */}
+                  <div className="flex-1 min-w-0">
+                    {/* Equipment sort controls */}
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest">
+                        {armySelectedHero ? armySelectedHero.split(" ")[0] + " Equipment" : "Equipment"}
+                      </p>
+                      {!armySelectedHero && (
+                        <div className="flex gap-1">
+                          {["rarity","hero"].map(mode => (
+                            <button key={mode} type="button"
+                              onClick={() => setArmyEqSort(mode)}
+                              className={`text-[8px] px-2 py-0.5 rounded-full border transition ${armyEqSort === mode ? "border-purple-500/60 bg-purple-500/20 text-purple-300" : "border-white/10 text-slate-600 hover:text-slate-400"}`}>
+                              {mode === "rarity" ? "Epic/Common" : "By Hero"}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {armySelectedHero && (
+                        <button type="button" onClick={() => setArmySelectedHero(null)}
+                          className="text-[8px] text-slate-600 hover:text-slate-300 transition">All</button>
+                      )}
+                    </div>
+
+                    {/* Equipment grid */}
+                    {(() => {
+                      const eq = armyData.heroEquipment || [];
+                      let filtered = armySelectedHero
+                        ? eq.filter(e => (EQUIPMENT_LOOKUP[e.name]?.hero || "") === armySelectedHero)
+                        : eq;
+
+                      if (!armySelectedHero) {
+                        if (armyEqSort === "rarity") {
+                          filtered = [...filtered].sort((a, b) => {
+                            const ra = EQUIPMENT_LOOKUP[a.name]?.rarity === "Epic" ? 0 : 1;
+                            const rb = EQUIPMENT_LOOKUP[b.name]?.rarity === "Epic" ? 0 : 1;
+                            return ra - rb;
+                          });
+                        } else {
+                          const heroOrder = ["Barbarian King","Archer Queen","Grand Warden","Royal Champion","Minion Prince","Dragon Duke"];
+                          filtered = [...filtered].sort((a, b) => {
+                            const ha = heroOrder.indexOf(EQUIPMENT_LOOKUP[a.name]?.hero || "");
+                            const hb = heroOrder.indexOf(EQUIPMENT_LOOKUP[b.name]?.hero || "");
+                            return ha - hb;
+                          });
+                        }
+                      }
+
+                      // Group by rarity when in rarity mode
+                      if (!armySelectedHero && armyEqSort === "rarity") {
+                        const epic = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic");
+                        const common = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity !== "Epic");
+                        return (
+                          <div className="space-y-2">
+                            {epic.length > 0 && (
+                              <div>
+                                <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {epic.map(e => <EquipmentTile key={e.name} eq={e}/>)}
+                                </div>
+                              </div>
+                            )}
+                            {common.length > 0 && (
+                              <div>
+                                <p className="text-[7px] text-slate-600 uppercase tracking-widest mb-1">Common</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {common.map(e => <EquipmentTile key={e.name} eq={e}/>)}
+                                </div>
+                              </div>
+                            )}
                           </div>
+                        );
+                      }
+
+                      return (
+                        <div className="flex flex-wrap gap-1">
+                          {filtered.map(e => <EquipmentTile key={e.name} eq={e}/>)}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })()}
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Hero Equipment — flat list, API doesn't link to specific hero */}
-              {armyData.heroEquipment?.length > 0 && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Hero Equipment</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {armyData.heroEquipment.map(eq => (
-                      <div key={eq.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${eq.level >= eq.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
-                          <img
-                            src={`/icons/equipment/${eq.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
-                            alt={eq.name}
-                            className="w-8 h-8 object-contain"
-                            onError={e => { e.target.style.display = "none"; }}
-                          />
+              {/* ── TROOPS + SPELLS + SIEGE ── */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+                <button type="button" onClick={() => setArmyShowTroops(v => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3">
+                  <p className="text-[9px] text-slate-500 uppercase tracking-widest">Troops, Spells & Siege</p>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 text-slate-600 transition-transform ${armyShowTroops ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                {armyShowTroops && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-white/[0.06] pt-3">
+                    {armyData.troops?.length > 0 && (
+                      <div>
+                        <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">Troops</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {armyData.troops.map(t => <UnitTile key={t.name} unit={t} folder="troops"/>)}
                         </div>
-                        <span className="text-[7px] text-slate-500 text-center leading-tight truncate w-full text-center">{eq.name}</span>
-                        <span className={`text-[9px] font-bold ${eq.level >= eq.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{eq.level}/{eq.maxLevel}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Pets */}
-              {armyData.pets?.length > 0 && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Pets</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {armyData.pets.map(pet => (
-                      <div key={pet.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${pet.level >= pet.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
-                          <img src={`/icons/pets/${pet.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={pet.name}
-                            className="w-9 h-9 object-contain"
-                            onError={e => { e.target.style.display = "none"; }}/>
+                    )}
+                    {armyData.spells?.length > 0 && (
+                      <div>
+                        <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">Spells</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {armyData.spells.map(s => <UnitTile key={s.name} unit={s} folder="spells"/>)}
                         </div>
-                        <span className="text-[8px] text-slate-500 text-center leading-tight">{pet.name}</span>
-                        <span className={`text-[9px] font-bold ${pet.level >= pet.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{pet.level}/{pet.maxLevel}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Troops */}
-              {armyData.troops?.length > 0 && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Troops</p>
-                  <div className="grid grid-cols-5 gap-2">
-                    {armyData.troops.map(t => (
-                      <div key={t.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${t.level >= t.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
-                          <img src={`/icons/troops/${t.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={t.name}
-                            className="w-8 h-8 object-contain"
-                            onError={e => { e.target.style.display = "none"; }}/>
+                    )}
+                    {armyData.siegeMachines?.length > 0 && (
+                      <div>
+                        <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">Siege Machines</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {armyData.siegeMachines.map(s => <UnitTile key={s.name} unit={s} folder="siege"/>)}
                         </div>
-                        <span className="text-[7px] text-slate-500 text-center leading-tight truncate w-full text-center">{t.name}</span>
-                        <span className={`text-[9px] font-bold ${t.level >= t.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{t.level}/{t.maxLevel}</span>
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Spells */}
-              {armyData.spells?.length > 0 && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Spells</p>
-                  <div className="grid grid-cols-5 gap-2">
-                    {armyData.spells.map(s => (
-                      <div key={s.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${s.level >= s.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
-                          <img src={`/icons/spells/${s.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={s.name}
-                            className="w-8 h-8 object-contain"
-                            onError={e => { e.target.style.display = "none"; }}/>
-                        </div>
-                        <span className="text-[7px] text-slate-500 text-center leading-tight truncate w-full text-center">{s.name}</span>
-                        <span className={`text-[9px] font-bold ${s.level >= s.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{s.level}/{s.maxLevel}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Siege Machines */}
-              {armyData.siegeMachines?.length > 0 && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Siege Machines</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {armyData.siegeMachines.map(s => (
-                      <div key={s.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${s.level >= s.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
-                          <img src={`/icons/siege/${s.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`} alt={s.name}
-                            className="w-9 h-9 object-contain"
-                            onError={e => { e.target.style.display = "none"; }}/>
-                        </div>
-                        <span className="text-[7px] text-slate-500 text-center leading-tight">{s.name}</span>
-                        <span className={`text-[9px] font-bold ${s.level >= s.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{s.level}/{s.maxLevel}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Cache info */}
               {armyCachedAt && (
                 <p className="text-[9px] text-slate-700 text-center">
-                  Data from {new Date(armyCachedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · refreshes every 24h
+                  Snapshot from {new Date(armyCachedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · refreshes every 24h
                 </p>
               )}
             </>
@@ -1203,7 +1349,7 @@ export default function PlayerProfilePage() {
         </div>
       )}
 
-      {/* ── STATS VIEW ── */}
+      {/* ── STATS VIEW ── */}      {/* ── STATS VIEW ── */}
       {view === "stats" && (
         <div className="relative z-10 space-y-4">
 
