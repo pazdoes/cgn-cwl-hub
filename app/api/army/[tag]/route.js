@@ -2,7 +2,21 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getPlayer } from "@/lib/coc";
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+const SIEGE_MACHINES = new Set([
+  "Wall Wrecker", "Battle Blimp", "Stone Slammer", "Siege Barracks",
+  "Log Launcher", "Flame Flinger", "Battle Drill",
+]);
+
+const PET_NAMES = new Set([
+  "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
+  "Diggy", "Poison Lizard", "Phoenix", "Spirit Fox", "Angry Jelly",
+  "Sneezy", "Gorilla", "Capybara", "Skeletal Dragon",
+]);
+
+function isSiegeMachine(name) { return SIEGE_MACHINES.has(name); }
+function isPet(name) { return PET_NAMES.has(name); }
 
 export async function GET(request, { params }) {
   const { tag } = await params;
@@ -63,16 +77,4 @@ export async function GET(request, { params }) {
   }
 }
 
-const PET_NAMES = new Set([
-  "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
-  "Diggy", "Poison Lizard", "Phoenix", "Spirit Fox", "Angry Jelly",
-  "Sneezy", "Gorilla", "Capybara", "Skeletal Dragon",
-]);
 
-function isSiegeMachine(name) {
-  return SIEGE_MACHINES.has(name);
-}
-
-function isPet(name) {
-  return PET_NAMES.has(name);
-}
