@@ -1060,58 +1060,52 @@ export default function PlayerProfilePage() {
           )}
           {armyData && !armyLoading && (
             <>
-              {/* Heroes & Equipment */}
+              {/* Heroes */}
               {armyData.heroes?.length > 0 && (
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Heroes</p>
                   <div className="space-y-3">
                     {armyData.heroes.map(hero => (
-                      <div key={hero.name} className="flex items-start gap-3">
-                        {/* Hero icon placeholder */}
+                      <div key={hero.name} className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center shrink-0 overflow-hidden">
                           <img
                             src={`/icons/heroes/${hero.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
                             alt={hero.name}
                             className="w-10 h-10 object-contain"
-                            onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+                            onError={e => { e.target.style.display = "none"; }}
                           />
-                          <div className="hidden w-10 h-10 items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                            </svg>
-                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-white">{hero.name}</span>
                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${hero.level >= hero.maxLevel ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" : "bg-white/[0.06] text-slate-400 border border-white/10"}`}>
                               {hero.level}/{hero.maxLevel}
                             </span>
                           </div>
-                          {/* Equipment for this hero */}
-                          {armyData.heroEquipment?.filter(eq => eq.heroName === hero.name || !eq.heroName).slice(0, 2).length > 0 ? (
-                            <div className="flex gap-2 flex-wrap">
-                              {armyData.heroEquipment
-                                .filter(eq => eq.heroName === hero.name)
-                                .map(eq => (
-                                  <div key={eq.name} className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                                    <div className="w-5 h-5 rounded-lg overflow-hidden bg-white/[0.04] flex items-center justify-center shrink-0">
-                                      <img
-                                        src={`/icons/equipment/${eq.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
-                                        alt={eq.name}
-                                        className="w-4 h-4 object-contain"
-                                        onError={e => { e.target.style.display = "none"; }}
-                                      />
-                                    </div>
-                                    <span className="text-[10px] text-slate-400">{eq.name}</span>
-                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${eq.level >= eq.maxLevel ? "bg-amber-500/20 text-amber-300" : "bg-white/[0.06] text-slate-500"}`}>
-                                      {eq.level}
-                                    </span>
-                                  </div>
-                                ))}
-                            </div>
-                          ) : null}
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Hero Equipment — flat list, API doesn't link to specific hero */}
+              {armyData.heroEquipment?.length > 0 && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Hero Equipment</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {armyData.heroEquipment.map(eq => (
+                      <div key={eq.name} className={`flex flex-col items-center gap-1 p-2 rounded-2xl border ${eq.level >= eq.maxLevel ? "border-amber-500/30 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/[0.04] flex items-center justify-center">
+                          <img
+                            src={`/icons/equipment/${eq.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}.png`}
+                            alt={eq.name}
+                            className="w-8 h-8 object-contain"
+                            onError={e => { e.target.style.display = "none"; }}
+                          />
+                        </div>
+                        <span className="text-[7px] text-slate-500 text-center leading-tight truncate w-full text-center">{eq.name}</span>
+                        <span className={`text-[9px] font-bold ${eq.level >= eq.maxLevel ? "text-amber-300" : "text-slate-500"}`}>{eq.level}/{eq.maxLevel}</span>
                       </div>
                     ))}
                   </div>
