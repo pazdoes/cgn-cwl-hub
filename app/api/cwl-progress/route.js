@@ -9,7 +9,7 @@ export async function GET() {
 
     // Get the current open season
     const [seasonRow] = await sql`
-      SELECT season FROM seasons WHERE is_open = true LIMIT 1
+      SELECT current_season AS season FROM seasons ORDER BY opened_at DESC LIMIT 1
     `;
     if (!seasonRow) return NextResponse.json({ active: false });
     const season = seasonRow.season;
