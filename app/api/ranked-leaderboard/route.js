@@ -11,7 +11,9 @@ const LEAGUE_ORDER = [
 
 function leagueSortKey(name) {
   if (!name) return 99;
-  const idx = LEAGUE_ORDER.findIndex(l => name.includes(l));
+  // Strip tier number suffix e.g. "Dragon League 28" → "Dragon League"
+  const base = name.replace(/\s+\d+$/, "").replace(" League", "").trim();
+  const idx = LEAGUE_ORDER.findIndex(l => l === base);
   return idx === -1 ? 98 : idx;
 }
 
