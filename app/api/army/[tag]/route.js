@@ -84,9 +84,22 @@ export async function GET(request, { params }) {
     const allHomeTroops = (player.troops || []).filter(t => t.village === "home");
 
     const army = {
+      // Profile fields
       name: player.name,
       tag: player.tag,
       townHallLevel: player.townHallLevel,
+      expLevel: player.expLevel,
+      trophies: player.trophies,
+      bestTrophies: player.bestTrophies,
+      warStars: player.warStars,
+      attackWins: player.attackWins,
+      defenseWins: player.defenseWins,
+      donations: player.donations,
+      donationsReceived: player.donationsReceived,
+      clan: player.clan ? { name: player.clan.name, tag: player.clan.tag, badgeUrl: player.clan.badgeUrls?.small } : null,
+      role: player.role || null,
+      league: player.league ? { name: player.league.name, iconUrl: player.league.iconUrls?.small } : null,
+      // Army fields
       heroes: (player.heroes || []).filter(h => h.village === "home"),
       heroEquipment: player.heroEquipment || [],
       troops: (() => {
