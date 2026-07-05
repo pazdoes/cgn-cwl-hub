@@ -1115,6 +1115,13 @@ const PROFILE_EQUIPMENT_LOOKUP = {
 const PROFILE_HERO_ORDER = ["Barbarian King","Archer Queen","Minion Prince","Grand Warden","Royal Champion","Dragon Duke"];
 const PROFILE_ROLE_LABELS = { leader: "Leader", coLeader: "Co-Leader", admin: "Elder", member: "Member" };
 
+function leagueSlug(name) {
+  if (!name) return null;
+  // Strip " League" suffix, handle sub-tiers like "Dragon League 28" -> "dragon"
+  const base = name.replace(/\s*(league)?\s*\d*$/i, "").trim();
+  return base.toLowerCase().replace(/[^a-z0-9]+/g, "-") || null;
+}
+
 function ProfileEqTile({ eq }) {
   const slug = eq.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const isMaxed = eq.level >= eq.maxLevel;
@@ -1285,9 +1292,16 @@ function PlayerProfileView({ onBack }) {
             {/* Profile header card */}
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-start gap-4">
-                <div className="shrink-0 w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.06] flex flex-col items-center justify-center">
-                  <span className="text-[8px] text-slate-600 uppercase tracking-widest">TH</span>
-                  <span className="text-2xl font-thin text-white">{army.townHallLevel}</span>
+                <div className="shrink-0 w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.06] flex items-center justify-center overflow-hidden">
+                  {army.townHallLevel ? (
+                    <img src={`/icons/th/th${army.townHallLevel}.png`} alt={`TH${army.townHallLevel}`}
+                      className="w-14 h-14 object-contain"
+                      onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="flex"; }}/>
+                  ) : null}
+                  <div className="hidden flex-col items-center justify-center w-full h-full">
+                    <span className="text-[8px] text-slate-600 uppercase tracking-widest">TH</span>
+                    <span className="text-2xl font-thin text-white">{army.townHallLevel}</span>
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold text-white truncate">{army.name}</h2>
@@ -1302,8 +1316,14 @@ function PlayerProfileView({ onBack }) {
                 </div>
                 {army.league && (
                   <div className="flex flex-col items-center gap-0.5 shrink-0">
-                    <img src={army.league.iconUrl} alt={army.league.name} className="w-10 h-10 object-contain"/>
-                    <span className="text-[7px] text-slate-500 text-center leading-tight max-w-[48px]">{army.league.name?.replace(" League","")}</span>
+                    <img
+                      src={`/icons/leagues/${leagueSlug(army.league.name)}.png`}
+                      alt={army.league.name}
+                      className="w-10 h-10 object-contain"
+                      onError={e => { e.target.src = army.league.iconUrl || ""; }}/>
+                    <span className="text-[7px] text-slate-500 text-center leading-tight max-w-[48px]">
+                      {army.league.name?.replace(/\s*League\s*\d*$/i,"").trim()}
+                    </span>
                   </div>
                 )}
               </div>
