@@ -1157,17 +1157,46 @@ function PlayerProfileView({ onBack }) {
   const [eqSort, setEqSort] = useState("rarity");
   const [showTroops, setShowTroops] = useState(false);
 
+  const [nameResults, setNameResults] = useState([]);
+
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]);
+    const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
+    if (isTag) {
+      // Tag search — fetch directly from CoC API via army route
+      try {
+        const tag = query.trim().replace(/^#/, "");
+        const res = await fetch(`/api/army/${tag}`);
+        const d = await res.json();
+        if (!res.ok || d.error) { setError(d.error || "Player not found"); setSearching(false); return; }
+        setArmy(d.army);
+        // Preload icons
+        const a = d.army;
+        const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
+        allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
+      } catch { setError("Network error"); }
+      finally { setSearching(false); }
+    } else {
+      // Name search — query alliance members from DB
+      try {
+        const res = await fetch(`/api/search-player?q=${encodeURIComponent(query.trim())}`);
+        const d = await res.json();
+        if (d.results?.length === 0) { setError("No alliance members found with that name"); }
+        else { setNameResults(d.results || []); }
+      } catch { setError("Network error"); }
+      finally { setSearching(false); }
+    }
+  }
+
+  async function loadPlayerByTag(tag) {
+    setSearching(true); setArmy(null); setError(null); setNameResults([]);
     try {
-      const tag = query.trim().replace(/^#/, "");
-      const res = await fetch(`/api/army/${tag}`);
+      const res = await fetch(`/api/army/${tag.replace("#","")}`);
       const d = await res.json();
       if (!res.ok || d.error) { setError(d.error || "Player not found"); return; }
       setArmy(d.army);
-      // Preload icons
       const a = d.army;
       const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
       allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
@@ -1232,6 +1261,25 @@ function PlayerProfileView({ onBack }) {
 
         {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
+        {/* Name search results */}
+        {nameResults.length > 0 && (
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest px-4 pt-3 pb-2">Alliance Members</p>
+            {nameResults.map(r => (
+              <button key={r.tag} type="button" onClick={() => loadPlayerByTag(r.tag)}
+                className="w-full flex items-center justify-between px-4 py-3 border-t border-white/[0.06] hover:bg-white/[0.04] transition text-left">
+                <div>
+                  <p className="text-sm font-semibold text-white">{r.name}</p>
+                  <p className="text-[10px] text-slate-500 font-mono">{r.tag} · {r.clan}</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            ))}
+          </div>
+        )}
+
         {army && (
           <>
             {/* Profile header card */}
@@ -1252,7 +1300,12 @@ function PlayerProfileView({ onBack }) {
                     </div>
                   )}
                 </div>
-                {army.league?.iconUrl && <img src={army.league.iconUrl} alt={army.league.name} className="w-10 h-10 object-contain shrink-0"/>}
+                {army.league && (
+                  <div className="flex flex-col items-center gap-0.5 shrink-0">
+                    <img src={army.league.iconUrl} alt={army.league.name} className="w-10 h-10 object-contain"/>
+                    <span className="text-[7px] text-slate-500 text-center leading-tight max-w-[48px]">{army.league.name?.replace(" League","")}</span>
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
                 {[
