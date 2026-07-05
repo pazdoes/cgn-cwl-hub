@@ -1809,18 +1809,26 @@ function RankedLeaderboardView({ onBack }) {
 
         <AppHeader variant="bar"/>
 
-        {/* Title card */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
-            <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
+        {/* Title card — matches app design spec */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
+              <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
+            </div>
+            <button onClick={handleRefresh} disabled={refreshing}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500 hover:text-slate-300 hover:border-white/20 transition disabled:opacity-40 text-[10px] uppercase tracking-widest">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              {refreshing ? "Updating…" : "Refresh"}
+            </button>
           </div>
-          <button onClick={handleRefresh} disabled={refreshing}
-            className="p-2 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white transition disabled:opacity-40">
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-          </button>
+          {data && !loading && (
+            <p className="text-[9px] text-slate-700 mt-3 pt-3 border-t border-white/[0.06]">
+              {data.total} registered players · Last updated {data.updatedAt ? new Date(data.updatedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"} · Refreshes weekly
+            </p>
+          )}
         </div>
 
         {loading && (
@@ -1885,10 +1893,8 @@ function RankedLeaderboardView({ onBack }) {
               </div>
             ))}
 
-            {data.updatedAt && (
-              <p className="text-[9px] text-slate-700 text-center">
-                Last updated {new Date(data.updatedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · Refreshes weekly
-              </p>
+            {data.groups.length === 0 && (
+              <p className="text-slate-500 text-xs text-center py-8">No ranked data yet — check back after the next weekly snapshot.</p>
             )}
           </>
         )}
