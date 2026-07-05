@@ -1166,11 +1166,15 @@ function PlayerProfileView({ onBack }) {
 
   const [nameResults, setNameResults] = useState([]);
   const [iconsReady, setIconsReady] = useState(false);
+  const [profileView, setProfileView] = useState("army");
+  const [upgrades, setUpgrades] = useState(null);
+  const [upgradesLoading, setUpgradesLoading] = useState(false);
+  const [upgradeSnapshots, setUpgradeSnapshots] = useState(0);
 
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null);
     const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
@@ -1225,6 +1229,17 @@ function PlayerProfileView({ onBack }) {
       else { criticalImgs2.forEach(src => { const img = new Image(); img.onload = img.onerror = done2; img.src = src; }); }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
+  }
+
+  async function fetchUpgrades(tag) {
+    setUpgradesLoading(true);
+    try {
+      const res = await fetch(`/api/army-upgrades/${tag.replace("#","")}`);
+      const d = await res.json();
+      setUpgrades(d.upgrades || []);
+      setUpgradeSnapshots(d.snapshots || 0);
+    } catch { setUpgrades([]); }
+    finally { setUpgradesLoading(false); }
   }
 
   const sortedEq = (() => {
@@ -1447,6 +1462,120 @@ function PlayerProfileView({ onBack }) {
               </div>
             </div>
 
+            {/* ── View navigation ── */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+              <button type="button"
+                onClick={() => {
+                  if (profileView === "upgrades") setProfileView("army");
+                  else { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                }}
+                className="text-slate-500 hover:text-slate-300 transition p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
+                {profileView === "army" ? "Army" : "Upgrades"}
+              </span>
+              <button type="button"
+                onClick={() => {
+                  if (profileView === "army") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else setProfileView("army");
+                }}
+                className="text-slate-500 hover:text-slate-300 transition p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* ── UPGRADES VIEW ── */}
+            {profileView === "upgrades" && (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
+                {upgradesLoading && (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(4)].map((_,i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/[0.06] shrink-0"/>
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3 w-28 bg-white/[0.06] rounded"/>
+                          <div className="h-2 w-16 bg-white/[0.06] rounded"/>
+                        </div>
+                        <div className="h-3 w-12 bg-white/[0.06] rounded"/>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!upgradesLoading && upgradeSnapshots < 2 && (
+                  <div className="text-center py-6">
+                    <p className="text-slate-500 text-xs">No upgrade history yet</p>
+                    <p className="text-slate-700 text-[10px] mt-1">Check back after your next visit to see upgrades</p>
+                  </div>
+                )}
+                {!upgradesLoading && upgrades?.length === 0 && upgradeSnapshots >= 2 && (
+                  <div className="text-center py-6">
+                    <p className="text-slate-500 text-xs">No upgrades detected between snapshots</p>
+                  </div>
+                )}
+                {!upgradesLoading && upgrades?.length > 0 && (() => {
+                  // Group by date
+                  const byDate = {};
+                  upgrades.forEach(u => {
+                    const d = new Date(u.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+                    if (!byDate[d]) byDate[d] = [];
+                    byDate[d].push(u);
+                  });
+                  const CAT_FOLDER = { heroes:"heroes", heroEquipment:"equipment", troops:"troops", spells:"spells", siegeMachines:"siege", pets:"pets" };
+                  return Object.entries(byDate).map(([date, items]) => (
+                    <div key={date}>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2 px-1">{date}</p>
+                      <div className="space-y-2">
+                        {items.map((u, idx) => {
+                          const slug = u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+                          const folder = CAT_FOLDER[u.category] || "troops";
+                          const isMaxed = u.toLevel >= u.maxLevel;
+                          const pct = Math.round((u.toLevel / u.maxLevel) * 100);
+                          return (
+                            <div key={idx} className="flex items-center gap-3">
+                              {/* Icon */}
+                              <div className={`relative w-10 h-10 rounded-xl overflow-hidden border shrink-0 ${isMaxed ? "border-amber-500/60" : "border-green-500/30"}`}>
+                                <div className="w-full h-full bg-white/[0.05]">
+                                  <img src={`/icons/${folder}/${slug}.png`} alt={u.name} loading="eager"
+                                    className="w-full h-full object-cover" onError={e=>{e.target.style.display="none"}}/>
+                                </div>
+                                {/* Upgrade glow */}
+                                <div className={`absolute inset-0 rounded-xl ${isMaxed ? "shadow-[inset_0_0_6px_rgba(251,191,36,0.4)]" : "shadow-[inset_0_0_6px_rgba(74,222,128,0.3)]"}`}/>
+                              </div>
+                              {/* Name + progress bar */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-semibold text-white truncate">{u.name}</span>
+                                  {isMaxed && <span className="text-[8px] text-amber-400 uppercase tracking-widest shrink-0">Max</span>}
+                                  {u.unlocked && <span className="text-[8px] text-purple-400 uppercase tracking-widest shrink-0">New</span>}
+                                </div>
+                                {/* Level progress bar */}
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                                    <div className={`h-full rounded-full transition-all ${isMaxed ? "bg-amber-400" : "bg-green-400"}`} style={{width:`${pct}%`}}/>
+                                  </div>
+                                  <span className="text-[9px] text-slate-500 shrink-0 tabular-nums">
+                                    {u.unlocked ? `Unlocked Lv ${u.toLevel}` : `${u.fromLevel} → ${u.toLevel}`}
+                                    <span className="text-slate-700">/{u.maxLevel}</span>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            )}
+
+            {/* ── ARMY VIEW ── */}
+            {profileView === "army" && <>
             {/* Heroes + Pets + Equipment */}
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <div className="flex gap-3">
@@ -1590,6 +1719,7 @@ function PlayerProfileView({ onBack }) {
               )}
             </div>
 
+            </>}
             <p className="text-[9px] text-slate-700 text-center">{army.tag} · Data refreshes every 24h</p>
           </>
         )}
