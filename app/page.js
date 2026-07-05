@@ -1295,30 +1295,14 @@ function PlayerProfileView({ onBack }) {
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army · Upgrades</p>
         </div>
 
-        {/* Search card */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Enter player tag e.g. #ABC123"
-            className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
-          <button type="submit" disabled={searching || !query.trim()}
-            className="px-5 py-3 rounded-2xl text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
-            {searching ? "…" : "Search"}
-          </button>
-        </form>
-        </div>
-
         {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
-        {/* Info tile — shown only before any search */}
+        {/* Info tile + search — shown only before any search */}
         {!army && !searching && !error && !nameResults.length && (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest">About This Section</p>
             <p className="text-sm text-slate-300 leading-relaxed">Search for any player by their tag, or use a Cognition alliance member's name to view their full Clash profile.</p>
-            <div className="space-y-3 pt-1">
+            <div className="space-y-3">
               {[
                 { icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z", label: "Army", desc: "View heroes, equipment, pets, troops and spells with level badges" },
                 { icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", label: "Upgrades", desc: "Track level changes detected between profile visits over time" },
@@ -1337,10 +1321,31 @@ function PlayerProfileView({ onBack }) {
                 </div>
               ))}
             </div>
+            {/* Search bar — inline, matches app style */}
+            <form onSubmit={handleSearch} className="flex gap-2 pt-1">
+              <input type="text" value={query} onChange={e => setQuery(e.target.value)}
+                placeholder="Search by #TAG or player name…"
+                className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              <button type="submit" disabled={searching || !query.trim()}
+                className="shrink-0 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 px-3 py-1 text-xs font-semibold">
+                {searching ? "…" : "Search"}
+              </button>
+            </form>
           </div>
         )}
 
-        {/* Skeleton loader while fetching */}
+        {/* Search card — shown after a search has been performed, army not yet loaded */}
+        {(army || searching || error || nameResults.length > 0) && (
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input type="text" value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="Search by #TAG or player name…"
+              className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+            <button type="submit" disabled={searching || !query.trim()}
+              className="shrink-0 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 px-3 py-1 text-xs font-semibold">
+              {searching ? "…" : "Search"}
+            </button>
+          </form>
+        )}
         {searching && !nameResults.length && (
           <div className="space-y-3 animate-pulse">
             {/* Profile header skeleton */}
