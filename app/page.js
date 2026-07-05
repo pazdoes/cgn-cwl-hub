@@ -1774,11 +1774,23 @@ function PlayerProfileView({ onBack }) {
 }
 
 // ─── Ranked Leaderboard View ─────────────────────────────────────────────────
+function leagueTierNum(name) {
+  if (!name) return 0;
+  if (name === "Legend I") return 103;
+  if (name === "Legend II") return 102;
+  if (name === "Legend III") return 101;
+  const m = name.match(/(\d+)$/);
+  return m ? parseInt(m[1]) : 0;
+}
+
 function RankedLeaderboardView({ onBack }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedTag, setExpandedTag] = useState(null);
+  const [historyCache, setHistoryCache] = useState({});
+  const [historyLoading, setHistoryLoading] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -1789,6 +1801,19 @@ function RankedLeaderboardView({ onBack }) {
       setData(d);
     } catch { setError("Failed to load ranked data"); }
     finally { setLoading(false); }
+  }
+
+  async function toggleExpand(tag) {
+    if (expandedTag === tag) { setExpandedTag(null); return; }
+    setExpandedTag(tag);
+    if (historyCache[tag]) return;
+    setHistoryLoading(tag);
+    try {
+      const res = await fetch(`/api/ranked-history/${tag.replace("#","")}`);
+      const d = await res.json();
+      setHistoryCache(prev => ({ ...prev, [tag]: d.snapshots || [] }));
+    } catch { setHistoryCache(prev => ({ ...prev, [tag]: [] })); }
+    finally { setHistoryLoading(null); }
   }
 
   async function handleRefresh() {
@@ -1858,32 +1883,73 @@ function RankedLeaderboardView({ onBack }) {
                   {group.players.map(player => {
                     globalRank++;
                     return (
-                      <div key={player.player_tag} className="flex items-center gap-3 px-4 py-3">
-                        {/* Rank */}
-                        <span className="text-[10px] text-slate-600 font-mono w-5 shrink-0 text-right">{globalRank}</span>
+                      <div key={player.player_tag}>
+                        <button type="button" onClick={() => toggleExpand(player.player_tag)}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition text-left">
+                          {/* Rank */}
+                          <span className="text-[10px] text-slate-600 font-mono w-5 shrink-0 text-right">{globalRank}</span>
 
-                        {/* TH icon */}
-                        <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.06] shrink-0 flex items-center justify-center">
-                          <img src={`/icons/th/th${player.th}.png`} alt={`TH${player.th}`}
-                            className="w-7 h-7 object-contain" onError={e=>{e.target.style.display="none"}}/>
-                        </div>
-
-                        {/* Name + clan */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{player.name}</p>
-                          <div className="flex items-center gap-1">
-                            {player.clan_badge && <img src={player.clan_badge} alt="" className="w-3 h-3 object-contain"/>}
-                            <p className="text-[10px] text-slate-500 truncate">{player.clan_name}</p>
+                          {/* TH icon */}
+                          <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.06] shrink-0 flex items-center justify-center">
+                            <img src={`/icons/th/th${player.th}.png`} alt={`TH${player.th}`}
+                              className="w-7 h-7 object-contain" onError={e=>{e.target.style.display="none"}}/>
                           </div>
-                        </div>
 
-                        {/* Trophies */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75H7.5m9 0c1.657 0 3 1.343 3 3H4.5c0-1.657 1.343-3 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.395 5.972M18.75 4.236V4.5a9.023 9.023 0 01-2.48 5.228m-10.48 0a9.024 9.024 0 005.23 2.478m5.25-2.478a9.024 9.024 0 01-5.25 2.478"/>
+                          {/* Name + clan */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{player.name}</p>
+                            <div className="flex items-center gap-1">
+                              {player.clan_badge && <img src={player.clan_badge} alt="" className="w-3 h-3 object-contain"/>}
+                              <p className="text-[10px] text-slate-500 truncate">{player.clan_name}</p>
+                            </div>
+                          </div>
+
+                          {/* Trophies */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75H7.5m9 0c1.657 0 3 1.343 3 3H4.5c0-1.657 1.343-3 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.395 5.972M18.75 4.236V4.5a9.023 9.023 0 01-2.48 5.228m-10.48 0a9.024 9.024 0 005.23 2.478m5.25-2.478a9.024 9.024 0 01-5.25 2.478"/>
+                            </svg>
+                            <span className="text-sm font-semibold text-purple-300">{(player.trophies || 0).toLocaleString()}</span>
+                          </div>
+
+                          {/* Expand chevron */}
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 text-slate-600 transition-transform shrink-0 ${expandedTag === player.player_tag ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
                           </svg>
-                          <span className="text-sm font-semibold text-purple-300">{(player.trophies || 0).toLocaleString()}</span>
-                        </div>
+                        </button>
+
+                        {/* History expansion */}
+                        {expandedTag === player.player_tag && (
+                          <div className="px-4 pb-3 border-t border-white/[0.04]">
+                            {historyLoading === player.player_tag && (
+                              <div className="py-2 animate-pulse space-y-1.5">
+                                {[...Array(3)].map((_,i) => <div key={i} className="h-5 bg-white/[0.04] rounded"/>)}
+                              </div>
+                            )}
+                            {historyCache[player.player_tag]?.length === 0 && (
+                              <p className="text-[9px] text-slate-700 py-2">No history yet</p>
+                            )}
+                            {historyCache[player.player_tag]?.map((snap, i) => {
+                              const prev = historyCache[player.player_tag][i + 1];
+                              const prevLeague = prev?.league_name;
+                              const currLeague = snap.league_name;
+                              const promoted = prevLeague && currLeague !== prevLeague && leagueTierNum(currLeague) > leagueTierNum(prevLeague);
+                              const demoted = prevLeague && currLeague !== prevLeague && leagueTierNum(currLeague) < leagueTierNum(prevLeague);
+                              return (
+                                <div key={i} className="flex items-center gap-3 py-1.5">
+                                  <span className="text-[9px] text-slate-600 w-16 shrink-0">
+                                    {new Date(snap.captured_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                  </span>
+                                  {snap.league_icon && <img src={snap.league_icon} alt="" className="w-5 h-5 object-contain shrink-0"/>}
+                                  <span className="text-[10px] text-slate-400 flex-1 truncate">{snap.league_name}</span>
+                                  <span className="text-[10px] text-purple-300 tabular-nums shrink-0">{(snap.trophies||0).toLocaleString()}</span>
+                                  {promoted && <span className="text-[8px] text-green-400 shrink-0">↑</span>}
+                                  {demoted && <span className="text-[8px] text-red-400 shrink-0">↓</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
