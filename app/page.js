@@ -1165,11 +1165,12 @@ function PlayerProfileView({ onBack }) {
   const [showTroops, setShowTroops] = useState(false);
 
   const [nameResults, setNameResults] = useState([]);
+  const [iconsReady, setIconsReady] = useState(false);
 
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false);
     const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
@@ -1183,8 +1184,14 @@ function PlayerProfileView({ onBack }) {
         const a = d.army;
         const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
         allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
-        if (a.townHallLevel) { const thImg = new Image(); thImg.src = `/icons/th/th${a.townHallLevel}.png`; }
-        if (a.league?.name) { const lSlug = a.league.name.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-"); const lImg = new Image(); lImg.src = `/icons/leagues/${lSlug}.png`; }
+        // Preload TH + league icons then mark ready
+        const criticalImgs = [];
+        if (a.townHallLevel) criticalImgs.push(`/icons/th/th${a.townHallLevel}.png`);
+        if (a.league?.iconUrl) criticalImgs.push(a.league.iconUrl);
+        let loaded = 0;
+        const done = () => { loaded++; if (loaded >= criticalImgs.length) setIconsReady(true); };
+        if (criticalImgs.length === 0) { setIconsReady(true); }
+        else { criticalImgs.forEach(src => { const img = new Image(); img.onload = img.onerror = done; img.src = src; }); }
       } catch { setError("Network error"); }
       finally { setSearching(false); }
     } else {
@@ -1209,8 +1216,13 @@ function PlayerProfileView({ onBack }) {
       const a = d.army;
       const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
       allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
-      if (a.townHallLevel) { const thImg = new Image(); thImg.src = `/icons/th/th${a.townHallLevel}.png`; }
-      if (a.league?.name) { const lSlug = a.league.name.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-"); const lImg = new Image(); lImg.src = `/icons/leagues/${lSlug}.png`; }
+      const criticalImgs2 = [];
+      if (a.townHallLevel) criticalImgs2.push(`/icons/th/th${a.townHallLevel}.png`);
+      if (a.league?.iconUrl) criticalImgs2.push(a.league.iconUrl);
+      let loaded2 = 0;
+      const done2 = () => { loaded2++; if (loaded2 >= criticalImgs2.length) setIconsReady(true); };
+      if (criticalImgs2.length === 0) { setIconsReady(true); }
+      else { criticalImgs2.forEach(src => { const img = new Image(); img.onload = img.onerror = done2; img.src = src; }); }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
   }
@@ -1340,7 +1352,26 @@ function PlayerProfileView({ onBack }) {
           </div>
         )}
 
-        {army && (
+        {army && !iconsReady && (
+          <div className="space-y-3 animate-pulse">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-white/[0.06] shrink-0"/>
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-5 w-32 bg-white/[0.06] rounded"/>
+                  <div className="h-3 w-20 bg-white/[0.06] rounded"/>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/[0.06] shrink-0"/>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
+                {[...Array(4)].map((_,i) => <div key={i} className="h-8 rounded-xl bg-white/[0.06]"/>)}
+              </div>
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 h-48"/>
+          </div>
+        )}
+
+        {army && iconsReady && (
           <>
             {/* Profile header card */}
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
