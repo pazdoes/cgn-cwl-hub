@@ -1186,16 +1186,24 @@ function PlayerProfileView({ onBack }) {
         setArmy(d.army);
         // Preload icons
         const a = d.army;
-        const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
-        allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
-        // Preload TH + league icons then mark ready
-        const criticalImgs = [];
-        if (a.townHallLevel) criticalImgs.push(`/icons/th/th${a.townHallLevel}.png`);
-        if (a.league?.iconUrl) criticalImgs.push(a.league.iconUrl);
-        let loaded = 0;
-        const done = () => { loaded++; if (loaded >= criticalImgs.length) setIconsReady(true); };
-        if (criticalImgs.length === 0) { setIconsReady(true); }
-        else { criticalImgs.forEach(src => { const img = new Image(); img.onload = img.onerror = done; img.src = src; }); }
+        // Build full icon list — all must resolve before profile renders
+        const allIconSrcs = [
+          ...(a.heroes||[]).map(u => `/icons/heroes/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+          ...(a.heroEquipment||[]).map(u => `/icons/equipment/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+          ...(a.pets||[]).map(u => `/icons/pets/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+          ...(a.troops||[]).map(u => `/icons/troops/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+          ...(a.spells||[]).map(u => `/icons/spells/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+          ...(a.siegeMachines||[]).map(u => `/icons/siege/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+          ...(a.townHallLevel ? [`/icons/th/th${a.townHallLevel}.png`] : []),
+          ...(a.league?.iconUrl ? [a.league.iconUrl] : []),
+          ...(a.clan?.badgeUrl ? [a.clan.badgeUrl] : []),
+        ];
+        if (allIconSrcs.length === 0) { setIconsReady(true); }
+        else {
+          let resolved = 0;
+          const onResolve = () => { resolved++; if (resolved >= allIconSrcs.length) setIconsReady(true); };
+          allIconSrcs.forEach(src => { const img = new Image(); img.onload = img.onerror = onResolve; img.src = src; });
+        }
       } catch { setError("Network error"); }
       finally { setSearching(false); }
     } else {
@@ -1218,15 +1226,23 @@ function PlayerProfileView({ onBack }) {
       if (!res.ok || d.error) { setError(d.error || "Player not found"); return; }
       setArmy(d.army);
       const a = d.army;
-      const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
-      allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
-      const criticalImgs2 = [];
-      if (a.townHallLevel) criticalImgs2.push(`/icons/th/th${a.townHallLevel}.png`);
-      if (a.league?.iconUrl) criticalImgs2.push(a.league.iconUrl);
-      let loaded2 = 0;
-      const done2 = () => { loaded2++; if (loaded2 >= criticalImgs2.length) setIconsReady(true); };
-      if (criticalImgs2.length === 0) { setIconsReady(true); }
-      else { criticalImgs2.forEach(src => { const img = new Image(); img.onload = img.onerror = done2; img.src = src; }); }
+      const allIconSrcs2 = [
+        ...(a.heroes||[]).map(u => `/icons/heroes/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.heroEquipment||[]).map(u => `/icons/equipment/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.pets||[]).map(u => `/icons/pets/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.troops||[]).map(u => `/icons/troops/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.spells||[]).map(u => `/icons/spells/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.siegeMachines||[]).map(u => `/icons/siege/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.townHallLevel ? [`/icons/th/th${a.townHallLevel}.png`] : []),
+        ...(a.league?.iconUrl ? [a.league.iconUrl] : []),
+        ...(a.clan?.badgeUrl ? [a.clan.badgeUrl] : []),
+      ];
+      if (allIconSrcs2.length === 0) { setIconsReady(true); }
+      else {
+        let resolved2 = 0;
+        const onResolve2 = () => { resolved2++; if (resolved2 >= allIconSrcs2.length) setIconsReady(true); };
+        allIconSrcs2.forEach(src => { const img = new Image(); img.onload = img.onerror = onResolve2; img.src = src; });
+      }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
   }
