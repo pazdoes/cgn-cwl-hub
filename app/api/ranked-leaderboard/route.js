@@ -1,19 +1,28 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 
-// League tier display order — highest first (Legend I at top, Skeleton at bottom)
+// Exact league name prefixes as returned by the CoC API — highest first
 const LEAGUE_ORDER = [
-  "Legend I", "Legend II", "Legend III",
-  "Electro Dragon", "Dragon", "Electro Titan",
-  "P.E.K.K.A", "Golem", "Witch", "Valkyrie",
-  "Wizard", "Archer", "Barbarian", "Skeleton",
+  "Legend I",
+  "Legend II",
+  "Legend III",
+  "Electro League",   // Electro Dragon (31-33)
+  "Dragon League",    // Dragon (28-30)
+  "Titan League",     // Electro Titan (25-27)
+  "P.E.K.K.A League",// P.E.K.K.A (22-24)
+  "Golem League",     // Golem (19-21)
+  "Witch League",     // Witch (16-18)
+  "Valkyrie League",  // Valkyrie (13-15)
+  "Wizard League",    // Wizard (10-12)
+  "Archer League",    // Archer (7-9)
+  "Barbarian League", // Barbarian (4-6)
+  "Skeleton League",  // Skeleton (1-3)
+  "Unranked",
 ];
 
 function leagueSortKey(name) {
   if (!name) return 99;
-  // Strip tier number suffix e.g. "Dragon League 28" → "Dragon League"
-  const base = name.replace(/\s+\d+$/, "").replace(" League", "").trim();
-  const idx = LEAGUE_ORDER.findIndex(l => l === base);
+  const idx = LEAGUE_ORDER.findIndex(l => name.startsWith(l));
   return idx === -1 ? 98 : idx;
 }
 
