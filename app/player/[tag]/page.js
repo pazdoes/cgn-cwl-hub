@@ -761,7 +761,7 @@ function EquipmentTile({ eq }) {
   return (
     <div className={`relative w-10 h-10 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : isEpic ? "border-purple-500/30" : "border-white/[0.08]"}`}>
       <div className="w-full h-full bg-white/[0.05] flex items-center justify-center">
-        <img src={`/icons/equipment/${slug}.png`} alt={eq.name}
+        <img src={`/icons/equipment/${slug}.png`} alt={eq.name} loading="eager"
           className="w-full h-full object-cover"
           onError={e => { e.target.style.display = "none"; }}/>
       </div>
@@ -778,7 +778,7 @@ function UnitTile({ unit, folder }) {
   return (
     <div className={`relative w-10 h-10 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : "border-white/[0.08]"}`}>
       <div className="w-full h-full bg-white/[0.05] flex items-center justify-center">
-        <img src={`/icons/${folder}/${slug}.png`} alt={unit.name}
+        <img src={`/icons/${folder}/${slug}.png`} alt={unit.name} loading="eager"
           className="w-full h-full object-cover"
           onError={e => { e.target.style.display = "none"; }}/>
       </div>
@@ -936,6 +936,17 @@ export default function PlayerProfilePage() {
       if (!res.ok) { setArmyError(json.error || "Failed to load"); return; }
       setArmyData(json.army);
       setArmyCachedAt(json.cachedAt);
+      // Preload all icons immediately so tiles render without lag
+      const army = json.army;
+      const toPreload = [
+        ...(army.heroes || []).map(h => `/icons/heroes/${h.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`),
+        ...(army.heroEquipment || []).map(e => `/icons/equipment/${e.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`),
+        ...(army.pets || []).map(p => `/icons/pets/${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`),
+        ...(army.troops || []).map(t => `/icons/troops/${t.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`),
+        ...(army.spells || []).map(s => `/icons/spells/${s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`),
+        ...(army.siegeMachines || []).map(s => `/icons/siege/${s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`),
+      ];
+      toPreload.forEach(src => { const img = new Image(); img.src = src; });
     } catch { setArmyError("Network error"); }
     finally { setArmyLoading(false); }
   }
@@ -1135,8 +1146,32 @@ export default function PlayerProfilePage() {
       {view === "army" && (
         <div className="relative z-10 space-y-3">
           {armyLoading && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-              <p className="text-slate-600 text-xs animate-pulse">Loading army data…</p>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 animate-pulse">
+              <div className="flex gap-3">
+                {/* Left skeleton */}
+                <div className="flex flex-col gap-3 shrink-0" style={{width: "38%"}}>
+                  <div>
+                    <div className="h-2 w-12 bg-white/[0.06] rounded mb-2"/>
+                    <div className="flex gap-1.5">
+                      {[...Array(6)].map((_,i) => <div key={i} className="w-14 h-14 rounded-2xl bg-white/[0.06]"/>)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="h-2 w-8 bg-white/[0.06] rounded mb-2"/>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...Array(8)].map((_,i) => <div key={i} className="w-11 h-11 rounded-xl bg-white/[0.06]"/>)}
+                    </div>
+                  </div>
+                </div>
+                <div className="w-px bg-white/[0.06] shrink-0"/>
+                {/* Right skeleton */}
+                <div className="flex-1">
+                  <div className="h-2 w-16 bg-white/[0.06] rounded mb-2"/>
+                  <div className="flex flex-wrap gap-1">
+                    {[...Array(20)].map((_,i) => <div key={i} className="w-10 h-10 rounded-xl bg-white/[0.06]"/>)}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           {armyError && (
@@ -1174,7 +1209,7 @@ export default function PlayerProfilePage() {
                                       : "border-white/10"
                                 }`}>
                                 <div className="w-full h-full bg-white/[0.06] flex items-center justify-center">
-                                  <img src={`/icons/heroes/${slug}.png`} alt={hero.name}
+                                  <img src={`/icons/heroes/${slug}.png`} alt={hero.name} loading="eager"
                                     className="w-full h-full object-cover object-top"
                                     onError={e => { e.target.style.display = "none"; }}/>
                                 </div>
@@ -1199,7 +1234,7 @@ export default function PlayerProfilePage() {
                             return (
                               <div key={pet.name} className={`relative w-11 h-11 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : "border-white/10"}`}>
                                 <div className="w-full h-full bg-white/[0.06] flex items-center justify-center">
-                                  <img src={`/icons/pets/${slug}.png`} alt={pet.name}
+                                  <img src={`/icons/pets/${slug}.png`} alt={pet.name} loading="eager"
                                     className="w-full h-full object-cover"
                                     onError={e => { e.target.style.display = "none"; }}/>
                                 </div>
