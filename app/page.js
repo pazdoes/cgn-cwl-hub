@@ -1237,26 +1237,27 @@ function PlayerProfileView({ onBack }) {
   })();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 sm:p-6 pb-12">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
-      <div className="relative z-10 max-w-2xl mx-auto space-y-4">
+      <div className="relative z-10 space-y-4">
 
-        {/* Header */}
-        <div className="flex items-center gap-3 pt-2">
+        {/* Header card — matches app design spec */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-thin tracking-widest text-white">Player Profile</h1>
+            <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army</p>
+          </div>
           <button onClick={onBack} className="p-2 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white transition">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
-          <div>
-            <h1 className="text-xl font-thin tracking-widest text-white">Player Profile</h1>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest">Hero · Equipment · Army</p>
-          </div>
         </div>
 
-        {/* Search */}
+        {/* Search card */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
@@ -1269,6 +1270,7 @@ function PlayerProfileView({ onBack }) {
             {searching ? "…" : "Search"}
           </button>
         </form>
+        </div>
 
         {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 

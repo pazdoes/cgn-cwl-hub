@@ -1372,7 +1372,7 @@ export default function PlayerProfilePage() {
                             const epic = heroEq.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic");
                             return (
                               <div key={heroName}>
-                                <p className="text-[7px] text-slate-500 uppercase tracking-widest mb-1">{heroName.split(" ")[0]}</p>
+                                <p className="text-[7px] text-slate-500 uppercase tracking-widest mb-1">{heroName}</p>
                                 {common.length > 0 && <div className="flex flex-wrap gap-1 mb-1">{common.map(e => <EquipmentTile key={e.name} eq={e}/>)}</div>}
                                 {epic.length > 0 && <div className="flex flex-wrap gap-1">{epic.map(e => <EquipmentTile key={e.name} eq={e}/>)}</div>}
                               </div>
