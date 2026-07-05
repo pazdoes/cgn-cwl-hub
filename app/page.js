@@ -1183,6 +1183,8 @@ function PlayerProfileView({ onBack }) {
         const a = d.army;
         const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
         allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
+        if (a.townHallLevel) { const thImg = new Image(); thImg.src = `/icons/th/th${a.townHallLevel}.png`; }
+        if (a.league?.name) { const lSlug = a.league.name.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-"); const lImg = new Image(); lImg.src = `/icons/leagues/${lSlug}.png`; }
       } catch { setError("Network error"); }
       finally { setSearching(false); }
     } else {
@@ -1207,6 +1209,8 @@ function PlayerProfileView({ onBack }) {
       const a = d.army;
       const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
       allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
+      if (a.townHallLevel) { const thImg = new Image(); thImg.src = `/icons/th/th${a.townHallLevel}.png`; }
+      if (a.league?.name) { const lSlug = a.league.name.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-"); const lImg = new Image(); lImg.src = `/icons/leagues/${lSlug}.png`; }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
   }
@@ -1237,7 +1241,7 @@ function PlayerProfileView({ onBack }) {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
-      <div className="relative z-10 max-w-lg mx-auto space-y-4">
+      <div className="relative z-10 max-w-2xl mx-auto space-y-4">
 
         {/* Header */}
         <div className="flex items-center gap-3 pt-2">
@@ -1465,17 +1469,34 @@ function PlayerProfileView({ onBack }) {
                     )}
                   </div>
                   <div className="space-y-2">
-                    {sortedEq.common.length > 0 && (
-                      <div>
-                        <p className="text-[7px] text-slate-600 uppercase tracking-widest mb-1">Common</p>
-                        <div className="flex flex-wrap gap-1">{sortedEq.common.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>
-                      </div>
-                    )}
-                    {sortedEq.epic.length > 0 && (
-                      <div>
-                        <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
-                        <div className="flex flex-wrap gap-1">{sortedEq.epic.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>
-                      </div>
+                    {eqSort === "hero" && !selectedHero ? (
+                      PROFILE_HERO_ORDER.map(heroName => {
+                        const commonH = sortedEq.common.filter(e => PROFILE_EQUIPMENT_LOOKUP[e.name]?.hero === heroName);
+                        const epicH = sortedEq.epic.filter(e => PROFILE_EQUIPMENT_LOOKUP[e.name]?.hero === heroName);
+                        if (!commonH.length && !epicH.length) return null;
+                        return (
+                          <div key={heroName}>
+                            <p className="text-[7px] text-slate-500 uppercase tracking-widest mb-1">{heroName.split(" ")[0]}</p>
+                            {commonH.length > 0 && <div className="flex flex-wrap gap-1 mb-1">{commonH.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>}
+                            {epicH.length > 0 && <div className="flex flex-wrap gap-1">{epicH.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <>
+                        {sortedEq.common.length > 0 && (
+                          <div>
+                            <p className="text-[7px] text-slate-600 uppercase tracking-widest mb-1">Common</p>
+                            <div className="flex flex-wrap gap-1">{sortedEq.common.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>
+                          </div>
+                        )}
+                        {sortedEq.epic.length > 0 && (
+                          <div>
+                            <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
+                            <div className="flex flex-wrap gap-1">{sortedEq.epic.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -2201,11 +2222,7 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sor
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
             </a>
-            <a href={`/profile/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/10 bg-transparent text-[9px] text-slate-500 hover:border-purple-500/40 hover:text-purple-300 transition">
-              Army
-            </a>
+
           </div>
         </div>
       )}
@@ -3747,12 +3764,12 @@ function AppHeader({ variant = "bar" }) {
   }
   const items = [
     { key: "", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    { key: "profile", label: "Player Profile", icon: "M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
     { key: "roster", label: "Signup / Rosters", icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" },
     { key: "leaderboard", label: "Leaderboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
     { key: "history", label: "History", icon: "M7 17l4-8 4 5 2-3M3 3v18h18" },
     { key: "recap", label: "Season Recap", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
     { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
-    { key: "profile", label: "Player Profile", icon: "M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
   ];
 
   function go(key) {

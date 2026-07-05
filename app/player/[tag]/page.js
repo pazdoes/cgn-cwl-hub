@@ -1364,8 +1364,20 @@ export default function PlayerProfilePage() {
                         );
                       }
                       return (
-                        <div className="flex flex-wrap gap-1">
-                          {filtered.map(e => <EquipmentTile key={e.name} eq={e}/>)}
+                        <div className="space-y-2">
+                          {["Barbarian King","Archer Queen","Minion Prince","Grand Warden","Royal Champion","Dragon Duke"].map(heroName => {
+                            const heroEq = filtered.filter(e => EQUIPMENT_LOOKUP[e.name]?.hero === heroName);
+                            if (!heroEq.length) return null;
+                            const common = heroEq.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity !== "Epic");
+                            const epic = heroEq.filter(e => EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic");
+                            return (
+                              <div key={heroName}>
+                                <p className="text-[7px] text-slate-500 uppercase tracking-widest mb-1">{heroName.split(" ")[0]}</p>
+                                {common.length > 0 && <div className="flex flex-wrap gap-1 mb-1">{common.map(e => <EquipmentTile key={e.name} eq={e}/>)}</div>}
+                                {epic.length > 0 && <div className="flex flex-wrap gap-1">{epic.map(e => <EquipmentTile key={e.name} eq={e}/>)}</div>}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })()}
