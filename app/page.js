@@ -1478,7 +1478,7 @@ function PlayerProfileView({ onBack }) {
                         if (!commonH.length && !epicH.length) return null;
                         return (
                           <div key={heroName}>
-                            <p className="text-[7px] text-slate-500 uppercase tracking-widest mb-1">{heroName.split(" ")[0]}</p>
+                            <p className="text-[7px] text-slate-500 uppercase tracking-widest mb-1">{heroName}</p>
                             {commonH.length > 0 && <div className="flex flex-wrap gap-1 mb-1">{commonH.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>}
                             {epicH.length > 0 && <div className="flex flex-wrap gap-1">{epicH.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>}
                           </div>
