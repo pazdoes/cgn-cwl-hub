@@ -9,6 +9,19 @@ const SIEGE_MACHINES = new Set([
   "Log Launcher", "Flame Flinger", "Battle Drill",
 ]);
 
+// Only valid home village troops as of July 2026
+const VALID_TROOPS = new Set([
+  // Elixir troops
+  "Barbarian", "Archer", "Giant", "Goblin", "Wall Breaker", "Balloon",
+  "Wizard", "Healer", "Dragon", "P.E.K.K.A", "Baby Dragon", "Miner",
+  "Electro Dragon", "Yeti", "Dragon Rider", "Electro Titan", "Root Rider",
+  "Thrower",
+  // Dark elixir troops
+  "Minion", "Hog Rider", "Valkyrie", "Golem", "Witch", "Lava Hound",
+  "Bowler", "Ice Golem", "Headhunter", "Apprentice Warden", "Druid",
+  "Ruin Witch",
+]);
+
 const PET_NAMES = new Set([
   "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
   "Diggy", "Poison Lizard", "Phoenix", "Spirit Fox", "Angry Jelly",
@@ -63,7 +76,7 @@ export async function GET(request, { params }) {
       townHallLevel: player.townHallLevel,
       heroes: (player.heroes || []).filter(h => h.village === "home"),
       heroEquipment: player.heroEquipment || [],
-      troops: allHomeTroops.filter(t => !t.superTroopIsActive && !isSiegeMachine(t.name) && !isPet(t.name)),
+      troops: allHomeTroops.filter(t => !t.superTroopIsActive && !isSiegeMachine(t.name) && !isPet(t.name) && VALID_TROOPS.has(t.name)),
       superTroops: allHomeTroops.filter(t => t.superTroopIsActive),
       spells: (player.spells || []).filter(s => s.village === "home"),
       siegeMachines: allHomeTroops.filter(t => isSiegeMachine(t.name)),
