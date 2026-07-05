@@ -1175,7 +1175,7 @@ export default function PlayerProfilePage() {
                                 }`}>
                                 <div className="w-full h-full bg-white/[0.06] flex items-center justify-center">
                                   <img src={`/icons/heroes/${slug}.png`} alt={hero.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover object-top"
                                     onError={e => { e.target.style.display = "none"; }}/>
                                 </div>
                                 <span className={`absolute top-0.5 right-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-sm text-[9px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
