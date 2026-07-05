@@ -1286,17 +1286,13 @@ function PlayerProfileView({ onBack }) {
       </div>
       <div className="relative z-10 space-y-4">
 
-        {/* Header card — matches app design spec */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-thin tracking-widest text-white">Player Profile</h1>
-            <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army</p>
-          </div>
-          <button onClick={onBack} className="p-2 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white transition">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
+        {/* Standard app header — hamburger + branding + Discord */}
+        <AppHeader variant="bar"/>
+
+        {/* Page title card — centred, no back button */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
+          <h1 className="text-2xl font-thin tracking-widest text-white">Player Profile</h1>
+          <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army · Upgrades</p>
         </div>
 
         {/* Search card */}
