@@ -1317,6 +1317,33 @@ function PlayerProfileView({ onBack }) {
 
         {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
+        {/* Info tile — shown only before any search */}
+        {!army && !searching && !error && !nameResults.length && (
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest">About This Section</p>
+            <p className="text-sm text-slate-300 leading-relaxed">Search for any player by their tag, or use a Cognition alliance member's name to view their full Clash profile.</p>
+            <div className="space-y-3 pt-1">
+              {[
+                { icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z", label: "Army", desc: "View heroes, equipment, pets, troops and spells with level badges" },
+                { icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", label: "Upgrades", desc: "Track level changes detected between profile visits over time" },
+                { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", label: "Search", desc: "Enter #TAG for any player, or a name for alliance members" },
+              ].map(item => (
+                <div key={item.label} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-white">{item.label}</p>
+                    <p className="text-[10px] text-slate-500 leading-snug">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Skeleton loader while fetching */}
         {searching && !nameResults.length && (
           <div className="space-y-3 animate-pulse">
@@ -1406,7 +1433,8 @@ function PlayerProfileView({ onBack }) {
           <>
             {/* Profile header card */}
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-              <div className="flex items-start gap-4">
+              {/* Top row: TH + name/clan centred + league */}
+              <div className="flex items-center gap-4">
                 <div className="shrink-0 w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.06] flex items-center justify-center overflow-hidden">
                   {army.townHallLevel ? (
                     <img src={`/icons/th/th${army.townHallLevel}.png`} alt={`TH${army.townHallLevel}`}
@@ -1418,11 +1446,11 @@ function PlayerProfileView({ onBack }) {
                     <span className="text-2xl font-thin text-white">{army.townHallLevel}</span>
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 text-center">
                   <h2 className="text-lg font-semibold text-white truncate">{army.name}</h2>
                   <p className="text-[10px] text-slate-500 font-mono mb-1">{army.tag}</p>
                   {army.clan && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center justify-center gap-1.5">
                       {army.clan.badgeUrl && <img src={army.clan.badgeUrl} alt="" className="w-4 h-4 object-contain"/>}
                       <span className="text-xs text-slate-400">{army.clan.name}</span>
                       {army.role && <span className="text-[9px] text-slate-600">· {PROFILE_ROLE_LABELS[army.role] || army.role}</span>}
@@ -1432,17 +1460,17 @@ function PlayerProfileView({ onBack }) {
                 {army.league && (
                   <div className="flex flex-col items-center gap-0.5 shrink-0">
                     <img
-                      src={`/icons/leagues/${leagueSlug(army.league.name)}.png`}
+                      src={army.league.iconUrl || `/icons/leagues/${leagueSlug(army.league.name)}.png`}
                       alt={army.league.name}
-                      className="w-10 h-10 object-contain"
-                      onError={e => { e.target.src = army.league.iconUrl || ""; }}/>
+                      loading="eager"
+                      className="w-10 h-10 object-contain"/>
                     <span className="text-[7px] text-slate-500 text-center leading-tight max-w-[48px]">
-                      {army.league.name?.replace(/\s*League\s*\d*$/i,"").trim()}
+                      {army.league.name?.replace(" League","").replace(/\s\d+$/,"").trim()}
                     </span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-white/[0.06]">
+              <div className="flex items-center justify-center gap-2 flex-wrap mt-4 pt-4 border-t border-white/[0.06]">
                 {/* Level — blue */}
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-blue-500/40 bg-transparent">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
