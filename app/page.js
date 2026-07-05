@@ -1066,6 +1066,343 @@ function WarMomentumChart({ dayAggregates }) {
 }
 
 // ── War Intelligence View ────────────────────────────────────────────────────
+// ─── Player Profile View ──────────────────────────────────────────────────────
+const PROFILE_EQUIPMENT_LOOKUP = {
+  "Barbarian Puppet":     { hero: "Barbarian King",  rarity: "Common", order: 1  },
+  "Rage Vial":            { hero: "Barbarian King",  rarity: "Common", order: 2  },
+  "Earthquake Boots":     { hero: "Barbarian King",  rarity: "Common", order: 3  },
+  "Vampstache":           { hero: "Barbarian King",  rarity: "Common", order: 4  },
+  "Sneaky Goblin Puppet": { hero: "Barbarian King",  rarity: "Common", order: 5  },
+  "Snake Bracelet":       { hero: "Barbarian King",  rarity: "Epic",   order: 6  },
+  "Giant Gauntlet":       { hero: "Barbarian King",  rarity: "Epic",   order: 7  },
+  "Spiky Ball":           { hero: "Barbarian King",  rarity: "Epic",   order: 8  },
+  "Stick Horse":          { hero: "Barbarian King",  rarity: "Epic",   order: 9  },
+  "Archer Puppet":        { hero: "Archer Queen",    rarity: "Common", order: 10 },
+  "Invisibility Vial":    { hero: "Archer Queen",    rarity: "Common", order: 11 },
+  "Giant Arrow":          { hero: "Archer Queen",    rarity: "Common", order: 12 },
+  "Healer Puppet":        { hero: "Archer Queen",    rarity: "Common", order: 13 },
+  "Frozen Arrow":         { hero: "Archer Queen",    rarity: "Epic",   order: 14 },
+  "Monolith Arrow":       { hero: "Archer Queen",    rarity: "Epic",   order: 15 },
+  "Magic Mirror":         { hero: "Archer Queen",    rarity: "Epic",   order: 16 },
+  "Action Figure":        { hero: "Archer Queen",    rarity: "Epic",   order: 17 },
+  "Henchmen Puppet":      { hero: "Minion Prince",   rarity: "Common", order: 18 },
+  "Dark Orb":             { hero: "Minion Prince",   rarity: "Common", order: 19 },
+  "Metal Pants":          { hero: "Minion Prince",   rarity: "Common", order: 20 },
+  "Noble Iron":           { hero: "Minion Prince",   rarity: "Common", order: 21 },
+  "Dark Crown":           { hero: "Minion Prince",   rarity: "Epic",   order: 22 },
+  "Meteor Staff":         { hero: "Minion Prince",   rarity: "Epic",   order: 23 },
+  "Eternal Tome":         { hero: "Grand Warden",    rarity: "Common", order: 24 },
+  "Life Gem":             { hero: "Grand Warden",    rarity: "Common", order: 25 },
+  "Rage Gem":             { hero: "Grand Warden",    rarity: "Common", order: 26 },
+  "Healing Tome":         { hero: "Grand Warden",    rarity: "Common", order: 27 },
+  "Heroic Torch":         { hero: "Grand Warden",    rarity: "Epic",   order: 28 },
+  "Fireball":             { hero: "Grand Warden",    rarity: "Epic",   order: 29 },
+  "Lavaloon Puppet":      { hero: "Grand Warden",    rarity: "Epic",   order: 30 },
+  "Seeking Shield":       { hero: "Royal Champion",  rarity: "Common", order: 31 },
+  "Royal Gem":            { hero: "Royal Champion",  rarity: "Common", order: 32 },
+  "Hog Rider Puppet":     { hero: "Royal Champion",  rarity: "Common", order: 33 },
+  "Haste Vial":           { hero: "Royal Champion",  rarity: "Common", order: 34 },
+  "Rocket Spear":         { hero: "Royal Champion",  rarity: "Epic",   order: 35 },
+  "Electro Boots":        { hero: "Royal Champion",  rarity: "Epic",   order: 36 },
+  "Frost Flake":          { hero: "Royal Champion",  rarity: "Epic",   order: 37 },
+  "Fire Heart":           { hero: "Dragon Duke",     rarity: "Common", order: 38 },
+  "Flame Blower":         { hero: "Dragon Duke",     rarity: "Common", order: 39 },
+  "Stun Blaster":         { hero: "Dragon Duke",     rarity: "Common", order: 40 },
+  "Electro Fangs":        { hero: "Dragon Duke",     rarity: "Common", order: 41 },
+  "Rocket Backpack":      { hero: "Dragon Duke",     rarity: "Epic",   order: 42 },
+};
+
+const PROFILE_HERO_ORDER = ["Barbarian King","Archer Queen","Minion Prince","Grand Warden","Royal Champion","Dragon Duke"];
+const PROFILE_ROLE_LABELS = { leader: "Leader", coLeader: "Co-Leader", admin: "Elder", member: "Member" };
+
+function ProfileEqTile({ eq }) {
+  const slug = eq.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const isMaxed = eq.level >= eq.maxLevel;
+  const isEpic = PROFILE_EQUIPMENT_LOOKUP[eq.name]?.rarity === "Epic";
+  return (
+    <div className={`relative w-10 h-10 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : isEpic ? "border-purple-500/30" : "border-white/[0.08]"}`}>
+      <div className="w-full h-full bg-white/[0.05]">
+        <img src={`/icons/equipment/${slug}.png`} alt={eq.name} loading="eager"
+          className="w-full h-full object-cover" onError={e => { e.target.style.display = "none"; }}/>
+      </div>
+      <span className={`absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-sm text-[8px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
+        {eq.level}
+      </span>
+    </div>
+  );
+}
+
+function ProfileUnitTile({ unit, folder }) {
+  const slug = unit.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const isMaxed = unit.level >= unit.maxLevel;
+  return (
+    <div className={`relative w-10 h-10 rounded-xl overflow-hidden border ${isMaxed ? "border-amber-500/60" : "border-white/[0.08]"}`}>
+      <div className="w-full h-full bg-white/[0.05]">
+        <img src={`/icons/${folder}/${slug}.png`} alt={unit.name} loading="eager"
+          className="w-full h-full object-cover" onError={e => { e.target.style.display = "none"; }}/>
+      </div>
+      <span className={`absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-sm text-[8px] font-bold px-0.5 ${isMaxed ? "bg-amber-500 text-white" : "bg-black/80 text-white"}`}>
+        {unit.level}
+      </span>
+    </div>
+  );
+}
+
+function PlayerProfileView({ onBack }) {
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [army, setArmy] = useState(null);
+  const [error, setError] = useState(null);
+  const [selectedHero, setSelectedHero] = useState(null);
+  const [eqSort, setEqSort] = useState("rarity");
+  const [showTroops, setShowTroops] = useState(false);
+
+  async function handleSearch(e) {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null);
+    try {
+      const tag = query.trim().replace(/^#/, "");
+      const res = await fetch(`/api/army/${tag}`);
+      const d = await res.json();
+      if (!res.ok || d.error) { setError(d.error || "Player not found"); return; }
+      setArmy(d.army);
+      // Preload icons
+      const a = d.army;
+      const allUnits = [...(a.heroes||[]).map(u=>({...u,f:"heroes"})), ...(a.heroEquipment||[]).map(u=>({...u,f:"equipment"})), ...(a.pets||[]).map(u=>({...u,f:"pets"})), ...(a.troops||[]).map(u=>({...u,f:"troops"})), ...(a.spells||[]).map(u=>({...u,f:"spells"})), ...(a.siegeMachines||[]).map(u=>({...u,f:"siege"}))];
+      allUnits.forEach(({name,f}) => { const img = new Image(); img.src = `/icons/${f}/${name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`; });
+    } catch { setError("Network error"); }
+    finally { setSearching(false); }
+  }
+
+  const sortedEq = (() => {
+    if (!army) return { common: [], epic: [] };
+    const eq = army.heroEquipment || [];
+    let filtered = selectedHero ? eq.filter(e => PROFILE_EQUIPMENT_LOOKUP[e.name]?.hero === selectedHero) : [...eq];
+    filtered.sort((a, b) => {
+      if (eqSort === "hero" && !selectedHero) {
+        const ha = PROFILE_HERO_ORDER.indexOf(PROFILE_EQUIPMENT_LOOKUP[a.name]?.hero || "");
+        const hb = PROFILE_HERO_ORDER.indexOf(PROFILE_EQUIPMENT_LOOKUP[b.name]?.hero || "");
+        if (ha !== hb) return ha - hb;
+      }
+      const ra = PROFILE_EQUIPMENT_LOOKUP[a.name]?.rarity === "Epic" ? 1 : 0;
+      const rb = PROFILE_EQUIPMENT_LOOKUP[b.name]?.rarity === "Epic" ? 1 : 0;
+      if (ra !== rb) return ra - rb;
+      return (PROFILE_EQUIPMENT_LOOKUP[a.name]?.order ?? 99) - (PROFILE_EQUIPMENT_LOOKUP[b.name]?.order ?? 99);
+    });
+    return {
+      common: filtered.filter(e => PROFILE_EQUIPMENT_LOOKUP[e.name]?.rarity !== "Epic"),
+      epic: filtered.filter(e => PROFILE_EQUIPMENT_LOOKUP[e.name]?.rarity === "Epic"),
+    };
+  })();
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+      <div className="relative z-10 max-w-lg mx-auto space-y-4">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 pt-2">
+          <button onClick={onBack} className="p-2 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white transition">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-xl font-thin tracking-widest text-white">Player Profile</h1>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest">Hero · Equipment · Army</p>
+          </div>
+        </div>
+
+        {/* Search */}
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Enter player tag e.g. #ABC123"
+            className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
+          <button type="submit" disabled={searching || !query.trim()}
+            className="px-5 py-3 rounded-2xl text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+            {searching ? "…" : "Search"}
+          </button>
+        </form>
+
+        {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+
+        {army && (
+          <>
+            {/* Profile header card */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.06] flex flex-col items-center justify-center">
+                  <span className="text-[8px] text-slate-600 uppercase tracking-widest">TH</span>
+                  <span className="text-2xl font-thin text-white">{army.townHallLevel}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold text-white truncate">{army.name}</h2>
+                  <p className="text-[10px] text-slate-500 font-mono mb-1">{army.tag}</p>
+                  {army.clan && (
+                    <div className="flex items-center gap-1.5">
+                      {army.clan.badgeUrl && <img src={army.clan.badgeUrl} alt="" className="w-4 h-4 object-contain"/>}
+                      <span className="text-xs text-slate-400">{army.clan.name}</span>
+                      {army.role && <span className="text-[9px] text-slate-600">· {PROFILE_ROLE_LABELS[army.role] || army.role}</span>}
+                    </div>
+                  )}
+                </div>
+                {army.league?.iconUrl && <img src={army.league.iconUrl} alt={army.league.name} className="w-10 h-10 object-contain shrink-0"/>}
+              </div>
+              <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
+                {[
+                  { label: "Trophies", value: army.trophies?.toLocaleString() },
+                  { label: "War Stars", value: army.warStars?.toLocaleString() },
+                  { label: "Donations", value: army.donations?.toLocaleString() },
+                  { label: "Level", value: army.expLevel },
+                ].map(s => (
+                  <div key={s.label} className="text-center">
+                    <p className="text-sm font-semibold text-white">{s.value ?? "—"}</p>
+                    <p className="text-[8px] text-slate-600 uppercase tracking-widest mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Heroes + Pets + Equipment */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <div className="flex gap-3">
+                {/* Left — Heroes + Pets */}
+                <div className="flex flex-col gap-3 shrink-0" style={{width:"38%"}}>
+                  {army.heroes?.length > 0 && (
+                    <div>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1.5">Heroes</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[...army.heroes].sort((a,b) => PROFILE_HERO_ORDER.indexOf(a.name)-PROFILE_HERO_ORDER.indexOf(b.name)).map(hero => {
+                          const slug = hero.name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+                          const isMaxed = hero.level >= hero.maxLevel;
+                          return (
+                            <button key={hero.name} type="button"
+                              onClick={() => setSelectedHero(selectedHero === hero.name ? null : hero.name)}
+                              className={`relative shrink-0 w-14 h-14 rounded-2xl overflow-hidden border-2 transition ${selectedHero === hero.name ? "border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.4)]" : isMaxed ? "border-amber-500/60" : "border-white/10"}`}>
+                              <div className="w-full h-full bg-white/[0.06]">
+                                <img src={`/icons/heroes/${slug}.png`} alt={hero.name} loading="eager"
+                                  className="w-full h-full object-cover object-top" onError={e=>{e.target.style.display="none"}}/>
+                              </div>
+                              <span className={`absolute top-0.5 right-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-sm text-[9px] font-bold px-0.5 ${isMaxed?"bg-amber-500 text-white":"bg-black/80 text-white"}`}>
+                                {hero.level}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {army.pets?.length > 0 && (
+                    <div>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1.5">Pets</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {army.pets.map(pet => {
+                          const slug = pet.name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+                          const isMaxed = pet.level >= pet.maxLevel;
+                          return (
+                            <div key={pet.name} className={`relative w-11 h-11 rounded-xl overflow-hidden border ${isMaxed?"border-amber-500/60":"border-white/10"}`}>
+                              <div className="w-full h-full bg-white/[0.06]">
+                                <img src={`/icons/pets/${slug}.png`} alt={pet.name} loading="eager"
+                                  className="w-full h-full object-cover" onError={e=>{e.target.style.display="none"}}/>
+                              </div>
+                              <span className={`absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-sm text-[8px] font-bold px-0.5 ${isMaxed?"bg-amber-500 text-white":"bg-black/80 text-white"}`}>
+                                {pet.level}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-px bg-white/[0.06] shrink-0"/>
+
+                {/* Right — Equipment */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[8px] text-slate-600 uppercase tracking-widest">
+                      {selectedHero ? selectedHero.split(" ")[0]+" Equip." : "Equipment"}
+                    </p>
+                    {!selectedHero ? (
+                      <div className="flex gap-1">
+                        {["rarity","hero"].map(m => (
+                          <button key={m} type="button" onClick={() => setEqSort(m)}
+                            className={`text-[8px] px-2 py-0.5 rounded-full border transition ${eqSort===m?"border-purple-500/60 bg-purple-500/20 text-purple-300":"border-white/10 text-slate-600 hover:text-slate-400"}`}>
+                            {m==="rarity"?"Epic/Common":"By Hero"}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => setSelectedHero(null)}
+                        className="text-[8px] text-slate-600 hover:text-slate-300 transition">All</button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {sortedEq.common.length > 0 && (
+                      <div>
+                        <p className="text-[7px] text-slate-600 uppercase tracking-widest mb-1">Common</p>
+                        <div className="flex flex-wrap gap-1">{sortedEq.common.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>
+                      </div>
+                    )}
+                    {sortedEq.epic.length > 0 && (
+                      <div>
+                        <p className="text-[7px] text-amber-500/60 uppercase tracking-widest mb-1">Epic</p>
+                        <div className="flex flex-wrap gap-1">{sortedEq.epic.map(e => <ProfileEqTile key={e.name} eq={e}/>)}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Troops + Spells + Siege */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+              <button type="button" onClick={() => setShowTroops(v => !v)}
+                className="w-full flex items-center justify-between px-5 py-4">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest">Troops, Spells & Siege</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 text-slate-600 transition-transform ${showTroops?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              {showTroops && (
+                <div className="px-5 pb-5 space-y-3 border-t border-white/[0.06] pt-4">
+                  {army.troops?.length > 0 && (
+                    <div>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">Troops</p>
+                      <div className="flex flex-wrap gap-1.5">{army.troops.map(t => <ProfileUnitTile key={t.name} unit={t} folder="troops"/>)}</div>
+                    </div>
+                  )}
+                  {army.spells?.length > 0 && (
+                    <div>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">Spells</p>
+                      <div className="flex flex-wrap gap-1.5">{army.spells.map(s => <ProfileUnitTile key={s.name} unit={s} folder="spells"/>)}</div>
+                    </div>
+                  )}
+                  {army.siegeMachines?.length > 0 && (
+                    <div>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">Siege Machines</p>
+                      <div className="flex flex-wrap gap-1.5">{army.siegeMachines.map(s => <ProfileUnitTile key={s.name} unit={s} folder="siege"/>)}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <p className="text-[9px] text-slate-700 text-center">{army.tag} · Data refreshes every 24h</p>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
 function WarIntelView({ onBack }) {
   const [tab, setTab] = useState("days");
   const [loading, setLoading] = useState(true);
@@ -3295,6 +3632,7 @@ function AppHeader({ variant = "bar" }) {
     { key: "history", label: "History", icon: "M7 17l4-8 4 5 2-3M3 3v18h18" },
     { key: "recap", label: "Season Recap", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
     { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
+    { key: "profile", label: "Player Profile", icon: "M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
   ];
 
   function go(key) {
@@ -3848,7 +4186,7 @@ export default function Home() {
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-      if (["roster","leaderboard","history","recap","warintel"].includes(hash)) {
+      if (["roster","leaderboard","history","recap","warintel","profile"].includes(hash)) {
         setPage(hash);
       } else {
         setPage("home");
@@ -3878,6 +4216,10 @@ export default function Home() {
   }
   if (page === "warintel") {
     return <WarIntelView onBack={() => navigate("home")} />;
+  }
+
+  if (page === "profile") {
+    return <PlayerProfileView onBack={() => navigate("home")} />;
   }
 
   return (
