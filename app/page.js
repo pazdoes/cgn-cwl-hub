@@ -1773,6 +1773,130 @@ function PlayerProfileView({ onBack }) {
   );
 }
 
+// ─── Ranked Leaderboard View ─────────────────────────────────────────────────
+function RankedLeaderboardView({ onBack }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => { loadData(); }, []);
+
+  async function loadData() {
+    try {
+      const res = await fetch("/api/ranked-leaderboard");
+      const d = await res.json();
+      setData(d);
+    } catch { setError("Failed to load ranked data"); }
+    finally { setLoading(false); }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }
+
+  // Assign alliance-wide rank across all groups
+  let globalRank = 0;
+
+  return (
+    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 sm:p-6 pb-12">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      </div>
+      <div className="relative z-10 space-y-4">
+
+        <AppHeader variant="bar"/>
+
+        {/* Title card */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
+            <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
+          </div>
+          <button onClick={handleRefresh} disabled={refreshing}
+            className="p-2 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white transition disabled:opacity-40">
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+
+        {loading && (
+          <div className="space-y-3 animate-pulse">
+            {[...Array(3)].map((_,i) => (
+              <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 space-y-2">
+                <div className="h-3 w-24 bg-white/[0.06] rounded"/>
+                {[...Array(4)].map((_,j) => <div key={j} className="h-10 bg-white/[0.06] rounded-2xl"/>)}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+
+        {data && !loading && (
+          <>
+            {data.groups.map(group => (
+              <div key={group.league} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+                {/* League header */}
+                <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]">
+                  {group.iconUrl && <img src={group.iconUrl} alt={group.league} className="w-8 h-8 object-contain"/>}
+                  <span className="text-sm font-semibold text-white">{group.league}</span>
+                  <span className="text-[9px] text-slate-600 uppercase tracking-widest ml-auto">{group.players.length} players</span>
+                </div>
+
+                {/* Player rows */}
+                <div className="divide-y divide-white/[0.04]">
+                  {group.players.map(player => {
+                    globalRank++;
+                    return (
+                      <div key={player.player_tag} className="flex items-center gap-3 px-4 py-3">
+                        {/* Rank */}
+                        <span className="text-[10px] text-slate-600 font-mono w-5 shrink-0 text-right">{globalRank}</span>
+
+                        {/* TH icon */}
+                        <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.06] shrink-0 flex items-center justify-center">
+                          <img src={`/icons/th/th${player.th}.png`} alt={`TH${player.th}`}
+                            className="w-7 h-7 object-contain" onError={e=>{e.target.style.display="none"}}/>
+                        </div>
+
+                        {/* Name + clan */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{player.name}</p>
+                          <div className="flex items-center gap-1">
+                            {player.clan_badge && <img src={player.clan_badge} alt="" className="w-3 h-3 object-contain"/>}
+                            <p className="text-[10px] text-slate-500 truncate">{player.clan_name}</p>
+                          </div>
+                        </div>
+
+                        {/* Trophies */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75H7.5m9 0c1.657 0 3 1.343 3 3H4.5c0-1.657 1.343-3 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.395 5.972M18.75 4.236V4.5a9.023 9.023 0 01-2.48 5.228m-10.48 0a9.024 9.024 0 005.23 2.478m5.25-2.478a9.024 9.024 0 01-5.25 2.478"/>
+                          </svg>
+                          <span className="text-sm font-semibold text-purple-300">{(player.trophies || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {data.updatedAt && (
+              <p className="text-[9px] text-slate-700 text-center">
+                Last updated {new Date(data.updatedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · Refreshes weekly
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
 function WarIntelView({ onBack }) {
   const [tab, setTab] = useState("days");
   const [loading, setLoading] = useState(true);
@@ -3996,6 +4120,7 @@ function AppHeader({ variant = "bar" }) {
     { key: "profile", label: "Player Profile", icon: "M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
     { key: "roster", label: "Signup / Rosters", icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" },
     { key: "leaderboard", label: "Leaderboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+    { key: "ranked", label: "Ranked Leaderboard", icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" },
     { key: "history", label: "History", icon: "M7 17l4-8 4 5 2-3M3 3v18h18" },
     { key: "recap", label: "Season Recap", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
     { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
@@ -4552,7 +4677,7 @@ export default function Home() {
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-      if (["roster","leaderboard","history","recap","warintel","profile"].includes(hash)) {
+      if (["roster","leaderboard","ranked","history","recap","warintel","profile"].includes(hash)) {
         setPage(hash);
       } else {
         setPage("home");
@@ -4586,6 +4711,10 @@ export default function Home() {
 
   if (page === "profile") {
     return <PlayerProfileView onBack={() => navigate("home")} />;
+  }
+
+  if (page === "ranked") {
+    return <RankedLeaderboardView onBack={() => navigate("home")} />;
   }
 
   return (
