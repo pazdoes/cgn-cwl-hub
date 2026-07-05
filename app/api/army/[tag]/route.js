@@ -57,11 +57,12 @@ export async function GET(request, { params }) {
   const sql = getDb();
 
   try {
-    // Check cache first
+    // Check cache — only use rows that have full army data (heroes present)
     const [cached] = await sql`
       SELECT data, captured_at
       FROM player_army_cache
       WHERE player_tag = ${playerTag}
+        AND jsonb_array_length(data->'heroes') > 0
       ORDER BY captured_at DESC
       LIMIT 1
     `;
