@@ -62,6 +62,7 @@ export async function GET(request, { params }) {
       SELECT data, captured_at
       FROM player_army_cache
       WHERE player_tag = ${playerTag}
+        AND data->'heroes' IS NOT NULL
         AND jsonb_array_length(data->'heroes') > 0
       ORDER BY captured_at DESC
       LIMIT 1
