@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 
-// League tier display order — lowest to highest
+// League tier display order — highest first (Legend I at top, Skeleton at bottom)
 const LEAGUE_ORDER = [
-  "Skeleton", "Barbarian", "Archer", "Wizard", "Valkyrie", "Witch",
-  "Golem", "P.E.K.K.A", "Electro Titan", "Dragon", "Electro Dragon",
-  "Legend III", "Legend II", "Legend I",
+  "Legend I", "Legend II", "Legend III",
+  "Electro Dragon", "Dragon", "Electro Titan",
+  "P.E.K.K.A", "Golem", "Witch", "Valkyrie",
+  "Wizard", "Archer", "Barbarian", "Skeleton",
 ];
 
 function leagueSortKey(name) {
-  if (!name) return -1;
-  const base = LEAGUE_ORDER.findIndex(l => name.includes(l));
-  return base === -1 ? -1 : base;
+  if (!name) return 99;
+  const idx = LEAGUE_ORDER.findIndex(l => name.includes(l));
+  return idx === -1 ? 98 : idx;
 }
 
 export async function GET() {
@@ -48,9 +49,9 @@ export async function GET() {
     grouped[league].push(row);
   }
 
-  // Sort groups by league tier (highest first)
+  // Sort groups by league tier (highest first — lower index in LEAGUE_ORDER = higher tier)
   const sortedGroups = Object.entries(grouped).sort((a, b) => {
-    return leagueSortKey(b[0]) - leagueSortKey(a[0]);
+    return leagueSortKey(a[0]) - leagueSortKey(b[0]);
   });
 
   return NextResponse.json({

@@ -1809,15 +1809,13 @@ function RankedLeaderboardView({ onBack }) {
 
         <AppHeader variant="bar"/>
 
-        {/* Title card — matches app design spec */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
-              <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
-            </div>
+        {/* Title card — centred, matches app design spec */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
+          <h1 className="text-2xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
+          <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
+          <div className="flex justify-center mt-4">
             <button onClick={handleRefresh} disabled={refreshing}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500 hover:text-slate-300 hover:border-white/20 transition disabled:opacity-40 text-[10px] uppercase tracking-widest">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500 hover:text-slate-300 hover:border-white/20 transition disabled:opacity-40 text-[10px] uppercase tracking-widest">
               <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
