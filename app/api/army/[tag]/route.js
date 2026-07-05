@@ -98,11 +98,9 @@ export async function GET(request, { params }) {
       donationsReceived: player.donationsReceived,
       clan: player.clan ? { name: player.clan.name, tag: player.clan.tag, badgeUrl: player.clan.badgeUrls?.small } : null,
       role: player.role || null,
-      league: player.rankedLeague
-        ? { name: player.rankedLeague.name, iconUrl: player.rankedLeague.iconUrls?.small }
-        : player.league
-          ? { name: player.league.name, iconUrl: player.league.iconUrls?.small }
-          : null,
+      league: player.leagueTier
+        ? { name: player.leagueTier.name, iconUrl: player.leagueTier.iconUrls?.small }
+        : null,
       // Army fields
       heroes: (player.heroes || []).filter(h => h.village === "home"),
       heroEquipment: player.heroEquipment || [],
