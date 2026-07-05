@@ -6,7 +6,7 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 const SIEGE_MACHINES = new Set([
   "Wall Wrecker", "Battle Blimp", "Stone Slammer", "Siege Barracks",
-  "Log Launcher", "Flame Flinger", "Battle Drill",
+  "Log Launcher", "Flame Flinger", "Battle Drill", "Troop Launcher", "Sky Wagon",
 ]);
 
 // Only valid home village troops as of July 2026
