@@ -1268,6 +1268,53 @@ function PlayerProfileView({ onBack }) {
 
         {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
+        {/* Skeleton loader while fetching */}
+        {searching && !nameResults.length && (
+          <div className="space-y-3 animate-pulse">
+            {/* Profile header skeleton */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-white/[0.06] shrink-0"/>
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-5 w-32 bg-white/[0.06] rounded"/>
+                  <div className="h-3 w-20 bg-white/[0.06] rounded"/>
+                  <div className="h-3 w-28 bg-white/[0.06] rounded"/>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/[0.06] shrink-0"/>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
+                {[...Array(4)].map((_,i) => <div key={i} className="h-8 rounded-xl bg-white/[0.06]"/>)}
+              </div>
+            </div>
+            {/* Heroes + equipment skeleton */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="flex gap-3">
+                <div className="flex flex-col gap-3 shrink-0" style={{width:"38%"}}>
+                  <div>
+                    <div className="h-2 w-10 bg-white/[0.06] rounded mb-2"/>
+                    <div className="flex gap-1.5">
+                      {[...Array(5)].map((_,i) => <div key={i} className="w-14 h-14 rounded-2xl bg-white/[0.06]"/>)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="h-2 w-6 bg-white/[0.06] rounded mb-2"/>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...Array(6)].map((_,i) => <div key={i} className="w-11 h-11 rounded-xl bg-white/[0.06]"/>)}
+                    </div>
+                  </div>
+                </div>
+                <div className="w-px bg-white/[0.06] shrink-0"/>
+                <div className="flex-1">
+                  <div className="h-2 w-14 bg-white/[0.06] rounded mb-2"/>
+                  <div className="flex flex-wrap gap-1">
+                    {[...Array(24)].map((_,i) => <div key={i} className="w-10 h-10 rounded-xl bg-white/[0.06]"/>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Name search results */}
         {nameResults.length > 0 && (
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
