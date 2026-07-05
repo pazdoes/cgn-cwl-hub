@@ -9,18 +9,31 @@ const SIEGE_MACHINES = new Set([
   "Log Launcher", "Flame Flinger", "Battle Drill", "Troop Launcher", "Sky Wagon",
 ]);
 
-// Only valid home village troops as of July 2026
-const VALID_TROOPS = new Set([
-  // Elixir troops
+// Valid home village troops in correct display order — Regular then Dark
+const TROOP_ORDER = [
+  // Regular (Elixir) troops
   "Barbarian", "Archer", "Giant", "Goblin", "Wall Breaker", "Balloon",
   "Wizard", "Healer", "Dragon", "P.E.K.K.A", "Baby Dragon", "Miner",
   "Electro Dragon", "Yeti", "Dragon Rider", "Electro Titan", "Root Rider",
-  "Thrower",
-  // Dark elixir troops
+  "Thrower", "Meteor Golem",
+  // Dark Elixir troops
   "Minion", "Hog Rider", "Valkyrie", "Golem", "Witch", "Lava Hound",
-  "Bowler", "Ice Golem", "Headhunter", "Apprentice Warden", "Druid",
-  "Ruin Witch",
-]);
+  "Bowler", "Ice Golem", "Headhunter", "Apprentice Warden", "Ruin Witch",
+  "Druid", "Furnace",
+];
+const VALID_TROOPS = new Set(TROOP_ORDER);
+
+// Valid spells in correct display order — Regular then Dark
+const SPELL_ORDER = [
+  // Regular (Elixir) spells
+  "Lightning Spell", "Healing Spell", "Rage Spell", "Jump Spell",
+  "Freeze Spell", "Clone Spell", "Invisibility Spell", "Recall Spell",
+  "Revive Spell", "Totem Spell",
+  // Dark spells
+  "Poison Spell", "Earthquake Spell", "Haste Spell", "Skeleton Spell",
+  "Bat Spell", "Overgrowth Spell", "Ice Block Spell", "Angry Spell",
+];
+const VALID_SPELLS = new Set(SPELL_ORDER);
 
 const PET_NAMES = new Set([
   "L.A.S.S.I", "Electro Owl", "Mighty Yak", "Unicorn", "Frosty",
@@ -76,9 +89,23 @@ export async function GET(request, { params }) {
       townHallLevel: player.townHallLevel,
       heroes: (player.heroes || []).filter(h => h.village === "home"),
       heroEquipment: player.heroEquipment || [],
-      troops: allHomeTroops.filter(t => !t.superTroopIsActive && !isSiegeMachine(t.name) && !isPet(t.name) && VALID_TROOPS.has(t.name)),
+      troops: (() => {
+        const raw = allHomeTroops.filter(t => !t.superTroopIsActive && !isSiegeMachine(t.name) && !isPet(t.name) && VALID_TROOPS.has(t.name));
+        return [...raw].sort((a, b) => {
+          const oa = TROOP_ORDER.indexOf(a.name);
+          const ob = TROOP_ORDER.indexOf(b.name);
+          return (oa === -1 ? 99 : oa) - (ob === -1 ? 99 : ob);
+        });
+      })(),
       superTroops: allHomeTroops.filter(t => t.superTroopIsActive),
-      spells: (player.spells || []).filter(s => s.village === "home"),
+      spells: (() => {
+        const raw = (player.spells || []).filter(s => s.village === "home" && VALID_SPELLS.has(s.name));
+        return [...raw].sort((a, b) => {
+          const oa = SPELL_ORDER.indexOf(a.name);
+          const ob = SPELL_ORDER.indexOf(b.name);
+          return (oa === -1 ? 99 : oa) - (ob === -1 ? 99 : ob);
+        });
+      })(),
       siegeMachines: allHomeTroops.filter(t => isSiegeMachine(t.name)),
       pets: (() => {
         const raw = allHomeTroops.filter(t => isPet(t.name));
