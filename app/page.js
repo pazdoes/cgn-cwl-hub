@@ -1170,11 +1170,14 @@ function PlayerProfileView({ onBack }) {
   const [upgrades, setUpgrades] = useState(null);
   const [upgradesLoading, setUpgradesLoading] = useState(false);
   const [upgradeSnapshots, setUpgradeSnapshots] = useState(0);
+  const [rankedData, setRankedData] = useState(null);
+  const [rankedLoading, setRankedLoading] = useState(false);
+  const [rankedError, setRankedError] = useState(null);
 
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setRankedData(null); setRankedError(null);
     const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
@@ -1245,6 +1248,17 @@ function PlayerProfileView({ onBack }) {
       }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
+  }
+
+  async function fetchRanked(tag) {
+    setRankedLoading(true); setRankedError(null);
+    try {
+      const res = await fetch(`/api/clashking/${tag.replace("#","")}`);
+      const d = await res.json();
+      if (!res.ok || d.error) { setRankedError(d.error || "No ranked data found"); return; }
+      setRankedData(d.data);
+    } catch { setRankedError("Network error"); }
+    finally { setRankedLoading(false); }
   }
 
   async function fetchUpgrades(tag) {
@@ -1511,8 +1525,9 @@ function PlayerProfileView({ onBack }) {
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
               <button type="button"
                 onClick={() => {
-                  if (profileView === "upgrades") setProfileView("army");
-                  else { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  if (profileView === "army") { setProfileView("ranked"); if (!rankedData) fetchRanked(army.tag); }
+                  else if (profileView === "ranked") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1520,11 +1535,12 @@ function PlayerProfileView({ onBack }) {
                 </svg>
               </button>
               <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
-                {profileView === "army" ? "Army" : "Upgrades"}
+                {profileView === "army" ? "Army" : profileView === "ranked" ? "Ranked" : "Upgrades"}
               </span>
               <button type="button"
                 onClick={() => {
                   if (profileView === "army") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else if (profileView === "upgrades") { setProfileView("ranked"); if (!rankedData) fetchRanked(army.tag); }
                   else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
@@ -1535,6 +1551,88 @@ function PlayerProfileView({ onBack }) {
             </div>
 
             {/* ── UPGRADES VIEW ── */}
+            {profileView === "ranked" && (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
+                {rankedLoading && (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(4)].map((_,i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/[0.06] shrink-0"/>
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3 w-28 bg-white/[0.06] rounded"/>
+                          <div className="h-2 w-16 bg-white/[0.06] rounded"/>
+                        </div>
+                        <div className="h-3 w-12 bg-white/[0.06] rounded"/>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {rankedError && <p className="text-red-400 text-xs text-center py-4">{rankedError}</p>}
+                {rankedData && !rankedLoading && (() => {
+                  // Extract attack/defence entries — handle various possible structures
+                  const entries = Array.isArray(rankedData)
+                    ? rankedData
+                    : rankedData.attacks || rankedData.legend_data || rankedData.data || [];
+
+                  if (!entries.length) return (
+                    <p className="text-slate-500 text-xs text-center py-4">No ranked battle history found</p>
+                  );
+
+                  // Group by date
+                  const byDate = {};
+                  entries.forEach(e => {
+                    const d = e.time || e.timestamp || e.date || e.attack_time;
+                    if (!d) return;
+                    const dateKey = new Date(d * 1000 || d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                    if (!byDate[dateKey]) byDate[dateKey] = [];
+                    byDate[dateKey].push(e);
+                  });
+
+                  return Object.entries(byDate).map(([date, items]) => (
+                    <div key={date}>
+                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">{date}</p>
+                      <div className="space-y-2">
+                        {items.map((e, i) => {
+                          const trophyChange = e.trophies || e.trophy_change || e.change || 0;
+                          const isAttack = trophyChange > 0 || e.type === "attack";
+                          const stars = e.stars || e.star_count || null;
+                          return (
+                            <div key={i} className="flex items-center gap-3 py-1">
+                              {/* Attack/Defence indicator */}
+                              <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${isAttack ? "border-green-500/30 bg-green-500/[0.05]" : "border-red-500/30 bg-red-500/[0.05]"}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${isAttack ? "text-green-400" : "text-red-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  {isAttack
+                                    ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                                    : <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                  }
+                                </svg>
+                              </div>
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-semibold text-white">{isAttack ? "Attack" : "Defence"}</span>
+                                  {stars !== null && (
+                                    <span className="text-[9px] text-amber-400">{"⭐".repeat(Math.min(stars, 3))}</span>
+                                  )}
+                                </div>
+                                <span className="text-[9px] text-slate-500">
+                                  {new Date((e.time || e.timestamp || e.date) * 1000 || (e.time || e.timestamp || e.date)).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              </div>
+                              {/* Trophy change */}
+                              <span className={`text-sm font-bold tabular-nums shrink-0 ${trophyChange > 0 ? "text-green-400" : trophyChange < 0 ? "text-red-400" : "text-slate-500"}`}>
+                                {trophyChange > 0 ? `+${trophyChange}` : trophyChange}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            )}
+
             {profileView === "upgrades" && (
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
                 {upgradesLoading && (
