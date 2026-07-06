@@ -1569,7 +1569,7 @@ function PlayerProfileView({ onBack }) {
                   const isDemoted = r.result === "demoted";
 
                   // Week date range: Mon-Mon
-                  const weekEnd = new Date(r.week_ending + "T00:00:00Z");
+                  const weekEnd = new Date(r.week_ending);
                   const weekStart = new Date(weekEnd);
                   weekStart.setUTCDate(weekStart.getUTCDate() - 6);
                   const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
