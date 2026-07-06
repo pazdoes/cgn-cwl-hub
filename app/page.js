@@ -1170,12 +1170,14 @@ function PlayerProfileView({ onBack }) {
   const [upgrades, setUpgrades] = useState(null);
   const [upgradesLoading, setUpgradesLoading] = useState(false);
   const [upgradeSnapshots, setUpgradeSnapshots] = useState(0);
+  const [tourneyHistory, setTourneyHistory] = useState(null);
+  const [tourneyLoading, setTourneyLoading] = useState(false);
 
 
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setTourneyHistory(null);
     const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
@@ -1246,6 +1248,16 @@ function PlayerProfileView({ onBack }) {
       }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
+  }
+
+  async function fetchTourneyHistory(tag) {
+    setTourneyLoading(true);
+    try {
+      const res = await fetch(`/api/tournament-history/${tag.replace("#","")}`);
+      const d = await res.json();
+      setTourneyHistory(d.results || []);
+    } catch { setTourneyHistory([]); }
+    finally { setTourneyLoading(false); }
   }
 
   async function fetchUpgrades(tag) {
@@ -1512,8 +1524,9 @@ function PlayerProfileView({ onBack }) {
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
               <button type="button"
                 onClick={() => {
-                  if (profileView === "upgrades") setProfileView("army");
-                  else { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  if (profileView === "army") { setProfileView("ranked"); if (!tourneyHistory) fetchTourneyHistory(army.tag); }
+                  else if (profileView === "ranked") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1521,11 +1534,12 @@ function PlayerProfileView({ onBack }) {
                 </svg>
               </button>
               <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
-                {profileView === "army" ? "Army" : "Upgrades"}
+                {profileView === "army" ? "Army" : profileView === "ranked" ? "Ranked" : "Upgrades"}
               </span>
               <button type="button"
                 onClick={() => {
                   if (profileView === "army") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else if (profileView === "upgrades") { setProfileView("ranked"); if (!tourneyHistory) fetchTourneyHistory(army.tag); }
                   else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
@@ -1536,6 +1550,50 @@ function PlayerProfileView({ onBack }) {
             </div>
 
             {/* ── UPGRADES VIEW ── */}
+            {profileView === "ranked" && (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Weekly Tournament History</p>
+                {tourneyLoading && (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(4)].map((_,i) => <div key={i} className="h-14 bg-white/[0.04] rounded-2xl"/>)}
+                  </div>
+                )}
+                {!tourneyLoading && tourneyHistory?.length === 0 && (
+                  <div className="text-center py-6 space-y-1">
+                    <p className="text-slate-500 text-xs">No tournament history yet</p>
+                    <p className="text-slate-700 text-[10px]">Results are recorded each Monday after the weekly reset</p>
+                  </div>
+                )}
+                {!tourneyLoading && tourneyHistory?.map((r, i) => {
+                  const isPromoted = r.result === "promoted";
+                  const isDemoted = r.result === "demoted";
+                  const weekDate = new Date(r.week_ending + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+                  return (
+                    <div key={i} className={`rounded-2xl border p-3 ${isPromoted ? "border-green-500/30 bg-green-500/[0.04]" : isDemoted ? "border-red-500/30 bg-red-500/[0.04]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[9px] text-slate-500 uppercase tracking-widest">{weekDate}</span>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
+                          {isPromoted ? "↑ Promoted" : isDemoted ? "↓ Demoted" : "→ Stayed"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400 truncate">{r.pre_league}</span>
+                        {r.pre_league !== r.post_league && (
+                          <>
+                            <span className="text-slate-600 text-xs">→</span>
+                            <span className={`text-xs font-semibold truncate ${isPromoted ? "text-green-300" : "text-red-300"}`}>{r.post_league}</span>
+                          </>
+                        )}
+                      </div>
+                      {r.pre_trophies > 0 && (
+                        <p className="text-[10px] text-purple-400 mt-1">{r.pre_trophies.toLocaleString()} final trophies</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {profileView === "upgrades" && (
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
                 {upgradesLoading && (
