@@ -1170,14 +1170,12 @@ function PlayerProfileView({ onBack }) {
   const [upgrades, setUpgrades] = useState(null);
   const [upgradesLoading, setUpgradesLoading] = useState(false);
   const [upgradeSnapshots, setUpgradeSnapshots] = useState(0);
-  const [rankedData, setRankedData] = useState(null);
-  const [rankedLoading, setRankedLoading] = useState(false);
-  const [rankedError, setRankedError] = useState(null);
+
 
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setRankedData(null); setRankedError(null);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null);
     const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
@@ -1248,17 +1246,6 @@ function PlayerProfileView({ onBack }) {
       }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
-  }
-
-  async function fetchRanked(tag) {
-    setRankedLoading(true); setRankedError(null);
-    try {
-      const res = await fetch(`/api/clashking/${tag.replace("#","")}`);
-      const d = await res.json();
-      if (!res.ok || d.error) { setRankedError(d.error || "No ranked data found"); return; }
-      setRankedData(d.data);
-    } catch { setRankedError("Network error"); }
-    finally { setRankedLoading(false); }
   }
 
   async function fetchUpgrades(tag) {
@@ -1525,9 +1512,8 @@ function PlayerProfileView({ onBack }) {
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
               <button type="button"
                 onClick={() => {
-                  if (profileView === "army") { setProfileView("ranked"); if (!rankedData) fetchRanked(army.tag); }
-                  else if (profileView === "ranked") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
-                  else setProfileView("army");
+                  if (profileView === "upgrades") setProfileView("army");
+                  else { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1535,12 +1521,11 @@ function PlayerProfileView({ onBack }) {
                 </svg>
               </button>
               <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
-                {profileView === "army" ? "Army" : profileView === "ranked" ? "Ranked" : "Upgrades"}
+                {profileView === "army" ? "Army" : "Upgrades"}
               </span>
               <button type="button"
                 onClick={() => {
                   if (profileView === "army") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
-                  else if (profileView === "upgrades") { setProfileView("ranked"); if (!rankedData) fetchRanked(army.tag); }
                   else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
@@ -1551,103 +1536,6 @@ function PlayerProfileView({ onBack }) {
             </div>
 
             {/* ── UPGRADES VIEW ── */}
-            {profileView === "ranked" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
-                {rankedLoading && (
-                  <div className="animate-pulse space-y-2">
-                    {[...Array(4)].map((_,i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/[0.06] shrink-0"/>
-                        <div className="flex-1 space-y-1.5">
-                          <div className="h-3 w-28 bg-white/[0.06] rounded"/>
-                          <div className="h-2 w-16 bg-white/[0.06] rounded"/>
-                        </div>
-                        <div className="h-3 w-12 bg-white/[0.06] rounded"/>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {rankedError && <p className="text-red-400 text-xs text-center py-4">{rankedError}</p>}
-                {rankedData && !rankedLoading && (() => {
-                  // ClashKing structure: data.legends = { "YYYY-MM-DD": { new_attacks: [{time, change, trophies, hero_gear}], new_defenses: [{time, change, trophies}] } }
-                  const legends = rankedData?.legends || {};
-                  const dates = Object.keys(legends).sort((a, b) => b.localeCompare(a));
-
-                  if (!dates.length) return (
-                    <p className="text-slate-500 text-xs text-center py-4">No ranked battle history found</p>
-                  );
-
-                  return dates.map(date => {
-                    const day = legends[date];
-                    if (!day) return null;
-                    const attacks = Array.isArray(day.new_attacks) ? day.new_attacks : [];
-                    const defences = Array.isArray(day.new_defenses) ? day.new_defenses : [];
-
-                    const entries = [
-                      ...attacks.map(e => ({ ...e, type: "attack" })),
-                      ...defences.map(e => ({ ...e, type: "defence" })),
-                    ].sort((a, b) => ((b.time || 0) - (a.time || 0)));
-
-                    if (!entries.length) return null;
-
-                    const dayTotal = [...attacks, ...defences].reduce((s, e) => s + (e.change || 0), 0);
-
-                    return (
-                      <div key={date}>
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-[8px] text-slate-600 uppercase tracking-widest">
-                            {new Date(date + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}
-                          </p>
-                          <span className={`text-[9px] font-bold tabular-nums ${dayTotal > 0 ? "text-green-400" : dayTotal < 0 ? "text-red-400" : "text-slate-500"}`}>
-                            {dayTotal > 0 ? `+${dayTotal}` : dayTotal} trophies
-                          </span>
-                        </div>
-                        <div className="space-y-1.5">
-                          {entries.map((e, i) => {
-                            const isAttack = e.type === "attack";
-                            const change = e.change || 0;
-                            return (
-                              <div key={i} className="flex items-center gap-3 py-1">
-                                <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${isAttack ? "border-green-500/30 bg-green-500/[0.05]" : "border-blue-500/20 bg-blue-500/[0.04]"}`}>
-                                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${isAttack ? "text-green-400" : "text-blue-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    {isAttack
-                                      ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                                      : <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                    }
-                                  </svg>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold text-white">{isAttack ? "Attack" : "Defence"}</p>
-                                  <p className="text-[9px] text-slate-500">
-                                    {e.time ? new Date(e.time * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC" : ""}
-                                    {e.trophies ? ` · ${e.trophies} total` : ""}
-                                  </p>
-                                </div>
-                                {Array.isArray(e.hero_gear) && e.hero_gear.length > 0 && (
-                                  <div className="flex gap-0.5 shrink-0">
-                                    {e.hero_gear.slice(0, 3).map((g, gi) => (
-                                      <div key={gi} className="w-5 h-5 rounded bg-white/[0.06] overflow-hidden">
-                                        <img src={`/icons/equipment/${g.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
-                                          alt={g.name} className="w-full h-full object-cover"
-                                          onError={e => { e.target.style.display="none"; }}/>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                <span className={`text-sm font-bold tabular-nums shrink-0 ${isAttack && change > 0 ? "text-green-400" : !isAttack && change > 0 ? "text-blue-400" : change < 0 ? "text-red-400" : "text-slate-500"}`}>
-                                  {change > 0 ? `+${change}` : change}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            )}
-
             {profileView === "upgrades" && (
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
                 {upgradesLoading && (
