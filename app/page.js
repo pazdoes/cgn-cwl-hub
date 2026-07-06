@@ -1597,12 +1597,20 @@ function PlayerProfileView({ onBack }) {
                       {/* Row 2: league badge + name (left) · trophy count (right) */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                          {r.pre_league_icon && <img src={r.pre_league_icon} alt={r.pre_league} className="w-6 h-6 object-contain shrink-0"/>}
+                          {r.pre_league && <img
+                            src={`/icons/leagues/${r.pre_league.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                            alt={r.pre_league}
+                            className="w-6 h-6 object-contain shrink-0"
+                            onError={e => { e.target.src = r.pre_league_icon || ""; }}/>}
                           <span className="text-[10px] text-slate-400 truncate">{r.pre_league}</span>
                           {r.pre_league !== r.post_league && (
                             <>
                               <span className="text-slate-600 text-[10px]">→</span>
-                              {r.post_league_icon && <img src={r.post_league_icon} alt={r.post_league} className="w-6 h-6 object-contain shrink-0"/>}
+                              {r.post_league && <img
+                                src={`/icons/leagues/${r.post_league.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                                alt={r.post_league}
+                                className="w-6 h-6 object-contain shrink-0"
+                                onError={e => { e.target.src = r.post_league_icon || ""; }}/>}
                               <span className={`text-[10px] font-semibold truncate ${isPromoted ? "text-green-300" : "text-red-300"}`}>{r.post_league}</span>
                             </>
                           )}
