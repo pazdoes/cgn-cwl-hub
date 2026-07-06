@@ -1181,12 +1181,13 @@ function PlayerProfileView({ onBack }) {
   const [tourneyLoading, setTourneyLoading] = useState(false);
 
 
-  // Auto-search if tag was pre-filled from roster
+  // Auto-search if tag was pre-filled from roster — runs after all functions defined
   useEffect(() => {
     if (query.trim() && !army) {
-      handleSearchDirect(query.trim());
+      const q = query.trim();
+      setTimeout(() => handleSearchDirect(q), 0);
     }
-  }, []);
+  }, [query]);
 
   async function handleSearchDirect(q) {
     setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setTourneyHistory(null);
