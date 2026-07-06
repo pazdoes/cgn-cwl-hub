@@ -1570,7 +1570,7 @@ function PlayerProfileView({ onBack }) {
                 {rankedError && <p className="text-red-400 text-xs text-center py-4">{rankedError}</p>}
                 {rankedData && !rankedLoading && (() => {
                   // ClashKing structure: data.legends = { "YYYY-MM-DD": { new_attacks: [{time, change, trophies, hero_gear}], new_defenses: [{time, change, trophies}] } }
-                  const legends = rankedData.legends || {};
+                  const legends = rankedData?.legends || {};
                   const dates = Object.keys(legends).sort((a, b) => b.localeCompare(a));
 
                   if (!dates.length) return (
@@ -1579,19 +1579,18 @@ function PlayerProfileView({ onBack }) {
 
                   return dates.map(date => {
                     const day = legends[date];
-                    const attacks = day.new_attacks || [];
-                    const defences = day.new_defenses || [];
+                    if (!day) return null;
+                    const attacks = Array.isArray(day.new_attacks) ? day.new_attacks : [];
+                    const defences = Array.isArray(day.new_defenses) ? day.new_defenses : [];
 
-                    // Merge attacks and defences, tag each type, sort by time
                     const entries = [
                       ...attacks.map(e => ({ ...e, type: "attack" })),
                       ...defences.map(e => ({ ...e, type: "defence" })),
-                    ].sort((a, b) => (b.time || 0) - (a.time || 0));
+                    ].sort((a, b) => ((b.time || 0) - (a.time || 0)));
 
                     if (!entries.length) return null;
 
-                    const dayTotal = attacks.reduce((s, e) => s + (e.change || 0), 0)
-                      + defences.reduce((s, e) => s + (e.change || 0), 0);
+                    const dayTotal = [...attacks, ...defences].reduce((s, e) => s + (e.change || 0), 0);
 
                     return (
                       <div key={date}>
@@ -1620,12 +1619,11 @@ function PlayerProfileView({ onBack }) {
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-semibold text-white">{isAttack ? "Attack" : "Defence"}</p>
                                   <p className="text-[9px] text-slate-500">
-                                    {new Date(e.time * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                    {e.time ? new Date(e.time * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""}
                                     {e.trophies ? ` · ${e.trophies} total` : ""}
                                   </p>
                                 </div>
-                                {/* Hero gear used */}
-                                {e.hero_gear?.length > 0 && (
+                                {Array.isArray(e.hero_gear) && e.hero_gear.length > 0 && (
                                   <div className="flex gap-0.5 shrink-0">
                                     {e.hero_gear.slice(0, 3).map((g, gi) => (
                                       <div key={gi} className="w-5 h-5 rounded bg-white/[0.06] overflow-hidden">
