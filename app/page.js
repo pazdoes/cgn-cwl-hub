@@ -1555,39 +1555,82 @@ function PlayerProfileView({ onBack }) {
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">Weekly Tournament History</p>
                 {tourneyLoading && (
                   <div className="animate-pulse space-y-2">
-                    {[...Array(4)].map((_,i) => <div key={i} className="h-14 bg-white/[0.04] rounded-2xl"/>)}
+                    {[...Array(4)].map((_,i) => <div key={i} className="h-20 bg-white/[0.04] rounded-2xl"/>)}
                   </div>
                 )}
                 {!tourneyLoading && tourneyHistory?.length === 0 && (
                   <div className="text-center py-6 space-y-1">
                     <p className="text-slate-500 text-xs">No tournament history yet</p>
-                    <p className="text-slate-700 text-[10px]">Results are recorded each Monday after the weekly reset</p>
+                    <p className="text-slate-700 text-[10px]">Results recorded each Monday after weekly reset</p>
                   </div>
                 )}
                 {!tourneyLoading && tourneyHistory?.map((r, i) => {
                   const isPromoted = r.result === "promoted";
                   const isDemoted = r.result === "demoted";
-                  const weekDate = new Date(r.week_ending + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+                  // Week date range: Mon-Mon
+                  const weekEnd = new Date(r.week_ending + "T00:00:00Z");
+                  const weekStart = new Date(weekEnd);
+                  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+                  const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+                  const dateRange = `${fmt(weekStart)} — ${fmt(weekEnd)}`;
+
+                  // Trophy trend vs previous week
+                  const prevResult = tourneyHistory[i + 1];
+                  const trophyDiff = prevResult?.pre_trophies && r.pre_trophies
+                    ? r.pre_trophies - prevResult.pre_trophies : null;
+
+                  // Alliance rank — derive from all results for this week
+                  // (passed from API in future; placeholder for now)
+
                   return (
-                    <div key={i} className={`rounded-2xl border p-3 ${isPromoted ? "border-green-500/30 bg-green-500/[0.04]" : isDemoted ? "border-red-500/30 bg-red-500/[0.04]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] text-slate-500 uppercase tracking-widest">{weekDate}</span>
+                    <div key={i} className={`rounded-2xl border p-3 space-y-2.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+
+                      {/* Row 1: date range + result badge */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-slate-500 uppercase tracking-widest">{dateRange}</span>
                         <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
                           {isPromoted ? "↑ Promoted" : isDemoted ? "↓ Demoted" : "→ Stayed"}
                         </span>
                       </div>
+
+                      {/* Row 2: TH icon + league badges + arrow */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 truncate">{r.pre_league}</span>
-                        {r.pre_league !== r.post_league && (
-                          <>
-                            <span className="text-slate-600 text-xs">→</span>
-                            <span className={`text-xs font-semibold truncate ${isPromoted ? "text-green-300" : "text-red-300"}`}>{r.post_league}</span>
-                          </>
+                        {r.th_level && (
+                          <img src={`/icons/th/th${r.th_level}.png`} alt={`TH${r.th_level}`}
+                            className="w-7 h-7 object-contain shrink-0"
+                            onError={e=>{e.target.style.display="none"}}/>
+                        )}
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          {r.pre_league_icon && <img src={r.pre_league_icon} alt={r.pre_league} className="w-6 h-6 object-contain shrink-0"/>}
+                          <span className="text-[10px] text-slate-400 truncate">{r.pre_league}</span>
+                          {r.pre_league !== r.post_league && (
+                            <>
+                              <span className="text-slate-600 text-[10px]">→</span>
+                              {r.post_league_icon && <img src={r.post_league_icon} alt={r.post_league} className="w-6 h-6 object-contain shrink-0"/>}
+                              <span className={`text-[10px] font-semibold truncate ${isPromoted ? "text-green-300" : "text-red-300"}`}>{r.post_league}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Row 3: final trophies + trend */}
+                      <div className="flex items-center gap-3 pt-0.5 border-t border-white/[0.04]">
+                        {r.pre_trophies > 0 && (
+                          <div className="flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75H7.5m9 0c1.657 0 3 1.343 3 3H4.5c0-1.657 1.343-3 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.395 5.972M18.75 4.236V4.5a9.023 9.023 0 01-2.48 5.228m-10.48 0a9.024 9.024 0 005.23 2.478m5.25-2.478a9.024 9.024 0 01-5.25 2.478"/>
+                            </svg>
+                            <span className="text-xs font-semibold text-purple-300">{r.pre_trophies.toLocaleString()}</span>
+                            <span className="text-[9px] text-slate-600">final</span>
+                          </div>
+                        )}
+                        {trophyDiff !== null && (
+                          <span className={`text-[9px] font-semibold ml-auto ${trophyDiff > 0 ? "text-green-400" : trophyDiff < 0 ? "text-red-400" : "text-slate-500"}`}>
+                            {trophyDiff > 0 ? `↑ +${trophyDiff}` : trophyDiff < 0 ? `↓ ${trophyDiff}` : "→ 0"} vs prev week
+                          </span>
                         )}
                       </div>
-                      {r.pre_trophies > 0 && (
-                        <p className="text-[10px] text-purple-400 mt-1">{r.pre_trophies.toLocaleString()} final trophies</p>
-                      )}
                     </div>
                   );
                 })}

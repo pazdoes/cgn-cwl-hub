@@ -42,11 +42,12 @@ export async function GET(request) {
     SELECT DISTINCT ON (player_tag)
       player_tag,
       (data->>'trophies')::int   AS trophies,
-      data->'league'->>'name'    AS league,
-      data->>'name'              AS player_name,
+      data->'league'->>'name'     AS league,
+      data->'league'->>'iconUrl'  AS league_icon,
+      data->>'name'               AS player_name,
       (data->>'townHallLevel')::int AS th_level,
-      data->'clan'->>'name'      AS clan_name,
-      data->'clan'->>'tag'       AS clan_tag,
+      data->'clan'->>'name'       AS clan_name,
+      data->'clan'->>'tag'        AS clan_tag,
       captured_at
     FROM player_army_cache
     WHERE player_tag = ANY(${tags})
@@ -59,7 +60,8 @@ export async function GET(request) {
   const postSnapshots = await sql`
     SELECT DISTINCT ON (player_tag)
       player_tag,
-      data->'league'->>'name' AS league,
+      data->'league'->>'name'    AS league,
+      data->'league'->>'iconUrl' AS league_icon,
       captured_at
     FROM player_army_cache
     WHERE player_tag = ANY(${tags})
@@ -90,20 +92,24 @@ export async function GET(request) {
     await sql`
       INSERT INTO tournament_results (
         player_tag, player_name, week_ending,
-        pre_trophies, pre_league, post_league,
+        pre_trophies, pre_league, pre_league_icon,
+        post_league, post_league_icon,
         result, clan_name, clan_tag, th_level
       ) VALUES (
         ${pre.player_tag}, ${pre.player_name}, ${weekEnding},
-        ${pre.trophies}, ${pre.league}, ${post.league},
+        ${pre.trophies}, ${pre.league}, ${pre.league_icon || null},
+        ${post.league}, ${post.league_icon || null},
         ${result}, ${pre.clan_name}, ${pre.clan_tag}, ${pre.th_level}
       )
       ON CONFLICT (player_tag, week_ending)
       DO UPDATE SET
-        pre_trophies = EXCLUDED.pre_trophies,
-        pre_league   = EXCLUDED.pre_league,
-        post_league  = EXCLUDED.post_league,
-        result       = EXCLUDED.result,
-        captured_at  = now()
+        pre_trophies      = EXCLUDED.pre_trophies,
+        pre_league        = EXCLUDED.pre_league,
+        pre_league_icon   = EXCLUDED.pre_league_icon,
+        post_league       = EXCLUDED.post_league,
+        post_league_icon  = EXCLUDED.post_league_icon,
+        result            = EXCLUDED.result,
+        captured_at       = now()
     `;
 
     results.push({ tag: pre.player_tag, name: pre.player_name, result, preTier, postTier });

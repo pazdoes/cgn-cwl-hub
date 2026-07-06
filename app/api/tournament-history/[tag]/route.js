@@ -11,9 +11,12 @@ export async function GET(request, { params }) {
       week_ending,
       pre_trophies,
       pre_league,
+      pre_league_icon,
       post_league,
+      post_league_icon,
       result,
-      clan_name
+      clan_name,
+      th_level
     FROM tournament_results
     WHERE player_tag = ${playerTag}
     ORDER BY week_ending DESC
