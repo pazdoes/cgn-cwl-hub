@@ -47,7 +47,7 @@ function rankSortIndex(rank) {
 // the confirmed scope. Visually modeled on the admin pool page's card
 // style, but with every admin control (drag-and-drop, X buttons, status
 // toggles) stripped out — this is a public, read-only view.
-function PlayersView({ players, onBack, rosterSeasons = [] }) {
+function PlayersView({ players, onBack, rosterSeasons = [], onNavigateProfile }) {
   const [histSeason, setHistSeason] = useState(null);
   const [histPlayers, setHistPlayers] = useState(null);
   const [loadingHist, setLoadingHist] = useState(false);
@@ -99,7 +99,7 @@ function PlayersView({ players, onBack, rosterSeasons = [] }) {
             .map(player => (
             <div
               key={player.player_tag || `${player.clan}-${player.account}-${player.position}`}
-              onClick={() => window.open(`/player/${(player.player_tag||"").replace("#","")}`, "_blank")}
+              onClick={() => onNavigateProfile ? onNavigateProfile(player.player_tag || "") : null}
               className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 cursor-pointer hover:border-white/20 hover:bg-white/[0.05] transition"
             >
               <div className="flex items-center justify-between gap-3">
@@ -1156,7 +1156,14 @@ function ProfileUnitTile({ unit, folder }) {
 }
 
 function PlayerProfileView({ onBack }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => {
+    // Check for pre-filled tag from roster click
+    if (typeof window !== "undefined") {
+      const pending = sessionStorage.getItem("profileSearchTag");
+      if (pending) { sessionStorage.removeItem("profileSearchTag"); return pending; }
+    }
+    return "";
+  });
   const [searching, setSearching] = useState(false);
   const [army, setArmy] = useState(null);
   const [error, setError] = useState(null);
@@ -1173,6 +1180,43 @@ function PlayerProfileView({ onBack }) {
   const [tourneyHistory, setTourneyHistory] = useState(null);
   const [tourneyLoading, setTourneyLoading] = useState(false);
 
+
+  // Auto-search if tag was pre-filled from roster
+  useEffect(() => {
+    if (query.trim() && !army) {
+      handleSearchDirect(query.trim());
+    }
+  }, []);
+
+  async function handleSearchDirect(q) {
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setTourneyHistory(null);
+    try {
+      const tag = q.replace(/^#/, "");
+      const res = await fetch(`/api/army/${tag}`);
+      const d = await res.json();
+      if (!res.ok || d.error) { setError(d.error || "Player not found"); setSearching(false); return; }
+      setArmy(d.army);
+      const a = d.army;
+      const allIconSrcs = [
+        ...(a.heroes||[]).map(u => `/icons/heroes/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.heroEquipment||[]).map(u => `/icons/equipment/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.pets||[]).map(u => `/icons/pets/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.troops||[]).map(u => `/icons/troops/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.spells||[]).map(u => `/icons/spells/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.siegeMachines||[]).map(u => `/icons/siege/${u.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`),
+        ...(a.townHallLevel ? [`/icons/th/th${a.townHallLevel}.png`] : []),
+        ...(a.league?.iconUrl ? [a.league.iconUrl] : []),
+        ...(a.clan?.badgeUrl ? [a.clan.badgeUrl] : []),
+      ];
+      if (allIconSrcs.length === 0) { setIconsReady(true); }
+      else {
+        let resolved = 0;
+        const onResolve = () => { resolved++; if (resolved >= allIconSrcs.length) setIconsReady(true); };
+        allIconSrcs.forEach(src => { const img = new Image(); img.onload = img.onerror = onResolve; img.src = src; });
+      }
+    } catch { setError("Network error"); }
+    finally { setSearching(false); }
+  }
 
   async function handleSearch(e) {
     e.preventDefault();
@@ -4929,7 +4973,7 @@ export default function Home() {
   }
 
   if (page === "roster") {
-    return <RosterHubView onNavigateHome={() => navigate("home")} />;
+    return <RosterHubView onNavigateHome={() => navigate("home")} onNavigateProfile={tag => { sessionStorage.setItem("profileSearchTag", tag); navigate("profile"); }} />;
   }
   if (page === "leaderboard") {
     return <LeaderboardView onBack={() => navigate("home")} />;
@@ -5000,7 +5044,7 @@ export default function Home() {
   );
 }
 
-function RosterHubView({ onNavigateHome }) {
+function RosterHubView({ onNavigateHome, onNavigateProfile }) {
   const [players, setPlayers] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedClan, setSelectedClan] = useState(null);
@@ -5075,7 +5119,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   : [];
 
   if (statView === "players") {
-    return <PlayersView players={players} rosterSeasons={rosterSeasons} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} />;
+    return <PlayersView players={players} rosterSeasons={rosterSeasons} onBack={() => { window.history.pushState({}, "", window.location.pathname); setStatView(null); }} onNavigateProfile={onNavigateProfile} />;
   }
 
   if (statView === "clans") {
