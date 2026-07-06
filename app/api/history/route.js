@@ -26,6 +26,9 @@ export async function GET(request) {
         FROM clan_season_history csh
         LEFT JOIN season_registry sr ON sr.season = csh.season
         WHERE csh.season = ${season}
+          AND csh.clan_tag NOT IN (
+            SELECT clan_tag FROM clans WHERE cwl_absent = true
+          )
         ORDER BY csh.clan_tag, sr.season_date ASC NULLS LAST
       `
     : await sql`

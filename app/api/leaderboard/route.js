@@ -56,6 +56,9 @@ export async function GET(request) {
           AND csh.season = ps.season
         WHERE ps.season = ${targetSeason}
           AND ps.player_tag IN (SELECT player_tag FROM accounts)
+          AND ps.clan_name NOT IN (
+            SELECT clan_name FROM clans WHERE cwl_absent = true
+          )
         ORDER BY ps.stars_earned DESC, ps.destruction_pct DESC
       `;
 
