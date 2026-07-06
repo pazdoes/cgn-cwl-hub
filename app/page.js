@@ -1594,13 +1594,8 @@ function PlayerProfileView({ onBack }) {
                         </span>
                       </div>
 
-                      {/* Row 2: TH icon + league badges + arrow */}
+                      {/* Row 2: league badges + arrow */}
                       <div className="flex items-center gap-2">
-                        {r.th_level && (
-                          <img src={`/icons/th/th${r.th_level}.png`} alt={`TH${r.th_level}`}
-                            className="w-7 h-7 object-contain shrink-0"
-                            onError={e=>{e.target.style.display="none"}}/>
-                        )}
                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
                           {r.pre_league_icon && <img src={r.pre_league_icon} alt={r.pre_league} className="w-6 h-6 object-contain shrink-0"/>}
                           <span className="text-[10px] text-slate-400 truncate">{r.pre_league}</span>
