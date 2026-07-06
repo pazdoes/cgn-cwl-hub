@@ -1596,7 +1596,7 @@ function PlayerProfileView({ onBack }) {
                       <div key={date}>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-[8px] text-slate-600 uppercase tracking-widest">
-                            {new Date(date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
+                            {new Date(date + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}
                           </p>
                           <span className={`text-[9px] font-bold tabular-nums ${dayTotal > 0 ? "text-green-400" : dayTotal < 0 ? "text-red-400" : "text-slate-500"}`}>
                             {dayTotal > 0 ? `+${dayTotal}` : dayTotal} trophies
@@ -1608,18 +1608,18 @@ function PlayerProfileView({ onBack }) {
                             const change = e.change || 0;
                             return (
                               <div key={i} className="flex items-center gap-3 py-1">
-                                <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${isAttack ? "border-green-500/30 bg-green-500/[0.05]" : "border-red-500/30 bg-red-500/[0.05]"}`}>
-                                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${isAttack ? "text-green-400" : "text-red-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${isAttack ? "border-green-500/30 bg-green-500/[0.05]" : "border-blue-500/20 bg-blue-500/[0.04]"}`}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${isAttack ? "text-green-400" : "text-blue-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     {isAttack
                                       ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                                      : <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                      : <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                     }
                                   </svg>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-semibold text-white">{isAttack ? "Attack" : "Defence"}</p>
                                   <p className="text-[9px] text-slate-500">
-                                    {e.time ? new Date(e.time * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                    {e.time ? new Date(e.time * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC" : ""}
                                     {e.trophies ? ` · ${e.trophies} total` : ""}
                                   </p>
                                 </div>
@@ -1634,7 +1634,7 @@ function PlayerProfileView({ onBack }) {
                                     ))}
                                   </div>
                                 )}
-                                <span className={`text-sm font-bold tabular-nums shrink-0 ${change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-slate-500"}`}>
+                                <span className={`text-sm font-bold tabular-nums shrink-0 ${isAttack && change > 0 ? "text-green-400" : !isAttack && change > 0 ? "text-blue-400" : change < 0 ? "text-red-400" : "text-slate-500"}`}>
                                   {change > 0 ? `+${change}` : change}
                                 </span>
                               </div>
