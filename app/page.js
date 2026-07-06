@@ -1569,66 +1569,83 @@ function PlayerProfileView({ onBack }) {
                 )}
                 {rankedError && <p className="text-red-400 text-xs text-center py-4">{rankedError}</p>}
                 {rankedData && !rankedLoading && (() => {
-                  // Extract attack/defence entries — handle various possible structures
-                  const entries = Array.isArray(rankedData)
-                    ? rankedData
-                    : rankedData.attacks || rankedData.legend_data || rankedData.data || [];
+                  // ClashKing structure: data.legends = { "YYYY-MM-DD": { new_attacks: [{time, change, trophies, hero_gear}], new_defenses: [{time, change, trophies}] } }
+                  const legends = rankedData.legends || {};
+                  const dates = Object.keys(legends).sort((a, b) => b.localeCompare(a));
 
-                  if (!entries.length) return (
+                  if (!dates.length) return (
                     <p className="text-slate-500 text-xs text-center py-4">No ranked battle history found</p>
                   );
 
-                  // Group by date
-                  const byDate = {};
-                  entries.forEach(e => {
-                    const d = e.time || e.timestamp || e.date || e.attack_time;
-                    if (!d) return;
-                    const dateKey = new Date(d * 1000 || d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-                    if (!byDate[dateKey]) byDate[dateKey] = [];
-                    byDate[dateKey].push(e);
-                  });
+                  return dates.map(date => {
+                    const day = legends[date];
+                    const attacks = day.new_attacks || [];
+                    const defences = day.new_defenses || [];
 
-                  return Object.entries(byDate).map(([date, items]) => (
-                    <div key={date}>
-                      <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-2">{date}</p>
-                      <div className="space-y-2">
-                        {items.map((e, i) => {
-                          const trophyChange = e.trophies || e.trophy_change || e.change || 0;
-                          const isAttack = trophyChange > 0 || e.type === "attack";
-                          const stars = e.stars || e.star_count || null;
-                          return (
-                            <div key={i} className="flex items-center gap-3 py-1">
-                              {/* Attack/Defence indicator */}
-                              <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${isAttack ? "border-green-500/30 bg-green-500/[0.05]" : "border-red-500/30 bg-red-500/[0.05]"}`}>
-                                <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${isAttack ? "text-green-400" : "text-red-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  {isAttack
-                                    ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                                    : <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                                  }
-                                </svg>
-                              </div>
-                              {/* Info */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-xs font-semibold text-white">{isAttack ? "Attack" : "Defence"}</span>
-                                  {stars !== null && (
-                                    <span className="text-[9px] text-amber-400">{"⭐".repeat(Math.min(stars, 3))}</span>
-                                  )}
+                    // Merge attacks and defences, tag each type, sort by time
+                    const entries = [
+                      ...attacks.map(e => ({ ...e, type: "attack" })),
+                      ...defences.map(e => ({ ...e, type: "defence" })),
+                    ].sort((a, b) => (b.time || 0) - (a.time || 0));
+
+                    if (!entries.length) return null;
+
+                    const dayTotal = attacks.reduce((s, e) => s + (e.change || 0), 0)
+                      + defences.reduce((s, e) => s + (e.change || 0), 0);
+
+                    return (
+                      <div key={date}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[8px] text-slate-600 uppercase tracking-widest">
+                            {new Date(date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
+                          </p>
+                          <span className={`text-[9px] font-bold tabular-nums ${dayTotal > 0 ? "text-green-400" : dayTotal < 0 ? "text-red-400" : "text-slate-500"}`}>
+                            {dayTotal > 0 ? `+${dayTotal}` : dayTotal} trophies
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {entries.map((e, i) => {
+                            const isAttack = e.type === "attack";
+                            const change = e.change || 0;
+                            return (
+                              <div key={i} className="flex items-center gap-3 py-1">
+                                <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${isAttack ? "border-green-500/30 bg-green-500/[0.05]" : "border-red-500/30 bg-red-500/[0.05]"}`}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${isAttack ? "text-green-400" : "text-red-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    {isAttack
+                                      ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                                      : <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                    }
+                                  </svg>
                                 </div>
-                                <span className="text-[9px] text-slate-500">
-                                  {new Date((e.time || e.timestamp || e.date) * 1000 || (e.time || e.timestamp || e.date)).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-white">{isAttack ? "Attack" : "Defence"}</p>
+                                  <p className="text-[9px] text-slate-500">
+                                    {new Date(e.time * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                    {e.trophies ? ` · ${e.trophies} total` : ""}
+                                  </p>
+                                </div>
+                                {/* Hero gear used */}
+                                {e.hero_gear?.length > 0 && (
+                                  <div className="flex gap-0.5 shrink-0">
+                                    {e.hero_gear.slice(0, 3).map((g, gi) => (
+                                      <div key={gi} className="w-5 h-5 rounded bg-white/[0.06] overflow-hidden">
+                                        <img src={`/icons/equipment/${g.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                                          alt={g.name} className="w-full h-full object-cover"
+                                          onError={e => { e.target.style.display="none"; }}/>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <span className={`text-sm font-bold tabular-nums shrink-0 ${change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-slate-500"}`}>
+                                  {change > 0 ? `+${change}` : change}
                                 </span>
                               </div>
-                              {/* Trophy change */}
-                              <span className={`text-sm font-bold tabular-nums shrink-0 ${trophyChange > 0 ? "text-green-400" : trophyChange < 0 ? "text-red-400" : "text-slate-500"}`}>
-                                {trophyChange > 0 ? `+${trophyChange}` : trophyChange}
-                              </span>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ));
+                    );
+                  });
                 })()}
               </div>
             )}
