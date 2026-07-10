@@ -2,7 +2,28 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
-function getRankColour(rankName) {
+// Static CWL war league icon URLs from CoC API CDN
+// These are stable and don't change between seasons
+const CWL_LEAGUE_ICONS = {
+  "Bronze League III":   "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
+  "Bronze League II":    "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
+  "Bronze League I":     "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
+  "Silver League III":   "https://api-assets.clashofclans.com/warleagues/256/lXmPFiluFfIUXnXJLRhOPSmrNerEGLyxhW41f78sNrw.png",
+  "Silver League II":    "https://api-assets.clashofclans.com/warleagues/256/lXmPFiluFfIUXnXJLRhOPSmrNerEGLyxhW41f78sNrw.png",
+  "Silver League I":     "https://api-assets.clashofclans.com/warleagues/256/lXmPFiluFfIUXnXJLRhOPSmrNerEGLyxhW41f78sNrw.png",
+  "Gold League III":     "https://api-assets.clashofclans.com/warleagues/256/vd4dCz-d5RbzCGMuYICJTd7jzxUJ8a2qnLdFLBAbMDk.png",
+  "Gold League II":      "https://api-assets.clashofclans.com/warleagues/256/vd4dCz-d5RbzCGMuYICJTd7jzxUJ8a2qnLdFLBAbMDk.png",
+  "Gold League I":       "https://api-assets.clashofclans.com/warleagues/256/vd4dCz-d5RbzCGMuYICJTd7jzxUJ8a2qnLdFLBAbMDk.png",
+  "Crystal League III":  "https://api-assets.clashofclans.com/warleagues/256/Jzb3DXpLCEHpCBIhEMiDONUMr0DvGKQfQ2wAh1VNFoc.png",
+  "Crystal League II":   "https://api-assets.clashofclans.com/warleagues/256/Jzb3DXpLCEHpCBIhEMiDONUMr0DvGKQfQ2wAh1VNFoc.png",
+  "Crystal League I":    "https://api-assets.clashofclans.com/warleagues/256/Jzb3DXpLCEHpCBIhEMiDONUMr0DvGKQfQ2wAh1VNFoc.png",
+  "Master League III":   "https://api-assets.clashofclans.com/warleagues/256/knMpSmBgNAGpCGYlFmjPLHxA06h4OoAKBfVaOE_bBqI.png",
+  "Master League II":    "https://api-assets.clashofclans.com/warleagues/256/knMpSmBgNAGpCGYlFmjPLHxA06h4OoAKBfVaOE_bBqI.png",
+  "Master League I":     "https://api-assets.clashofclans.com/warleagues/256/knMpSmBgNAGpCGYlFmjPLHxA06h4OoAKBfVaOE_bBqI.png",
+  "Champion League III": "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
+  "Champion League II":  "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
+  "Champion League I":   "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
+};
   if (!rankName) return 0x5865F2;
   if (rankName.includes("Champion")) return 0xE74C3C;
   if (rankName.includes("Master"))   return 0x23272A;
@@ -24,7 +45,7 @@ function formatTs(date) {
 
 function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const cwlRank    = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
-  const cwlIconUrl = clan.warLeague?.iconUrls?.medium || clan.warLeague?.iconUrls?.small || null;
+  const cwlIconUrl = CWL_LEAGUE_ICONS[cwlRank] || clan.warLeague?.iconUrls?.medium || null;
   const clanLink   = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
   const winStreak  = clan.warWinStreak ?? 0;
   const warWins    = clan.warWins ?? 0;
