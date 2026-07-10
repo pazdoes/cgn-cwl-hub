@@ -32,7 +32,7 @@ function getCwlIconUrl(rankName) {
 const HEADER_EMBED = {
   color:       0x23272A,
   title:       "Cognition Collective",
-  image:       { url: "https://cgnco.vercel.app/icons/branding/cgn-shield.png" },
+  image:       { url: "https://cdn.discordapp.com/attachments/1480200113082208346/1484533474122666139/IMG_6577.png?ex=6a523b09&is=6a50e989&hm=9e58fc2279e6d441c0492f84b370dc47ae58b96c14fdebc27166be0fa317e7d3&" },
 };
 
 function getRankColour(rankName) {
