@@ -188,6 +188,19 @@ export async function POST(request) {
   return NextResponse.json({ success, messageId, clansPosted: embeds.length });
 }
 
+export async function DELETE(request) {
+  const sql  = getDb();
+  const body = await request.json();
+  const { id, pin } = body;
+
+  if (pin !== process.env.OFFICER_PIN) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
+  await sql`DELETE FROM discord_live_messages WHERE id = ${id}`;
+  return NextResponse.json({ success: true });
+}
+
 export async function GET() {
   const sql      = getDb();
   const messages = await sql`SELECT * FROM discord_live_messages WHERE type = 'clan_info' ORDER BY created_at DESC`;

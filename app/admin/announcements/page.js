@@ -899,6 +899,22 @@ function ClanInfoBoardTool() {
     } catch {}
   }
 
+  async function handleDeleteBoard(id) {
+    if (!confirm("Delete this board? The Discord message will remain but will no longer auto-update.")) return;
+    setPosting(true); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-info-board", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, pin: "070226" }),
+      });
+      const d = await res.json();
+      if (d.success) { setStatus({ ok: "Board deleted" }); loadMessages(); }
+      else setStatus({ error: d.error || "Failed to delete" });
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setPosting(false); }
+  }
+
   async function handlePost() {
     if (!webhookUrl.trim()) { setStatus({ error: "Enter a webhook URL" }); return; }
     setPosting(true); setStatus(null);
@@ -975,10 +991,16 @@ function ClanInfoBoardTool() {
                 <p className="text-[10px] text-slate-500 truncate flex-1">
                   {msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}
                 </p>
-                <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
-                  className="shrink-0 rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
-                  {posting ? "…" : "Update"}
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
+                    className="rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
+                    {posting ? "…" : "Update"}
+                  </button>
+                  <button onClick={() => handleDeleteBoard(msg.id)} disabled={posting}
+                    className="rounded-full border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">
+                    Delete
+                  </button>
+                </div>
               </div>
               {msg.last_updated && (
                 <p className="text-[9px] text-slate-700">
