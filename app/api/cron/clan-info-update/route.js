@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
 const WEBHOOK_USERNAME   = "Cognition {CGN}";
-const WEBHOOK_AVATAR_URL = "https://cdn.discordapp.com/attachments/1480200113082208346/1484533474122666139/IMG_6577.png?ex=6a523b09&is=6a50e989&hm=9e58fc2279e6d441c0492f84b370dc47ae58b96c14fdebc27166be0fa317e7d3&";
+const WEBHOOK_AVATAR_URL = "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a520355&is=6a50b1d5&hm=baa6944e521d271f7444d77db5aae046185dab6796ecab3b0b5fee2ca20a6cfe&";
 
 function getCwlIconUrl(rankName) {
   if (!rankName) return null;
@@ -98,9 +98,11 @@ export async function GET(request) {
   // Get included clans from board config — alliance + side war clans
   const allianceRows = await sql`
     SELECT c.clan_tag, c.clan_name, c.cwl_rank, c.clan_link,
-      COALESCE(bc.seed_wins, 0)   as seed_wins,
-      COALESCE(bc.seed_draws, 0)  as seed_draws,
-      COALESCE(bc.seed_losses, 0) as seed_losses,
+      COALESCE(bc.seed_wins, 0)          as seed_wins,
+      COALESCE(bc.seed_draws, 0)         as seed_draws,
+      COALESCE(bc.seed_losses, 0)        as seed_losses,
+      COALESCE(bc.display_order, 999)    as display_order,
+      COALESCE(bc.cwl_only, false)       as cwl_only,
       false as is_side_war
     FROM clans c
     INNER JOIN clan_info_board_config bc ON bc.clan_tag = c.clan_tag
