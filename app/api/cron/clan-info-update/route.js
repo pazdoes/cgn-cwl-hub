@@ -76,7 +76,7 @@ export async function GET(request) {
   ` : [];
   const warRecordMap = Object.fromEntries(warRecords.map(r => [r.clan_name, r]));
 
-  const now = new Date();
+  const nowTs = new Date();
   const embeds = [];
   for (const clanRow of clans) {
     try {
@@ -92,8 +92,8 @@ export async function GET(request) {
     return NextResponse.json({ updated: 0, error: "Failed to fetch clan data" });
   }
 
-  const now = new Date();
-  const timestamp = now.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+  const nowTs = new Date();
+  const timestamp = nowTs.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
 
   let updated = 0;
   for (const msg of liveMessages) {

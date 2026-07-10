@@ -80,7 +80,7 @@ export async function POST(request) {
   ` : [];
   const warRecordMap = Object.fromEntries(warRecords.map(r => [r.clan_name, r]));
 
-  const now = new Date();
+  const nowTs = new Date();
   const embeds = [];
   for (const clanRow of clans) {
     try {
@@ -96,8 +96,8 @@ export async function POST(request) {
     return NextResponse.json({ error: "Failed to fetch clan data" }, { status: 500 });
   }
 
-  const now = new Date();
-  const timestamp = now.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+  const nowTs = new Date();
+  const timestamp = nowTs.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
 
   // Check if we have an existing message to edit
   const [existing] = await sql`SELECT * FROM discord_live_messages WHERE type = 'clan_info' AND webhook_url = ${webhook_url} LIMIT 1`;
