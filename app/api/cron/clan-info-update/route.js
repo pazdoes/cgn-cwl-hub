@@ -69,17 +69,17 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
     fields: (clanDbRow?.cwl_only === true || clanDbRow?.cwl_only === "true")
       ? [
           { name: "CWL Only", value: "​", inline: false },
-          { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
+          { name: "​", value: `[**Join**](${clanLink})`, inline: false },
         ]
       : (clanDbRow?.side_war_only === true || clanDbRow?.side_war_only === "true")
       ? [
           { name: "Side War Only", value: "​", inline: false },
-          { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
+          { name: "​", value: `[**Join**](${clanLink})`, inline: false },
         ]
       : [
           { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
           { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
-          { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
+          { name: "​", value: `[**Join**](${clanLink})`, inline: false },
         ],
     footer: { text: `👤 ${members}/50  •  ${ts}` },
   };
