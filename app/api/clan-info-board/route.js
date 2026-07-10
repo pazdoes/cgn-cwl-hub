@@ -57,20 +57,14 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
 
   const embed = {
     color:     getRankColour(cwlRank),
-    title:     clan.name,
-    url:       clanLink,
-    // CWL rank icon as thumbnail (top right, prominent)
+    author:    { name: clan.name, icon_url: clan.badgeUrls?.small },
     thumbnail: cwlIconUrl ? { url: cwlIconUrl } : undefined,
     fields: [
-      { name: "🏆 CWL League", value: cwlRank, inline: false },
-      { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
       { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
+      { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
+      { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
     ],
-    // Clan badge in footer
-    footer: {
-      text: `👤 ${members}/50  •  ${ts}`,
-      icon_url: clan.badgeUrls?.small,
-    },
+    footer: { text: `👤 ${members}/50  •  ${ts}` },
   };
 
   return embed;
