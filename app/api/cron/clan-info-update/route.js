@@ -2,25 +2,44 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
+function getRankColour(rankName) {
+  if (!rankName) return 0x5865F2;
+  if (rankName.includes("Champion")) return 0xFFD700;
+  if (rankName.includes("Master"))   return 0x9B59B6;
+  if (rankName.includes("Crystal"))  return 0x00BCD4;
+  if (rankName.includes("Gold"))     return 0xF39C12;
+  if (rankName.includes("Silver"))   return 0xBDC3C7;
+  if (rankName.includes("Bronze"))   return 0xCD7F32;
+  return 0x5865F2;
+}
+
 function buildClanEmbed(clan, clanDbRow) {
-  const level = clan.clanLevel ?? 1;
-  const league = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
+  const cwlRank = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
+  const cwlIconUrl = clan.warLeague?.iconUrls?.medium || clan.warLeague?.iconUrls?.small || null;
   const clanLink = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
+  const winStreak = clan.warWinStreak ?? 0;
+  const warWins = clan.warWins ?? 0;
+  const members = clan.members ?? 0;
+  const level = clan.clanLevel ?? 1;
+
   return {
-    color: 0x5865F2,
+    color: getRankColour(cwlRank),
     author: {
       name: `${clan.name}  •  Level ${level}`,
-      icon_url: clan.badgeUrls?.medium || clan.badgeUrls?.small,
+      icon_url: clan.badgeUrls?.small,
+      url: clanLink,
     },
+    title: cwlRank,
+    thumbnail: cwlIconUrl ? { url: cwlIconUrl } : undefined,
     fields: [
-      { name: "🏆 CWL League", value: league, inline: true },
-      { name: "👥 Members", value: `${clan.members ?? 0}/50`, inline: true },
-      { name: "⚔️ War Wins", value: `${clan.warWins ?? 0}`, inline: true },
-      { name: "🔥 Win Streak", value: `${clan.warWinStreak ?? 0}`, inline: true },
-      { name: "🏷️ Tag", value: clan.tag, inline: true },
-      { name: "🔗 Join", value: `[Open in Clash](${clanLink})`, inline: true },
+      { name: "⚔️ War Wins",   value: `**${warWins}**`,   inline: true },
+      { name: "🔥 Win Streak", value: `**${winStreak}**`, inline: true },
     ],
-    thumbnail: { url: clan.badgeUrls?.medium || clan.badgeUrls?.small },
+    footer: {
+      text: `${members}/50 Members  •  Open in Clash`,
+      icon_url: clan.badgeUrls?.small,
+    },
+    url: clanLink,
   };
 }
 
