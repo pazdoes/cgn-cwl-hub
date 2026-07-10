@@ -105,16 +105,20 @@ export async function POST(request) {
   let messageId = existing?.message_id;
   let success = false;
 
+  // Strip undefined values from embeds (JSON.stringify drops undefined keys but be safe)
+  const cleanEmbeds = JSON.parse(JSON.stringify(embeds));
+
   if (messageId) {
     // Edit existing message
     const editRes = await fetch(`${webhook_url}/messages/${messageId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: `**Cognition Alliance — Clan Info Board**\n*Last updated: ${timestamp}*`,
-        embeds,
-      }),
+      body: JSON.stringify({ embeds: cleanEmbeds }),
     });
+    if (!editRes.ok) {
+      const errText = await editRes.text();
+      console.error("Discord PATCH failed:", editRes.status, errText);
+    }
     success = editRes.ok;
     if (!success) messageId = null; // Message was deleted — post fresh
   }
@@ -124,10 +128,7 @@ export async function POST(request) {
     const postRes = await fetch(`${webhook_url}?wait=true`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: `**Cognition Alliance — Clan Info Board**\n*Last updated: ${timestamp}*`,
-        embeds,
-      }),
+      body: JSON.stringify({ embeds: cleanEmbeds }),
     });
     if (postRes.ok) {
       const posted = await postRes.json();
