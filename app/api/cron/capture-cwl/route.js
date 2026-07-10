@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
 import { captureCwlData, captureWarAttacks } from "@/lib/cwlCapture";
+import { updatePositionStats } from "@/lib/pool";
 
 // Called by cron-job.org during CWL season
 // Captures CWL rank history, player war stats, and per-war attack data
@@ -22,12 +23,16 @@ export async function GET(request) {
     captureCwlData(season),
   ]);
 
+  // Update position-based stats (punch_up_rate, dips, reaches) from war_attacks
+  const positionUpdated = await updatePositionStats(season).catch(() => 0);
+
   return NextResponse.json({
     ok: true,
     season,
     ...statsResult,
     warsProcessed: attackResult.warsProcessed,
     attacksProcessed: attackResult.attacksProcessed,
+    positionUpdated,
     capturedAt: new Date().toISOString(),
   });
 }
