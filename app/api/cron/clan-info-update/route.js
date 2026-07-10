@@ -2,26 +2,29 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
-const CWL_LEAGUE_ICONS = {
-  "Bronze League III":   "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
-  "Bronze League II":    "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
-  "Bronze League I":     "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
-  "Silver League III":   "https://api-assets.clashofclans.com/warleagues/256/lXmPFiluFfIUXnXJLRhOPSmrNerEGLyxhW41f78sNrw.png",
-  "Silver League II":    "https://api-assets.clashofclans.com/warleagues/256/lXmPFiluFfIUXnXJLRhOPSmrNerEGLyxhW41f78sNrw.png",
-  "Silver League I":     "https://api-assets.clashofclans.com/warleagues/256/lXmPFiluFfIUXnXJLRhOPSmrNerEGLyxhW41f78sNrw.png",
-  "Gold League III":     "https://api-assets.clashofclans.com/warleagues/256/vd4dCz-d5RbzCGMuYICJTd7jzxUJ8a2qnLdFLBAbMDk.png",
-  "Gold League II":      "https://api-assets.clashofclans.com/warleagues/256/vd4dCz-d5RbzCGMuYICJTd7jzxUJ8a2qnLdFLBAbMDk.png",
-  "Gold League I":       "https://api-assets.clashofclans.com/warleagues/256/vd4dCz-d5RbzCGMuYICJTd7jzxUJ8a2qnLdFLBAbMDk.png",
-  "Crystal League III":  "https://api-assets.clashofclans.com/warleagues/256/Jzb3DXpLCEHpCBIhEMiDONUMr0DvGKQfQ2wAh1VNFoc.png",
-  "Crystal League II":   "https://api-assets.clashofclans.com/warleagues/256/Jzb3DXpLCEHpCBIhEMiDONUMr0DvGKQfQ2wAh1VNFoc.png",
-  "Crystal League I":    "https://api-assets.clashofclans.com/warleagues/256/Jzb3DXpLCEHpCBIhEMiDONUMr0DvGKQfQ2wAh1VNFoc.png",
-  "Master League III":   "https://api-assets.clashofclans.com/warleagues/256/knMpSmBgNAGpCGYlFmjPLHxA06h4OoAKBfVaOE_bBqI.png",
-  "Master League II":    "https://api-assets.clashofclans.com/warleagues/256/knMpSmBgNAGpCGYlFmjPLHxA06h4OoAKBfVaOE_bBqI.png",
-  "Master League I":     "https://api-assets.clashofclans.com/warleagues/256/knMpSmBgNAGpCGYlFmjPLHxA06h4OoAKBfVaOE_bBqI.png",
-  "Champion League III": "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
-  "Champion League II":  "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
-  "Champion League I":   "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
-};
+function getCwlIconUrl(rankName) {
+  if (!rankName) return null;
+  const lower = rankName.toLowerCase();
+  if (lower.includes("champion") && lower.includes("i") && !lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/champion-1.png";
+  if (lower.includes("champion") && lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/champion-2.png";
+  if (lower.includes("champion") && lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/champion-3.png";
+  if (lower.includes("master") && lower.includes("i") && !lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/master-1.png";
+  if (lower.includes("master") && lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/master-2.png";
+  if (lower.includes("master") && lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/master-3.png";
+  if (lower.includes("crystal") && lower.includes("i") && !lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/crystal-1.png";
+  if (lower.includes("crystal") && lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/crystal-2.png";
+  if (lower.includes("crystal") && lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/crystal-3.png";
+  if (lower.includes("gold") && lower.includes("i") && !lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/gold-1.png";
+  if (lower.includes("gold") && lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/gold-2.png";
+  if (lower.includes("gold") && lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/gold-3.png";
+  if (lower.includes("silver") && lower.includes("i") && !lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/silver-1.png";
+  if (lower.includes("silver") && lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/silver-2.png";
+  if (lower.includes("silver") && lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/silver-3.png";
+  if (lower.includes("bronze") && lower.includes("i") && !lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/bronze-1.png";
+  if (lower.includes("bronze") && lower.includes("ii") && !lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/bronze-2.png";
+  if (lower.includes("bronze") && lower.includes("iii")) return "https://cgnco.vercel.app/icons/cwl/bronze-3.png";
+  return null;
+}
 
 function getRankColour(rankName) {
   if (!rankName) return 0x5865F2;
@@ -45,7 +48,7 @@ function formatTs(date) {
 
 function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const cwlRank    = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
-  const cwlIconUrl = CWL_LEAGUE_ICONS[cwlRank] || null;
+  const cwlIconUrl = getCwlIconUrl(cwlRank);
   const clanLink   = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
   const winStreak  = clan.warWinStreak ?? 0;
   const warWins    = clan.warWins ?? 0;
@@ -53,20 +56,26 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const ts         = formatTs(capturedAt);
 
   const embed = {
-    color:  getRankColour(cwlRank),
-    author: { name: clan.name, icon_url: clan.badgeUrls?.small, url: clanLink },
-    title:  cwlRank,
-    url:    clanLink,
+    color:     getRankColour(cwlRank),
+    title:     clan.name,
+    url:       clanLink,
+    // CWL rank icon as thumbnail (top right, prominent)
+    thumbnail: cwlIconUrl ? { url: cwlIconUrl } : undefined,
     fields: [
+      { name: "🏆 CWL League", value: cwlRank, inline: false },
       { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
       { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
     ],
-    footer: { text: `👤 ${members}/50  •  ${ts}` },
+    // Clan badge in footer
+    footer: {
+      text: `👤 ${members}/50  •  ${ts}`,
+      icon_url: clan.badgeUrls?.small,
+    },
   };
 
-  if (cwlIconUrl) embed.thumbnail = { url: cwlIconUrl };
   return embed;
 }
+
 
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -109,7 +118,7 @@ export async function GET(request) {
       const res = await fetch(`${msg.webhook_url}/messages/${msg.message_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ embeds }),
+        body: JSON.stringify({ content: "", embeds }),
       });
       if (res.ok) {
         await sql`UPDATE discord_live_messages SET last_updated = now() WHERE id = ${msg.id}`;
