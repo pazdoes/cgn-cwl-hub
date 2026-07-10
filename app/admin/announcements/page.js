@@ -1461,8 +1461,9 @@ export default function AnnouncementsPage() {
         const emojiMatch     = remaining.match(/^([\s\S]*?)<a?:(\w+):(\d+)>/);
         const tsMatch        = remaining.match(/^([\s\S]*?)<t:(\d+)(?::([tTdDfFR]))?>/);
         const everyoneMatch  = remaining.match(/^([\s\S]*?)(@everyone|@here)/);
+        const linkMatch      = remaining.match(/^([\s\S]*?)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/);
         const boldMatch      = remaining.match(/^([\s\S]*?)\*\*(.+?)\*\*/);
-        const italicMatch    = remaining.match(/^([\s\S]*?)\*(.+?)\*/);
+        const italicMatch    = remaining.match(/^([\s\S]*?)(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
         const underlineMatch = remaining.match(/^([\s\S]*?)__(.+?)__/);
         const strikeMatch    = remaining.match(/^([\s\S]*?)~~(.+?)~~/);
         const spoilerMatch   = remaining.match(/^([\s\S]*?)\|\|(.+?)\|\|/);
@@ -1474,6 +1475,7 @@ export default function AnnouncementsPage() {
           emojiMatch     && { idx: emojiMatch[1].length,     len: emojiMatch[0].length,     type: "emoji",     name: emojiMatch[2], id: emojiMatch[3] },
           tsMatch        && { idx: tsMatch[1].length,        len: tsMatch[0].length,        type: "ts",        unix: tsMatch[2], fmt: tsMatch[3]||"f" },
           everyoneMatch  && { idx: everyoneMatch[1].length,  len: everyoneMatch[0].length,  type: "everyone",  val: everyoneMatch[2] },
+          linkMatch      && { idx: linkMatch[1].length,      len: linkMatch[0].length,      type: "link",      label: linkMatch[2], url: linkMatch[3] },
           boldMatch      && { idx: boldMatch[1].length,      len: boldMatch[0].length,      type: "bold",      val: boldMatch[2] },
           underlineMatch && { idx: underlineMatch[1].length, len: underlineMatch[0].length, type: "underline", val: underlineMatch[2] },
           strikeMatch    && { idx: strikeMatch[1].length,    len: strikeMatch[0].length,    type: "strike",    val: strikeMatch[2] },
@@ -1514,6 +1516,8 @@ export default function AnnouncementsPage() {
           parts.push(<span key={key++} className="rounded px-1 text-xs bg-white/10 text-[#dbdee1]">{display}</span>);
         } else if (hit.type === "everyone") {
           parts.push(<span key={key++} className="rounded px-1 text-xs font-semibold bg-[#5865f2]/20 text-[#c9cdfb]">{hit.val}</span>);
+        } else if (hit.type === "link") {
+          parts.push(<a key={key++} href={hit.url} target="_blank" rel="noopener noreferrer" className="text-[#00a8fc] hover:underline">{hit.label}</a>);
         } else if (hit.type === "bold") {
           parts.push(<strong key={key++} className="text-white font-bold">{hit.val}</strong>);
         } else if (hit.type === "underline") {
