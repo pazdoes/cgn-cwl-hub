@@ -1909,7 +1909,7 @@ export default function AnnouncementsPage() {
               <span className="text-[10px] bg-[#5865f2] text-white px-1 py-0.5 rounded">APP</span>
             </div>
             {/* Ping/content outside embed */}
-            {content && <p className="text-[#dbdee1] text-sm mb-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(content) }}/>}
+            {content && <p className="text-[#dbdee1] text-sm mb-2 whitespace-pre-wrap">{renderDiscordMarkdown(content)}</p>}
             {/* Embed card */}
             <div className="rounded overflow-hidden border-l-4 bg-[#2b2d31]" style={{borderLeftColor: hexColor}}>
               <div className="p-3">
@@ -1931,7 +1931,7 @@ export default function AnnouncementsPage() {
                     )}
                     {/* Description */}
                     {previewEmbed.description && (
-                      <div className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(previewEmbed.description) }}/>
+                      <div className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">{renderDiscordMarkdown(previewEmbed.description)}</div>
                     )}
                   </div>
                   {/* Thumbnail — top right, 80x80 */}
@@ -1947,7 +1947,7 @@ export default function AnnouncementsPage() {
                     {previewEmbed.fields.map((f,i) => (
                       <div key={i} className={f.inline ? "" : "col-span-3"}>
                         <p className="text-white text-xs font-semibold mb-0.5">{f.name}</p>
-                        <p className="text-[#dbdee1] text-xs whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(f.value) }}/>
+                        <p className="text-[#dbdee1] text-xs whitespace-pre-wrap">{renderDiscordMarkdown(f.value)}</p>
                       </div>
                     ))}
                   </div>
