@@ -832,7 +832,9 @@ function ClanInfoBoardTool() {
       });
       const d = await res.json();
       if (d.success) {
-        setStatus({ ok: `Posted ${d.clansPosted} clans · ${d.timestamp}` });
+        const now = new Date();
+        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        setStatus({ ok: `Posted ${d.clansPosted} clans · ${ts}` });
         setWebhookUrl("");
         loadMessages();
       } else {
@@ -852,7 +854,9 @@ function ClanInfoBoardTool() {
       });
       const d = await res.json();
       if (d.success) {
-        setStatus({ ok: `Updated · ${d.timestamp}` });
+        const now = new Date();
+        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        setStatus({ ok: `Updated · ${ts}` });
         loadMessages();
       } else {
         setStatus({ error: d.error || "Failed to update" });
