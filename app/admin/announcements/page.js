@@ -837,46 +837,82 @@ function ClanBoardManager({ pin }) {
     finally { setSaving(null); }
   }
 
+  async function reorder(clan, direction) {
+    const idx = clans.findIndex(c => c.clan_tag === clan.clan_tag);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= clans.length) return;
+    const swap = clans[swapIdx];
+    const newOrder = idx + 1;
+    const swapOrder = swapIdx + 1;
+    await Promise.all([
+      save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, cwl_only: clan.cwl_only, display_order: swapOrder }),
+      save(swap, { included: swap.included, seed_wins: swap.seed_wins, seed_draws: swap.seed_draws, seed_losses: swap.seed_losses, cwl_only: swap.cwl_only, display_order: newOrder }),
+    ]);
+  }
+
   if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
 
   return (
     <div className="space-y-3">
       {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
       {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-      {clans.map(clan => (
+      {clans.map((clan, idx) => (
         <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs font-semibold text-white">{clan.clan_name}</p>
+            {/* Reorder arrows */}
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <button onClick={() => reorder(clan, "up")} disabled={idx === 0 || saving === clan.clan_tag}
+                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▲</button>
+              <button onClick={() => reorder(clan, "down")} disabled={idx === clans.length - 1 || saving === clan.clan_tag}
+                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▼</button>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-white truncate">{clan.clan_name}</p>
               <p className="text-[9px] text-slate-600">{clan.is_side_war ? "Side War Clan" : clan.cwl_rank || "—"}</p>
             </div>
-            <button onClick={() => save(clan, {
-              included: !clan.included,
-              seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses
-            })} disabled={saving === clan.clan_tag}
-              className={`shrink-0 rounded-full px-3 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
-              {clan.included ? "Included" : "Excluded"}
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* CWL Only toggle — not for side war clans */}
+              {!clan.is_side_war && (
+                <button onClick={() => save(clan, {
+                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
+                  seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: !clan.cwl_only
+                })} disabled={saving === clan.clan_tag}
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  CWL Only
+                </button>
+              )}
+              {/* Include/Exclude toggle */}
+              <button onClick={() => save(clan, {
+                included: !clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
+                seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: clan.cwl_only
+              })} disabled={saving === clan.clan_tag}
+                className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
+                {clan.included ? "In" : "Out"}
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: "Wins", key: "seed_wins", val: clan.seed_wins },
-              { label: "Draws", key: "seed_draws", val: clan.seed_draws },
-              { label: "Losses", key: "seed_losses", val: clan.seed_losses },
-            ].map(field => (
-              <div key={field.key}>
-                <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1">{field.label}</p>
-                <input type="number" min="0" defaultValue={field.val}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
-                  onBlur={e => save(clan, {
-                    included: clan.included,
-                    seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
-                    seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
-                    seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,
-                  })}/>
-              </div>
-            ))}
-          </div>
+          {/* Seed values — only show when not CWL only */}
+          {!clan.cwl_only && (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Seed W", key: "seed_wins",   val: clan.seed_wins },
+                { label: "Seed D", key: "seed_draws",  val: clan.seed_draws },
+                { label: "Seed L", key: "seed_losses", val: clan.seed_losses },
+              ].map(field => (
+                <div key={field.key}>
+                  <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1">{field.label}</p>
+                  <input type="number" min="0" defaultValue={field.val}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
+                    onBlur={e => save(clan, {
+                      included: clan.included, cwl_only: clan.cwl_only, display_order: clan.display_order,
+                      seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
+                      seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
+                      seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,
+                    })}/>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

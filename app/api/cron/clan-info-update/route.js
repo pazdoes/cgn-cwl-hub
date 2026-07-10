@@ -63,11 +63,16 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
     color:     colour,
     author:    { name: clan.name, icon_url: clan.badgeUrls?.small },
     thumbnail,
-    fields: [
-      { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
-      { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
-      { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
-    ],
+    fields: clanDbRow?.cwl_only
+      ? [
+          { name: "CWL Only", value: "​", inline: false },
+          { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
+        ]
+      : [
+          { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
+          { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
+          { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
+        ],
     footer: { text: `👤 ${members}/50  •  ${ts}` },
   };
 
@@ -97,7 +102,7 @@ export async function GET(request) {
     FROM clans c
     INNER JOIN clan_info_board_config bc ON bc.clan_tag = c.clan_tag
     WHERE bc.included = true
-    ORDER BY c.display_order ASC NULLS LAST, c.clan_name ASC
+    ORDER BY bc.display_order ASC NULLS LAST, c.clan_name ASC
   `;
 
   const sideWarRows = await sql`
@@ -113,7 +118,8 @@ export async function GET(request) {
     ORDER BY sw.clan_tag, sw.created_at DESC
   `;
 
-  const configRows = [...allianceRows, ...sideWarRows];
+  const configRows = [...allianceRows, ...sideWarRows]
+    .sort((a, b) => (parseInt(a.display_order||999) - parseInt(b.display_order||999)));
 
   if (configRows.length === 0) {
     return NextResponse.json({ error: "No clans configured for the info board" }, { status: 404 });

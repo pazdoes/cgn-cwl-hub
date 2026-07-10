@@ -8,10 +8,12 @@ export async function GET() {
   const allianceClans = await sql`
     SELECT 
       c.clan_tag, c.clan_name, c.cwl_rank,
-      COALESCE(bc.included, false) as included,
-      COALESCE(bc.seed_wins, 0)   as seed_wins,
-      COALESCE(bc.seed_draws, 0)  as seed_draws,
-      COALESCE(bc.seed_losses, 0) as seed_losses,
+      COALESCE(bc.included, false)      as included,
+      COALESCE(bc.seed_wins, 0)          as seed_wins,
+      COALESCE(bc.seed_draws, 0)         as seed_draws,
+      COALESCE(bc.seed_losses, 0)        as seed_losses,
+      COALESCE(bc.display_order, 999)    as display_order,
+      COALESCE(bc.cwl_only, false)       as cwl_only,
       bc.id as config_id,
       false as is_side_war
     FROM clans c
@@ -23,10 +25,12 @@ export async function GET() {
   const sideWarClans = await sql`
     SELECT DISTINCT ON (sw.clan_tag)
       sw.clan_tag, sw.clan_name, null as cwl_rank,
-      COALESCE(bc.included, false) as included,
-      COALESCE(bc.seed_wins, 0)   as seed_wins,
-      COALESCE(bc.seed_draws, 0)  as seed_draws,
-      COALESCE(bc.seed_losses, 0) as seed_losses,
+      COALESCE(bc.included, false)      as included,
+      COALESCE(bc.seed_wins, 0)          as seed_wins,
+      COALESCE(bc.seed_draws, 0)         as seed_draws,
+      COALESCE(bc.seed_losses, 0)        as seed_losses,
+      COALESCE(bc.display_order, 999)    as display_order,
+      COALESCE(bc.cwl_only, false)       as cwl_only,
       bc.id as config_id,
       true as is_side_war
     FROM side_wars sw
@@ -35,7 +39,7 @@ export async function GET() {
   `;
 
   const clans = [...allianceClans, ...sideWarClans]
-    .sort((a, b) => a.clan_name.localeCompare(b.clan_name));
+    .sort((a, b) => (a.display_order - b.display_order) || a.clan_name.localeCompare(b.clan_name));
 
   return NextResponse.json({ clans });
 }
@@ -43,22 +47,26 @@ export async function GET() {
 export async function POST(request) {
   const sql  = getDb();
   const body = await request.json();
-  const { pin, clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses } = body;
+  const { pin } = body;
 
   if (pin !== process.env.OFFICER_PIN) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
+  const { clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses, display_order, cwl_only } = body;
+
   await sql`
-    INSERT INTO clan_info_board_config (clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses)
-    VALUES (${clan_tag}, ${clan_name}, ${included ?? true}, ${seed_wins ?? 0}, ${seed_draws ?? 0}, ${seed_losses ?? 0})
+    INSERT INTO clan_info_board_config (clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses, display_order, cwl_only)
+    VALUES (${clan_tag}, ${clan_name}, ${included ?? true}, ${seed_wins ?? 0}, ${seed_draws ?? 0}, ${seed_losses ?? 0}, ${display_order ?? 999}, ${cwl_only ?? false})
     ON CONFLICT (clan_tag) DO UPDATE SET
-      clan_name   = EXCLUDED.clan_name,
-      included    = EXCLUDED.included,
-      seed_wins   = EXCLUDED.seed_wins,
-      seed_draws  = EXCLUDED.seed_draws,
-      seed_losses = EXCLUDED.seed_losses,
-      updated_at  = now()
+      clan_name     = EXCLUDED.clan_name,
+      included      = EXCLUDED.included,
+      seed_wins     = EXCLUDED.seed_wins,
+      seed_draws    = EXCLUDED.seed_draws,
+      seed_losses   = EXCLUDED.seed_losses,
+      display_order = EXCLUDED.display_order,
+      cwl_only      = EXCLUDED.cwl_only,
+      updated_at    = now()
   `;
 
   return NextResponse.json({ success: true });
