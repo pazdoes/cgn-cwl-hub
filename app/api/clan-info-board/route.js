@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
-// Static CWL war league icon URLs from CoC API CDN
-// These are stable and don't change between seasons
 const CWL_LEAGUE_ICONS = {
   "Bronze League III":   "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
   "Bronze League II":    "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
@@ -24,6 +22,8 @@ const CWL_LEAGUE_ICONS = {
   "Champion League II":  "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
   "Champion League I":   "https://api-assets.clashofclans.com/warleagues/256/9v_04LhmYurHpRmB8M0Y7GKeIAHR_-rnOBPMI3HHGOA.png",
 };
+
+function getRankColour(rankName) {
   if (!rankName) return 0x5865F2;
   if (rankName.includes("Champion")) return 0xE74C3C;
   if (rankName.includes("Master"))   return 0x23272A;
@@ -45,7 +45,7 @@ function formatTs(date) {
 
 function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const cwlRank    = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
-  const cwlIconUrl = CWL_LEAGUE_ICONS[cwlRank] || clan.warLeague?.iconUrls?.medium || null;
+  const cwlIconUrl = CWL_LEAGUE_ICONS[cwlRank] || null;
   const clanLink   = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
   const winStreak  = clan.warWinStreak ?? 0;
   const warWins    = clan.warWins ?? 0;
@@ -53,10 +53,10 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const ts         = formatTs(capturedAt);
 
   const embed = {
-    color:       getRankColour(cwlRank),
-    author:      { name: clan.name, icon_url: clan.badgeUrls?.small, url: clanLink },
-    title:       cwlRank,
-    url:         clanLink,
+    color:  getRankColour(cwlRank),
+    author: { name: clan.name, icon_url: clan.badgeUrls?.small, url: clanLink },
+    title:  cwlRank,
+    url:    clanLink,
     fields: [
       { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
       { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },

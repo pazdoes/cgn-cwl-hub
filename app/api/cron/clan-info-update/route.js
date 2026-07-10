@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
-// Static CWL war league icon URLs from CoC API CDN
 const CWL_LEAGUE_ICONS = {
   "Bronze League III":   "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
   "Bronze League II":    "https://api-assets.clashofclans.com/warleagues/256/R2u2YrpMBryc8_tKhSqAOv6RoxmkBU4E1NkMWlRCBQ.png",
@@ -46,7 +45,7 @@ function formatTs(date) {
 
 function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const cwlRank    = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
-  const cwlIconUrl = CWL_LEAGUE_ICONS[cwlRank] || clan.warLeague?.iconUrls?.medium || null;
+  const cwlIconUrl = CWL_LEAGUE_ICONS[cwlRank] || null;
   const clanLink   = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
   const winStreak  = clan.warWinStreak ?? 0;
   const warWins    = clan.warWins ?? 0;
