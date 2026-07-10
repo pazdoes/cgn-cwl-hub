@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getClan } from "@/lib/coc";
 
+const WEBHOOK_USERNAME   = "Cognition {CGN}";
+const WEBHOOK_AVATAR_URL = "https://cdn.discordapp.com/attachments/1480200113082208346/1484533474122666139/IMG_6577.png?ex=6a523b09&is=6a50e989&hm=9e58fc2279e6d441c0492f84b370dc47ae58b96c14fdebc27166be0fa317e7d3&";
+
 function getCwlIconUrl(rankName) {
   if (!rankName) return null;
   const lower = rankName.toLowerCase();
@@ -63,7 +66,7 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
     color:     colour,
     author:    { name: clan.name, icon_url: clan.badgeUrls?.small },
     thumbnail,
-    fields: clanDbRow?.cwl_only
+    fields: (clanDbRow?.cwl_only === true || clanDbRow?.cwl_only === "true")
       ? [
           { name: "CWL Only", value: "​", inline: false },
           { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
@@ -165,7 +168,7 @@ export async function POST(request) {
     const editRes = await fetch(`${webhook_url}/messages/${messageId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "", embeds }),
+      body: JSON.stringify({ content: "", embeds, username: WEBHOOK_USERNAME, avatar_url: WEBHOOK_AVATAR_URL }),
     });
     success = editRes.ok;
     if (!success) messageId = null;
@@ -175,7 +178,7 @@ export async function POST(request) {
     const postRes = await fetch(`${webhook_url}?wait=true`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "", embeds }),
+      body: JSON.stringify({ content: "", embeds, username: WEBHOOK_USERNAME, avatar_url: WEBHOOK_AVATAR_URL }),
     });
     if (postRes.ok) {
       const posted = await postRes.json();
