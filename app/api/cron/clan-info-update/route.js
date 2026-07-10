@@ -29,6 +29,12 @@ function getCwlIconUrl(rankName) {
   return null;
 }
 
+const HEADER_EMBED = {
+  color:       0x23272A,
+  title:       "Cognition Collective",
+  image:       { url: "https://cgnco.vercel.app/icons/branding/cgn-shield.png" },
+};
+
 function getRankColour(rankName) {
   if (!rankName) return 0x5865F2;
   if (rankName.includes("Champion")) return 0xE74C3C;
