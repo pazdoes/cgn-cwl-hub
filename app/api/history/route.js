@@ -6,12 +6,6 @@ export async function GET(request) {
   const season = searchParams.get("season");
   const sql = getDb();
 
-  // Rule: a specific season is a historical snapshot — it must show every
-  // clan that genuinely played that season, registered or not, so season
-  // recaps, war intel, and history charts stay in sync with player-level data
-  // (which already shows full history regardless of clan status).
-  // An "all seasons" request (no season param) returns only clans currently
-  // registered in the clans table, since that represents the ongoing roster.
   const history = season
     ? await sql`
         SELECT
@@ -26,10 +20,11 @@ export async function GET(request) {
         FROM clan_season_history csh
         LEFT JOIN season_registry sr ON sr.season = csh.season
         WHERE csh.season = ${season}
-          AND csh.clan_tag NOT IN (
-            SELECT clan_tag FROM clans WHERE cwl_absent = true
+          AND csh.total_stars IS NOT NULL
+          AND csh.clan_name NOT IN (
+            SELECT clan_name FROM clans WHERE cwl_absent = true
           )
-        ORDER BY csh.clan_tag, sr.season_date ASC NULLS LAST
+        ORDER BY csh.total_stars DESC NULLS LAST
       `
     : await sql`
         SELECT
@@ -43,8 +38,11 @@ export async function GET(request) {
           csh.three_stars_clan, csh.two_stars_clan, csh.one_stars_clan, csh.zero_stars_clan
         FROM clan_season_history csh
         LEFT JOIN season_registry sr ON sr.season = csh.season
-        WHERE csh.clan_tag IN (SELECT clan_tag FROM clans WHERE clan_tag IS NOT NULL)
-        ORDER BY csh.clan_tag, sr.season_date ASC NULLS LAST
+        WHERE csh.total_stars IS NOT NULL
+          AND csh.clan_name IN (
+            SELECT clan_name FROM clans WHERE cwl_absent = false OR cwl_absent IS NULL
+          )
+        ORDER BY csh.clan_name, sr.season_date ASC NULLS LAST
       `;
 
   return NextResponse.json({ history });
