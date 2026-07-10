@@ -4,42 +4,49 @@ import { getClan } from "@/lib/coc";
 
 function getRankColour(rankName) {
   if (!rankName) return 0x5865F2;
-  if (rankName.includes("Champion")) return 0xFFD700;
-  if (rankName.includes("Master"))   return 0x9B59B6;
-  if (rankName.includes("Crystal"))  return 0x00BCD4;
-  if (rankName.includes("Gold"))     return 0xF39C12;
-  if (rankName.includes("Silver"))   return 0xBDC3C7;
+  if (rankName.includes("Champion")) return 0xE74C3C;
+  if (rankName.includes("Master"))   return 0x23272A;
+  if (rankName.includes("Crystal"))  return 0x9B59B6;
+  if (rankName.includes("Gold"))     return 0xFFD700;
+  if (rankName.includes("Silver"))   return 0xC0C0C0;
   if (rankName.includes("Bronze"))   return 0xCD7F32;
   return 0x5865F2;
 }
 
-function buildClanEmbed(clan, clanDbRow) {
+function buildClanEmbed(clan, clanDbRow, timestamp, warRecord = {}) {
   const cwlRank = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
   const cwlIconUrl = clan.warLeague?.iconUrls?.medium || clan.warLeague?.iconUrls?.small || null;
   const clanLink = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
   const winStreak = clan.warWinStreak ?? 0;
   const warWins = clan.warWins ?? 0;
   const members = clan.members ?? 0;
-  const level = clan.clanLevel ?? 1;
+
+  // Format timestamp as DD/MM/YY HH:MM UTC
+  const now = timestamp ? new Date(timestamp) : new Date();
+  const dd = String(now.getUTCDate()).padStart(2,"0");
+  const mm = String(now.getUTCMonth()+1).padStart(2,"0");
+  const yy = String(now.getUTCFullYear()).slice(2);
+  const hh = String(now.getUTCHours()).padStart(2,"0");
+  const min = String(now.getUTCMinutes()).padStart(2,"0");
+  const ts = `${dd}/${mm}/${yy} ${hh}:${min} UTC`;
 
   return {
     color: getRankColour(cwlRank),
     author: {
-      name: `${clan.name}  •  Level ${level}`,
+      name: clan.name,
       icon_url: clan.badgeUrls?.small,
       url: clanLink,
     },
     title: cwlRank,
+    url: clanLink,
     thumbnail: cwlIconUrl ? { url: cwlIconUrl } : undefined,
     fields: [
-      { name: "⚔️ War Wins",   value: `**${warWins}**`,   inline: true },
-      { name: "🔥 Win Streak", value: `**${winStreak}**`, inline: true },
+      { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
+      { name: "⚡️ Streak",  value: `${winStreak}`,        inline: true },
     ],
     footer: {
-      text: `${members}/50 Members  •  Open in Clash`,
-      icon_url: clan.badgeUrls?.small,
+      text: `👤 ${members}/50  •  ${ts}`,
     },
-    url: clanLink,
   };
 }
 
@@ -60,11 +67,24 @@ export async function GET(request) {
   // Fetch all active clans
   const clans = await sql`SELECT * FROM clans WHERE cwl_absent = false OR cwl_absent IS NULL ORDER BY display_order ASC NULLS LAST, clan_name ASC`;
 
+  const currentSeason = await sql`SELECT season FROM season_registry ORDER BY season_date DESC LIMIT 1`;
+  const seasonName = currentSeason[0]?.season || null;
+  const warRecords = seasonName ? await sql`
+    SELECT clan_name, wars_won, wars_drawn, wars_lost
+    FROM clan_season_history
+    WHERE season = ${seasonName}
+  ` : [];
+  const warRecordMap = Object.fromEntries(warRecords.map(r => [r.clan_name, r]));
+
+  const now = new Date();
   const embeds = [];
   for (const clanRow of clans) {
     try {
       const clan = await getClan(clanRow.clan_tag);
-      if (clan) embeds.push(buildClanEmbed(clan, clanRow));
+      if (clan) {
+        const wr = warRecordMap[clanRow.clan_name] || {};
+        embeds.push(buildClanEmbed(clan, clanRow, now, wr));
+      }
     } catch { /* skip */ }
   }
 
