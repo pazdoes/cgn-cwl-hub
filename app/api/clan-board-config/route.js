@@ -4,22 +4,40 @@ import { getDb } from "@/lib/db";
 export async function GET() {
   const sql = getDb();
 
-  // Get all clans with their board config (left join so unconfig'd clans show too)
-  const rows = await sql`
+  // Get all alliance clans with board config
+  const allianceClans = await sql`
     SELECT 
       c.clan_tag, c.clan_name, c.cwl_rank,
       COALESCE(bc.included, false) as included,
       COALESCE(bc.seed_wins, 0)   as seed_wins,
       COALESCE(bc.seed_draws, 0)  as seed_draws,
       COALESCE(bc.seed_losses, 0) as seed_losses,
-      bc.id as config_id
+      bc.id as config_id,
+      false as is_side_war
     FROM clans c
     LEFT JOIN clan_info_board_config bc ON bc.clan_tag = c.clan_tag
     WHERE c.cwl_absent = false OR c.cwl_absent IS NULL
-    ORDER BY c.clan_name ASC
   `;
 
-  return NextResponse.json({ clans: rows });
+  // Get side war clans with board config
+  const sideWarClans = await sql`
+    SELECT DISTINCT ON (sw.clan_tag)
+      sw.clan_tag, sw.clan_name, null as cwl_rank,
+      COALESCE(bc.included, false) as included,
+      COALESCE(bc.seed_wins, 0)   as seed_wins,
+      COALESCE(bc.seed_draws, 0)  as seed_draws,
+      COALESCE(bc.seed_losses, 0) as seed_losses,
+      bc.id as config_id,
+      true as is_side_war
+    FROM side_wars sw
+    LEFT JOIN clan_info_board_config bc ON bc.clan_tag = sw.clan_tag
+    ORDER BY sw.clan_tag, sw.created_at DESC
+  `;
+
+  const clans = [...allianceClans, ...sideWarClans]
+    .sort((a, b) => a.clan_name.localeCompare(b.clan_name));
+
+  return NextResponse.json({ clans });
 }
 
 export async function POST(request) {

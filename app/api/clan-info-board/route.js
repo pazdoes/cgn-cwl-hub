@@ -47,8 +47,12 @@ function formatTs(date) {
 }
 
 function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
-  const cwlRank    = clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked";
-  const cwlIconUrl = getCwlIconUrl(cwlRank);
+  const isSideWar  = clanDbRow?.is_side_war === true;
+  const cwlRank    = isSideWar ? null : (clanDbRow?.cwl_rank || clan.warLeague?.name || "Unranked");
+  const thumbnail  = isSideWar
+    ? { url: "https://cgnco.vercel.app/icons/branding/ores.png" }
+    : (getCwlIconUrl(cwlRank) ? { url: getCwlIconUrl(cwlRank) } : undefined);
+  const colour     = isSideWar ? 0x5865F2 : getRankColour(cwlRank);
   const clanLink   = clanDbRow?.clan_link || `https://link.clashofclans.com/en?action=OpenClanProfile&tag=${encodeURIComponent(clan.tag)}`;
   const winStreak  = clan.warWinStreak ?? 0;
   const warWins    = clan.warWins ?? 0;
@@ -56,9 +60,9 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
   const ts         = formatTs(capturedAt);
 
   const embed = {
-    color:     getRankColour(cwlRank),
+    color:     colour,
     author:    { name: clan.name, icon_url: clan.badgeUrls?.small },
-    thumbnail: cwlIconUrl ? { url: cwlIconUrl } : undefined,
+    thumbnail,
     fields: [
       { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
       { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
@@ -83,18 +87,33 @@ export async function POST(request) {
     return NextResponse.json({ error: "webhook_url required" }, { status: 400 });
   }
 
-  // Get included clans from board config
-  const configRows = await sql`
-    SELECT 
-      c.clan_tag, c.clan_name, c.cwl_rank, c.clan_link,
+  // Get included clans from board config — alliance + side war clans
+  const allianceRows = await sql`
+    SELECT c.clan_tag, c.clan_name, c.cwl_rank, c.clan_link,
       COALESCE(bc.seed_wins, 0)   as seed_wins,
       COALESCE(bc.seed_draws, 0)  as seed_draws,
-      COALESCE(bc.seed_losses, 0) as seed_losses
+      COALESCE(bc.seed_losses, 0) as seed_losses,
+      false as is_side_war
     FROM clans c
     INNER JOIN clan_info_board_config bc ON bc.clan_tag = c.clan_tag
     WHERE bc.included = true
     ORDER BY c.display_order ASC NULLS LAST, c.clan_name ASC
   `;
+
+  const sideWarRows = await sql`
+    SELECT DISTINCT ON (sw.clan_tag)
+      sw.clan_tag, sw.clan_name, null as cwl_rank, sw.clan_link,
+      COALESCE(bc.seed_wins, 0)   as seed_wins,
+      COALESCE(bc.seed_draws, 0)  as seed_draws,
+      COALESCE(bc.seed_losses, 0) as seed_losses,
+      true as is_side_war
+    FROM side_wars sw
+    INNER JOIN clan_info_board_config bc ON bc.clan_tag = sw.clan_tag
+    WHERE bc.included = true
+    ORDER BY sw.clan_tag, sw.created_at DESC
+  `;
+
+  const configRows = [...allianceRows, ...sideWarRows];
 
   if (configRows.length === 0) {
     return NextResponse.json({ error: "No clans configured for the info board" }, { status: 404 });

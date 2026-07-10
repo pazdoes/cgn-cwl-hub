@@ -848,7 +848,7 @@ function ClanBoardManager({ pin }) {
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-semibold text-white">{clan.clan_name}</p>
-              <p className="text-[9px] text-slate-600">{clan.cwl_rank}</p>
+              <p className="text-[9px] text-slate-600">{clan.is_side_war ? "Side War Clan" : clan.cwl_rank || "—"}</p>
             </div>
             <button onClick={() => save(clan, {
               included: !clan.included,
