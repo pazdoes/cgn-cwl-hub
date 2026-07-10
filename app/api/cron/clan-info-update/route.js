@@ -29,12 +29,6 @@ function getCwlIconUrl(rankName) {
   return null;
 }
 
-const HEADER_EMBED = {
-  color:       0xFFD700,
-  title:       "Cognition Collective",
-  description: "Clan Directory",
-  thumbnail:   { url: "https://cdn.discordapp.com/emojis/1481712001603604573.png" },
-};
 
 
 function getRankColour(rankName) {
