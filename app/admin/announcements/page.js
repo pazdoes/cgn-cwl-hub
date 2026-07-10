@@ -1909,7 +1909,7 @@ export default function AnnouncementsPage() {
               <span className="text-[10px] bg-[#5865f2] text-white px-1 py-0.5 rounded">APP</span>
             </div>
             {/* Ping/content outside embed */}
-            {content && <p className="text-[#dbdee1] text-sm mb-2 whitespace-pre-wrap">{renderDiscordMarkdown(content)}</p>}
+            {content && <p className="text-[#dbdee1] text-sm mb-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderDiscordMarkdown(content) }}/>}
             {/* Embed card */}
             <div className="rounded overflow-hidden border-l-4 bg-[#2b2d31]" style={{borderLeftColor: hexColor}}>
               <div className="p-3">
