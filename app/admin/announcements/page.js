@@ -845,8 +845,8 @@ function ClanBoardManager({ pin }) {
     const newOrder = idx + 1;
     const swapOrder = swapIdx + 1;
     await Promise.all([
-      save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, cwl_only: clan.cwl_only, display_order: swapOrder }),
-      save(swap, { included: swap.included, seed_wins: swap.seed_wins, seed_draws: swap.seed_draws, seed_losses: swap.seed_losses, cwl_only: swap.cwl_only, display_order: newOrder }),
+      save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: swapOrder }),
+      save(swap, { included: swap.included, seed_wins: swap.seed_wins, seed_draws: swap.seed_draws, seed_losses: swap.seed_losses, cwl_only: swap.cwl_only, side_war_only: swap.side_war_only, display_order: newOrder }),
     ]);
   }
 
@@ -871,20 +871,33 @@ function ClanBoardManager({ pin }) {
               <p className="text-[9px] text-slate-600">{clan.is_side_war ? "Side War Clan" : clan.cwl_rank || "—"}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              {/* CWL Only toggle — not for side war clans */}
+              {/* CWL Only toggle — alliance clans only */}
               {!clan.is_side_war && (
                 <button onClick={() => save(clan, {
                   included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                  seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: !clan.cwl_only
+                  seed_losses: clan.seed_losses, display_order: clan.display_order,
+                  cwl_only: !clan.cwl_only, side_war_only: clan.side_war_only
                 })} disabled={saving === clan.clan_tag}
                   className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
                   CWL Only
                 </button>
               )}
+              {/* Side War Only toggle — side war clans only */}
+              {clan.is_side_war && (
+                <button onClick={() => save(clan, {
+                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
+                  seed_losses: clan.seed_losses, display_order: clan.display_order,
+                  cwl_only: clan.cwl_only, side_war_only: !clan.side_war_only
+                })} disabled={saving === clan.clan_tag}
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  Side War Only
+                </button>
+              )}
               {/* Include/Exclude toggle */}
               <button onClick={() => save(clan, {
                 included: !clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: clan.cwl_only
+                seed_losses: clan.seed_losses, display_order: clan.display_order,
+                cwl_only: clan.cwl_only, side_war_only: clan.side_war_only
               })} disabled={saving === clan.clan_tag}
                 className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
                 {clan.included ? "In" : "Out"}
@@ -904,7 +917,7 @@ function ClanBoardManager({ pin }) {
                   <input type="number" min="0" defaultValue={field.val}
                     className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
                     onBlur={e => save(clan, {
-                      included: clan.included, cwl_only: clan.cwl_only, display_order: clan.display_order,
+                      included: clan.included, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: clan.display_order,
                       seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
                       seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
                       seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,

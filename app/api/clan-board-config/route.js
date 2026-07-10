@@ -14,6 +14,7 @@ export async function GET() {
       COALESCE(bc.seed_losses, 0)        as seed_losses,
       COALESCE(bc.display_order, 999)    as display_order,
       COALESCE(bc.cwl_only, false)       as cwl_only,
+      COALESCE(bc.side_war_only, false)  as side_war_only,
       bc.id as config_id,
       false as is_side_war
     FROM clans c
@@ -31,6 +32,7 @@ export async function GET() {
       COALESCE(bc.seed_losses, 0)        as seed_losses,
       COALESCE(bc.display_order, 999)    as display_order,
       COALESCE(bc.cwl_only, false)       as cwl_only,
+      COALESCE(bc.side_war_only, false)  as side_war_only,
       bc.id as config_id,
       true as is_side_war
     FROM side_wars sw
@@ -53,20 +55,21 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const { clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses, display_order, cwl_only } = body;
+  const { clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses, display_order, cwl_only, side_war_only } = body;
 
   await sql`
-    INSERT INTO clan_info_board_config (clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses, display_order, cwl_only)
-    VALUES (${clan_tag}, ${clan_name}, ${included ?? true}, ${seed_wins ?? 0}, ${seed_draws ?? 0}, ${seed_losses ?? 0}, ${display_order ?? 999}, ${cwl_only ?? false})
+    INSERT INTO clan_info_board_config (clan_tag, clan_name, included, seed_wins, seed_draws, seed_losses, display_order, cwl_only, side_war_only)
+    VALUES (${clan_tag}, ${clan_name}, ${included ?? true}, ${seed_wins ?? 0}, ${seed_draws ?? 0}, ${seed_losses ?? 0}, ${display_order ?? 999}, ${cwl_only ?? false}, ${side_war_only ?? false})
     ON CONFLICT (clan_tag) DO UPDATE SET
-      clan_name     = EXCLUDED.clan_name,
-      included      = EXCLUDED.included,
-      seed_wins     = EXCLUDED.seed_wins,
-      seed_draws    = EXCLUDED.seed_draws,
-      seed_losses   = EXCLUDED.seed_losses,
-      display_order = EXCLUDED.display_order,
-      cwl_only      = EXCLUDED.cwl_only,
-      updated_at    = now()
+      clan_name      = EXCLUDED.clan_name,
+      included       = EXCLUDED.included,
+      seed_wins      = EXCLUDED.seed_wins,
+      seed_draws     = EXCLUDED.seed_draws,
+      seed_losses    = EXCLUDED.seed_losses,
+      display_order  = EXCLUDED.display_order,
+      cwl_only       = EXCLUDED.cwl_only,
+      side_war_only  = EXCLUDED.side_war_only,
+      updated_at     = now()
   `;
 
   return NextResponse.json({ success: true });

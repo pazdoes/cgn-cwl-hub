@@ -71,6 +71,11 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
           { name: "CWL Only", value: "​", inline: false },
           { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
         ]
+      : (clanDbRow?.side_war_only === true || clanDbRow?.side_war_only === "true")
+      ? [
+          { name: "Side War Only", value: "​", inline: false },
+          { name: "​", value: `[**Visit**](${clanLink})`, inline: false },
+        ]
       : [
           { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
           { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
@@ -103,6 +108,7 @@ export async function POST(request) {
       COALESCE(bc.seed_losses, 0)        as seed_losses,
       COALESCE(bc.display_order, 999)    as display_order,
       COALESCE(bc.cwl_only, false)       as cwl_only,
+      COALESCE(bc.side_war_only, false)  as side_war_only,
       false as is_side_war
     FROM clans c
     INNER JOIN clan_info_board_config bc ON bc.clan_tag = c.clan_tag
@@ -113,9 +119,12 @@ export async function POST(request) {
   const sideWarRows = await sql`
     SELECT DISTINCT ON (sw.clan_tag)
       sw.clan_tag, sw.clan_name, null as cwl_rank, sw.clan_link,
-      COALESCE(bc.seed_wins, 0)   as seed_wins,
-      COALESCE(bc.seed_draws, 0)  as seed_draws,
-      COALESCE(bc.seed_losses, 0) as seed_losses,
+      COALESCE(bc.seed_wins, 0)          as seed_wins,
+      COALESCE(bc.seed_draws, 0)         as seed_draws,
+      COALESCE(bc.seed_losses, 0)        as seed_losses,
+      COALESCE(bc.display_order, 999)    as display_order,
+      COALESCE(bc.cwl_only, false)       as cwl_only,
+      COALESCE(bc.side_war_only, false)  as side_war_only,
       true as is_side_war
     FROM side_wars sw
     INNER JOIN clan_info_board_config bc ON bc.clan_tag = sw.clan_tag
