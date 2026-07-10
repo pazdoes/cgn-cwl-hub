@@ -805,6 +805,84 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
 }
 
 
+function ClanBoardManager({ pin }) {
+  const [clans, setClans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => { loadClans(); }, []);
+
+  async function loadClans() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/clan-board-config");
+      const d = await res.json();
+      setClans(d.clans || []);
+    } catch {} finally { setLoading(false); }
+  }
+
+  async function save(clan, updates) {
+    setSaving(clan.clan_tag); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-board-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin, clan_tag: clan.clan_tag, clan_name: clan.clan_name, ...updates }),
+      });
+      const d = await res.json();
+      if (d.success) { setStatus({ ok: "Saved" }); loadClans(); }
+      else setStatus({ error: d.error || "Failed" });
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setSaving(null); }
+  }
+
+  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
+
+  return (
+    <div className="space-y-3">
+      {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
+      {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
+      {clans.map(clan => (
+        <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold text-white">{clan.clan_name}</p>
+              <p className="text-[9px] text-slate-600">{clan.cwl_rank}</p>
+            </div>
+            <button onClick={() => save(clan, {
+              included: !clan.included,
+              seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses
+            })} disabled={saving === clan.clan_tag}
+              className={`shrink-0 rounded-full px-3 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
+              {clan.included ? "Included" : "Excluded"}
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Wins", key: "seed_wins", val: clan.seed_wins },
+              { label: "Draws", key: "seed_draws", val: clan.seed_draws },
+              { label: "Losses", key: "seed_losses", val: clan.seed_losses },
+            ].map(field => (
+              <div key={field.key}>
+                <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1">{field.label}</p>
+                <input type="number" min="0" defaultValue={field.val}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
+                  onBlur={e => save(clan, {
+                    included: clan.included,
+                    seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
+                    seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
+                    seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,
+                  })}/>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ClanInfoBoardTool() {
   const [webhookUrl, setWebhookUrl] = useState("");
   const [status, setStatus] = useState(null);
@@ -867,6 +945,12 @@ function ClanInfoBoardTool() {
 
   return (
     <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
+      <div>
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Clan Board Manager</p>
+        <p className="text-xs text-slate-400 leading-relaxed mb-3">Select which clans appear in the board and set their historical war record seed values. Draws and losses are entered manually — wins, draws and losses from tracked wars are added on top automatically.</p>
+        <ClanBoardManager pin="070226"/>
+      </div>
+      <div className="border-t border-white/[0.06] pt-4">
       <p className="text-xs text-slate-400 leading-relaxed">Paste a Discord webhook URL to post a live clan info board. It auto-updates every 6 hours. New clans added to the app appear automatically on the next update.</p>
 
       <div className="space-y-2">
@@ -881,6 +965,7 @@ function ClanInfoBoardTool() {
         {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
       </div>
 
+      </div>
       {liveMessages.length > 0 && (
         <div className="space-y-2">
           <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>

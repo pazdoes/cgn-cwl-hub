@@ -83,25 +83,48 @@ export async function POST(request) {
     return NextResponse.json({ error: "webhook_url required" }, { status: 400 });
   }
 
-  const clans = await sql`SELECT * FROM clans WHERE cwl_absent = false OR cwl_absent IS NULL ORDER BY display_order ASC NULLS LAST, clan_name ASC`;
-  if (clans.length === 0) {
-    return NextResponse.json({ error: "No active clans found" }, { status: 404 });
+  // Get included clans from board config
+  const configRows = await sql`
+    SELECT 
+      c.clan_tag, c.clan_name, c.cwl_rank, c.clan_link,
+      COALESCE(bc.seed_wins, 0)   as seed_wins,
+      COALESCE(bc.seed_draws, 0)  as seed_draws,
+      COALESCE(bc.seed_losses, 0) as seed_losses
+    FROM clans c
+    INNER JOIN clan_info_board_config bc ON bc.clan_tag = c.clan_tag
+    WHERE bc.included = true
+    ORDER BY c.display_order ASC NULLS LAST, c.clan_name ASC
+  `;
+
+  if (configRows.length === 0) {
+    return NextResponse.json({ error: "No clans configured for the info board" }, { status: 404 });
   }
 
-  const currentSeason = await sql`SELECT season FROM season_registry ORDER BY season_date DESC LIMIT 1`;
-  const seasonName    = currentSeason[0]?.season || null;
-  const warRecords    = seasonName ? await sql`
-    SELECT clan_name, wars_won, wars_drawn, wars_lost
-    FROM clan_season_history WHERE season = ${seasonName}
-  ` : [];
-  const warRecordMap = Object.fromEntries(warRecords.map(r => [r.clan_name, r]));
+  // Get running war totals from regular_war_results
+  const warTotals = await sql`
+    SELECT clan_tag,
+      COUNT(*) FILTER (WHERE result = 'win')  as wins,
+      COUNT(*) FILTER (WHERE result = 'draw') as draws,
+      COUNT(*) FILTER (WHERE result = 'lose') as losses
+    FROM regular_war_results
+    WHERE clan_tag = ANY(${configRows.map(r => r.clan_tag)})
+    GROUP BY clan_tag
+  `;
+  const warMap = Object.fromEntries(warTotals.map(r => [r.clan_tag, r]));
 
   const capturedAt = new Date();
   const embeds = [];
-  for (const clanRow of clans) {
+  for (const clanRow of configRows) {
     try {
       const clan = await getClan(clanRow.clan_tag);
-      if (clan) embeds.push(buildClanEmbed(clan, clanRow, capturedAt, warRecordMap[clanRow.clan_name] || {}));
+      if (!clan) continue;
+      const wt = warMap[clanRow.clan_tag] || {};
+      const warRecord = {
+        wars_won:   (parseInt(wt.wins || 0))   + parseInt(clanRow.seed_wins),
+        wars_drawn: (parseInt(wt.draws || 0))  + parseInt(clanRow.seed_draws),
+        wars_lost:  (parseInt(wt.losses || 0)) + parseInt(clanRow.seed_losses),
+      };
+      embeds.push(buildClanEmbed(clan, clanRow, capturedAt, warRecord));
     } catch { /* skip */ }
   }
 
