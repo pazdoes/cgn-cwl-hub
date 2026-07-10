@@ -30,10 +30,12 @@ function getCwlIconUrl(rankName) {
 }
 
 const HEADER_EMBED = {
-  color:     0x23272A,
-  author:    { name: "Cognition Collective", icon_url: "https://cdn.discordapp.com/emojis/1481712001603604573.png", url: "https://cgnco.vercel.app" },
-  thumbnail: { url: "https://cdn.discordapp.com/emojis/1481712001603604573.png" },
+  color:       0xFFD700,
+  title:       "Cognition Collective",
+  description: "Clan Directory",
+  thumbnail:   { url: "https://cdn.discordapp.com/emojis/1481712001603604573.png" },
 };
+
 
 function getRankColour(rankName) {
   if (!rankName) return 0x5865F2;
