@@ -32,6 +32,7 @@ function getCwlIconUrl(rankName) {
 const HEADER_EMBED = {
   color:       0x23272A,
   title:       "Cognition Collective",
+  url:         "https://cgnco.vercel.app",
   image:       { url: "https://cdn.discordapp.com/emojis/1481712001603604573.png" },
 };
 
