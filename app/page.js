@@ -2144,136 +2144,6 @@ function RankedLeaderboardView({ onBack }) {
   );
 }
 
-// ─── Discord Admin View ──────────────────────────────────────────────────────
-function DiscordAdminView({ onBack }) {
-  const [pin, setPin] = useState("");
-  const [pinVerified, setPinVerified] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [status, setStatus] = useState(null);
-  const [posting, setPosting] = useState(false);
-  const [liveMessages, setLiveMessages] = useState([]);
-
-  useEffect(() => {
-    if (pinVerified) loadMessages();
-  }, [pinVerified]);
-
-  async function loadMessages() {
-    try {
-      const res = await fetch("/api/clan-info-board");
-      const d = await res.json();
-      setLiveMessages(d.messages || []);
-    } catch {}
-  }
-
-  async function handlePost() {
-    if (!webhookUrl.trim()) { setStatus({ error: "Enter a webhook URL" }); return; }
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhook_url: webhookUrl.trim(), pin }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        setStatus({ ok: `Posted ${d.clansPosted} clans · ${d.timestamp}` });
-        setWebhookUrl("");
-        loadMessages();
-      } else {
-        setStatus({ error: d.error || "Failed to post" });
-      }
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  async function handleUpdate(url) {
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhook_url: url, pin }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        setStatus({ ok: `Updated · ${d.timestamp}` });
-        loadMessages();
-      } else {
-        setStatus({ error: d.error || "Failed to update" });
-      }
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  return (
-    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 sm:p-6 pb-12">
-      <div className="relative z-10 space-y-4">
-        <AppHeader variant="bar"/>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
-          <h1 className="text-2xl font-thin tracking-widest text-white">Discord Boards</h1>
-          <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Live Updating Clan Info</p>
-        </div>
-
-        {!pinVerified ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
-            <p className="text-xs text-slate-400">Enter officer PIN to access admin controls</p>
-            <div className="flex gap-2">
-              <input type="password" value={pin} onChange={e => setPin(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && (pin === "070226" ? setPinVerified(true) : setStatus({ error: "Incorrect PIN" }))}
-                placeholder="Officer PIN"
-                className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
-              <button onClick={() => { if (pin === "070226") setPinVerified(true); else setStatus({ error: "Incorrect PIN" }); }}
-                className="shrink-0 rounded-full border border-purple-500/40 bg-transparent text-purple-400 px-3 py-1 text-xs font-semibold hover:border-purple-400 transition">
-                Unlock
-              </button>
-            </div>
-            {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-          </div>
-        ) : (
-          <>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest">Post Clan Info Board</p>
-              <p className="text-xs text-slate-400 leading-relaxed">Paste a Discord webhook URL to post a live clan info board. It will auto-update every 6 hours via the scheduled cron.</p>
-              <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
-                placeholder="https://discord.com/api/webhooks/…"
-                className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
-              <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
-                className="w-full rounded-full border border-green-500/40 bg-transparent text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
-                {posting ? "Posting…" : "Post Now"}
-              </button>
-              {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
-              {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-            </div>
-
-            {liveMessages.length > 0 && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
-                {liveMessages.map((msg, i) => (
-                  <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[10px] text-slate-500 truncate flex-1">
-                        {msg.webhook_url.replace("https://discord.com/api/webhooks/", "…/").slice(0, 36)}…
-                      </p>
-                      <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
-                        className="shrink-0 rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
-                        {posting ? "…" : "Update Now"}
-                      </button>
-                    </div>
-                    {msg.last_updated && (
-                      <p className="text-[9px] text-slate-700">
-                        Last updated {new Date(msg.last_updated).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </main>
-  );
-}
 
 function WarIntelView({ onBack }) {
   const [tab, setTab] = useState("days");
@@ -4526,12 +4396,7 @@ function AppHeader({ variant = "bar" }) {
         { key: "warintel", label: "War Intel", icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" },
       ]
     },
-    {
-      label: "Admin",
-      items: [
-        { key: "discord-admin", label: "Discord Boards", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
-      ]
-    },
+
   ];
 
   function go(key) {
@@ -5094,7 +4959,7 @@ export default function Home() {
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-      if (["roster","leaderboard","ranked","history","recap","warintel","profile","discord-admin"].includes(hash)) {
+      if (["roster","leaderboard","ranked","history","recap","warintel","profile"].includes(hash)) {
         setPage(hash);
       } else {
         setPage("home");
@@ -5132,10 +4997,6 @@ export default function Home() {
 
   if (page === "ranked") {
     return <RankedLeaderboardView onBack={() => navigate("home")} />;
-  }
-
-  if (page === "discord-admin") {
-    return <DiscordAdminView onBack={() => navigate("home")} />;
   }
 
   return (

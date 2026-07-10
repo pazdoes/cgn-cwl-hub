@@ -805,6 +805,105 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
 }
 
 
+function ClanInfoBoardTool() {
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [status, setStatus] = useState(null);
+  const [posting, setPosting] = useState(false);
+  const [liveMessages, setLiveMessages] = useState([]);
+
+  useEffect(() => { loadMessages(); }, []);
+
+  async function loadMessages() {
+    try {
+      const res = await fetch("/api/clan-info-board");
+      const d = await res.json();
+      setLiveMessages(d.messages || []);
+    } catch {}
+  }
+
+  async function handlePost() {
+    if (!webhookUrl.trim()) { setStatus({ error: "Enter a webhook URL" }); return; }
+    setPosting(true); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-info-board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_url: webhookUrl.trim(), pin: "070226" }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setStatus({ ok: `Posted ${d.clansPosted} clans · ${d.timestamp}` });
+        setWebhookUrl("");
+        loadMessages();
+      } else {
+        setStatus({ error: d.error || "Failed to post" });
+      }
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setPosting(false); }
+  }
+
+  async function handleUpdate(url) {
+    setPosting(true); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-info-board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_url: url, pin: "070226" }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setStatus({ ok: `Updated · ${d.timestamp}` });
+        loadMessages();
+      } else {
+        setStatus({ error: d.error || "Failed to update" });
+      }
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setPosting(false); }
+  }
+
+  return (
+    <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
+      <p className="text-xs text-slate-400 leading-relaxed">Paste a Discord webhook URL to post a live clan info board. It auto-updates every 6 hours. New clans added to the app appear automatically on the next update.</p>
+
+      <div className="space-y-2">
+        <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
+          placeholder="https://discord.com/api/webhooks/…"
+          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
+        <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
+          className="w-full rounded-full border border-green-500/40 bg-transparent text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
+          {posting ? "Posting…" : "Post Now"}
+        </button>
+        {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
+        {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
+      </div>
+
+      {liveMessages.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
+          {liveMessages.map((msg, i) => (
+            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] text-slate-500 truncate flex-1">
+                  {msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}
+                </p>
+                <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
+                  className="shrink-0 rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
+                  {posting ? "…" : "Update"}
+                </button>
+              </div>
+              {msg.last_updated && (
+                <p className="text-[9px] text-slate-700">
+                  Last updated {new Date(msg.last_updated).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AnnouncementsPage() {
   const { data: session, status: discordStatus } = useSession();
   const [pin, setPin] = useState("");
@@ -2220,6 +2319,17 @@ export default function AnnouncementsPage() {
             <div className="px-5 pb-5 border-t border-white/10 pt-4">
               <TimestampTool/>
             </div>
+          )}
+        </div>
+
+        {/* Clan Info Board */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setManageTab(manageTab==="clan-info-board"?"":"clan-info-board")} className="w-full flex items-center justify-between px-5 py-4">
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Clan Info Board</p><p className="text-[10px] text-slate-600 mt-0.5">Live-updating clan info embed for Discord</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="clan-info-board"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {manageTab === "clan-info-board" && (
+            <ClanInfoBoardTool/>
           )}
         </div>
 
