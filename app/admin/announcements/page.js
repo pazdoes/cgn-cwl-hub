@@ -2486,16 +2486,7 @@ export default function AnnouncementsPage() {
           )}
         </div>
 
-        {/* Clan Info Board */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setManageTab(manageTab==="clan-info-board"?"":"clan-info-board")} className="w-full flex items-center justify-between px-5 py-4">
-            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Clan Info Board</p><p className="text-[10px] text-slate-600 mt-0.5">Live-updating clan info embed for Discord</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="clan-info-board"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          {manageTab === "clan-info-board" && (
-            <ClanInfoBoardTool/>
-          )}
-        </div>
+
 
         </>)} {/* end tools tab */}
 
