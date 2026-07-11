@@ -1220,83 +1220,14 @@ export default function AdminPoolPage() {
             )}
           </div>
 
-          {/* ── CLAN MANAGER ── */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-            <button onClick={() => setActiveClanForm(v => v ? null : "add")}
-              className="w-full flex items-center justify-between px-5 py-4 text-left">
-              <div>
-                <p className="text-sm font-semibold text-slate-300">Clan Manager</p>
-                <p className="text-[10px] text-slate-600 mt-0.5">Add or remove clans · {clans.length} active</p>
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${activeClanForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            {activeClanForm && (
-              <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
-                {/* Tab toggle */}
-                <div className="flex items-center justify-center gap-4">
-                  <button onClick={() => toggleClanForm("add")} className="text-slate-500 hover:text-slate-300 transition p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                  </button>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest select-none min-w-[80px] text-center">
-                    {activeClanForm === "add" ? "Add Clan" : "Delete Clan"}
-                  </span>
-                  <button onClick={() => toggleClanForm("delete")} className="text-slate-500 hover:text-slate-300 transition p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                  </button>
-                </div>
-
-                {activeClanForm === "add" && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Clan Tag</label>
-                      <div className="flex gap-2">
-                        <input type="text" placeholder="#ABC123" value={addClanTag} onChange={e => setAddClanTag(e.target.value)} onBlur={doLookupClan} autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                          className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
-                        <button type="button" onClick={doLookupClan} disabled={addClanLookupBusy || !addClanTag.trim()}
-                          className="px-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:border-white/30 hover:text-white transition disabled:opacity-40">
-                          {addClanLookupBusy ? "…" : "Lookup"}
-                        </button>
-                      </div>
-                      {addClanSuggestedName && <p className="text-xs text-purple-300 mt-1 ml-1">→ {addClanSuggestedName}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Clan Link</label>
-                      <input type="text" placeholder="https://link.clashofclans.com/…" value={addClanLink} onChange={e => setAddClanLink(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition text-sm"/>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">CWL Rank</label>
-                      <select value={addClanRank} onChange={e => setAddClanRank(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white focus:outline-none focus:border-purple-500/50 transition text-sm [color-scheme:dark]">
-                        <option value="">Select…</option>
-                        <option value="Unranked">Unranked</option>
-                        {Object.keys(CWL_ICONS).map(rank => <option key={rank} value={rank}>{rank}</option>)}
-                      </select>
-                    </div>
-                    <button type="button" onClick={doAddClan} disabled={addClanSubmitting || !addClanTag.trim() || !addClanLink.trim()}
-                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
-                      {addClanSubmitting ? "Adding…" : "Add Clan"}
-                    </button>
-                    {addClanResult && <p className={`text-xs text-center ${addClanResult.ok ? "text-green-300" : "text-red-400"}`}>{addClanResult.message}</p>}
-                  </div>
-                )}
-
-                {activeClanForm === "delete" && (
-                  <div className="space-y-3">
-                    <p className="text-[11px] text-slate-500">Type the exact clan name. Blocked if players are still assigned.</p>
-                    <input type="text" placeholder="e.g. Cognition {CGN}" value={deleteClanTag} onChange={e => setDeleteClanTag(e.target.value)}
-                      className="w-full rounded-2xl border border-red-500/20 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition text-sm"/>
-                    <button type="button" onClick={doDeleteClan} disabled={deleteClanSubmitting || !deleteClanTag.trim()}
-                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.12)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40">
-                      {deleteClanSubmitting ? "Deleting…" : "Delete Clan"}
-                    </button>
-                    {deleteClanResult && <p className={`text-xs text-center ${deleteClanResult.ok ? "text-green-300" : "text-red-400"}`}>{deleteClanResult.message}</p>}
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <p className="text-sm font-semibold text-slate-300 mb-1">Clan Manager</p>
+            <p className="text-[10px] text-slate-600 mb-3">Add, remove and configure clans for the alliance</p>
+            <Link href="/admin/clans"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border border-purple-500/40 text-purple-400 hover:border-purple-400 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Open Clan Manager
+            </Link>
           </div>
 
           </>)} {/* end settings tab */}

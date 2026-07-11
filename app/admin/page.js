@@ -698,7 +698,7 @@ export default function AdminOverviewPage() {
 
       {/* Tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["dashboard","Dashboard"],["directory","Directory"],["sidewars","Side Wars"]].map(([key,label]) => (
+        {[["dashboard","Dashboard"],["directory","Directory"]].map(([key,label]) => (
           <button key={key} onClick={() => setAdminTab(key)}
             className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               adminTab === key
@@ -865,214 +865,14 @@ export default function AdminOverviewPage() {
           </>)} {/* end directory tab */}
 
           {/* ── SIDE WARS TAB ── */}
-          {adminTab === "sidewars" && (<>
-
-          {/* Clan cards — schedule + activate */}
-          {sideWars.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-              <p className="text-slate-600 text-xs">No clans saved yet — add one in Manage Clans below</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {sideWars.map(war => {
-                const warId = war.id;
-                const pendingTime = swTimes[warId] ?? "";
-                const showPicker = !war.start_time || swTimes[warId] !== undefined;
-                const isRecurring = war.time_format === "recurring";
-                return (
-                  <div key={warId} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
-
-                    {/* Identity + Live toggle */}
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{war.clan_name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono">{war.clan_tag}</p>
-                        </div>
-                      </div>
-                      <button onClick={() => swToggle(war)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition shrink-0 ${
-                          war.is_active
-                            ? "bg-pink-500/20 border-pink-500/60 text-pink-300"
-                            : war.start_time
-                              ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300"
-                              : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"
-                        }`}>
-                        {war.is_active ? "Live" : "Off"}
-                      </button>
-                    </div>
-
-                    {/* Schedule */}
-                    <div className="border-t border-white/[0.06] pt-3">
-                      {war.start_time && !showPicker && (
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <div>
-                            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
-                            <p className="text-[11px] text-slate-300">
-                              {new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
-                            </p>
-                          </div>
-                          <button onClick={() => setSwTimes(p => ({...p, [warId]: ""}))}
-                            className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            Change
-                          </button>
-                        </div>
-                      )}
-                      {!war.start_time && (
-                        <p className="text-[10px] text-slate-600 mb-2">No start time — schedule before activating</p>
-                      )}
-                      {showPicker && (
-                        <div className="flex items-center gap-2">
-                          <input type="datetime-local"
-                            value={pendingTime}
-                            onChange={e => setSwTimes(p => ({...p, [warId]: e.target.value}))}
-                            className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
-                          <button onClick={() => {
-                            if (!pendingTime) { setSwTimeErrors(p => ({...p, [warId]: "Pick a date and time first"})); return; }
-                            setSwTimeErrors(p => ({...p, [warId]: ""}));
-                            // datetime-local gives a local time string with no tz info.
-                            // new Date() interprets it as local time, then .toISOString()
-                            // converts it to UTC — so 17:00 BST becomes 16:00 UTC correctly.
-                            const utcTime = new Date(pendingTime).toISOString();
-                            fetch("/api/admin/side-wars", {
-                              method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-                              body: JSON.stringify({ id: warId, action: "set_time", start_time: utcTime }),
-                            }).then(r => r.json()).then(data => {
-                              if (data.war) {
-                                setSideWars(prev => prev.map(w => w.id === warId ? data.war : w));
-                                setSwTimes(p => { const n = {...p}; delete n[warId]; return n; });
-                              }
-                            });
-                          }}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-2xl text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            Set
-                          </button>
-                        </div>
-                      )}
-                      {swTimeErrors[warId] && (
-                        <p className="text-[10px] text-red-400 mt-1">{swTimeErrors[warId]}</p>
-                      )}
-                    </div>
-
-                    {/* Recurring toggle only */}
-                    <div className="border-t border-white/[0.06] pt-3 mt-3">
-                      <button onClick={() => swSetFormat(warId, isRecurring ? "countdown" : "recurring")}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl text-[10px] font-semibold border transition ${
-                          isRecurring
-                            ? "bg-purple-500/20 border-purple-500/60 text-purple-300"
-                            : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
-                        }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        Recurring {isRecurring ? "· On" : "· Off"}
-                      </button>
-                      {isRecurring && (
-                        <p className="text-[9px] text-slate-600 mt-1.5">Resets every 48h from start time</p>
-                      )}
-                    </div>
-
-                    {war.is_active && (
-                      <div className="mt-3 pt-3 border-t border-pink-500/10 flex items-center justify-between">
-                        <p className="text-[10px] text-pink-400">Visible on homepage</p>
-                        <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
-                          className="text-[10px] text-slate-500 hover:text-slate-300 transition underline">
-                          View clan link
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+          {adminTab === "sidewars" && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-center">
+              <p className="text-slate-400 text-sm mb-3">Side Wars has moved to Clan Manager</p>
+              <Link href="/admin/clans" className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-semibold border border-purple-500/40 text-purple-400 hover:border-purple-400 transition">
+                Open Clan Manager
+              </Link>
             </div>
           )}
-
-          {/* Manage Clans — collapsed by default */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-            <button onClick={() => setSwManageOpen(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left">
-              <div className="flex items-center gap-2">
-                <img src="/icons/branding/war-shield.png" alt="" className="w-5 h-5 opacity-60"/>
-                <span className="text-sm font-semibold text-white">Manage Clans</span>
-                {sideWars.length > 0 && (
-                  <span className="text-[10px] text-slate-500">{sideWars.length} saved</span>
-                )}
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-500 transition-transform ${swManageOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-
-            {swManageOpen && (
-              <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
-
-                {/* Add clan form */}
-                <div>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Add Clan</p>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Name</p>
-                        <input value={swForm.clan_name} onChange={e => setSwForm(p => ({...p, clan_name: e.target.value}))}
-                          placeholder="Cognition {CGN}"
-                          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                      </div>
-                      <div>
-                        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Tag</p>
-                        <input value={swForm.clan_tag} onChange={e => setSwForm(p => ({...p, clan_tag: e.target.value}))}
-                          placeholder="#2C8QQPCL2"
-                          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Link</p>
-                      <input value={swForm.clan_link} onChange={e => setSwForm(p => ({...p, clan_link: e.target.value}))}
-                        placeholder="https://link.clashofclans.com/..."
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                    </div>
-                    {swError && <p className="text-[11px] text-red-400">{swError}</p>}
-                    <button onClick={swCreate} disabled={swLoading}
-                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition disabled:opacity-50">
-                      {swLoading ? "Saving…" : "Save Clan"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remove clans */}
-                {sideWars.length > 0 && (
-                  <div>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Remove Clan</p>
-                    <div className="space-y-2">
-                      {sideWars.map(war => (
-                        <div key={war.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
-                          <div className="min-w-0">
-                            <p className="text-xs text-white truncate">{war.clan_name}</p>
-                            <p className="text-[10px] text-slate-600 font-mono">{war.clan_tag}</p>
-                          </div>
-                          <button onClick={() => swDelete(war.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-red-400 border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 transition shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          </>)} {/* end side wars tab */}
 
         </div>
       )}
