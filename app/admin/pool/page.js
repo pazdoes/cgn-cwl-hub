@@ -219,6 +219,7 @@ function AdminHeader() {
     { href: "/admin", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
     { href: "/admin/pool", label: "Pool Manager", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
     { href: "/admin/clans", label: "Clan Manager", icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
+    { href: "/admin/season", label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
     { href: "/admin/announcements", label: "Announcements", icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
   ];
   return (
@@ -351,6 +352,13 @@ function AdminNav_REMOVED() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
                 </svg>
                 Clan Manager
+              </Link>
+              <Link href="/admin/season" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Season Manager
               </Link>
               <Link href="/admin/announcements" onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
@@ -1182,42 +1190,14 @@ export default function AdminPoolPage() {
           {mainPoolTab === "settings" && (<>
 
           {/* ── SEASON TILE ── */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-            <button onClick={() => setShowCloseSeasonForm(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left">
-              <div>
-                <p className="text-sm font-semibold text-slate-300">Season Management</p>
-                <p className="text-[10px] text-slate-600 mt-0.5">{season} · Migrate or fetch CWL data</p>
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showCloseSeasonForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            {showCloseSeasonForm && (
-              <div className="px-5 pb-5 border-t border-white/10 space-y-3 pt-4">
-                {/* Migrate season */}
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-                  <p className="text-xs text-amber-300 font-semibold">Migrate {season}</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">Records CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
-                  <input type="text" placeholder="Type CONFIRM" value={closeSeasonConfirm} onChange={e => setCloseSeasonConfirm(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition"/>
-                  <button onClick={doCloseSeason} disabled={closeSeasonConfirm !== "CONFIRM" || closeSeasonSubmitting}
-                    className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-amber-400 border border-amber-500/60 hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    {closeSeasonSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
-                  </button>
-                  {closeSeasonResult && <p className={`text-[11px] text-center ${closeSeasonResult.ok ? "text-green-400" : "text-red-400"}`}>{closeSeasonResult.message}</p>}
-                </div>
-                {/* Fetch CWL */}
-                <button onClick={doFetchCwlData} disabled={fetchingCwl}
-                  className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-blue-400 border border-blue-500/60 hover:border-blue-400 hover:text-blue-300 transition disabled:opacity-40 flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                  {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
-                </button>
-                {fetchCwlResult && <p className={`text-[11px] text-center ${fetchCwlResult.ok ? "text-blue-300" : "text-red-400"}`}>{fetchCwlResult.message}</p>}
-              </div>
-            )}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <p className="text-sm font-semibold text-slate-300 mb-1">Season Manager</p>
+            <p className="text-[10px] text-slate-600 mb-3">Migrate seasons and fetch CWL data</p>
+            <Link href="/admin/season"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border border-amber-500/40 text-amber-400 hover:border-amber-400 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Open Season Manager
+            </Link>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
