@@ -2,17 +2,25 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { TH_ICONS } from "../../../lib/icons";
 import DiscordWidget from "../../components/DiscordWidget";
+
+/* ─── TH Icon ────────────────────────────────────────────────── */
+function ThIcon({ level }) {
+  const src = level ? TH_ICONS[String(level)] : null;
+  if (!src) return <div className="w-7 h-7 rounded-full bg-white/[0.06] shrink-0"/>;
+  return <img src={src} alt={`TH${level}`} className="w-7 h-7 shrink-0"/>;
+}
 
 /* ─── FAQ ────────────────────────────────────────────────────── */
 function FaqButton() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const faqs = [
-    { section: "Season Management", items: [
-      { q: "When should I migrate a season?", a: "At the end of each CWL season — after all wars are complete and data has been captured. Migration records final CWL ranks and advances the pool to the next month." },
-      { q: "What does Migrate do?", a: "Records CWL ranks for all active clans, closes the current season, opens the next one, and archives all player pool assignments." },
-      { q: "What does Fetch CWL Data do?", a: "Manually triggers the CWL data capture cron — same as the scheduled job. Use this if you need to refresh stats mid-season." },
+    { section: "Directory", items: [
+      { q: "What does In Pool mean?", a: "The player has been added to the CWL pool for the current season by an admin." },
+      { q: "What does Discord ✓ mean?", a: "The player has linked their Discord account to their hub profile." },
+      { q: "What does Token ✓ mean?", a: "The player verified ownership of their account using the in-game API token." },
     ]},
   ];
   return (
@@ -89,12 +97,12 @@ function ContrastToggle() {
 function AdminHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const items = [
-    { href: "/admin",               label: "Overview",        icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    { href: "/admin/pool",          label: "Pool Manager",    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
-    { href: "/admin/clans",         label: "Clan Manager",    icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
-    { href: "/admin/season",        label: "Season Manager",  icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
+    { href: "/admin",               label: "Overview",       icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    { href: "/admin/pool",          label: "Pool Manager",   icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
+    { href: "/admin/clans",         label: "Clan Manager",   icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
+    { href: "/admin/season",        label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
     { href: "/admin/directory",     label: "Directory",      icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
-    { href: "/admin/announcements", label: "Announcements",   icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
+    { href: "/admin/announcements", label: "Announcements",  icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
   ];
   return (
     <>
@@ -109,7 +117,7 @@ function AdminHeader() {
           <nav className="flex-1 space-y-1">
             {items.map(item => (
               <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm transition ${item.href === "/admin/season" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:text-white hover:bg-white/[0.06]"}`}>
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm transition ${item.href === "/admin/directory" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:text-white hover:bg-white/[0.06]"}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                 </svg>
@@ -163,20 +171,17 @@ function AdminFooter() {
 }
 
 /* ─── Main page ──────────────────────────────────────────────── */
-export default function AdminSeasonPage() {
+export default function AdminDirectoryPage() {
   const [pin, setPinState] = useState("");
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
   const [authed, setAuthed] = useState(false);
-  const [season, setSeason] = useState(null);
-
-  const [showMigrateForm, setShowMigrateForm] = useState(false);
-  const [migrateConfirm, setMigrateConfirm] = useState("");
-  const [migrateSubmitting, setMigrateSubmitting] = useState(false);
-  const [migrateResult, setMigrateResult] = useState(null);
-
-  const [fetchingCwl, setFetchingCwl] = useState(false);
-  const [fetchCwlResult, setFetchCwlResult] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterPool, setFilterPool] = useState("all");
+  const [filterDiscord, setFilterDiscord] = useState("all");
+  const [filterToken, setFilterToken] = useState("all");
 
   const { status: discordStatus } = useSession();
   const SESSION_KEY = "cwl_admin_pin_confirmed";
@@ -184,19 +189,20 @@ export default function AdminSeasonPage() {
   useEffect(() => {
     if (discordStatus !== "authenticated") return;
     const saved = sessionStorage.getItem(SESSION_KEY);
-    if (saved) { setPinState(saved); setAuthed(true); loadSeason(saved); }
+    if (saved) { setPinState(saved); setAuthed(true); loadMembers(saved); }
   }, [discordStatus]);
 
   useEffect(() => {
     if (discordStatus === "unauthenticated") sessionStorage.removeItem(SESSION_KEY);
   }, [discordStatus]);
 
-  async function loadSeason(p) {
+  async function loadMembers(p) {
+    setLoading(true);
     try {
       const res = await fetch("/api/admin/members", { headers: { "x-officer-pin": p } });
       const d = await res.json();
-      if (d.season) setSeason(d.season);
-    } catch {}
+      setMembers(d.members || []);
+    } catch {} finally { setLoading(false); }
   }
 
   function handlePinSubmit(e) {
@@ -205,36 +211,19 @@ export default function AdminSeasonPage() {
     setAuthed(true);
     setPinError(false);
     if (discordStatus === "authenticated") sessionStorage.setItem(SESSION_KEY, pinInput);
-    loadSeason(pinInput);
+    loadMembers(pinInput);
   }
 
-  async function doMigrate(e) {
-    e.preventDefault();
-    if (migrateConfirm !== "CONFIRM") return;
-    setMigrateSubmitting(true); setMigrateResult(null);
-    try {
-      const res = await fetch("/api/admin/season/close", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ confirm: "CONFIRM" }) });
-      const data = await res.json();
-      if (res.ok) {
-        setMigrateResult({ ok: true, message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived` });
-        setMigrateConfirm("");
-        setShowMigrateForm(false);
-        loadSeason(pin);
-      } else { setMigrateResult({ ok: false, message: data.error || "Failed to migrate season" }); }
-    } catch { setMigrateResult({ ok: false, message: "Network error" }); }
-    finally { setMigrateSubmitting(false); }
-  }
+  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
 
-  async function doFetchCwlData() {
-    setFetchingCwl(true); setFetchCwlResult(null);
-    try {
-      const res = await fetch("/api/admin/cwl-fetch", { method: "POST", headers: { "x-officer-pin": pin } });
-      const data = await res.json();
-      if (res.ok) { setFetchCwlResult({ ok: true, message: `Captured ${data.playersProcessed} players across ${data.clansProcessed} clans for ${data.season}` }); }
-      else { setFetchCwlResult({ ok: false, message: data.error || "Fetch failed" }); }
-    } catch { setFetchCwlResult({ ok: false, message: "Network error" }); }
-    finally { setFetchingCwl(false); }
-  }
+  const filtered = members.filter(m => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || m.player_name?.toLowerCase().includes(q) || m.player_tag?.toLowerCase().includes(q) || m.assigned_clan?.toLowerCase().includes(q);
+    const matchPool = filterPool === "all" || (filterPool === "in" ? m.in_pool : !m.in_pool);
+    const matchDiscord = filterDiscord === "all" || (filterDiscord === "yes" ? !!m.discord_id : !m.discord_id);
+    const matchToken = filterToken === "all" || (filterToken === "yes" ? m.api_token_verified : !m.api_token_verified);
+    return matchSearch && matchPool && matchDiscord && matchToken;
+  });
 
   /* ─── PIN gate ────────────────────────────────────────────── */
   if (!authed) {
@@ -245,7 +234,7 @@ export default function AdminSeasonPage() {
         </div>
         <div className="relative z-10 w-full max-w-xs">
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
-            <h1 className="text-xl font-thin tracking-widest mb-1">Season Manager</h1>
+            <h1 className="text-xl font-thin tracking-widest mb-1">Directory</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
@@ -273,59 +262,91 @@ export default function AdminSeasonPage() {
 
       {/* Hero card */}
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Season Manager</h1>
-        <p className="text-slate-500 text-xs">{season ? <><span className="text-purple-300">{season}</span> · Current open season</> : "Loading…"}</p>
+        <h1 className="text-2xl font-thin tracking-widest mb-1">Directory</h1>
+        <p className="text-slate-500 text-xs">{members.length} registered accounts · {members.filter(m => m.in_pool).length} in pool</p>
       </div>
 
       <div className="relative z-10 space-y-3">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Member Directory</h2>
+            <button type="button" onClick={() => loadMembers(pin)} title="Refresh"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20 transition text-[10px] uppercase tracking-widest font-semibold">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh
+            </button>
+          </div>
 
-        {/* Migrate season */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setShowMigrateForm(v => !v)}
-            className="w-full flex items-center justify-between px-5 py-4 text-left">
-            <div>
-              <p className="text-sm font-semibold text-slate-300">Migrate Season</p>
-              <p className="text-[10px] text-slate-600 mt-0.5">{season ? `Close ${season} and advance to next month` : "Loading…"}</p>
+          {/* Search + filters */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <div className="relative flex-1 min-w-[140px]">
+              <input type="text" placeholder="Search name, tag or clan…" value={search} onChange={e => setSearch(e.target.value)}
+                className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>
+              )}
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showMigrateForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          {showMigrateForm && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4">
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-                <p className="text-xs text-amber-300 font-semibold">Migrate {season}</p>
-                <p className="text-[11px] text-slate-500 leading-relaxed">Records CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
-                <form onSubmit={doMigrate} className="space-y-3">
-                  <input type="text" placeholder="Type CONFIRM" value={migrateConfirm} onChange={e => setMigrateConfirm(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition"/>
-                  <button type="submit" disabled={migrateConfirm !== "CONFIRM" || migrateSubmitting}
-                    className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-amber-400 border border-amber-500/60 hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    {migrateSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
-                  </button>
-                </form>
-                {migrateResult && <p className={`text-[11px] text-center ${migrateResult.ok ? "text-green-400" : "text-red-400"}`}>{migrateResult.message}</p>}
-              </div>
+            <select value={filterPool} onChange={e => setFilterPool(e.target.value)} className={pillSelect}>
+              <option value="all">All Pool</option>
+              <option value="in">In Pool</option>
+              <option value="out">Not In Pool</option>
+            </select>
+            <select value={filterDiscord} onChange={e => setFilterDiscord(e.target.value)} className={pillSelect}>
+              <option value="all">All Discord</option>
+              <option value="yes">Discord ✓</option>
+              <option value="no">No Discord</option>
+            </select>
+            <select value={filterToken} onChange={e => setFilterToken(e.target.value)} className={pillSelect}>
+              <option value="all">All Token</option>
+              <option value="yes">Token ✓</option>
+              <option value="no">No Token</option>
+            </select>
+          </div>
+
+          <p className="text-[10px] text-slate-700 mb-3">{filtered.length} of {members.length} accounts</p>
+
+          {loading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => <div key={i} className="h-14 rounded-2xl bg-white/[0.04] animate-pulse"/>)}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map(m => (
+                <div key={m.player_tag} className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:bg-white/[0.04] transition">
+                  <ThIcon level={m.town_hall_level}/>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
+                    <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
+                    {m.assigned_clan && <p className="text-[10px] text-slate-500 truncate">{m.assigned_clan.split(" ")[0]}</p>}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span title={m.in_pool ? "In pool" : "Not in pool"}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] border ${m.in_pool ? "border-purple-500/40 text-purple-400" : "border-white/10 text-slate-700"}`}>
+                      {m.in_pool ? "✓" : "—"}
+                    </span>
+                    <span title={m.discord_id ? "Discord linked" : "No Discord"}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.discord_id ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-700"}`}>
+                      <svg className="w-2.5 h-2.5" viewBox="0 0 127.14 96.36" fill="currentColor">
+                        <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                      </svg>
+                    </span>
+                    <span title={m.api_token_verified ? "Token verified" : "No token"}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.api_token_verified ? "border-green-500/40 text-green-400" : "border-white/10 text-slate-700"}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <p className="text-slate-700 text-xs text-center py-6">No members match your filters</p>
+              )}
             </div>
           )}
         </div>
-
-        {/* Fetch CWL data */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
-          <div>
-            <p className="text-sm font-semibold text-slate-300 mb-1">Fetch CWL Data</p>
-            <p className="text-[10px] text-slate-600">Manually trigger the CWL data capture — same as the scheduled cron job</p>
-          </div>
-          <button onClick={doFetchCwlData} disabled={fetchingCwl}
-            className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-blue-400 border border-blue-500/60 hover:border-blue-400 hover:text-blue-300 transition disabled:opacity-40 flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${fetchingCwl ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
-          </button>
-          {fetchCwlResult && <p className={`text-[11px] text-center ${fetchCwlResult.ok ? "text-blue-300" : "text-red-400"}`}>{fetchCwlResult.message}</p>}
-        </div>
-
       </div>
 
       <AdminFooter/>
