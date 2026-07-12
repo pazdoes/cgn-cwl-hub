@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason, setCurrentSeason, getOpenPoolSeasonFromDate } from "@/lib/season";
 import { snapshotRoster } from "@/lib/pool";
+import { clearRosterAssignments } from "@/lib/sheetsWrite";
 
 // Migrate Season — three steps in order:
 //   1. Snapshot current assigned roster into roster_history
@@ -33,6 +34,15 @@ export async function POST(request) {
     // Non-fatal — continue with migration
   }
 
+  // Step 1b: clear Google Sheet roster assignments
+  let sheetsCleared = 0;
+  try {
+    sheetsCleared = await clearRosterAssignments();
+  } catch (err) {
+    console.error("Sheet clear failed:", err);
+    // Non-fatal — continue with migration
+  }
+
   // Step 2 & 3: advance to next season
   let nextSeason;
   try {
@@ -53,5 +63,6 @@ export async function POST(request) {
     closed: closingSeason,
     opened: nextSeason,
     snapshotCount,
+    sheetsCleared,
   });
 }
