@@ -3211,9 +3211,6 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
   }
 
   const RANK_ORDER = ["Bronze League III","Bronze League II","Bronze League I","Silver League III","Silver League II","Silver League I","Gold League III","Gold League II","Gold League I","Crystal League III","Crystal League II","Crystal League I","Master League III","Master League II","Master League I","Champion League III","Champion League II","Champion League I"];
-
-  // Use currentCwlRank (live from clans table) for icon display
-  // Use clanData.cwl_rank (season record) as the "previous" rank for delta
   const displayRank = currentCwlRank || clanData?.cwl_rank || null;
   const seasonRank  = clanData?.cwl_rank || null;
   const currentIdx  = displayRank ? RANK_ORDER.indexOf(displayRank) : -1;
@@ -3223,15 +3220,18 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
   const demoted     = rankDelta < 0;
   const cwlIconUrl  = getCwlIconUrl(displayRank);
 
-  const awards = [
-    { label: "Best Attacker",    player: bestAttacker,        value: bestAttacker        ? parseFloat(bestAttacker.efficiency).toFixed(2)              : null, unit: "Atk EFF",     colour: "#c4b5fd", bg: "rgba(139,92,246,0.08)",  border: "rgba(139,92,246,0.22)"  },
-    { label: "3★ Machine",       player: awardMostThreeStars, value: awardMostThreeStars ? String(awardMostThreeStars.three_stars)                     : null, unit: "3-Stars",     colour: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)"  },
-    { label: "Best Defender",    player: bestDefender,        value: bestDefender        ? parseFloat(bestDefender.defence_efficiency).toFixed(2)      : null, unit: "Def EFF",     colour: "#93c5fd", bg: "rgba(59,130,246,0.08)",  border: "rgba(59,130,246,0.22)"  },
-    { label: "Brave Heart",      player: awardPunchUpKing,    value: awardPunchUpKing    ? parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)+"%" : null, unit: "Punch-Up",    colour: "#4ade80", bg: "rgba(74,222,128,0.08)",  border: "rgba(74,222,128,0.22)"  },
-    { label: "Clutch King",      player: awardClutchKing,     value: awardClutchKing     ? parseFloat(awardClutchKing.clutch_rate).toFixed(2)          : null, unit: "Clutch Rate", colour: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.22)" },
-    { label: "Iron Wall",        player: awardIronDefence,    value: awardIronDefence    ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2): null, unit: "Def EFF",     colour: "#34d399", bg: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.22)"  },
-    { label: "Season MVP",       player: seasonMvp,           value: seasonMvp           ? parseFloat(seasonMvp.overall).toFixed(2)                    : null, unit: "CGN Rating",  colour: "#D4AF37", bg: "rgba(212,175,55,0.08)",  border: "rgba(212,175,55,0.22)"  },
-    { label: "Most Consistent",  player: awardMostConsistent, value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score).toFixed(2): null, unit: "Consistency", colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.18)"  },
+  // 8 tiles in 2 columns x 4 rows — matching overall recap card exactly
+  const col1 = [
+    { label: "Best Attacker",   player: bestAttacker,        value: bestAttacker        ? parseFloat(bestAttacker.efficiency).toFixed(2)               : null, unit: "Atk EFF",     colour: "#c4b5fd", bg: "rgba(139,92,246,0.08)",  border: "rgba(139,92,246,0.22)"  },
+    { label: "Best Defender",   player: bestDefender,        value: bestDefender        ? parseFloat(bestDefender.defence_efficiency).toFixed(2)       : null, unit: "Def EFF",     colour: "#93c5fd", bg: "rgba(59,130,246,0.08)",  border: "rgba(59,130,246,0.22)"  },
+    { label: "Clutch King",     player: awardClutchKing,     value: awardClutchKing     ? parseFloat(awardClutchKing.clutch_rate).toFixed(2)           : null, unit: "Clutch Rate", colour: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.22)" },
+    { label: "Season MVP",      player: seasonMvp,           value: seasonMvp           ? parseFloat(seasonMvp.overall).toFixed(2)                     : null, unit: "CGN Rating",  colour: "#D4AF37", bg: "rgba(212,175,55,0.08)",  border: "rgba(212,175,55,0.22)"  },
+  ];
+  const col2 = [
+    { label: "3★ Machine",      player: awardMostThreeStars, value: awardMostThreeStars ? String(awardMostThreeStars.three_stars)                      : null, unit: "3-Stars",     colour: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)"  },
+    { label: "Brave Heart",     player: awardPunchUpKing,    value: awardPunchUpKing    ? parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)+"%"    : null, unit: "Punch-Up",    colour: "#4ade80", bg: "rgba(74,222,128,0.08)",  border: "rgba(74,222,128,0.22)"  },
+    { label: "Iron Wall",       player: awardIronDefence,    value: awardIronDefence    ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2): null, unit: "Def EFF",     colour: "#34d399", bg: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.22)"  },
+    { label: "Most Consistent", player: awardMostConsistent, value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score).toFixed(2) : null, unit: "Consistency", colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.18)"  },
   ];
 
   const statItems = clanData ? [
@@ -3241,6 +3241,25 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
     { label: "Atk EFF", value: parseFloat(clanData.attack_efficiency||0).toFixed(2),  colour: "#c4b5fd" },
     { label: "Def EFF", value: parseFloat(clanData.defence_efficiency||0).toFixed(2), colour: "#93c5fd" },
   ] : [];
+
+  function AwardTile({ tile }) {
+    return (
+      <div style={{ background: tile.bg, border: `1px solid ${tile.border}`, borderRadius: 16, padding: "14px 16px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>{tile.label}</div>
+        {tile.player ? (
+          <>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>{tile.player.player_name}</div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: tile.colour, lineHeight: 1 }}>{tile.value}</div>
+              <div style={{ fontSize: 9, color: "#334155", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3 }}>{tile.unit}</div>
+            </div>
+          </>
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#1e293b" }}>No Data</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -3275,49 +3294,48 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         <rect width="100%" height="100%" fill="url(#glow-cc)"/>
       </svg>
 
-      <div style={{ position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100%",gap:16 }}>
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", height:"100%", gap:16 }}>
 
         {/* HEADER */}
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
-            <div style={{ fontSize:11,color:"#475569",textTransform:"uppercase",letterSpacing:"0.15em",marginBottom:4 }}>Season Recap · {selectedSeason}</div>
-            <div style={{ fontSize:44,fontWeight:100,letterSpacing:"0.04em",color:"white",lineHeight:1 }}>{clanName.split(" ")[0]}</div>
+            <div style={{ fontSize:11, color:"#475569", textTransform:"uppercase", letterSpacing:"0.15em", marginBottom:4 }}>Season Recap · {selectedSeason}</div>
+            <div style={{ fontSize:44, fontWeight:100, letterSpacing:"0.04em", color:"white", lineHeight:1 }}>{clanName.split(" ")[0]}</div>
           </div>
-          <div style={{ display:"flex",gap:30,alignItems:"flex-end" }}>
+          <div style={{ display:"flex", gap:30, alignItems:"flex-end" }}>
             {statItems.map((s,i) => (
               <div key={i} style={{ textAlign:"center" }}>
-                <div style={{ fontSize:30,fontWeight:200,color:s.colour,lineHeight:1 }}>{s.value}</div>
-                <div style={{ fontSize:9,color:"#334155",textTransform:"uppercase",letterSpacing:"0.14em",marginTop:5 }}>{s.label}</div>
+                <div style={{ fontSize:30, fontWeight:200, color:s.colour, lineHeight:1 }}>{s.value}</div>
+                <div style={{ fontSize:9, color:"#334155", textTransform:"uppercase", letterSpacing:"0.14em", marginTop:5 }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* BODY */}
-        <div style={{ display:"flex",gap:14,flex:1,minHeight:0 }}>
+        {/* BODY — three columns matching overall card structure */}
+        <div style={{ display:"flex", gap:16, flex:1, minHeight:0 }}>
 
-          {/* LEFT: Top Players + CWL icon */}
-          <div style={{ width:270,flexShrink:0,display:"flex",flexDirection:"column",gap:12 }}>
-
-            <div style={{ background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:18,padding:"14px 18px" }}>
-              <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.15em",marginBottom:12 }}>Top Players · CGN Rating</div>
+          {/* LEFT: Top Players + CWL icon — same width as overall card left column */}
+          <div style={{ width:300, flexShrink:0, display:"flex", flexDirection:"column", gap:12 }}>
+            <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:18, padding:"16px 20px" }}>
+              <div style={{ fontSize:9, color:"#475569", textTransform:"uppercase", letterSpacing:"0.15em", marginBottom:14 }}>Top Players · CGN Rating</div>
               {top3.map((p,i) => (
-                <div key={p.player_tag} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:i<top3.length-1?10:0 }}>
-                  <div style={{ display:"flex",alignItems:"center",gap:8 }}>
-                    <div style={{ width:6,height:6,borderRadius:"50%",background:medalColours[i+1],flexShrink:0 }}/>
-                    <span style={{ fontSize:13,color:medalColours[i+1],fontWeight:600 }}>{p.player_name}</span>
+                <div key={p.player_tag} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:i<top3.length-1?12:0 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ width:6, height:6, borderRadius:"50%", background:medalColours[i+1], flexShrink:0 }}/>
+                    <span style={{ fontSize:14, color:medalColours[i+1], fontWeight:600 }}>{p.player_name}</span>
                   </div>
-                  <span style={{ fontSize:14,color:"#a78bfa",fontWeight:700,marginLeft:10,flexShrink:0 }}>{p.overall?.toFixed(2)}</span>
+                  <span style={{ fontSize:14, color:"#a78bfa", fontWeight:700, marginLeft:12, flexShrink:0 }}>{p.overall?.toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
-            {/* CWL rank icon + rank name + promo/demo pill */}
-            <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10 }}>
-              {cwlIconUrl && <img src={cwlIconUrl} style={{ width:150,height:150,objectFit:"contain" }} alt=""/>}
-              <div style={{ fontSize:14,color:"#a78bfa",fontWeight:400,letterSpacing:"0.04em",textAlign:"center" }}>{displayRank || ""}</div>
+            {/* CWL icon + rank name + promo/demo pill */}
+            <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10 }}>
+              {cwlIconUrl && <img src={cwlIconUrl} style={{ width:150, height:150, objectFit:"contain" }} alt=""/>}
+              <div style={{ fontSize:14, color:"#a78bfa", letterSpacing:"0.04em", textAlign:"center" }}>{displayRank || ""}</div>
               {(promoted||demoted) && (
-                <div style={{ display:"inline-flex",alignItems:"center",gap:6,fontSize:11,fontWeight:700,color:promoted?"#4ade80":"#f87171",background:promoted?"rgba(74,222,128,0.1)":"rgba(248,113,113,0.1)",border:`1px solid ${promoted?"rgba(74,222,128,0.3)":"rgba(248,113,113,0.3)"}`,borderRadius:99,padding:"4px 12px" }}>
+                <div style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:11, fontWeight:700, color:promoted?"#4ade80":"#f87171", background:promoted?"rgba(74,222,128,0.1)":"rgba(248,113,113,0.1)", border:`1px solid ${promoted?"rgba(74,222,128,0.3)":"rgba(248,113,113,0.3)"}`, borderRadius:99, padding:"4px 12px" }}>
                   <span style={{ fontSize:14 }}>{promoted?"↑":"↓"}</span>
                   <span>{promoted?"PROMOTED":"DEMOTED"}</span>
                 </div>
@@ -3326,52 +3344,44 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           </div>
 
           {/* MIDDLE: CWL Rounds */}
-          <div style={{ width:240,flexShrink:0,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:18,padding:"14px 18px",display:"flex",flexDirection:"column" }}>
-            <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.15em",marginBottom:12 }}>CWL Rounds</div>
-            <div style={{ flex:1,display:"flex",flexDirection:"column",justifyContent:rounds.length>0?"space-between":"center" }}>
+          <div style={{ width:220, flexShrink:0, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:18, padding:"16px 18px", display:"flex", flexDirection:"column" }}>
+            <div style={{ fontSize:9, color:"#475569", textTransform:"uppercase", letterSpacing:"0.15em", marginBottom:12 }}>CWL Rounds</div>
+            <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:rounds.length>0?"space-between":"center" }}>
               {rounds.length>0 ? rounds.map((r,i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned===r.stars_conceded && parseFloat(r.destruction_pct||0)>parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned===r.stars_conceded && parseFloat(r.destruction_pct||0)<parseFloat(r.defence_pct||0));
                 const col  = won?"#4ade80":lost?"#f87171":"#94a3b8";
                 return (
-                  <div key={i} style={{ display:"flex",alignItems:"center",gap:5 }}>
-                    <span style={{ fontSize:10,color:"#334155",width:20,flexShrink:0 }}>R{r.war_day}</span>
-                    <span style={{ fontSize:11,color:"#64748b",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{r.opponent_clan}</span>
-                    <span style={{ fontSize:11,color:"#fbbf24",fontWeight:600,flexShrink:0 }}>{r.stars_earned}★</span>
-                    <span style={{ fontSize:10,color:"#1e293b",margin:"0 2px",flexShrink:0 }}>·</span>
-                    <span style={{ fontSize:11,color:"#475569",flexShrink:0 }}>{r.stars_conceded}★</span>
-                    <span style={{ fontSize:12,fontWeight:700,color:col,width:14,textAlign:"right",flexShrink:0 }}>{won?"W":lost?"L":"D"}</span>
+                  <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                    <span style={{ fontSize:10, color:"#334155", width:20, flexShrink:0 }}>R{r.war_day}</span>
+                    <span style={{ fontSize:11, color:"#64748b", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.opponent_clan}</span>
+                    <span style={{ fontSize:11, color:"#fbbf24", fontWeight:600, flexShrink:0 }}>{r.stars_earned}★</span>
+                    <span style={{ fontSize:10, color:"#1e293b", margin:"0 2px", flexShrink:0 }}>·</span>
+                    <span style={{ fontSize:11, color:"#475569", flexShrink:0 }}>{r.stars_conceded}★</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:col, width:14, textAlign:"right", flexShrink:0 }}>{won?"W":lost?"L":"D"}</span>
                   </div>
                 );
-              }) : <div style={{ fontSize:12,color:"#1e293b",textAlign:"center" }}>No data</div>}
+              }) : <div style={{ fontSize:12, color:"#1e293b", textAlign:"center" }}>No data</div>}
             </div>
           </div>
 
-          {/* RIGHT: 8 award tiles 4×2 */}
-          <div style={{ flex:1,display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gridTemplateRows:"1fr 1fr",gap:10 }}>
-            {awards.map((tile,i) => (
-              <div key={i} style={{ background:tile.bg,border:`1px solid ${tile.border}`,borderRadius:16,padding:"12px 14px",display:"flex",flexDirection:"column",overflow:"hidden" }}>
-                <div style={{ fontSize:8,color:"#475569",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:6 }}>{tile.label}</div>
-                {tile.player ? (
-                  <>
-                    <div style={{ fontSize:13,fontWeight:600,color:"white",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{tile.player.player_name}</div>
-                    <div style={{ flex:1,display:"flex",flexDirection:"column",justifyContent:"flex-end" }}>
-                      <div style={{ fontSize:22,fontWeight:700,color:tile.colour,lineHeight:1 }}>{tile.value}</div>
-                      <div style={{ fontSize:8,color:"#334155",textTransform:"uppercase",letterSpacing:"0.1em",marginTop:3 }}>{tile.unit}</div>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#1e293b" }}>No Data</div>
-                )}
-              </div>
-            ))}
+          {/* RIGHT: 2 columns x 4 rows = 8 tiles — matching overall recap card */}
+          <div style={{ flex:1, display:"flex", gap:10 }}>
+            {/* Column 1 */}
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10 }}>
+              {col1.map((tile,i) => <AwardTile key={i} tile={tile}/>)}
+            </div>
+            {/* Column 2 */}
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10 }}>
+              {col2.map((tile,i) => <AwardTile key={i} tile={tile}/>)}
+            </div>
           </div>
         </div>
 
         {/* FOOTER */}
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:10 }}>
-          <span style={{ fontSize:10,color:"#1e293b",textTransform:"uppercase",letterSpacing:"0.14em" }}>CGNCO.VERCEL.APP</span>
-          <span style={{ fontSize:10,color:"#1e293b",textTransform:"uppercase",letterSpacing:"0.14em" }}>COGNITION {"{CGN}"}</span>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:"1px solid rgba(255,255,255,0.05)", paddingTop:10 }}>
+          <span style={{ fontSize:10, color:"#1e293b", textTransform:"uppercase", letterSpacing:"0.14em" }}>CGNCO.VERCEL.APP</span>
+          <span style={{ fontSize:10, color:"#1e293b", textTransform:"uppercase", letterSpacing:"0.14em" }}>COGNITION {"{CGN}"}</span>
         </div>
       </div>
     </div>
