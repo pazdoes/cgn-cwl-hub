@@ -23,17 +23,19 @@ export async function GET(request) {
     captureCwlData(season),
   ]);
 
+  const sql = getDb();
+
   // Update position-based stats directly via SQL from war_attacks
   await sql`
     UPDATE player_cwl_stats ps
     SET
-      punch_up_rate   = sub.punch_up_rate,
-      dips            = sub.dips,
-      reaches         = sub.reaches,
+      punch_up_rate        = sub.punch_up_rate,
+      dips                 = sub.dips,
+      reaches              = sub.reaches,
       avg_target_position  = sub.avg_target_pos,
       avg_target_distance  = sub.avg_target_dist,
-      clutch_rate     = sub.clutch_rate,
-      consistency_score = sub.consistency_score
+      clutch_rate          = sub.clutch_rate,
+      consistency_score    = sub.consistency_score
     FROM (
       SELECT
         player_tag,
@@ -54,8 +56,23 @@ export async function GET(request) {
       AND ps.season = ${season}
   `.catch(() => null);
 
-  // Update defence stats directly from war_defences — reliable SQL aggregation
-  const sql = getDb();
+  // Update consistency_score for all players regardless of map position
+  await sql`
+    UPDATE player_cwl_stats ps
+    SET consistency_score = sub.consistency_score
+    FROM (
+      SELECT player_tag,
+        ROUND(AVG(stars) FILTER (WHERE stars IS NOT NULL), 2) as consistency_score
+      FROM war_attacks
+      WHERE season = ${season}
+      GROUP BY player_tag
+    ) sub
+    WHERE ps.player_tag = sub.player_tag
+      AND ps.season = ${season}
+      AND ps.consistency_score IS NULL
+  `.catch(() => null);
+
+  // Update defence stats directly from war_defences
   await sql`
     UPDATE player_cwl_stats ps
     SET
@@ -70,11 +87,11 @@ export async function GET(request) {
     FROM (
       SELECT
         player_tag,
-        SUM(stars_conceded)                               as total_stars,
-        COUNT(*) FILTER (WHERE stars_conceded = 3)        as three_stars,
-        COUNT(*) FILTER (WHERE stars_conceded = 2)        as two_stars,
-        COUNT(*) FILTER (WHERE stars_conceded = 1)        as one_stars,
-        COUNT(*) FILTER (WHERE stars_conceded = 0)        as zero_stars
+        SUM(stars_conceded)                          as total_stars,
+        COUNT(*) FILTER (WHERE stars_conceded = 3)   as three_stars,
+        COUNT(*) FILTER (WHERE stars_conceded = 2)   as two_stars,
+        COUNT(*) FILTER (WHERE stars_conceded = 1)   as one_stars,
+        COUNT(*) FILTER (WHERE stars_conceded = 0)   as zero_stars
       FROM war_defences
       WHERE season = ${season}
       GROUP BY player_tag
