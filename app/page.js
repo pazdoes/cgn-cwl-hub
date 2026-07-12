@@ -3272,9 +3272,9 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         <div style={{ display: "flex", gap: 14, flex: 1 }}>
 
           {/* LEFT: Top Players + CWL icon */}
-          <div style={{ width: 300, flexShrink: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ width: 295, flexShrink: 0, display: "flex", flexDirection: "column", gap: 10 }}>
 
-            {/* Top Players — same structure as RecapShareCard */}
+            {/* Top Players */}
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Top Players</div>
@@ -3294,10 +3294,10 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
               ))}
             </div>
 
-            {/* CWL icon + rank + promo/demo */}
+            {/* CWL icon — enlarged to fill space */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              {iconUrl && <img src={iconUrl} style={{ width: 130, height: 130, objectFit: "contain" }} alt=""/>}
-              <div style={{ fontSize: 12, color: "#a78bfa", textAlign: "center" }}>{displayRank || ""}</div>
+              {iconUrl && <img src={iconUrl} style={{ width: 170, height: 170, objectFit: "contain" }} alt=""/>}
+              <div style={{ fontSize: 13, color: "#a78bfa", textAlign: "center" }}>{displayRank || ""}</div>
               {(promoted || demoted) && (
                 <div style={{ display: "flex", alignItems: "center", gap: 5, color: promoted ? "#4ade80" : "#f87171" }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
@@ -3309,21 +3309,24 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
             </div>
           </div>
 
-          {/* MIDDLE: CWL Rounds */}
-          <div style={{ width: 230, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+          {/* MIDDLE: CWL Rounds — wider for full opponent names */}
+          <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>CWL Rounds</div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
               {rounds.map((r, i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) < parseFloat(r.defence_pct||0));
                 const rc   = won ? "#4ade80" : lost ? "#f87171" : "#94a3b8";
+                // Star highlight: win=our stars amber, loss=opponent stars red, draw=both neutral
+                const ourStarCol = won ? "#fbbf24" : "#475569";
+                const oppStarCol = lost ? "#f87171" : "#475569";
                 return (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0 }}>R{r.war_day}</span>
-                    <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.opponent_clan}</span>
-                    <span style={{ fontSize: 10, color: "#fbbf24", fontWeight: 600, flexShrink: 0 }}>{r.stars_earned}★</span>
+                    <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{r.opponent_clan}</span>
+                    <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0 }}>{r.stars_earned}★</span>
                     <span style={{ fontSize: 9, color: "#1e293b", flexShrink: 0, margin: "0 1px" }}>·</span>
-                    <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{r.stars_conceded}★</span>
+                    <span style={{ fontSize: 10, color: oppStarCol, fontWeight: lost ? 700 : 400, flexShrink: 0 }}>{r.stars_conceded}★</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: rc, width: 10, textAlign: "right", flexShrink: 0 }}>{won ? "W" : lost ? "L" : "D"}</span>
                   </div>
                 );
@@ -3331,7 +3334,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
             </div>
           </div>
 
-          {/* RIGHT: 8 tiles in 2×4 grid — same as RecapShareCard */}
+          {/* RIGHT: 8 tiles 2×4 grid */}
           <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 10 }}>
             {tiles.map((tile, i) => tile.player && tile.value ? (
               <div key={i} style={{ background: tile.bg, borderRadius: 12, border: `1px solid ${tile.border}`, padding: "10px 12px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -3665,6 +3668,7 @@ function RecapView({ onBack }) {
   const [sharingClan, setSharingClan] = useState(false);
   const [copiedClan, setCopiedClan] = useState(false);
   const [showClanShareCard, setShowClanShareCard] = useState(false);
+  const [fullHistory, setFullHistory] = useState([]);
   const [selectedClan, setSelectedClan] = useState("alliance");
   const [clanRounds, setClanRounds] = useState([]);
   const recapCardRef = useRef(null);
@@ -3678,6 +3682,7 @@ function RecapView({ onBack }) {
       setSeasons(lb.seasons || []);
       setSelectedSeason(lb.currentSeason || lb.seasons?.[0] || null);
       setHistory(hist.history || []);
+      setFullHistory(hist.history || []);
       const withOverall = (lb.stats || []).map(p => ({
         ...p,
         overall: (p.attacks_used > 0 && p.attacks_available > 0)
@@ -3754,9 +3759,9 @@ function RecapView({ onBack }) {
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
   const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
   const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
-  // Previous season rank — sort by parsed season date, oldest first
+  // Previous season rank — use fullHistory (all seasons) sorted by date
   const parseSeason = (s) => { try { return new Date(s); } catch { return new Date(0); } };
-  const allClanHistory = history
+  const allClanHistory = fullHistory
     .filter(h => h.clan_name === selectedClan)
     .sort((a, b) => parseSeason(a.season) - parseSeason(b.season));
   const currentClanHistoryIdx = allClanHistory.findIndex(h => h.season === selectedSeason);
