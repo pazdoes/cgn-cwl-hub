@@ -3310,9 +3310,9 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           </div>
 
           {/* MIDDLE: CWL Rounds — wider for full opponent names */}
-          <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>CWL Rounds</div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
+          <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, flexShrink: 0 }}>CWL Rounds</div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden" }}>
               {rounds.map((r, i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) < parseFloat(r.defence_pct||0));
@@ -3765,16 +3765,20 @@ function RecapView({ onBack }) {
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
   const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
   const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
-  // Previous season rank — use fullHistory (all seasons) sorted by date
-  // Fallback to history if fullHistory not yet populated
-  const parseSeason = (s) => { try { return new Date(s); } catch { return new Date(0); } };
-  const historySource = fullHistory.length > 0 ? fullHistory : history;
-  const allClanHistory = historySource
+  // Previous season rank — sort fullHistory by parsed date, find entry immediately before current season
+  const parseSeasonDate = (s) => {
+    if (!s) return new Date(0);
+    // Handle "June 16 2026" and "June 2026" formats
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? new Date(0) : d;
+  };
+  const allHistory = fullHistory.length > 0 ? fullHistory : history;
+  const clanAllSeasons = allHistory
     .filter(h => h.clan_name === selectedClan)
-    .sort((a, b) => parseSeason(a.season) - parseSeason(b.season));
-  const currentClanHistoryIdx = allClanHistory.findIndex(h => h.season === selectedSeason);
-  const prevClanRank = currentClanHistoryIdx > 0
-    ? allClanHistory[currentClanHistoryIdx - 1]?.cwl_rank || null
+    .sort((a, b) => parseSeasonDate(a.season) - parseSeasonDate(b.season)); // oldest first
+  const curSeasonIdx = clanAllSeasons.findIndex(h => h.season === selectedSeason);
+  const prevClanRank = curSeasonIdx > 0
+    ? clanAllSeasons[curSeasonIdx - 1]?.cwl_rank || null
     : null;
   const prevClanWithOverall = prevSeasonHistory.map(c => ({
     ...c,
