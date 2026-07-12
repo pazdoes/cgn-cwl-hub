@@ -3310,7 +3310,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           </div>
 
           {/* MIDDLE: CWL Rounds */}
-          <div style={{ width: 210, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+          <div style={{ width: 230, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>CWL Rounds</div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
               {rounds.map((r, i) => {
@@ -3754,10 +3754,11 @@ function RecapView({ onBack }) {
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
   const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
   const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
-  // Previous season rank for the selected clan — scan all history ordered by season index
+  // Previous season rank for the selected clan — seasons array is newest-first (index 0 = newest)
+  // So lower indexOf = more recent. Sort ascending by indexOf = oldest first.
   const allClanHistory = history
     .filter(h => h.clan_name === selectedClan)
-    .sort((a, b) => seasons.indexOf(a.season) - seasons.indexOf(b.season)); // ascending = oldest first
+    .sort((a, b) => seasons.indexOf(b.season) - seasons.indexOf(a.season)); // oldest first = higher indexOf first
   const currentClanHistoryIdx = allClanHistory.findIndex(h => h.season === selectedSeason);
   const prevClanRank = currentClanHistoryIdx > 0
     ? allClanHistory[currentClanHistoryIdx - 1]?.cwl_rank || null
