@@ -3490,6 +3490,8 @@ function RecapView({ onBack }) {
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [selectedClan, setSelectedClan] = useState("alliance");
+  const [clanRounds, setClanRounds] = useState([]);
   const recapCardRef = useRef(null);
 
   useEffect(() => {
@@ -3530,6 +3532,15 @@ function RecapView({ onBack }) {
     }).catch(() => setLoading(false));
   }, [selectedSeason]);
 
+  // Fetch per-round war data when clan selected
+  useEffect(() => {
+    if (!selectedSeason || selectedClan === "alliance") { setClanRounds([]); return; }
+    fetch(`/api/clan-rounds?season=${encodeURIComponent(selectedSeason)}&clan=${encodeURIComponent(selectedClan)}`)
+      .then(r => r.json())
+      .then(d => setClanRounds(d.rounds || []))
+      .catch(() => setClanRounds([]));
+  }, [selectedSeason, selectedClan]);
+
   // Derived data
   const seasonHistory = history.filter(r => r.season === selectedSeason);
   const totalWars = seasonHistory.reduce((s,r) => s + (r.wars_won||0) + (r.wars_lost||0) + (r.wars_drawn||0), 0);
@@ -3537,11 +3548,14 @@ function RecapView({ onBack }) {
   const totalLosses = seasonHistory.reduce((s,r) => s + (r.wars_lost||0), 0);
   const totalDraws = seasonHistory.reduce((s,r) => s + (r.wars_drawn||0), 0);
 
-  const validPlayers = stats.filter(p => p.overall != null).sort((a,b) => b.overall - a.overall);
+  // Filter stats by selected clan
+  const filteredStats = selectedClan === "alliance" ? stats : stats.filter(p => p.clan_name === selectedClan);
+  const validPlayers = filteredStats.filter(p => p.overall != null).sort((a,b) => b.overall - a.overall);
   const top3 = validPlayers.slice(0, 3);
 
-  const bestAttacker = [...stats].filter(p => p.attacks_used > 0).sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0];
-  const bestDefender = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||0) - parseFloat(b.defence_efficiency||0))[0];
+  const withAttacksFiltered = filteredStats.filter(p => p.attacks_used > 0);
+  const bestAttacker = [...withAttacksFiltered].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0];
+  const bestDefender = [...filteredStats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||0) - parseFloat(b.defence_efficiency||0))[0];
 
   const clanWithOverall = seasonHistory.map(c => ({
     ...c,
@@ -3552,12 +3566,12 @@ function RecapView({ onBack }) {
   // Total alliance stars
   const totalAllianceStars = seasonHistory.reduce((s,r) => s + (r.total_stars||0), 0);
 
-  // Season awards for share card
-  const withAttacks = stats.filter(p => p.attacks_used > 0);
+  // Season awards for share card — scoped to selected clan
+  const withAttacks = withAttacksFiltered;
   const awardMostThreeStars = [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0];
   const awardClutchKing = [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0];
   const awardPunchUpKing = [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0];
-  const awardIronDefence = [...stats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
+  const awardIronDefence = [...filteredStats].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0];
   const awardMostConsistent = [...withAttacks].filter(p => p.consistency_score != null).sort((a,b) => parseFloat(b.consistency_score||0) - parseFloat(a.consistency_score||0))[0];
 
   // Previous season delta
@@ -3631,13 +3645,26 @@ function RecapView({ onBack }) {
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">Season Recap</h1>
         {seasons.length > 1 ? (
-          <select value={selectedSeason||""} onChange={e => setSelectedSeason(e.target.value)}
+          <select value={selectedSeason||""} onChange={e => { setSelectedSeason(e.target.value); setSelectedClan("alliance"); }}
             className="mt-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             {seasons.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         ) : (
           <p className="text-slate-500 text-xs mt-1">{selectedSeason}</p>
         )}
+        {/* Clan filter */}
+        <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+          {["alliance", ...seasonHistory.map(h => h.clan_name)].map(clan => (
+            <button key={clan} onClick={() => setSelectedClan(clan)}
+              className={`px-3 py-0.5 rounded-full text-[9px] uppercase tracking-widest border transition ${
+                selectedClan === clan
+                  ? "border-purple-500/60 bg-purple-500/15 text-purple-300"
+                  : "border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
+              }`}>
+              {clan === "alliance" ? "Alliance" : clan.split(" ")[0]}
+            </button>
+          ))}
+        </div>
 
         {/* Share button */}
         {!loading && topClan && (
@@ -3685,40 +3712,76 @@ function RecapView({ onBack }) {
       ) : (
         <div className="relative z-10 space-y-4">
 
-          {/* Top clan */}
-          {topClan && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest">Top Clan</p>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-              </svg>
-              <div>
-                <p className="text-2xl font-thin tracking-widest" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{topClan.cwl_rank}</p>
-              </div>
-              <div className="flex items-center justify-center gap-6 w-full pt-2 border-t border-white/[0.06]">
-                <div className="text-center">
-                  <p className="text-xl font-thin text-green-300">{topClan.wars_won}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Wins</p>
+          {/* Top Clan (alliance) or Clan Header (per-clan) */}
+          {selectedClan === "alliance" ? (
+            topClan && (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Top Clan</p>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+                </svg>
+                <div>
+                  <p className="text-2xl font-thin tracking-widest" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{topClan.cwl_rank}</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-xl font-thin text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
-                    {topClanDelta !== null && (
-                      <span className={`text-[9px] font-semibold ${topClanDelta > 0 ? "text-green-400" : topClanDelta < 0 ? "text-red-400" : "text-slate-500"}`}>
-                        {topClanDelta > 0 ? `↑${topClanDelta}` : topClanDelta < 0 ? `↓${Math.abs(topClanDelta)}` : "→"}
-                      </span>
-                    )}
+                <div className="flex items-center justify-center gap-6 w-full pt-2 border-t border-white/[0.06]">
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-green-300">{topClan.wars_won}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Wins</p>
                   </div>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">CGN Rating</p>
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
+                      {topClanDelta !== null && (
+                        <span className={`text-[9px] font-semibold ${topClanDelta > 0 ? "text-green-400" : topClanDelta < 0 ? "text-red-400" : "text-slate-500"}`}>
+                          {topClanDelta > 0 ? `↑${topClanDelta}` : topClanDelta < 0 ? `↓${Math.abs(topClanDelta)}` : "→"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">CGN Rating</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )
+          ) : (() => {
+            const clanData = seasonHistory.find(h => h.clan_name === selectedClan);
+            if (!clanData) return null;
+            const clanStars = filteredStats.reduce((s,p) => s + (p.stars_earned||0), 0);
+            const threeStarCount = filteredStats.reduce((s,p) => s + (p.three_stars||0), 0);
+            const totalAtks = filteredStats.reduce((s,p) => s + (p.attacks_used||0), 0);
+            return (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">{clanData.cwl_rank}</p>
+                <p className="text-2xl font-thin tracking-widest text-white">{selectedClan.split(" ")[0]}</p>
+                <div className="flex items-center justify-center gap-4 w-full pt-2 border-t border-white/[0.06]">
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-green-300">{clanData.wars_won}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Wins</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-red-400">{clanData.wars_lost}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Losses</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-amber-300">{clanStars}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Stars</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-purple-300">{parseFloat(clanData.attack_efficiency||0).toFixed(2)}</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-thin text-green-300">{totalAtks > 0 ? Math.round((threeStarCount/totalAtks)*100) : 0}%</p>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">3★ Rate</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Top 3 players */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
@@ -3741,6 +3804,36 @@ function RecapView({ onBack }) {
               ))}
             </div>
           </div>
+
+          {/* Per-clan round breakdown */}
+          {selectedClan !== "alliance" && clanRounds.length > 0 && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">CWL Round Breakdown</p>
+              <div className="space-y-1.5">
+                {clanRounds.map((r, i) => {
+                  const won = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && r.destruction_pct > r.defence_pct);
+                  const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && r.destruction_pct < r.defence_pct);
+                  const colour = won ? "text-green-400 border-green-500/20" : lost ? "text-red-400 border-red-500/20" : "text-slate-400 border-white/10";
+                  return (
+                    <div key={i} className={`flex items-center justify-between rounded-2xl border ${colour} bg-white/[0.02] px-3 py-2`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-slate-600 uppercase tracking-widest w-12">R{r.war_day}</span>
+                        <span className="text-xs text-slate-400 truncate max-w-[100px]">{r.opponent_clan}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-xs font-semibold text-amber-300">{r.stars_earned}★</span>
+                        <span className="text-[9px] text-slate-600">vs</span>
+                        <span className="text-xs text-slate-500">{r.stars_conceded}★</span>
+                        <span className={`text-[9px] font-semibold uppercase tracking-widest ${won ? "text-green-400" : lost ? "text-red-400" : "text-slate-500"}`}>
+                          {won ? "W" : lost ? "L" : "D"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Standout performers */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
@@ -3776,11 +3869,11 @@ function RecapView({ onBack }) {
           </div>
 
           {/* Category winners */}
-          <SeasonAwards stats={stats} />
+          <SeasonAwards stats={filteredStats} />
 
           {/* Alliance Performance */}
-          {stats.length > 0 && (
-            <AlliancePerformanceTile stats={stats} totalAllianceStars={totalAllianceStars} />
+          {filteredStats.length > 0 && (
+            <AlliancePerformanceTile stats={filteredStats} totalAllianceStars={filteredStats.reduce((s,p) => s + (p.stars_earned||0), 0)} />
           )}
 
           {/* Alliance war record */}
