@@ -3754,11 +3754,11 @@ function RecapView({ onBack }) {
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
   const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
   const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
-  // Previous season rank for the selected clan — seasons array is newest-first (index 0 = newest)
-  // So lower indexOf = more recent. Sort ascending by indexOf = oldest first.
+  // Previous season rank — sort by parsed season date, oldest first
+  const parseSeason = (s) => { try { return new Date(s); } catch { return new Date(0); } };
   const allClanHistory = history
     .filter(h => h.clan_name === selectedClan)
-    .sort((a, b) => seasons.indexOf(b.season) - seasons.indexOf(a.season)); // oldest first = higher indexOf first
+    .sort((a, b) => parseSeason(a.season) - parseSeason(b.season));
   const currentClanHistoryIdx = allClanHistory.findIndex(h => h.season === selectedSeason);
   const prevClanRank = currentClanHistoryIdx > 0
     ? allClanHistory[currentClanHistoryIdx - 1]?.cwl_rank || null
