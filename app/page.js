@@ -3212,27 +3212,30 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
   }
 
   const RANK_ORDER = ["Bronze League III","Bronze League II","Bronze League I","Silver League III","Silver League II","Silver League I","Gold League III","Gold League II","Gold League I","Crystal League III","Crystal League II","Crystal League I","Master League III","Master League II","Master League I","Champion League III","Champion League II","Champion League I"];
-  const displayRank = currentCwlRank || clanData?.cwl_rank || null;
-  const seasonRank  = clanData?.cwl_rank || null;
-  const currentIdx  = displayRank ? RANK_ORDER.indexOf(displayRank) : -1;
-  const seasonIdx   = seasonRank  ? RANK_ORDER.indexOf(seasonRank)  : -1;
-  const rankDelta   = (currentIdx >= 0 && seasonIdx >= 0) ? currentIdx - seasonIdx : 0;
-  const promoted    = rankDelta > 0;
-  const demoted     = rankDelta < 0;
-  const cwlIconUrl  = getCwlIconUrl(displayRank);
 
-  // 8 tiles — 2 columns x 4 rows — exact icons from overall recap card
+  // displayRank: current live rank (Champion II for Cognition)
+  // prevCwlRank: rank from previous season history entry (Champion III for Cognition)
+  // Promotion = currentRank higher than prevRank (higher index = higher rank)
+  const displayRank  = currentCwlRank || clanData?.cwl_rank || null;
+  const prevIdx      = prevCwlRank  ? RANK_ORDER.indexOf(prevCwlRank)  : -1;
+  const currentIdx   = displayRank  ? RANK_ORDER.indexOf(displayRank)  : -1;
+  const rankDelta    = (currentIdx >= 0 && prevIdx >= 0) ? currentIdx - prevIdx : 0;
+  const promoted     = rankDelta > 0;
+  const demoted      = rankDelta < 0;
+  const cwlIconUrl   = getCwlIconUrl(displayRank);
+
+  // 8 tiles — 2 cols x 4 rows — exact icon paths from RecapShareCard
   const col1 = [
-    { label: "Best Attacker",   icon: "M13 10V3L4 14h7v7l9-11h-7z",                                                                                                                                                                                                iconCol: "#c4b5fd", player: bestAttacker,        value: bestAttacker        ? parseFloat(bestAttacker.efficiency).toFixed(2)               : null, unit: "Atk EFF",     colour: "#c4b5fd", bg: "rgba(139,92,246,0.08)",  border: "rgba(139,92,246,0.22)"  },
-    { label: "Best Defender",   icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",                       iconCol: "#93c5fd", player: bestDefender,        value: bestDefender        ? parseFloat(bestDefender.defence_efficiency).toFixed(2)       : null, unit: "Def EFF",     colour: "#93c5fd", bg: "rgba(59,130,246,0.08)",  border: "rgba(59,130,246,0.22)"  },
-    { label: "Clutch King",     icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",                                                                       iconCol: "#f472b6", player: awardClutchKing,     value: awardClutchKing     ? parseFloat(awardClutchKing.clutch_rate).toFixed(2)           : null, unit: "Clutch Rate", colour: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.22)" },
-    { label: "Season MVP",      icon: MEDAL_PATH,                                                                                                                                                                                                                   iconCol: "#D4AF37", player: seasonMvp,           value: seasonMvp           ? parseFloat(seasonMvp.overall).toFixed(2)                     : null, unit: "CGN Rating",  colour: "#D4AF37", bg: "rgba(212,175,55,0.08)",  border: "rgba(212,175,55,0.22)"  },
+    { label: "Best Attacker",   iconPath: "M13 10V3L4 14h7v7l9-11h-7z",                                                                                                                                                                                                                                                                                                                                                                                    iconCol: "#c4b5fd", player: bestAttacker,        value: bestAttacker        ? parseFloat(bestAttacker.efficiency).toFixed(2)               : null, unit: "Atk EFF",     colour: "#c4b5fd", bg: "rgba(139,92,246,0.08)",  border: "rgba(139,92,246,0.22)"  },
+    { label: "Best Defender",   iconPath: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",                                                                                                                                                                                                              iconCol: "#93c5fd", player: bestDefender,        value: bestDefender        ? parseFloat(bestDefender.defence_efficiency).toFixed(2)       : null, unit: "Def EFF",     colour: "#93c5fd", bg: "rgba(59,130,246,0.08)",  border: "rgba(59,130,246,0.22)"  },
+    { label: "Clutch King",     iconPath: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z",                                                                                                                                                                                                                                                              iconCol: "#f472b6", player: awardClutchKing,     value: awardClutchKing     ? parseFloat(awardClutchKing.clutch_rate).toFixed(2)           : null, unit: "Clutch Rate", colour: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.22)" },
+    { label: "Season MVP",      iconPath: MEDAL_PATH,                                                                                                                                                                                                                                                                                                                                                                                                       iconCol: "#D4AF37", player: seasonMvp,           value: seasonMvp           ? parseFloat(seasonMvp.overall).toFixed(2)                     : null, unit: "CGN Rating",  colour: "#D4AF37", bg: "rgba(212,175,55,0.08)",  border: "rgba(212,175,55,0.22)"  },
   ];
   const col2 = [
-    { label: "3★ Machine",      icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z", iconCol: "#fbbf24", player: awardMostThreeStars, value: awardMostThreeStars ? String(awardMostThreeStars.three_stars)                      : null, unit: "3-Stars",     colour: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)"  },
-    { label: "Brave Heart",     icon: "M5 10l7-7m0 0l7 7m-7-7v18",                                                                                                                                                                                                 iconCol: "#86efac", player: awardPunchUpKing,    value: awardPunchUpKing    ? parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)+"%"    : null, unit: "Punch-Up",    colour: "#86efac", bg: "rgba(34,197,94,0.08)",   border: "rgba(34,197,94,0.22)"   },
-    { label: "Iron Wall",       icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",                       iconCol: "#34d399", player: awardIronDefence,    value: awardIronDefence    ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2): null, unit: "Def EFF",     colour: "#34d399", bg: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.22)"  },
-    { label: "Most Consistent", icon: "M4 6h16M4 10h16M4 14h16M4 18h16",                                                                                                                                                                                           iconCol: "#a78bfa", player: awardMostConsistent, value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score).toFixed(2) : null, unit: "Consistency", colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.18)"  },
+    { label: "3★ Machine",      iconPath: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",                                  iconCol: "#fbbf24", player: awardMostThreeStars, value: awardMostThreeStars ? String(awardMostThreeStars.three_stars)                      : null, unit: "3-Stars",     colour: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)"  },
+    { label: "Brave Heart",     iconPath: "M5 10l7-7m0 0l7 7m-7-7v18",                                                                                                                                                                                                                                                                                                                                                                                     iconCol: "#86efac", player: awardPunchUpKing,    value: awardPunchUpKing    ? parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)+"%"    : null, unit: "Punch-Up",    colour: "#86efac", bg: "rgba(34,197,94,0.08)",   border: "rgba(34,197,94,0.22)"   },
+    { label: "Iron Wall",       iconPath: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",                                                                                                                                                                                                              iconCol: "#34d399", player: awardIronDefence,    value: awardIronDefence    ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2): null, unit: "Def EFF",     colour: "#34d399", bg: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.22)"  },
+    { label: "Most Consistent", iconPath: "M4 6h16M4 10h16M4 14h16M4 18h16",                                                                                                                                                                                                                                                                                                                                                                               iconCol: "#a78bfa", player: awardMostConsistent, value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score||0).toFixed(2): null, unit: "Consistency", colour: "#a78bfa", bg: "rgba(139,92,246,0.06)",  border: "rgba(139,92,246,0.18)"  },
   ];
 
   const statItems = clanData ? [
@@ -3243,20 +3246,20 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
     { label: "Def EFF", value: parseFloat(clanData.defence_efficiency||0).toFixed(2), colour: "#93c5fd" },
   ] : [];
 
+  // Award tile — label row with icon, player name (no truncation), value + unit at bottom
   function Tile({ tile }) {
     return (
-      <div style={{ background: tile.bg, border: `1px solid ${tile.border}`, borderRadius: 14, padding: "12px 14px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Label row with icon */}
-        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+      <div style={{ background: tile.bg, border: `1px solid ${tile.border}`, borderRadius: 14, padding: "11px 13px", display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 7 }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={tile.iconCol} strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+            <path strokeLinecap="round" strokeLinejoin="round" d={tile.iconPath}/>
           </svg>
-          <span style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>{tile.label}</span>
+          <span style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", whiteSpace: "nowrap" }}>{tile.label}</span>
         </div>
         {tile.player ? (
           <>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "white", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 4 }}>{tile.player.player_name}</div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "white", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{tile.player.player_name}</div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", marginTop: 4 }}>
               <div style={{ fontSize: 22, fontWeight: 700, color: tile.colour, lineHeight: 1 }}>{tile.value}</div>
               <div style={{ fontSize: 8, color: "#334155", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3 }}>{tile.unit}</div>
             </div>
@@ -3303,12 +3306,14 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
 
       <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", height:"100%", gap:14 }}>
 
-        {/* ── HEADER ── */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
-          <div>
-            <div style={{ fontSize:10, color:"#475569", textTransform:"uppercase", letterSpacing:"0.15em", marginBottom:4 }}>Season Recap · {selectedSeason}</div>
+        {/* ── HEADER: clan name + season label inline, stats right ── */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          {/* Left: clan name with season label to its right, vertically centred */}
+          <div style={{ display:"flex", alignItems:"baseline", gap:16 }}>
             <div style={{ fontSize:42, fontWeight:100, letterSpacing:"0.04em", color:"white", lineHeight:1 }}>{clanName.split(" ")[0]}</div>
+            <div style={{ fontSize:10, color:"#475569", textTransform:"uppercase", letterSpacing:"0.15em" }}>Season Recap · {selectedSeason}</div>
           </div>
+          {/* Right: key stats */}
           <div style={{ display:"flex", gap:28, alignItems:"flex-end" }}>
             {statItems.map((s,i) => (
               <div key={i} style={{ textAlign:"center" }}>
@@ -3319,32 +3324,39 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           </div>
         </div>
 
-        {/* ── DIVIDER ── */}
-        <div style={{ height:1, background:"rgba(255,255,255,0.06)" }}/>
+        {/* Divider */}
+        <div style={{ height:1, background:"rgba(255,255,255,0.06)", flexShrink:0 }}/>
 
         {/* ── BODY ── */}
         <div style={{ display:"flex", gap:14, flex:1, minHeight:0 }}>
 
           {/* LEFT: Top Players + CWL icon */}
-          <div style={{ width:290, flexShrink:0, display:"flex", flexDirection:"column", gap:12 }}>
+          <div style={{ width:285, flexShrink:0, display:"flex", flexDirection:"column", gap:12 }}>
 
-            {/* Top Players — matching overall card style exactly */}
+            {/* Top Players tile */}
             <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 14px" }}>
-              <div style={{ fontSize:8, color:"#475569", textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:10 }}>Top Players</div>
+              {/* Header row: "Top Players" label left, CGN Rating icon right */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                <span style={{ fontSize:8, color:"#475569", textTransform:"uppercase", letterSpacing:"0.12em" }}>Top Players</span>
+                <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
+                  </svg>
+                  <span style={{ fontSize:8, color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.1em" }}>CGN Rating</span>
+                </div>
+              </div>
+              {/* Player rows */}
               {top3.map((p,i) => (
-                <div key={p.player_tag} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:i<2?8:0, paddingBottom:i<2?8:0, borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}>
+                <div key={p.player_tag} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:i<2?8:0, paddingBottom:i<2?8:0, borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none", minWidth:0 }}>
+                  {/* Medal icon + name */}
+                  <div style={{ display:"flex", alignItems:"center", gap:7, minWidth:0, flex:1 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8} style={{ flexShrink:0 }}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
                     </svg>
-                    <div style={{ fontSize:13, fontWeight:600, color:medalColours[i+1] }}>{p.player_name}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:medalColours[i+1], whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", minWidth:0 }}>{p.player_name}</div>
                   </div>
-                  <div style={{ display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={1.8}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
-                    </svg>
-                    <div style={{ fontSize:14, fontWeight:700, color:"#a78bfa" }}>{p.overall?.toFixed(2)}</div>
-                  </div>
+                  {/* Score */}
+                  <div style={{ fontSize:14, fontWeight:700, color:"#a78bfa", flexShrink:0, marginLeft:8 }}>{p.overall?.toFixed(2)}</div>
                 </div>
               ))}
             </div>
@@ -3354,18 +3366,18 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
               {cwlIconUrl && <img src={cwlIconUrl} style={{ width:140, height:140, objectFit:"contain" }} alt=""/>}
               <div style={{ fontSize:13, color:"#a78bfa", letterSpacing:"0.04em", textAlign:"center" }}>{displayRank || ""}</div>
               {(promoted||demoted) && (
-                <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, fontWeight:700, color:promoted?"#4ade80":"#f87171" }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke={promoted?"#4ade80":"#f87171"} strokeWidth={2.5}>
+                <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, fontWeight:700, color:promoted?"#4ade80":"#f87171" }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke={promoted?"#4ade80":"#f87171"} strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={promoted?"M5 10l7-7m0 0l7 7m-7-7v18":"M19 14l-7 7m0 0l-7-7m7 7V3"}/>
                   </svg>
-                  <span>{promoted?"PROMOTED":"DEMOTED"}</span>
+                  <span style={{ textTransform:"uppercase", letterSpacing:"0.08em" }}>{promoted?"Promoted":"Demoted"}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* MIDDLE: CWL Rounds — wider to prevent truncation */}
-          <div style={{ width:240, flexShrink:0, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 16px", display:"flex", flexDirection:"column" }}>
+          {/* MIDDLE: CWL Rounds */}
+          <div style={{ width:235, flexShrink:0, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 14px", display:"flex", flexDirection:"column" }}>
             <div style={{ fontSize:8, color:"#475569", textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:12 }}>CWL Rounds</div>
             <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:rounds.length>0?"space-between":"center" }}>
               {rounds.length>0 ? rounds.map((r,i) => {
@@ -3373,11 +3385,11 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned===r.stars_conceded && parseFloat(r.destruction_pct||0)<parseFloat(r.defence_pct||0));
                 const col  = won?"#4ade80":lost?"#f87171":"#94a3b8";
                 return (
-                  <div key={i} style={{ display:"flex", alignItems:"center", gap:4 }}>
+                  <div key={i} style={{ display:"flex", alignItems:"center", gap:4, minWidth:0 }}>
                     <span style={{ fontSize:9, color:"#334155", width:18, flexShrink:0 }}>R{r.war_day}</span>
-                    <span style={{ fontSize:10, color:"#64748b", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.opponent_clan}</span>
-                    <span style={{ fontSize:10, color:"#fbbf24", fontWeight:600, flexShrink:0 }}>{r.stars_earned}★</span>
-                    <span style={{ fontSize:9, color:"#1e293b", margin:"0 1px", flexShrink:0 }}>·</span>
+                    <span style={{ fontSize:10, color:"#64748b", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", minWidth:0 }}>{r.opponent_clan}</span>
+                    <span style={{ fontSize:10, color:"#fbbf24", fontWeight:600, flexShrink:0, marginLeft:4 }}>{r.stars_earned}★</span>
+                    <span style={{ fontSize:9, color:"#1e293b", flexShrink:0, margin:"0 2px" }}>·</span>
                     <span style={{ fontSize:10, color:"#475569", flexShrink:0 }}>{r.stars_conceded}★</span>
                     <span style={{ fontSize:11, fontWeight:700, color:col, width:12, textAlign:"right", flexShrink:0 }}>{won?"W":lost?"L":"D"}</span>
                   </div>
@@ -3386,19 +3398,19 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
             </div>
           </div>
 
-          {/* RIGHT: 2 cols x 4 rows = 8 tiles */}
-          <div style={{ flex:1, display:"flex", gap:10 }}>
-            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10 }}>
+          {/* RIGHT: 2 cols x 4 rows */}
+          <div style={{ flex:1, display:"flex", gap:10, minWidth:0 }}>
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10, minWidth:0 }}>
               {col1.map((tile,i) => <Tile key={i} tile={tile}/>)}
             </div>
-            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10 }}>
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10, minWidth:0 }}>
               {col2.map((tile,i) => <Tile key={i} tile={tile}/>)}
             </div>
           </div>
         </div>
 
         {/* ── FOOTER ── */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:"1px solid rgba(255,255,255,0.05)", paddingTop:8 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:"1px solid rgba(255,255,255,0.05)", paddingTop:8, flexShrink:0 }}>
           <span style={{ fontSize:9, color:"#1e293b", textTransform:"uppercase", letterSpacing:"0.14em" }}>CGNCO.VERCEL.APP</span>
           <span style={{ fontSize:9, color:"#1e293b", textTransform:"uppercase", letterSpacing:"0.14em" }}>COGNITION {"{CGN}"}</span>
         </div>
