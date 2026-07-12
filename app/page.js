@@ -3317,11 +3317,10 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) < parseFloat(r.defence_pct||0));
                 const rc   = won ? "#4ade80" : lost ? "#f87171" : "#94a3b8";
-                // Star highlight: win=our stars amber, loss=opponent stars red, draw=both neutral
                 const ourStarCol = won ? "#fbbf24" : "#475569";
                 const oppStarCol = lost ? "#f87171" : "#475569";
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, width: "100%", overflow: "hidden" }}>
                     <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0 }}>R{r.war_day}</span>
                     <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{r.opponent_clan}</span>
                     <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0 }}>{r.stars_earned}★</span>
@@ -3720,6 +3719,13 @@ function RecapView({ onBack }) {
       .then(r => r.json())
       .then(d => setClanRounds(d.rounds || []))
       .catch(() => setClanRounds([]));
+    // Ensure fullHistory is populated for promo/demo detection
+    if (fullHistory.length === 0) {
+      fetch("/api/history")
+        .then(r => r.json())
+        .then(d => setFullHistory(d.history || []))
+        .catch(() => {});
+    }
   }, [selectedSeason, selectedClan]);
 
   // Derived data
@@ -3760,8 +3766,10 @@ function RecapView({ onBack }) {
   const prevSeason = selectedSeasonIdx >= 0 && selectedSeasonIdx < seasons.length - 1 ? seasons[selectedSeasonIdx + 1] : null;
   const prevSeasonHistory = prevSeason ? history.filter(r => r.season === prevSeason) : [];
   // Previous season rank — use fullHistory (all seasons) sorted by date
+  // Fallback to history if fullHistory not yet populated
   const parseSeason = (s) => { try { return new Date(s); } catch { return new Date(0); } };
-  const allClanHistory = fullHistory
+  const historySource = fullHistory.length > 0 ? fullHistory : history;
+  const allClanHistory = historySource
     .filter(h => h.clan_name === selectedClan)
     .sort((a, b) => parseSeason(a.season) - parseSeason(b.season));
   const currentClanHistoryIdx = allClanHistory.findIndex(h => h.season === selectedSeason);
