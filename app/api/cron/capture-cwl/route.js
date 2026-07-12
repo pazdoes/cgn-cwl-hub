@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
 import { captureCwlData, captureWarAttacks } from "@/lib/cwlCapture";
-import { getDb } from "@/lib/pool";
+import { getDb } from "@/lib/db";
 
 // Called by cron-job.org during CWL season
 // Captures CWL rank history, player war stats, and per-war attack data
