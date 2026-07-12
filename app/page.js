@@ -3274,6 +3274,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
   return (
     <div style={{
       width: 1200, height: 630,
+      minWidth: 1200, maxWidth: 1200,
       background: "#070b17",
       borderRadius: 28,
       border: "1px solid rgba(168,85,247,0.28)",
@@ -3304,12 +3305,12 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         <rect width="100%" height="100%" fill="url(#glow-cc)"/>
       </svg>
 
-      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", height:"100%", gap:14 }}>
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", height:"100%", gap:14, width:"100%" }}>
 
         {/* ── HEADER: clan name + season label inline, stats right ── */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           {/* Left: clan name with season label to its right, vertically centred */}
-          <div style={{ display:"flex", alignItems:"baseline", gap:16 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:16 }}>
             <div style={{ fontSize:42, fontWeight:100, letterSpacing:"0.04em", color:"white", lineHeight:1 }}>{clanName.split(" ")[0]}</div>
             <div style={{ fontSize:10, color:"#475569", textTransform:"uppercase", letterSpacing:"0.15em" }}>Season Recap · {selectedSeason}</div>
           </div>
@@ -3328,7 +3329,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         <div style={{ height:1, background:"rgba(255,255,255,0.06)", flexShrink:0 }}/>
 
         {/* ── BODY ── */}
-        <div style={{ display:"flex", gap:14, flex:1, minHeight:0 }}>
+        <div style={{ display:"flex", gap:14, flex:1, minHeight:0, width:"100%" }}>
 
           {/* LEFT: Top Players + CWL icon */}
           <div style={{ width:285, flexShrink:0, display:"flex", flexDirection:"column", gap:12 }}>
@@ -3376,10 +3377,10 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
             </div>
           </div>
 
-          {/* MIDDLE: CWL Rounds */}
-          <div style={{ width:235, flexShrink:0, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 14px", display:"flex", flexDirection:"column" }}>
-            <div style={{ fontSize:8, color:"#475569", textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:12 }}>CWL Rounds</div>
-            <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:rounds.length>0?"space-between":"center" }}>
+          {/* MIDDLE: CWL Rounds — height matches award tile columns via alignSelf */}
+          <div style={{ width:235, flexShrink:0, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 14px", display:"flex", flexDirection:"column", alignSelf:"stretch" }}>
+            <div style={{ fontSize:8, color:"#475569", textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:10 }}>CWL Rounds</div>
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:0, justifyContent:"space-evenly" }}>
               {rounds.length>0 ? rounds.map((r,i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned===r.stars_conceded && parseFloat(r.destruction_pct||0)>parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned===r.stars_conceded && parseFloat(r.destruction_pct||0)<parseFloat(r.defence_pct||0));
