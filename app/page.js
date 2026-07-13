@@ -3310,8 +3310,8 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           </div>
 
           {/* MIDDLE: CWL Rounds */}
-          <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, flexShrink: 0, lineHeight: "12px" }}>CWL Rounds</div>
+          <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, flexShrink: 0 }}>CWL Rounds</div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-around" }}>
               {rounds.map((r, i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
