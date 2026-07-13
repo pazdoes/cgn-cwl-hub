@@ -3499,7 +3499,10 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
             <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
               <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>CWL Rank Movement</div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
-                {clanWithOverall.filter(c => c.cwl_rank && c.current_cwl_rank).map((c, i) => {
+                {[...clanWithOverall].filter(c => c.cwl_rank && c.current_cwl_rank).sort((a, b) => {
+                  const RANKS2 = ["Bronze III","Bronze II","Bronze I","Silver III","Silver II","Silver I","Gold III","Gold II","Gold I","Crystal III","Crystal II","Crystal I","Master III","Master II","Master I","Champion III","Champion II","Champion I"];
+                  return RANKS2.indexOf(b.current_cwl_rank) - RANKS2.indexOf(a.current_cwl_rank);
+                }).map((c, i, arr) => {
                   const RANKS = ["Bronze III","Bronze II","Bronze I","Silver III","Silver II","Silver I","Gold III","Gold II","Gold I","Crystal III","Crystal II","Crystal I","Master III","Master II","Master I","Champion III","Champion II","Champion I"];
                   const prevIdx = RANKS.indexOf(c.cwl_rank);
                   const curIdx = RANKS.indexOf(c.current_cwl_rank);
@@ -3516,7 +3519,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
                   const prevIcon = rankIcon(c.cwl_rank);
                   const curIcon = rankIcon(c.current_cwl_rank);
                   return (
-                    <div key={c.clan_name} style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: i < clanWithOverall.filter(x => x.cwl_rank && x.current_cwl_rank).length - 1 ? 8 : 0, marginBottom: i < clanWithOverall.filter(x => x.cwl_rank && x.current_cwl_rank).length - 1 ? 8 : 0, borderBottom: i < clanWithOverall.filter(x => x.cwl_rank && x.current_cwl_rank).length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                    <div key={c.clan_name} style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: i < arr.length - 1 ? 8 : 0, marginBottom: i < arr.length - 1 ? 8 : 0, borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                       {/* Clan name */}
                       <span style={{ fontSize: 10, fontWeight: 600, color: "white", width: 72, flexShrink: 0 }}>{c.clan_name.split(" ")[0]}</span>
                       {/* Rank movement */}
@@ -3566,7 +3569,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
             </div>
 
             {/* Per-clan breakdown */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {clanWithOverall.slice(0, 3).map((c, i) => (
                 <div key={c.clan_tag || c.clan_name} style={{ background: "rgba(255,255,255,0.02)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)", padding: "8px 10px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
