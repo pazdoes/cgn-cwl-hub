@@ -3320,7 +3320,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
                 const ourStarCol = won ? "#fbbf24" : "#475569";
                 const oppStarCol = lost ? "#f87171" : "#475569";
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, lineHeight: "16px" }}>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, lineHeight: "16px", padding: "3px 0" }}>
                     <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0 }}>R{r.war_day}</span>
                     <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{r.opponent_clan}</span>
                     <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0 }}>{r.stars_earned}★</span>
