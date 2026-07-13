@@ -3254,6 +3254,14 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
             <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName.split(" ")[0]}</span>
             <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
+            {(promoted || demoted) && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                </svg>
+                <span style={{ fontSize: 10, fontWeight: 700, color: promoted ? "#4ade80" : "#f87171", textTransform: "uppercase", letterSpacing: "0.1em" }}>{promoted ? "Promoted" : "Demoted"}</span>
+              </div>
+            )}
           </div>
           <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
             {clanStats.map((s, i) => (
@@ -3295,44 +3303,35 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
             </div>
 
             {/* CWL rank movement visual */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
               {(promoted || demoted) ? (
-                <>
-                  {/* Rank movement: small prev icon → arrow → large current icon */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                    {/* Previous rank icon — small */}
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                      {cwlIconUrl(prevCwlRank) && (
-                        <img src={cwlIconUrl(prevCwlRank)} style={{ width: 60, height: 60, objectFit: "contain", opacity: 0.7 }} alt=""/>
-                      )}
-                      <span style={{ fontSize: 7, color: "#475569", textAlign: "center", maxWidth: 70 }}>{prevCwlRank}</span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%" }}>
+                  {/* Transition row: prev icon → arrow → current icon */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, width: "100%" }}>
+                    {/* Previous rank */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                      <span style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "center" }}>Previous</span>
+                      {cwlIconUrl(prevCwlRank) && <img src={cwlIconUrl(prevCwlRank)} style={{ width: 80, height: 80, objectFit: "contain", opacity: 0.75 }} alt=""/>}
+                      <span style={{ fontSize: 8, color: "#475569", textAlign: "center" }}>{prevCwlRank}</span>
                     </div>
                     {/* Arrow */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
-                    {/* Current rank icon — large */}
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                      {iconUrl && (
-                        <img src={iconUrl} style={{ width: 110, height: 110, objectFit: "contain" }} alt=""/>
-                      )}
-                      <span style={{ fontSize: 9, color: "#a78bfa", textAlign: "center", maxWidth: 100 }}>{displayRank}</span>
+                    {/* Current rank */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                      <span style={{ fontSize: 7, color: promoted ? "#4ade80" : "#f87171", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "center" }}>{promoted ? "Promoted" : "Demoted"}</span>
+                      {iconUrl && <img src={iconUrl} style={{ width: 130, height: 130, objectFit: "contain" }} alt=""/>}
+                      <span style={{ fontSize: 10, color: "#a78bfa", textAlign: "center" }}>{displayRank}</span>
                     </div>
                   </div>
-                  {/* Indicator text below */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: promoted ? "#4ade80" : "#f87171" }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
-                    </svg>
-                    <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>{promoted ? "Promoted" : "Demoted"}</span>
-                  </div>
-                </>
+                </div>
               ) : (
-                /* No change — single large icon */
-                <>
-                  {iconUrl && <img src={iconUrl} style={{ width: 150, height: 150, objectFit: "contain" }} alt=""/>}
+                /* No change — single large icon centred */
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                  {iconUrl && <img src={iconUrl} style={{ width: 155, height: 155, objectFit: "contain" }} alt=""/>}
                   <span style={{ fontSize: 12, color: "#a78bfa", textAlign: "center" }}>{displayRank}</span>
-                </>
+                </div>
               )}
             </div>
           </div>
