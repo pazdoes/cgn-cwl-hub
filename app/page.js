@@ -3580,7 +3580,6 @@ function RecapView({ onBack }) {
       setSeasons(lb.seasons || []);
       setSelectedSeason(lb.currentSeason || lb.seasons?.[0] || null);
       setHistory(hist.history || []);
-      setFullHistory(hist.history || []);
       const withOverall = (lb.stats || []).map(p => ({
         ...p,
         overall: (p.attacks_used > 0 && p.attacks_available > 0)
@@ -3644,7 +3643,7 @@ function RecapView({ onBack }) {
   // Previous season delta
   const selectedSeasonIdx = seasons.indexOf(selectedSeason);
   const parseSeasonDate = (s) => { if (!s) return new Date(0); const d = new Date(s); return isNaN(d.getTime()) ? new Date(0) : d; };
-  const allHistory = fullHistory.length > 0 ? fullHistory : history;
+  const allHistory = history;
   const clanAllSeasons = allHistory.filter(h => h.clan_name === selectedClan).sort((a,b) => parseSeasonDate(a.season) - parseSeasonDate(b.season));
   const curSeasonIdx = clanAllSeasons.findIndex(h => h.season === selectedSeason);
   const prevClanRank = curSeasonIdx > 0 ? clanAllSeasons[curSeasonIdx - 1]?.cwl_rank || null : null;
