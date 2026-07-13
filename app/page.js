@@ -1170,11 +1170,14 @@ function PlayerProfileView({ onBack }) {
   const [upgrades, setUpgrades] = useState(null);
   const [upgradesLoading, setUpgradesLoading] = useState(false);
   const [upgradeSnapshots, setUpgradeSnapshots] = useState(0);
+  const [tourneyHistory, setTourneyHistory] = useState(null);
+  const [tourneyLoading, setTourneyLoading] = useState(false);
+
 
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null);
+    setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setTourneyHistory(null);
     const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
@@ -1245,6 +1248,16 @@ function PlayerProfileView({ onBack }) {
       }
     } catch { setError("Network error"); }
     finally { setSearching(false); }
+  }
+
+  async function fetchTourneyHistory(tag) {
+    setTourneyLoading(true);
+    try {
+      const res = await fetch(`/api/tournament-history/${tag.replace("#","")}`);
+      const d = await res.json();
+      setTourneyHistory(d.results || []);
+    } catch { setTourneyHistory([]); }
+    finally { setTourneyLoading(false); }
   }
 
   async function fetchUpgrades(tag) {
@@ -1511,8 +1524,9 @@ function PlayerProfileView({ onBack }) {
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
               <button type="button"
                 onClick={() => {
-                  if (profileView === "upgrades") setProfileView("army");
-                  else { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  if (profileView === "army") { setProfileView("ranked"); if (!tourneyHistory) fetchTourneyHistory(army.tag); }
+                  else if (profileView === "ranked") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1520,11 +1534,12 @@ function PlayerProfileView({ onBack }) {
                 </svg>
               </button>
               <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none">
-                {profileView === "army" ? "Army" : "Upgrades"}
+                {profileView === "army" ? "Army" : profileView === "ranked" ? "Ranked" : "Upgrades"}
               </span>
               <button type="button"
                 onClick={() => {
                   if (profileView === "army") { setProfileView("upgrades"); if (!upgrades) fetchUpgrades(army.tag); }
+                  else if (profileView === "upgrades") { setProfileView("ranked"); if (!tourneyHistory) fetchTourneyHistory(army.tag); }
                   else setProfileView("army");
                 }}
                 className="text-slate-500 hover:text-slate-300 transition p-1">
@@ -1535,6 +1550,92 @@ function PlayerProfileView({ onBack }) {
             </div>
 
             {/* ── UPGRADES VIEW ── */}
+            {profileView === "ranked" && (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Weekly Tournament History</p>
+                {tourneyLoading && (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(4)].map((_,i) => <div key={i} className="h-20 bg-white/[0.04] rounded-2xl"/>)}
+                  </div>
+                )}
+                {!tourneyLoading && tourneyHistory?.length === 0 && (
+                  <div className="text-center py-6 space-y-1">
+                    <p className="text-slate-500 text-xs">No tournament history yet</p>
+                    <p className="text-slate-700 text-[10px]">Results recorded each Monday after weekly reset</p>
+                  </div>
+                )}
+                {!tourneyLoading && tourneyHistory?.map((r, i) => {
+                  const isPromoted = r.result === "promoted";
+                  const isDemoted = r.result === "demoted";
+
+                  // Week date range: Mon-Mon
+                  const weekEnd = new Date(r.week_ending);
+                  const weekStart = new Date(weekEnd);
+                  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+                  const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+                  const dateRange = `${fmt(weekStart)} — ${fmt(weekEnd)}`;
+
+                  // Trophy trend vs previous week
+                  const prevResult = tourneyHistory[i + 1];
+                  const trophyDiff = prevResult?.pre_trophies && r.pre_trophies
+                    ? r.pre_trophies - prevResult.pre_trophies : null;
+
+                  // Alliance rank — derive from all results for this week
+                  // (passed from API in future; placeholder for now)
+
+                  return (
+                    <div key={i} className={`rounded-2xl border p-3 space-y-2.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+
+                      {/* Row 1: date range + result badge */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-slate-500 uppercase tracking-widest">{dateRange}</span>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
+                          {isPromoted ? "↑ Promoted" : isDemoted ? "↓ Demoted" : "→ Stayed"}
+                        </span>
+                      </div>
+
+                      {/* Row 2: league badge + name (left) · trophy count (right) */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          {r.pre_league && <img
+                            src={`/icons/leagues/${r.pre_league.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                            alt={r.pre_league}
+                            className="w-6 h-6 object-contain shrink-0"
+                            onError={e => { e.target.src = r.pre_league_icon || ""; }}/>}
+                          <span className="text-[10px] text-slate-400 truncate">{r.pre_league}</span>
+                          {r.pre_league !== r.post_league && (
+                            <>
+                              <span className="text-slate-600 text-[10px]">→</span>
+                              {r.post_league && <img
+                                src={`/icons/leagues/${r.post_league.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                                alt={r.post_league}
+                                className="w-6 h-6 object-contain shrink-0"
+                                onError={e => { e.target.src = r.post_league_icon || ""; }}/>}
+                              <span className={`text-[10px] font-semibold truncate ${isPromoted ? "text-green-300" : "text-red-300"}`}>{r.post_league}</span>
+                            </>
+                          )}
+                        </div>
+                        {r.pre_trophies > 0 && (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75H7.5m9 0c1.657 0 3 1.343 3 3H4.5c0-1.657 1.343-3 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.395 5.972M18.75 4.236V4.5a9.023 9.023 0 01-2.48 5.228m-10.48 0a9.024 9.024 0 005.23 2.478m5.25-2.478a9.024 9.024 0 01-5.25 2.478"/>
+                            </svg>
+                            <span className="text-xs font-semibold text-purple-300">{r.pre_trophies.toLocaleString()}</span>
+                            {trophyDiff !== null && (
+                              <span className={`text-[9px] font-bold ${trophyDiff > 0 ? "text-green-400" : trophyDiff < 0 ? "text-red-400" : "text-slate-500"}`}>
+                                {trophyDiff > 0 ? `↑ +${trophyDiff}` : trophyDiff < 0 ? `↓ ${trophyDiff}` : "→"}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {profileView === "upgrades" && (
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
                 {upgradesLoading && (
@@ -1809,9 +1910,9 @@ function RankedLeaderboardView({ onBack }) {
     if (historyCache[tag]) return;
     setHistoryLoading(tag);
     try {
-      const res = await fetch(`/api/ranked-history/${tag.replace("#","")}`);
+      const res = await fetch(`/api/tournament-history/${tag.replace("#","")}`);
       const d = await res.json();
-      setHistoryCache(prev => ({ ...prev, [tag]: d.snapshots || [] }));
+      setHistoryCache(prev => ({ ...prev, [tag]: d.results || [] }));
     } catch { setHistoryCache(prev => ({ ...prev, [tag]: [] })); }
     finally { setHistoryLoading(null); }
   }
@@ -1918,33 +2019,64 @@ function RankedLeaderboardView({ onBack }) {
                           </svg>
                         </button>
 
-                        {/* History expansion */}
+                        {/* History expansion — tournament result tiles */}
                         {expandedTag === player.player_tag && (
-                          <div className="px-4 pb-3 border-t border-white/[0.04]">
+                          <div className="px-3 pb-3 pt-2 border-t border-white/[0.04] space-y-2">
                             {historyLoading === player.player_tag && (
-                              <div className="py-2 animate-pulse space-y-1.5">
-                                {[...Array(3)].map((_,i) => <div key={i} className="h-5 bg-white/[0.04] rounded"/>)}
+                              <div className="animate-pulse space-y-2">
+                                {[...Array(2)].map((_,i) => <div key={i} className="h-16 bg-white/[0.04] rounded-2xl"/>)}
                               </div>
                             )}
                             {historyCache[player.player_tag]?.length === 0 && (
-                              <p className="text-[9px] text-slate-700 py-2">No history yet</p>
+                              <p className="text-[9px] text-slate-700 py-2 text-center">No tournament history yet</p>
                             )}
-                            {historyCache[player.player_tag]?.map((snap, i) => {
+                            {historyCache[player.player_tag]?.map((r, i) => {
+                              const isPromoted = r.result === "promoted";
+                              const isDemoted = r.result === "demoted";
+                              const weekEnd = new Date(r.week_ending);
+                              const weekStart = new Date(weekEnd);
+                              weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+                              const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+                              const dateRange = `${fmt(weekStart)} — ${fmt(weekEnd)}`;
                               const prev = historyCache[player.player_tag][i + 1];
-                              const prevLeague = prev?.league_name;
-                              const currLeague = snap.league_name;
-                              const promoted = prevLeague && currLeague !== prevLeague && leagueTierNum(currLeague) > leagueTierNum(prevLeague);
-                              const demoted = prevLeague && currLeague !== prevLeague && leagueTierNum(currLeague) < leagueTierNum(prevLeague);
+                              const trophyDiff = prev?.pre_trophies && r.pre_trophies ? r.pre_trophies - prev.pre_trophies : null;
                               return (
-                                <div key={i} className="flex items-center gap-3 py-1.5">
-                                  <span className="text-[9px] text-slate-600 w-16 shrink-0">
-                                    {new Date(snap.captured_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                                  </span>
-                                  {snap.league_icon && <img src={snap.league_icon} alt="" className="w-5 h-5 object-contain shrink-0"/>}
-                                  <span className="text-[10px] text-slate-400 flex-1 truncate">{snap.league_name}</span>
-                                  <span className="text-[10px] text-purple-300 tabular-nums shrink-0">{(snap.trophies||0).toLocaleString()}</span>
-                                  {promoted && <span className="text-[8px] text-green-400 shrink-0">↑</span>}
-                                  {demoted && <span className="text-[8px] text-red-400 shrink-0">↓</span>}
+                                <div key={i} className={`rounded-2xl border p-2.5 space-y-1.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[8px] text-slate-500 uppercase tracking-widest">{dateRange}</span>
+                                    <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
+                                      {isPromoted ? "↑ Promoted" : isDemoted ? "↓ Demoted" : "→ Stayed"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                                      {r.pre_league && <img
+                                        src={`/icons/leagues/${r.pre_league.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                                        alt={r.pre_league} className="w-5 h-5 object-contain shrink-0"
+                                        onError={e => { e.target.src = r.pre_league_icon || ""; }}/>}
+                                      <span className="text-[9px] text-slate-400 truncate">{r.pre_league}</span>
+                                      {r.pre_league !== r.post_league && (
+                                        <>
+                                          <span className="text-slate-600 text-[9px]">→</span>
+                                          {r.post_league && <img
+                                            src={`/icons/leagues/${r.post_league.split(" ")[0].toLowerCase().replace(/[^a-z0-9]+/g,"-")}.png`}
+                                            alt={r.post_league} className="w-5 h-5 object-contain shrink-0"
+                                            onError={e => { e.target.src = r.post_league_icon || ""; }}/>}
+                                          <span className={`text-[9px] font-semibold truncate ${isPromoted ? "text-green-300" : "text-red-300"}`}>{r.post_league}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                    {r.pre_trophies > 0 && (
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span className="text-[10px] font-semibold text-purple-300">{r.pre_trophies.toLocaleString()}</span>
+                                        {trophyDiff !== null && (
+                                          <span className={`text-[8px] font-bold ${trophyDiff > 0 ? "text-green-400" : trophyDiff < 0 ? "text-red-400" : "text-slate-500"}`}>
+                                            {trophyDiff > 0 ? `↑+${trophyDiff}` : `↓${trophyDiff}`}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })}
