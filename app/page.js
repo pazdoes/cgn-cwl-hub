@@ -3312,7 +3312,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
           {/* MIDDLE: CWL Rounds */}
           <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, flexShrink: 0 }}>CWL Rounds</div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               {rounds.map((r, i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) < parseFloat(r.defence_pct||0));
@@ -3320,13 +3320,13 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
                 const ourStarCol = won ? "#fbbf24" : "#475569";
                 const oppStarCol = lost ? "#f87171" : "#475569";
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0 }}>R{r.war_day}</span>
-                    <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{r.opponent_clan}</span>
-                    <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0 }}>{r.stars_earned}★</span>
-                    <span style={{ fontSize: 9, color: "#1e293b", flexShrink: 0, margin: "0 1px" }}>·</span>
-                    <span style={{ fontSize: 10, color: oppStarCol, fontWeight: lost ? 700 : 400, flexShrink: 0 }}>{r.stars_conceded}★</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: rc, width: 10, textAlign: "right", flexShrink: 0 }}>{won ? "W" : lost ? "L" : "D"}</span>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, height: 20, overflow: "visible" }}>
+                    <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0, display: "block", lineHeight: "20px" }}>R{r.war_day}</span>
+                    <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, lineHeight: "20px" }}>{r.opponent_clan}</span>
+                    <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0, lineHeight: "20px" }}>{r.stars_earned}★</span>
+                    <span style={{ fontSize: 9, color: "#1e293b", flexShrink: 0, margin: "0 1px", lineHeight: "20px" }}>·</span>
+                    <span style={{ fontSize: 10, color: oppStarCol, fontWeight: lost ? 700 : 400, flexShrink: 0, lineHeight: "20px" }}>{r.stars_conceded}★</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: rc, width: 10, textAlign: "right", flexShrink: 0, lineHeight: "20px" }}>{won ? "W" : lost ? "L" : "D"}</span>
                   </div>
                 );
               })}
