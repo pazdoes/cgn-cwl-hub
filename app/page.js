@@ -3495,31 +3495,56 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
               ))}
             </div>
 
-            {/* Top Clan */}
-            {topClan && (
-              <div style={{ flex: 1, background: "rgba(212,175,55,0.04)", borderRadius: 12, border: "1px solid rgba(212,175,55,0.18)", padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Top Clan</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 200, color: medalColours[1], letterSpacing: "0.06em" }}>{topClan.clan_name.split(" ")[0]}</div>
-                    <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>{topClan.cwl_rank}</div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
-                  {[
-                    { label: "Wins",       value: topClan.wars_won,                              colour: "#86efac" },
-                    { label: "Atk EFF",    value: parseFloat(topClan.attack_efficiency).toFixed(2), colour: "#c4b5fd" },
-                    { label: "CGN Rating", value: topClan.overall.toFixed(2),                    colour: "#D4AF37" },
-                  ].map(({ label, value, colour }) => (
-                    <div key={label}>
-                      <div style={{ fontSize: 18, fontWeight: 200, color: colour, lineHeight: 1 }}>{value}</div>
-                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3 }}>{label}</div>
+            {/* CWL Rank Movement */}
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>CWL Rank Movement</div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
+                {clanWithOverall.filter(c => c.cwl_rank && c.current_cwl_rank).map((c, i) => {
+                  const RANKS = ["Bronze III","Bronze II","Bronze I","Silver III","Silver II","Silver I","Gold III","Gold II","Gold I","Crystal III","Crystal II","Crystal I","Master III","Master II","Master I","Champion III","Champion II","Champion I"];
+                  const prevIdx = RANKS.indexOf(c.cwl_rank);
+                  const curIdx = RANKS.indexOf(c.current_cwl_rank);
+                  const delta = (prevIdx >= 0 && curIdx >= 0) ? curIdx - prevIdx : 0;
+                  const promoted = delta > 0;
+                  const demoted = delta < 0;
+                  function rankIcon(rank) {
+                    if (!rank) return null;
+                    const l = rank.toLowerCase();
+                    const tier = l.includes("champion") ? "champion" : l.includes("master") ? "master" : l.includes("crystal") ? "crystal" : l.includes("gold") ? "gold" : l.includes("silver") ? "silver" : l.includes("bronze") ? "bronze" : null;
+                    const num = l.endsWith("iii") ? "3" : l.endsWith("ii") ? "2" : "1";
+                    return tier ? `https://cgnco.vercel.app/icons/cwl/${tier}-${num}.png` : null;
+                  }
+                  const prevIcon = rankIcon(c.cwl_rank);
+                  const curIcon = rankIcon(c.current_cwl_rank);
+                  return (
+                    <div key={c.clan_name} style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: i < clanWithOverall.filter(x => x.cwl_rank && x.current_cwl_rank).length - 1 ? 8 : 0, marginBottom: i < clanWithOverall.filter(x => x.cwl_rank && x.current_cwl_rank).length - 1 ? 8 : 0, borderBottom: i < clanWithOverall.filter(x => x.cwl_rank && x.current_cwl_rank).length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                      {/* Clan name */}
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "white", width: 72, flexShrink: 0 }}>{c.clan_name.split(" ")[0]}</span>
+                      {/* Rank movement */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
+                        {prevIcon && <img src={prevIcon} style={{ width: 26, height: 26, objectFit: "contain", opacity: 0.65 }} alt=""/>}
+                        {delta !== 0 && (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                          </svg>
+                        )}
+                        {curIcon && <img src={curIcon} style={{ width: 34, height: 34, objectFit: "contain" }} alt=""/>}
+                      </div>
+                      {/* Indicator */}
+                      {(promoted || demoted) ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                          </svg>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: promoted ? "#4ade80" : "#f87171", textTransform: "uppercase", letterSpacing: "0.07em" }}>{promoted ? "Promoted" : "Demoted"}</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 8, color: "#334155", flexShrink: 0 }}>—</span>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </div>
 
           {/* MIDDLE: Alliance War Record */}
