@@ -3311,8 +3311,8 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
 
           {/* MIDDLE: CWL Rounds */}
           <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, flexShrink: 0 }}>CWL Rounds</div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-around" }}>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, flexShrink: 0 }}>CWL Rounds</div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
               {rounds.map((r, i) => {
                 const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
                 const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) < parseFloat(r.defence_pct||0));
@@ -3320,7 +3320,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
                 const ourStarCol = won ? "#fbbf24" : "#475569";
                 const oppStarCol = lost ? "#f87171" : "#475569";
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, lineHeight: "16px", padding: "3px 0" }}>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0 }}>R{r.war_day}</span>
                     <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{r.opponent_clan}</span>
                     <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0 }}>{r.stars_earned}★</span>
