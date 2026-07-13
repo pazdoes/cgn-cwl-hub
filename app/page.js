@@ -3806,6 +3806,7 @@ function RecapView({ onBack }) {
       setSeasons(lb.seasons || []);
       setSelectedSeason(lb.currentSeason || lb.seasons?.[0] || null);
       setHistory(hist.history || []);
+      setFullHistory(hist.history || []);
       const withOverall = (lb.stats || []).map(p => ({
         ...p,
         overall: (p.attacks_used > 0 && p.attacks_available > 0)
