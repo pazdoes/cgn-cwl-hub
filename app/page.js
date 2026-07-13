@@ -3669,6 +3669,196 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
 }
 
 
+function AppFooter({ onNavigateHome, showHome = true }) {
+  function goHome() {
+    if (onNavigateHome) { onNavigateHome(); return; }
+    if (typeof window !== "undefined") window.location.href = "/";
+  }
+  return (
+    <div className="relative z-10 w-full py-6 flex items-center justify-center gap-3">
+      {showHome && (
+        <button onClick={goHome} className="absolute left-4 text-slate-600 hover:text-slate-400 transition p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+        </button>
+      )}
+      <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5 opacity-30"/>
+      <span className="text-[10px] text-slate-600 tracking-widest uppercase">Cognition {"{CGN}"}</span>
+    </div>
+  );
+}
+
+function CwlCountdown() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    fetch("/api/cwl-status").then(r => r.json()).then(d => setData(d)).catch(() => {});
+  }, []);
+  if (!data || !data.active) return null;
+  return (
+    <div className="rounded-3xl border border-purple-500/20 bg-purple-500/[0.04] backdrop-blur-xl p-5">
+      <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">CWL Season</p>
+      <p className="text-lg font-thin text-white">{data.season || "Active"}</p>
+      {data.daysRemaining != null && (
+        <p className="text-sm text-purple-400 mt-1">{data.daysRemaining}d remaining</p>
+      )}
+    </div>
+  );
+}
+
+function CwlProgressTile({ onNavigate }) {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    fetch("/api/cwl-progress").then(r => r.json()).then(d => setData(d)).catch(() => {});
+  }, []);
+  if (!data || !data.active) return null;
+  return (
+    <div className="rounded-3xl border border-amber-500/20 bg-amber-500/[0.04] backdrop-blur-xl p-5 cursor-pointer"
+      onClick={() => onNavigate && onNavigate("leaderboard")}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[9px] text-slate-500 uppercase tracking-widest">CWL Progress</p>
+        {data.isComplete
+          ? <span className="text-[9px] text-slate-500 uppercase tracking-widest">Season Complete</span>
+          : data.currentRound != null && <span className="text-[9px] text-amber-400 uppercase tracking-widest">Round {data.currentRound} of 7</span>
+        }
+      </div>
+      {data.totalStars != null && (
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-3xl font-thin text-amber-300">{data.totalStars}</span>
+          <span className="text-xs text-slate-500">alliance stars</span>
+        </div>
+      )}
+      {data.clans && data.clans.map((c, i) => (
+        <div key={i} className="flex items-center justify-between py-1 border-t border-white/5">
+          <span className="text-xs text-slate-400">{c.clan_name?.split(" ")[0]}</span>
+          <span className="text-xs text-slate-500">{c.wars_won}W {c.wars_lost}L · {parseFloat(c.attack_efficiency||0).toFixed(2)} EFF</span>
+        </div>
+      ))}
+      <p className="text-[9px] text-slate-600 mt-2 text-right">Full Stats →</p>
+    </div>
+  );
+}
+
+function SideWarsSection({ onNavigate }) {
+  const [wars, setWars] = useState([]);
+  useEffect(() => {
+    fetch("/api/side-wars").then(r => r.json()).then(d => setWars(d.wars || [])).catch(() => {});
+  }, []);
+  const active = wars.filter(w => w.is_active);
+  if (!active.length) return null;
+  return (
+    <div className="space-y-2">
+      {active.map((war, i) => (
+        <div key={i} className="rounded-3xl border border-pink-500/20 bg-pink-500/[0.03] backdrop-blur-xl p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Side War · Live</p>
+            <p className="text-sm font-semibold text-white">{war.clan_name}</p>
+            {war.opponent_name && <p className="text-xs text-slate-500">vs {war.opponent_name}</p>}
+          </div>
+          <div className="w-2 h-2 rounded-full bg-pink-400 animate-pulse shrink-0"/>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatsHighlightReel() {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 cursor-pointer"
+      onClick={() => { if (typeof window !== "undefined") window.location.href = "/#leaderboard"; }}>
+      <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-3">Stats & Overview</p>
+      <div className="flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <div>
+          <p className="text-sm font-semibold text-white">Leaderboard</p>
+          <p className="text-[10px] text-slate-500">CGN player rankings & performance</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardView({ onBack }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-24">
+      <div className="relative z-10 space-y-4">
+        <RankedLeaderboardView onBack={onBack}/>
+      </div>
+      <AppFooter onNavigateHome={onBack}/>
+    </div>
+  );
+}
+
+function RecapView({ onBack }) {
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/leaderboard").then(r => r.json()),
+      fetch("/api/history").then(r => r.json()),
+    ]).then(([lb, hist]) => {
+      setSeasons(lb.seasons || []);
+      setSelectedSeason(lb.currentSeason || lb.seasons?.[0] || null);
+      setHistory(hist.history || []);
+      const withOverall = (lb.stats || []).map(p => ({
+        ...p,
+        overall: (p.attacks_used > 0 && p.attacks_available > 0)
+          ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
+          : null,
+      }));
+      setStats(withOverall);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const seasonHistory = history.filter(r => r.season === selectedSeason);
+  const validPlayers = stats.filter(p => p.attacks_used > 0 && p.overall != null);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-24">
+      <div className="relative z-10 space-y-4">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
+          <h1 className="text-2xl font-thin tracking-widest text-white mb-1">Season Recap</h1>
+          {seasons.length > 0 && (
+            <select value={selectedSeason||""} onChange={e => setSelectedSeason(e.target.value)}
+              className="mt-2 text-xs bg-transparent border border-white/20 rounded-xl px-3 py-1.5 text-slate-300">
+              {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
+        </div>
+        {loading ? (
+          <div className="text-center text-slate-500 py-8">Loading...</div>
+        ) : (
+          <div className="space-y-3">
+            {seasonHistory.map(c => (
+              <div key={c.clan_name} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-white">{c.clan_name.split(" ")[0]}</p>
+                  <p className="text-xs text-slate-500">{c.cwl_rank}</p>
+                </div>
+                <div className="flex gap-4 mt-2">
+                  <span className="text-xs text-green-400">{c.wars_won}W</span>
+                  <span className="text-xs text-red-400">{c.wars_lost}L</span>
+                  <span className="text-xs text-amber-300">{c.total_stars}★</span>
+                  <span className="text-xs text-purple-300">{parseFloat(c.attack_efficiency||0).toFixed(2)} EFF</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <AppFooter onNavigateHome={onBack}/>
+    </div>
+  );
+}
+
+
 export default function Home() {
   const [page, setPage] = useState("home");
   const [cwlActive, setCwlActive] = useState(false);
