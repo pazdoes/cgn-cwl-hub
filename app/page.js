@@ -3294,17 +3294,45 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
               ))}
             </div>
 
-            {/* CWL icon — enlarged to fill space */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              {iconUrl && <img src={iconUrl} style={{ width: 170, height: 170, objectFit: "contain" }} alt=""/>}
-              <div style={{ fontSize: 13, color: "#a78bfa", textAlign: "center" }}>{displayRank || ""}</div>
-              {(promoted || demoted) && (
-                <div style={{ display: "flex", alignItems: "center", gap: 5, color: promoted ? "#4ade80" : "#f87171" }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
-                  </svg>
-                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{promoted ? "Promoted" : "Demoted"}</span>
-                </div>
+            {/* CWL rank movement visual */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              {(promoted || demoted) ? (
+                <>
+                  {/* Rank movement: small prev icon → arrow → large current icon */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                    {/* Previous rank icon — small */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      {cwlIconUrl(prevCwlRank) && (
+                        <img src={cwlIconUrl(prevCwlRank)} style={{ width: 60, height: 60, objectFit: "contain", opacity: 0.7 }} alt=""/>
+                      )}
+                      <span style={{ fontSize: 7, color: "#475569", textAlign: "center", maxWidth: 70 }}>{prevCwlRank}</span>
+                    </div>
+                    {/* Arrow */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                    </svg>
+                    {/* Current rank icon — large */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      {iconUrl && (
+                        <img src={iconUrl} style={{ width: 110, height: 110, objectFit: "contain" }} alt=""/>
+                      )}
+                      <span style={{ fontSize: 9, color: "#a78bfa", textAlign: "center", maxWidth: 100 }}>{displayRank}</span>
+                    </div>
+                  </div>
+                  {/* Indicator text below */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: promoted ? "#4ade80" : "#f87171" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                    </svg>
+                    <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>{promoted ? "Promoted" : "Demoted"}</span>
+                  </div>
+                </>
+              ) : (
+                /* No change — single large icon */
+                <>
+                  {iconUrl && <img src={iconUrl} style={{ width: 150, height: 150, objectFit: "contain" }} alt=""/>}
+                  <span style={{ fontSize: 12, color: "#a78bfa", textAlign: "center" }}>{displayRank}</span>
+                </>
               )}
             </div>
           </div>
