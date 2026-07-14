@@ -50,10 +50,7 @@ export async function GET(request) {
         WHERE ps.season = ${targetSeason}
           AND ps.player_tag IN (SELECT player_tag FROM accounts)
           AND COALESCE(a.active, true) = true
-          AND (
-            a.current_clan_tag IS NULL
-            OR a.current_clan_tag = ANY(${ALLIANCE_CLAN_TAGS})
-          )
+          AND a.current_clan_tag = ANY(${ALLIANCE_CLAN_TAGS})
           AND ps.clan_name NOT IN (
             SELECT clan_name FROM clans WHERE cwl_absent = true
           )

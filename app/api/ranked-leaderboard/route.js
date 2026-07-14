@@ -58,6 +58,8 @@ export async function GET() {
     INNER JOIN player_army_cache c ON c.player_tag = a.player_tag
     WHERE a.player_tag IS NOT NULL
       AND c.data->>'trophies' IS NOT NULL
+      AND COALESCE(a.active, true) = true
+      AND a.current_clan_tag = ANY(ARRAY['#2C8QQPCL2','#2CPC8GR9R','#2Y9PGJGVC','#2YQJJUYQY','#2YV9UCJG2'])
     ORDER BY a.player_tag, c.captured_at DESC
   `;
 
