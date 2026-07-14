@@ -3579,7 +3579,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
                     </div>
                     <span style={{ fontSize: 9, color: "#64748b" }}>{c.cwl_rank}</span>
                   </div>
-                  <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ display: "flex", gap: 10 }}>
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#86efac" }}>{c.wars_won}</div>
                       <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Won</div>
@@ -3591,6 +3591,10 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#c4b5fd" }}>{parseFloat(c.attack_efficiency||0).toFixed(2)}</div>
                       <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Atk EFF</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#93c5fd" }}>{parseFloat(c.defence_efficiency||0).toFixed(2)}</div>
+                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Def EFF</div>
                     </div>
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#D4AF37" }}>{c.overall?.toFixed(2)}</div>
