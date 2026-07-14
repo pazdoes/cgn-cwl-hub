@@ -280,34 +280,19 @@ export default function AdminSeasonPage() {
       <div className="relative z-10 space-y-3">
 
         {/* Migrate season */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setShowMigrateForm(v => !v)}
-            className="w-full flex items-center justify-between px-5 py-4 text-left">
-            <div>
-              <p className="text-sm font-semibold text-slate-300">Migrate Season</p>
-              <p className="text-[10px] text-slate-600 mt-0.5">{season ? `Close ${season} and advance to next month` : "Loading…"}</p>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${showMigrateForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          {showMigrateForm && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4">
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-                <p className="text-xs text-amber-300 font-semibold">Migrate {season}</p>
-                <p className="text-[11px] text-slate-500 leading-relaxed">Records CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
-                <form onSubmit={doMigrate} className="space-y-3">
-                  <input type="text" placeholder="Type CONFIRM" value={migrateConfirm} onChange={e => setMigrateConfirm(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition"/>
-                  <button type="submit" disabled={migrateConfirm !== "CONFIRM" || migrateSubmitting}
-                    className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-amber-400 border border-amber-500/60 hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                    {migrateSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
-                  </button>
-                </form>
-                {migrateResult && <p className={`text-[11px] text-center ${migrateResult.ok ? "text-green-400" : "text-red-400"}`}>{migrateResult.message}</p>}
-              </div>
-            </div>
-          )}
+        <div className="rounded-3xl border border-amber-500/20 bg-amber-500/5 backdrop-blur-xl p-5 space-y-3">
+          <p className="text-sm font-semibold text-amber-300">Migrate Season</p>
+          <p className="text-[10px] text-slate-500">{season ? `Close ${season} and advance to next month` : "Loading…"}</p>
+          <p className="text-[11px] text-slate-500 leading-relaxed">Records CWL ranks and advances to next month. Type <span className="text-white font-mono">CONFIRM</span> to proceed.</p>
+          <form onSubmit={doMigrate} className="space-y-3">
+            <input type="text" placeholder="Type CONFIRM" value={migrateConfirm} onChange={e => setMigrateConfirm(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition"/>
+            <button type="submit" disabled={migrateConfirm !== "CONFIRM" || migrateSubmitting}
+              className="w-full py-2.5 rounded-xl text-xs font-semibold bg-transparent text-amber-400 border border-amber-500/60 hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              {migrateSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
+            </button>
+          </form>
+          {migrateResult && <p className={`text-[11px] text-center ${migrateResult.ok ? "text-green-400" : "text-red-400"}`}>{migrateResult.message}</p>}
         </div>
 
         {/* Fetch CWL data */}

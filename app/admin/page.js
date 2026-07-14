@@ -702,7 +702,7 @@ export default function AdminOverviewPage() {
 
       {/* Tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["dashboard","Dashboard"],["directory","Directory"]].map(([key,label]) => (
+        {[["dashboard","Dashboard"]].map(([key,label]) => (
           <button key={key} onClick={() => setAdminTab(key)}
             className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               adminTab === key
@@ -789,84 +789,7 @@ export default function AdminOverviewPage() {
           {/* ── DIRECTORY TAB ── */}
           {adminTab === "directory" && (<>
 
-          {/* Member Directory */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Member Directory</h2>
-              <button type="button" onClick={() => loadData(pin)} title="Refresh"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20 transition text-[10px] uppercase tracking-widest font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Refresh
-              </button>
-            </div>
 
-            {/* Search + filters */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              <div className="relative flex-1 min-w-[140px]">
-                <input type="text" placeholder="Search name, tag or clan…" value={search} onChange={e => setSearch(e.target.value)}
-                  className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>
-                )}
-              </div>
-              <select value={filterPool} onChange={e => setFilterPool(e.target.value)} className={pillSelect}>
-                <option value="all">All Pool</option>
-                <option value="in">In Pool</option>
-                <option value="out">Not In Pool</option>
-              </select>
-              <select value={filterDiscord} onChange={e => setFilterDiscord(e.target.value)} className={pillSelect}>
-                <option value="all">All Discord</option>
-                <option value="yes">Discord ✓</option>
-                <option value="no">No Discord</option>
-              </select>
-              <select value={filterToken} onChange={e => setFilterToken(e.target.value)} className={pillSelect}>
-                <option value="all">All Token</option>
-                <option value="yes">Token ✓</option>
-                <option value="no">No Token</option>
-              </select>
-            </div>
-
-            <p className="text-[10px] text-slate-700 mb-3">{filtered.length} of {members.length} accounts</p>
-
-            {/* Member list */}
-            <div className="space-y-2">
-              {filtered.map(m => (
-                <div key={m.player_tag} className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:bg-white/[0.04] transition">
-                  <ThIcon level={m.town_hall_level}/>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
-                    <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
-                    {m.assigned_clan && <p className="text-[10px] text-slate-500 truncate">{m.assigned_clan.split(" ")[0]}</p>}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span title={m.in_pool ? "In pool" : "Not in pool"}
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] border ${m.in_pool ? "border-purple-500/40 text-purple-400" : "border-white/10 text-slate-700"}`}>
-                      {m.in_pool ? "✓" : "—"}
-                    </span>
-                    <span title={m.discord_id ? "Discord linked" : "No Discord"}
-                      className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.discord_id ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-700"}`}>
-                      <svg className="w-2.5 h-2.5" viewBox="0 0 127.14 96.36" fill="currentColor">
-                        <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0 0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
-                      </svg>
-                    </span>
-                    <span title={m.api_token_verified ? "Token verified" : "No token"}
-                      className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.api_token_verified ? "border-green-500/40 text-green-400" : "border-white/10 text-slate-700"}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                      </svg>
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {filtered.length === 0 && (
-                <p className="text-slate-700 text-xs text-center py-6">No members match your filters</p>
-              )}
-            </div>
-          </div>
-
-          </>)} {/* end directory tab */}
 
           {/* ── SIDE WARS TAB ── */}
           {adminTab === "sidewars" && (

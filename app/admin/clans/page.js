@@ -561,18 +561,11 @@ export default function AdminClansPage() {
         {/* ── ALLIANCE CLANS TAB ── */}
         {activeTab === "clans" && (
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-            <button onClick={() => setActiveClanForm(v => v ? null : "add")}
-              className="w-full flex items-center justify-between px-5 py-4 text-left">
-              <div>
-                <p className="text-sm font-semibold text-slate-300">Alliance Clans</p>
-                <p className="text-[10px] text-slate-600 mt-0.5">Add or remove clans · {clans.length} active</p>
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${activeClanForm ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            {activeClanForm && (
-              <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
+            <div className="px-5 py-4 border-b border-white/10">
+              <p className="text-sm font-semibold text-slate-300">Alliance Clans</p>
+              <p className="text-[10px] text-slate-600 mt-0.5">Add or remove clans · {clans.length} active</p>
+            </div>
+            <div className="px-5 pb-5 pt-4 space-y-4">
                 <div className="flex items-center justify-center gap-4">
                   <button onClick={() => toggleClanForm("add")} className="text-slate-500 hover:text-slate-300 transition p-1">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -633,8 +626,7 @@ export default function AdminClansPage() {
                     {deleteClanResult && <p className={`text-xs text-center ${deleteClanResult.ok ? "text-green-300" : "text-red-400"}`}>{deleteClanResult.message}</p>}
                   </form>
                 )}
-              </div>
-            )}
+            </div>
           </div>
         )}
 

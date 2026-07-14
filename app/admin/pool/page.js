@@ -950,7 +950,7 @@ export default function AdminPoolPage() {
 
       {/* Pool Manager tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["roster","Roster"],["settings","Settings"]].map(([key,label]) => (
+        {[["roster","Roster"]].map(([key,label]) => (
           <button key={key} onClick={() => setMainPoolTab(key)}
             className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               mainPoolTab === key
@@ -1188,30 +1188,7 @@ export default function AdminPoolPage() {
           </>)} {/* end roster tab */}
 
           {/* ── SETTINGS TAB ── */}
-          {mainPoolTab === "settings" && (<>
 
-          {/* ── SEASON TILE ── */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-sm font-semibold text-slate-300 mb-1">Season Manager</p>
-            <p className="text-[10px] text-slate-600 mb-3">Migrate seasons and fetch CWL data</p>
-            <Link href="/admin/season"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border border-amber-500/40 text-amber-400 hover:border-amber-400 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              Open Season Manager
-            </Link>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
-            <p className="text-sm font-semibold text-slate-300 mb-1">Clan Manager</p>
-            <p className="text-[10px] text-slate-600 mb-3">Add, remove and configure clans for the alliance</p>
-            <Link href="/admin/clans"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border border-purple-500/40 text-purple-400 hover:border-purple-400 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              Open Clan Manager
-            </Link>
-          </div>
-
-          </>)} {/* end settings tab */}
 
         </div>
       )}
