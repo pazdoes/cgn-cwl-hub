@@ -42,6 +42,8 @@ function baseLeagueSortKey(name) {
 
 export async function GET() {
   const sql = getDb();
+  const clanRows = await sql`SELECT clan_tag FROM clans WHERE clan_tag IS NOT NULL`;
+  const allianceTags = clanRows.map(r => r.clan_tag);
 
   const rows = await sql`
     SELECT DISTINCT ON (a.player_tag)
@@ -59,7 +61,7 @@ export async function GET() {
     WHERE a.player_tag IS NOT NULL
       AND c.data->>'trophies' IS NOT NULL
       AND COALESCE(a.active, true) = true
-      AND a.current_clan_tag IN ('#2C8QQPCL2','#2CPC8GR9R','#2Y9PGJGVC','#2YQJJUYQY','#2YV9UCJG2')
+      AND a.current_clan_tag = ANY(${allianceTags})
     ORDER BY a.player_tag, c.captured_at DESC
   `;
 

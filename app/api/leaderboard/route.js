@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 
-const ALLIANCE_CLAN_TAGS = ["#2C8QQPCL2", "#2CPC8GR9R", "#2Y9PGJGVC", "#2YQJJUYQY", "#2YV9UCJG2"];
-
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const requestedSeason = searchParams.get("season");
   const sql = getDb();
+
+  // Fetch alliance clan tags dynamically from clans table
+  const clanRows = await sql`SELECT clan_tag FROM clans WHERE clan_tag IS NOT NULL`;
+  const allianceTags = clanRows.map(r => r.clan_tag);
 
   const seasonRows = await sql`
     SELECT ps.season
@@ -41,7 +43,7 @@ export async function GET(request) {
             a.player_tag IS NULL
             OR (
               COALESCE(a.active, true) = true
-              AND a.current_clan_tag IN ('#2C8QQPCL2','#2CPC8GR9R','#2Y9PGJGVC','#2YQJJUYQY','#2YV9UCJG2')
+              AND a.current_clan_tag = ANY(${allianceTags})
             )
           )
         ORDER BY ps.stars_earned DESC, ps.destruction_pct DESC
@@ -58,7 +60,7 @@ export async function GET(request) {
         WHERE ps.season = ${targetSeason}
           AND ps.player_tag IN (SELECT player_tag FROM accounts)
           AND COALESCE(a.active, true) = true
-          AND a.current_clan_tag IN ('#2C8QQPCL2','#2CPC8GR9R','#2Y9PGJGVC','#2YQJJUYQY','#2YV9UCJG2')
+          AND a.current_clan_tag = ANY(${allianceTags})
           AND ps.clan_name NOT IN (
             SELECT clan_name FROM clans WHERE cwl_absent = true
           )
