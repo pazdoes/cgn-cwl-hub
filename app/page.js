@@ -3227,11 +3227,12 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
   ];
 
   const clanStats = clanData ? [
-    { label: "Won",     value: clanData.wars_won,                                     colour: "#86efac" },
-    { label: "Lost",    value: clanData.wars_lost,                                    colour: "#f87171" },
-    { label: "Stars",   value: clanData.total_stars,                                  colour: "#fbbf24" },
-    { label: "Atk EFF", value: parseFloat(clanData.attack_efficiency||0).toFixed(2), colour: "#c4b5fd" },
-    { label: "Def EFF", value: parseFloat(clanData.defence_efficiency||0).toFixed(2),colour: "#93c5fd" },
+    { label: "Stars",      value: clanData.total_stars,                                                                                                        colour: "#fbbf24" },
+    { label: "Wins",       value: clanData.wars_won,                                                                                                           colour: "#86efac" },
+    { label: "Losses",     value: clanData.wars_lost,                                                                                                          colour: "#f87171" },
+    { label: "Atk EFF",   value: parseFloat(clanData.attack_efficiency||0).toFixed(2),                                                                         colour: "#c4b5fd" },
+    { label: "Def EFF",   value: parseFloat(clanData.defence_efficiency||0).toFixed(2),                                                                        colour: "#93c5fd" },
+    { label: "CGN Rating", value: clanData.attack_efficiency ? ((parseFloat(clanData.attack_efficiency||0)*0.6)+((3-parseFloat(clanData.defence_efficiency||0))*0.4)).toFixed(2) : "—", colour: "#D4AF37" },
   ] : [];
 
   return (
