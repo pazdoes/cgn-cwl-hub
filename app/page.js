@@ -3428,39 +3428,27 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
       <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
 
         {/* ── HEADER ── */}
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{selectedSeason}</span>
-            <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap</span>
-            {totalAllianceStars > 0 && (
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 8 }}>
-                <span style={{ fontSize: 20, fontWeight: 300, color: "#fbbf24" }}>{totalAllianceStars}</span>
-                <span style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Alliance Stars</span>
-              </div>
-            )}
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>Collective</span>
+            <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
           </div>
-          {/* Top Clan badge */}
-          {topClan && (
-            <div style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 12, padding: "10px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 300, letterSpacing: "0.08em", color: medalColours[1] }}>{topClan.clan_name.split(" ")[0]}</div>
-                <div style={{ fontSize: 8, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 1 }}>{topClan.cwl_rank}</div>
+          {/* Alliance stats */}
+          <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
+            {[
+              { label: "Stars",   value: totalAllianceStars,                                                                                                                                                              colour: "#fbbf24" },
+              { label: "Wins",    value: totalWins,                                                                                                                                                                        colour: "#86efac" },
+              { label: "Losses",  value: totalLosses,                                                                                                                                                                      colour: "#f87171" },
+              { label: "Atk EFF", value: clanWithOverall.length > 0 ? (clanWithOverall.reduce((s,c) => s + parseFloat(c.attack_efficiency||0), 0) / clanWithOverall.length).toFixed(2) : "—",                            colour: "#c4b5fd" },
+              { label: "Def EFF", value: clanWithOverall.length > 0 ? (clanWithOverall.reduce((s,c) => s + parseFloat(c.defence_efficiency||0), 0) / clanWithOverall.length).toFixed(2) : "—",                           colour: "#93c5fd" },
+              { label: "CGN Rating", value: clanWithOverall.filter(c=>c.overall).length > 0 ? (clanWithOverall.filter(c=>c.overall).reduce((s,c) => s + c.overall, 0) / clanWithOverall.filter(c=>c.overall).length).toFixed(2) : "—", colour: "#D4AF37" },
+            ].map(({ label, value, colour }) => (
+              <div key={label} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 200, color: colour, lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 8, color: "#334155", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 4 }}>{label}</div>
               </div>
-              <div style={{ display: "flex", gap: 14, marginLeft: 4 }}>
-                {[
-                  { label: "Wins",       value: topClan.wars_won,                              colour: "#86efac" },
-                  { label: "Atk EFF",    value: parseFloat(topClan.attack_efficiency).toFixed(2), colour: "#c4b5fd" },
-                  { label: "CGN Rating", value: topClan.overall.toFixed(2),                    colour: "#D4AF37" },
-                ].map(({ label, value, colour }) => (
-                  <div key={label} style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: colour }}>{value}</div>
-                    <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 2 }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Divider */}
