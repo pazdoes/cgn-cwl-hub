@@ -80,7 +80,6 @@ function buildClanEmbed(clan, clanDbRow, capturedAt, warRecord = {}) {
         ]
       : [
           { name: "⚡️ Streak",  value: `${winStreak}`, inline: true },
-          { name: "W / D / L", value: `${warRecord.wars_won ?? warWins} / ${warRecord.wars_drawn ?? 0} / ${warRecord.wars_lost ?? 0}`, inline: true },
           { name: "​", value: `[**Join**](${clanLink})`, inline: false },
         ],
     footer: { text: `👤 ${members}/50  •  ${ts}` },
