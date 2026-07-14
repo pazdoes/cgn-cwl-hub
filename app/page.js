@@ -2864,6 +2864,7 @@ function ClanCard({ c, rank, isExpanded, onToggle }) {
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <StatPill label="Atk EFF" value={c.attack_efficiency ? parseFloat(c.attack_efficiency).toFixed(2) : "—"} colour="text-purple-300"/>
+          <StatPill label="Won" value={c.wars_won ?? "—"} colour="text-green-300"/>
           <StatPill label="Def EFF" value={c.defence_efficiency ? parseFloat(c.defence_efficiency).toFixed(2) : "—"} colour="text-blue-300"/>
           <StatPill label="Stars" value={c.total_stars ?? "—"} colour="text-slate-300"/>
         </div>
@@ -2903,7 +2904,18 @@ function ClanCard({ c, rank, isExpanded, onToggle }) {
                   <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-400">{c.avg_defence_pct ? parseFloat(c.avg_defence_pct).toFixed(1)+"%" : "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Dest Given</p></div>
                 </div>
               </div>
-
+              {/* Record */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Record</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-green-300">{c.wars_won ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Won</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-red-400">{c.wars_lost ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Lost</p></div>
+                  <div className="rounded-xl bg-white/[0.04] p-2 text-center"><p className="text-sm font-bold text-slate-500">{c.wars_drawn ?? "—"}</p><p className="text-[9px] text-slate-600 mt-0.5">Drawn</p></div>
+                </div>
+              </div>
             </div>
           )}
 
