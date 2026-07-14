@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 
+const ALLIANCE_CLAN_TAGS = ["#2C8QQPCL2", "#2CPC8GR9R", "#2Y9PGJGVC", "#2YQJJUYQY", "#2YV9UCJG2"];
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const requestedSeason = searchParams.get("season"); // null if caller didn't specify one
+  const requestedSeason = searchParams.get("season");
   const sql = getDb();
 
-  // Seasons list — every season where a linked alliance account has data.
-  // DISTINCT is nested in a subquery so the outer ORDER BY (on season_date,
-  // a column not in the DISTINCT select list) doesn't violate Postgres's
-  // DISTINCT/ORDER BY rule (error 42P10).
   const seasonRows = await sql`
     SELECT ps.season
     FROM (
@@ -28,12 +26,6 @@ export async function GET(request) {
 
   const targetSeason = requestedSeason || seasons[0];
 
-  // Rule: an explicitly requested historical season is a snapshot of that
-  // season and must show every player who played it, linked or not — this
-  // keeps player-level data in sync with the equivalent clan-level rule.
-  // The default/no-season request (latest season, used by the main
-  // leaderboard view) stays scoped to linked accounts only, since that
-  // represents the current alliance roster view.
   const stats = requestedSeason
     ? await sql`
         SELECT
@@ -54,8 +46,14 @@ export async function GET(request) {
         LEFT JOIN clan_season_history csh
           ON csh.clan_name = ps.clan_name
           AND csh.season = ps.season
+        LEFT JOIN accounts a ON a.player_tag = ps.player_tag
         WHERE ps.season = ${targetSeason}
           AND ps.player_tag IN (SELECT player_tag FROM accounts)
+          AND COALESCE(a.active, true) = true
+          AND (
+            a.current_clan_tag IS NULL
+            OR a.current_clan_tag = ANY(${ALLIANCE_CLAN_TAGS})
+          )
           AND ps.clan_name NOT IN (
             SELECT clan_name FROM clans WHERE cwl_absent = true
           )
