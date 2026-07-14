@@ -377,7 +377,7 @@ export default function AdminClansPage() {
 
   // Clan Manager state
   const [clans, setClans] = useState([]);
-  const [activeClanForm, setActiveClanForm] = useState(null);
+  const [activeClanForm, setActiveClanForm] = useState("add");
   const [addClanTag, setAddClanTag] = useState("");
   const [addClanLink, setAddClanLink] = useState("");
   const [addClanRank, setAddClanRank] = useState("");

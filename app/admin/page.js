@@ -700,19 +700,7 @@ export default function AdminOverviewPage() {
         <p className="text-slate-500 text-xs">{season} · Admin Dashboard</p>
       </div>
 
-      {/* Tab nav */}
-      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["dashboard","Dashboard"]].map(([key,label]) => (
-          <button key={key} onClick={() => setAdminTab(key)}
-            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
-              adminTab === key
-                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
-                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
-            }`}>
-            {label}
-          </button>
-        ))}
-      </div>
+
 
       {loading ? (
         <div className="relative z-10 space-y-4">
