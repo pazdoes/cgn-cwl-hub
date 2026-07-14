@@ -1323,6 +1323,10 @@ export default function AnnouncementsPage() {
   const [scContent, setScContent] = useState(""); // message-level content / role ping
   const [scEmbed, setScEmbed] = useState({ title: "", description: "", color: 0x6d28d9, footer: { text: "" }, timestamp: false });
   const [scScheduleAt, setScScheduleAt] = useState("");
+  const [scEmbeds, setScEmbeds] = useState([]); // array of embed configs
+  const [scRoleSearch, setScRoleSearch] = useState("");
+  const [scRoleSearchOpen, setScRoleSearchOpen] = useState(false);
+  const scRoleSearchRef = useRef(null);
   const [scScheduleResult, setScScheduleResult] = useState(null);
   const [scClanRounds, setScClanRounds] = useState({}); // { clanName: rounds[] }
   const [showScCollectiveCard, setShowScCollectiveCard] = useState(false);
@@ -1569,71 +1573,96 @@ export default function AnnouncementsPage() {
     const html2canvas = (await import("html2canvas")).default;
     const h2cOpts = { backgroundColor: "#070b17", scale: 2, useCORS: true, allowTaint: true, logging: false, removeContainer: true };
 
-    // Determine which cards to capture
-    const cardsToPost = [];
-    if (scCards.collective) cardsToPost.push({ type: "collective" });
-    Object.entries(scCards.clans || {}).forEach(([clanName, selected]) => {
-      if (selected) cardsToPost.push({ type: "clan", clanName });
-    });
-
-    if (!cardsToPost.length) {
-      setScPostResult({ ok: false, message: "Select at least one card to post" });
-      setScPosting(false); return;
-    }
-
-    try {
-      // Reveal cards off-screen
-      setShowScCollectiveCard(true);
+    if (scMode === "image") {
+      // Image only — post each checked card as a raw image message
+      const cardsToPost = [];
+      if (scCards.collective) cardsToPost.push("collective");
+      Object.entries(scCards.clans || {}).forEach(([n, sel]) => { if (sel) cardsToPost.push(n); });
+      if (!cardsToPost.length) { setScPostResult({ ok: false, message: "Select at least one card" }); setScPosting(false); return; }
+      // Reveal off-screen
+      setShowScCollectiveCard(cardsToPost.includes("collective"));
       const clanShows = {};
-      cardsToPost.filter(c => c.type === "clan").forEach(c => { clanShows[c.clanName] = true; });
+      cardsToPost.filter(k => k !== "collective").forEach(k => { clanShows[k] = true; });
       setShowScClanCards(clanShows);
       await new Promise(r => setTimeout(r, 300));
-
-      // Capture each card
-      const blobs = [];
-      for (const card of cardsToPost) {
-        let el;
-        if (card.type === "collective") el = scCollectiveRef.current;
-        else el = scClanRefs.current[card.clanName];
-        if (!el) continue;
-        const canvas = await html2canvas(el, h2cOpts);
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-        blobs.push({ blob, card });
-      }
-
-      if (scMode === "image") {
-        // Post each card as a separate image-only message
-        for (const { blob, card } of blobs) {
+      try {
+        let count = 0;
+        for (const key of cardsToPost) {
+          const el = key === "collective" ? scCollectiveRef.current : scClanRefs.current[key];
+          if (!el) continue;
+          const canvas = await html2canvas(el, h2cOpts);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
           const form = new FormData();
           form.append("webhookId", scWebhookId);
           form.append("season", scData.currentSeason || "Season Recap");
-          form.append("image", blob, `cgn-recap-${card.type === "collective" ? "collective" : card.clanName.replace(/[^a-z0-9]/gi, "-")}.png`);
+          form.append("image", blob, `cgn-recap-${key.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
           if (scContent) form.append("rolePing", scContent);
           await fetch("/api/admin/recap-share", { method: "POST", headers: { "x-officer-pin": pin }, body: form });
+          count++;
         }
-        setScPostResult({ ok: true, message: `Posted ${blobs.length} card${blobs.length > 1 ? "s" : ""} to Discord ✓` });
-      } else {
-        // Post all cards as embeds in one webhook call
-        const formData = new FormData();
-        formData.append("webhookId", scWebhookId);
-        formData.append("content", scContent || "");
-        formData.append("mode", "embed");
-        formData.append("embedTitle", scEmbed.title || "");
-        formData.append("embedDescription", scEmbed.description || "");
-        formData.append("embedColor", String(scEmbed.color || 0x6d28d9));
-        formData.append("embedFooter", scEmbed.footer?.text || "");
-        if (scEmbed.timestamp) formData.append("embedTimestamp", new Date().toISOString());
-        blobs.forEach(({ blob, card }, i) => {
-          formData.append(`image_${i}`, blob, `card-${i}.png`);
-          formData.append(`cardType_${i}`, card.type === "collective" ? "collective" : card.clanName);
-        });
-        formData.append("cardCount", String(blobs.length));
-        const res = await fetch("/api/admin/recap-share", { method: "POST", headers: { "x-officer-pin": pin }, body: formData });
-        let result = {};
-        try { result = await res.json(); } catch { result = { error: "Invalid response from server" }; }
-        if (res.ok) setScPostResult({ ok: true, message: `Posted ${blobs.length} embed${blobs.length > 1 ? "s" : ""} to Discord ✓` });
-        else setScPostResult({ ok: false, message: result.error || "Failed to post" });
+        setScPostResult({ ok: true, message: `Posted ${count} image${count > 1 ? "s" : ""} to Discord ✓` });
+      } catch (e) {
+        setScPostResult({ ok: false, message: "Error: " + e.message });
+      } finally {
+        setScPosting(false);
+        setShowScCollectiveCard(false);
+        setShowScClanCards({});
       }
+      return;
+    }
+
+    // Embed mode — each embed in scEmbeds array is posted sequentially as its own webhook call
+    if (!scEmbeds.length) { setScPostResult({ ok: false, message: "Add at least one embed" }); setScPosting(false); return; }
+
+    // Reveal all needed cards off-screen
+    const needsCollective = scEmbeds.some(e => e.cardKey === "collective");
+    setShowScCollectiveCard(needsCollective);
+    const clanShows = {};
+    scEmbeds.filter(e => e.cardKey !== "collective").forEach(e => { clanShows[e.cardKey] = true; });
+    setShowScClanCards(clanShows);
+    await new Promise(r => setTimeout(r, 300));
+
+    try {
+      let posted = 0;
+      for (let i = 0; i < scEmbeds.length; i++) {
+        const emb = scEmbeds[i];
+        const el = emb.cardKey === "collective" ? scCollectiveRef.current : scClanRefs.current[emb.cardKey];
+        if (!el) continue;
+        const canvas = await html2canvas(el, h2cOpts);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        const filename = `cgn-recap-${emb.cardKey.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`;
+        // Build Discord payload — one embed with image attachment
+        const discordForm = new FormData();
+        discordForm.append("file", blob, filename);
+        const embedPayload = {
+          color: emb.color || 0x6d28d9,
+          image: { url: `attachment://${filename}` },
+        };
+        if (emb.title) embedPayload.title = emb.title;
+        if (emb.description) embedPayload.description = emb.description;
+        if (emb.footer) embedPayload.footer = { text: emb.footer };
+        if (emb.timestamp) embedPayload.timestamp = new Date().toISOString();
+        discordForm.append("payload_json", JSON.stringify({
+          username: "Cognition {CGN}",
+          avatar_url: "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a477755&is=6a4625d5&hm=439a8a5863af157f40fc94811e8f195e2a2a0cf649c94c2a24bf2c857c15e6d3&",
+          // Only include content (role ping) on first embed
+          ...(i === 0 && scContent ? { content: scContent } : {}),
+          embeds: [embedPayload],
+        }));
+        // Get webhook URL via our route
+        const form = new FormData();
+        form.append("webhookId", scWebhookId);
+        form.append("mode", "direct");
+        form.append("image", blob, filename);
+        form.append("embedJson", JSON.stringify(embedPayload));
+        if (i === 0 && scContent) form.append("content", scContent);
+        const res = await fetch("/api/admin/recap-share", { method: "POST", headers: { "x-officer-pin": pin }, body: form });
+        if (res.ok) posted++;
+        else { const t = await res.text(); console.error("Embed post failed:", t); }
+        // Small delay between posts
+        if (i < scEmbeds.length - 1) await new Promise(r => setTimeout(r, 500));
+      }
+      setScPostResult({ ok: true, message: `Posted ${posted} embed${posted > 1 ? "s" : ""} to Discord ✓` });
     } catch (e) {
       setScPostResult({ ok: false, message: "Error: " + e.message });
     } finally {
@@ -1663,6 +1692,23 @@ export default function AnnouncementsPage() {
       if (res.ok) setScScheduleResult({ ok: true, message: "Scheduled ✓" });
       else setScScheduleResult({ ok: false, message: data.error || "Failed" });
     } catch { setScScheduleResult({ ok: false, message: "Network error" }); }
+  }
+
+  function addScEmbed(cardKey) {
+    setScEmbeds(prev => [...prev, {
+      cardKey, // "collective" or clan name
+      title: "",
+      description: "",
+      color: 0x6d28d9,
+      footer: "",
+      timestamp: false,
+    }]);
+  }
+  function updateScEmbed(i, key, value) {
+    setScEmbeds(prev => { const arr = [...prev]; arr[i] = { ...arr[i], [key]: value }; return arr; });
+  }
+  function removeScEmbed(i) {
+    setScEmbeds(prev => prev.filter((_, idx) => idx !== i));
   }
 
   async function handlePostRecap() {
@@ -2889,7 +2935,6 @@ export default function AnnouncementsPage() {
         {/* ── SHARE CARDS TAB ── */}
         {mainTab === "sharecards" && (<>
 
-        {/* Season selector + load */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Share Cards</h2>
@@ -2905,43 +2950,12 @@ export default function AnnouncementsPage() {
                 {recapSeasons.length === 0 && <option value="">Loading…</option>}
                 {recapSeasons.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
-              <button onClick={() => { if (!scSeason && recapSeasons.length) setScSeason(recapSeasons[0]); fetchScData(scSeason || recapSeasons[0] || ""); }}
-                disabled={scLoading}
+              <button onClick={() => fetchScData(scSeason || recapSeasons[0] || "")} disabled={scLoading}
                 className="px-4 py-2 rounded-2xl text-xs border border-purple-500/40 text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                 {scLoading ? "Loading…" : "Load"}
               </button>
             </div>
           </div>
-
-          {/* Card selector */}
-          {scData && (
-            <div>
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Cards to Post</p>
-              <div className="space-y-2">
-                {/* Collective */}
-                <label className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
-                  <input type="checkbox" checked={scCards.collective} onChange={e => setScCards(prev => ({ ...prev, collective: e.target.checked }))}
-                    className="w-3.5 h-3.5 accent-purple-500"/>
-                  <div>
-                    <p className="text-xs font-semibold text-white">Collective Recap</p>
-                    <p className="text-[10px] text-slate-600">Full alliance season overview</p>
-                  </div>
-                </label>
-                {/* Individual clans */}
-                {scData.activeClanNames.map(clanName => (
-                  <label key={clanName} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
-                    <input type="checkbox" checked={scCards.clans?.[clanName] || false}
-                      onChange={e => setScCards(prev => ({ ...prev, clans: { ...prev.clans, [clanName]: e.target.checked } }))}
-                      className="w-3.5 h-3.5 accent-purple-500"/>
-                    <div>
-                      <p className="text-xs font-semibold text-white">{clanName.split(" ")[0]}</p>
-                      <p className="text-[10px] text-slate-600">Individual clan recap</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Webhook */}
           <div>
@@ -2953,66 +2967,132 @@ export default function AnnouncementsPage() {
             </select>
           </div>
 
-          {/* Post mode toggle */}
+          {/* Post mode */}
           <div>
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Post Format</p>
             <div className="flex gap-2">
-              {[["image","Image Only"],["embed","Embed"]].map(([mode, label]) => (
-                <button key={mode} onClick={() => setScMode(mode)}
-                  className={`flex-1 py-2 rounded-2xl text-xs font-semibold border transition ${scMode === mode ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
+              {[["image","Image Only"],["embed","Embed"]].map(([m, label]) => (
+                <button key={m} onClick={() => setScMode(m)}
+                  className={`flex-1 py-2 rounded-2xl text-xs font-semibold border transition ${scMode === m ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
                   {label}
                 </button>
               ))}
             </div>
-            <p className="text-[9px] text-slate-700 mt-1.5">
-              {scMode === "image" ? "Posts each card as a raw image. No embed wrapper." : "Posts cards inside Discord embeds with optional title, description and colour."}
-            </p>
           </div>
 
-          {/* Message content / role ping */}
-          <div>
-            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Message Content <span className="normal-case text-slate-700">(role ping, text above embed)</span></p>
-            <input type="text" value={scContent} onChange={e => setScContent(e.target.value)}
-              placeholder="e.g. @everyone or <@&roleID>"
+          {/* Role ping / message content — with role search */}
+          <div className="relative">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Message Content <span className="normal-case text-slate-700">(appears above embeds, use for role pings)</span></p>
+            <input
+              ref={scRoleSearchRef}
+              type="text"
+              placeholder={discordMeta.roles.length > 0 ? "Search roles or type content…" : "@everyone, @here, or custom text"}
+              value={scRoleSearch || scContent}
+              onChange={e => { setScRoleSearch(e.target.value); setScContent(e.target.value); setScRoleSearchOpen(true); }}
+              onFocus={() => setScRoleSearchOpen(true)}
+              onBlur={() => setTimeout(() => setScRoleSearchOpen(false), 150)}
               className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+            {scRoleSearchOpen && scRoleSearch && discordMeta.roles.length > 0 && typeof document !== "undefined" && (() => {
+              const q = scRoleSearch.toLowerCase().replace(/^@/, "");
+              const matches = [
+                ...(("everyone".includes(q) || "all".includes(q)) ? [{ id: "everyone", name: "@everyone", colour: "#ffffff" }] : []),
+                ...(("here".includes(q)) ? [{ id: "here", name: "@here", colour: "#ffffff" }] : []),
+                ...discordMeta.roles.filter(r => r.name.toLowerCase().includes(q)),
+              ].slice(0, 12);
+              if (!matches.length || !scRoleSearchRef.current) return null;
+              const rect = scRoleSearchRef.current.getBoundingClientRect();
+              return createPortal(
+                <div style={{ position: "absolute", top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width, zIndex: 9999 }}
+                  className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
+                  {matches.map(r => (
+                    <button key={r.id} type="button"
+                      onMouseDown={() => {
+                        const val = r.id === "everyone" ? "@everyone" : r.id === "here" ? "@here" : `<@&${r.id}>`;
+                        setScContent(val); setScRoleSearch(val); setScRoleSearchOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.06] transition">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.colour || "#a78bfa" }}/>
+                      <span className="text-xs text-white">{r.name}</span>
+                    </button>
+                  ))}
+                </div>,
+                document.body
+              );
+            })()}
           </div>
 
-          {/* Embed fields — only shown in embed mode */}
+          {/* IMAGE ONLY — card checkboxes */}
+          {scMode === "image" && scData && (
+            <div>
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Cards to Post</p>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
+                  <input type="checkbox" checked={scCards.collective} onChange={e => setScCards(prev => ({ ...prev, collective: e.target.checked }))} className="w-3.5 h-3.5 accent-purple-500"/>
+                  <div><p className="text-xs font-semibold text-white">Collective</p><p className="text-[10px] text-slate-600">Full alliance overview</p></div>
+                </label>
+                {scData.activeClanNames.map(clanName => (
+                  <label key={clanName} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
+                    <input type="checkbox" checked={scCards.clans?.[clanName] || false}
+                      onChange={e => setScCards(prev => ({ ...prev, clans: { ...prev.clans, [clanName]: e.target.checked } }))} className="w-3.5 h-3.5 accent-purple-500"/>
+                    <div><p className="text-xs font-semibold text-white">{clanName.split(" ")[0]}</p><p className="text-[10px] text-slate-600">Clan recap</p></div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* EMBED MODE — per-embed builder */}
           {scMode === "embed" && (
-            <div className="space-y-3 border-t border-white/[0.06] pt-3">
-              <p className="text-[9px] text-slate-600 uppercase tracking-widest">Embed Options <span className="normal-case text-slate-700">(applied to each card embed)</span></p>
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Title</p>
-                <input type="text" value={scEmbed.title} onChange={e => setScEmbed(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. July 2026 Season Recap"
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Embeds</p>
+                <span className="text-[10px] text-slate-600">{scEmbeds.length} embed{scEmbeds.length !== 1 ? "s" : ""} · posted sequentially</span>
               </div>
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Description</p>
-                <textarea value={scEmbed.description} onChange={e => setScEmbed(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Optional description text. Supports **bold**, *italic*." rows={3}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none"/>
-              </div>
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Colour</p>
-                <div className="flex items-center gap-3">
-                  <input type="color" value={"#" + (scEmbed.color || 0x6d28d9).toString(16).padStart(6, "0")}
-                    onChange={e => setScEmbed(prev => ({ ...prev, color: parseInt(e.target.value.slice(1), 16) }))}
-                    className="w-10 h-8 rounded-lg border border-white/10 bg-transparent cursor-pointer"/>
-                  <span className="text-[10px] text-slate-500 font-mono">{"#" + (scEmbed.color || 0x6d28d9).toString(16).padStart(6, "0").toUpperCase()}</span>
+
+              {/* Existing embeds */}
+              {scEmbeds.map((emb, i) => (
+                <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-slate-400">Embed {i + 1} · {emb.cardKey === "collective" ? "Collective" : emb.cardKey.split(" ")[0]}</span>
+                    <button onClick={() => removeScEmbed(i)} className="text-slate-600 hover:text-red-400 text-xs transition">✕</button>
+                  </div>
+                  <input type="text" value={emb.title} onChange={e => updateScEmbed(i, "title", e.target.value)}
+                    placeholder="Title (optional)"
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  <textarea value={emb.description} onChange={e => updateScEmbed(i, "description", e.target.value)}
+                    placeholder="Description (optional)" rows={2}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none"/>
+                  <div className="flex items-center gap-3">
+                    <input type="color" value={"#" + (emb.color || 0x6d28d9).toString(16).padStart(6, "0")}
+                      onChange={e => updateScEmbed(i, "color", parseInt(e.target.value.slice(1), 16))}
+                      className="w-8 h-7 rounded-lg border border-white/10 bg-transparent cursor-pointer"/>
+                    <input type="text" value={emb.footer} onChange={e => updateScEmbed(i, "footer", e.target.value)}
+                      placeholder="Footer text"
+                      className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={emb.timestamp} onChange={e => updateScEmbed(i, "timestamp", e.target.checked)} className="w-3 h-3 accent-purple-500"/>
+                      <span className="text-[10px] text-slate-600">Time</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Footer</p>
-                <input type="text" value={scEmbed.footer?.text || ""} onChange={e => setScEmbed(prev => ({ ...prev, footer: { text: e.target.value } }))}
-                  placeholder="Footer text"
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={scEmbed.timestamp || false} onChange={e => setScEmbed(prev => ({ ...prev, timestamp: e.target.checked }))}
-                  className="w-3.5 h-3.5 accent-purple-500"/>
-                <span className="text-[10px] text-slate-500">Include timestamp</span>
-              </label>
+              ))}
+
+              {/* Add embed buttons */}
+              {scData && (
+                <div className="space-y-1.5">
+                  <p className="text-[9px] text-slate-700 uppercase tracking-widest">Add Embed</p>
+                  <button onClick={() => addScEmbed("collective")}
+                    className="w-full py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
+                    + Collective Recap
+                  </button>
+                  {scData.activeClanNames.map(clanName => (
+                    <button key={clanName} onClick={() => addScEmbed(clanName)}
+                      className="w-full py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
+                      + {clanName.split(" ")[0]} Recap
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

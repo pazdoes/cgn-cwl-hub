@@ -12,13 +12,9 @@ export async function POST(request) {
 
     const formData = await request.formData();
     const webhookId = formData.get("webhookId");
-    const season = formData.get("season") || "Season Recap";
-    const rolePing = formData.get("rolePing") || "";
     const mode = formData.get("mode") || "image";
 
-    if (!webhookId) {
-      return NextResponse.json({ error: "webhookId required" }, { status: 400 });
-    }
+    if (!webhookId) return NextResponse.json({ error: "webhookId required" }, { status: 400 });
 
     const webhooks = await getWebhooks();
     const webhook = webhooks.find(w => Number(w.id) === Number(webhookId));
@@ -26,52 +22,23 @@ export async function POST(request) {
     const rawUrl = ((webhook.webhook_url ?? webhook.webhookUrl) || "").replace(/\?.*$/, "");
     if (!rawUrl) return NextResponse.json({ error: "Webhook URL missing" }, { status: 500 });
 
-    if (mode === "embed") {
-      const cardCount = parseInt(formData.get("cardCount") || "1");
-      const embedTitle = formData.get("embedTitle") || "";
-      const embedDescription = formData.get("embedDescription") || "";
-      const embedColor = parseInt(formData.get("embedColor") || "7155673");
-      const embedFooter = formData.get("embedFooter") || "";
-      const embedTimestamp = formData.get("embedTimestamp") || null;
+    if (mode === "direct") {
+      // Single embed with one image attachment — used for sequential embed posting
+      const image = formData.get("image");
+      const embedJson = formData.get("embedJson");
       const content = formData.get("content") || "";
+      if (!image || !embedJson) return NextResponse.json({ error: "image and embedJson required" }, { status: 400 });
 
-      // Build embeds and collect files
-      const embeds = [];
-      const files = [];
+      const embed = JSON.parse(embedJson);
+      const filename = image.name || "cgn-recap.png";
 
-      for (let i = 0; i < cardCount; i++) {
-        const image = formData.get(`image_${i}`);
-        const cardType = formData.get(`cardType_${i}`) || `card-${i}`;
-        if (!image) continue;
-        const filename = `cgn-recap-${cardType.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-${i}.png`;
-        files.push({ image, filename, index: files.length });
-        const embed = {
-          color: embedColor,
-          image: { url: `attachment://${filename}` },
-        };
-        if (embedTitle) embed.title = embedTitle;
-        if (embedDescription) embed.description = embedDescription;
-        if (embedFooter) embed.footer = { text: embedFooter };
-        if (embedTimestamp) embed.timestamp = embedTimestamp;
-        embeds.push(embed);
-      }
-
-      if (!files.length) {
-        return NextResponse.json({ error: "No images provided" }, { status: 400 });
-      }
-
-      // Post to Discord — send first embed with first file,
-      // then subsequent files as follow-up messages to same webhook
-      // (Discord supports up to 10 embeds + 10 files in one request)
       const discordForm = new FormData();
-      files.forEach(({ image, filename, index }) => {
-        discordForm.append(`files[${index}]`, image, filename);
-      });
+      discordForm.append("file", image, filename);
       discordForm.append("payload_json", JSON.stringify({
         username: "Cognition {CGN}",
         avatar_url: CGN_AVATAR,
-        content: content || undefined,
-        embeds,
+        ...(content ? { content } : {}),
+        embeds: [embed],
       }));
 
       const discordRes = await fetch(rawUrl, { method: "POST", body: discordForm });
@@ -79,12 +46,15 @@ export async function POST(request) {
         const err = await discordRes.text();
         return NextResponse.json({ error: `Discord rejected: ${err}` }, { status: 502 });
       }
-      return NextResponse.json({ posted: true, embeds: embeds.length });
+      return NextResponse.json({ posted: true });
 
     } else {
       // Image only — existing behaviour preserved exactly
+      const season = formData.get("season") || "Season Recap";
+      const rolePing = formData.get("rolePing") || "";
       const image = formData.get("image");
       if (!image) return NextResponse.json({ error: "image required" }, { status: 400 });
+
       const discordForm = new FormData();
       discordForm.append("file", image, `cgn-recap-${season.toLowerCase().replace(/\s+/g, "-")}.png`);
       discordForm.append("payload_json", JSON.stringify({
@@ -92,6 +62,7 @@ export async function POST(request) {
         avatar_url: CGN_AVATAR,
         ...(rolePing ? { content: rolePing } : {}),
       }));
+
       const discordRes = await fetch(rawUrl, { method: "POST", body: discordForm });
       if (!discordRes.ok) {
         const err = await discordRes.text();
