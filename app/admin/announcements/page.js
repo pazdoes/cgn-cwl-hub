@@ -1509,7 +1509,12 @@ export default function AnnouncementsPage() {
       })).sort((a,b) => b.overall - a.overall);
       const withAttacks = withOverall.filter(p => p.attacks_used > 0);
       const validPlayers = withOverall.filter(p => p.overall != null).sort((a,b) => b.overall - a.overall);
-      const activeClanNames = clanWithOverall.map(c => c.clan_name);
+      const activeClanNames = clanWithOverall
+        .map(c => c.clan_name)
+        .sort((a,b) => {
+          const o = n => n.toLowerCase().startsWith("cognition") ? 0 : n.toLowerCase().startsWith("gems") ? 10 : 5;
+          return o(a) - o(b);
+        });
       // Initialise clan checkboxes
       const initialClans = {};
       activeClanNames.forEach(n => { initialClans[n] = false; });
