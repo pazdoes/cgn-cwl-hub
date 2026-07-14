@@ -14,7 +14,7 @@ export async function POST(request) {
     const webhookId = formData.get("webhookId");
     const season = formData.get("season") || "Season Recap";
     const rolePing = formData.get("rolePing") || "";
-    const mode = formData.get("mode") || "image"; // "image" | "embed"
+    const mode = formData.get("mode") || "image";
 
     if (!webhookId) {
       return NextResponse.json({ error: "webhookId required" }, { status: 400 });
@@ -27,7 +27,6 @@ export async function POST(request) {
     if (!rawUrl) return NextResponse.json({ error: "Webhook URL missing" }, { status: 500 });
 
     if (mode === "embed") {
-      // Multi-embed mode — one embed per card, all in one webhook call
       const cardCount = parseInt(formData.get("cardCount") || "1");
       const embedTitle = formData.get("embedTitle") || "";
       const embedDescription = formData.get("embedDescription") || "";
@@ -36,25 +35,38 @@ export async function POST(request) {
       const embedTimestamp = formData.get("embedTimestamp") || null;
       const content = formData.get("content") || "";
 
+      // Build embeds and collect files
       const embeds = [];
-      const discordForm = new FormData();
+      const files = [];
 
       for (let i = 0; i < cardCount; i++) {
         const image = formData.get(`image_${i}`);
         const cardType = formData.get(`cardType_${i}`) || `card-${i}`;
         if (!image) continue;
         const filename = `cgn-recap-${cardType.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-${i}.png`;
-        discordForm.append(`files[${i}]`, image, filename);
-        embeds.push({
-          title: embedTitle || undefined,
-          description: embedDescription || undefined,
+        files.push({ image, filename, index: files.length });
+        const embed = {
           color: embedColor,
           image: { url: `attachment://${filename}` },
-          footer: embedFooter ? { text: embedFooter } : undefined,
-          timestamp: embedTimestamp || undefined,
-        });
+        };
+        if (embedTitle) embed.title = embedTitle;
+        if (embedDescription) embed.description = embedDescription;
+        if (embedFooter) embed.footer = { text: embedFooter };
+        if (embedTimestamp) embed.timestamp = embedTimestamp;
+        embeds.push(embed);
       }
 
+      if (!files.length) {
+        return NextResponse.json({ error: "No images provided" }, { status: 400 });
+      }
+
+      // Post to Discord — send first embed with first file,
+      // then subsequent files as follow-up messages to same webhook
+      // (Discord supports up to 10 embeds + 10 files in one request)
+      const discordForm = new FormData();
+      files.forEach(({ image, filename, index }) => {
+        discordForm.append(`files[${index}]`, image, filename);
+      });
       discordForm.append("payload_json", JSON.stringify({
         username: "Cognition {CGN}",
         avatar_url: CGN_AVATAR,
@@ -70,7 +82,7 @@ export async function POST(request) {
       return NextResponse.json({ posted: true, embeds: embeds.length });
 
     } else {
-      // Image only mode — single image, existing behaviour
+      // Image only — existing behaviour preserved exactly
       const image = formData.get("image");
       if (!image) return NextResponse.json({ error: "image required" }, { status: 400 });
       const discordForm = new FormData();
