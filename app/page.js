@@ -3431,7 +3431,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         {/* ── HEADER ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>Collective</span>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>Cognition Collective</span>
             <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
           </div>
           {/* Alliance stats */}
