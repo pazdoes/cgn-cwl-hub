@@ -248,7 +248,10 @@ function AvgThView({ players, clans, onBack }) {
   const [selectedClanFilter, setSelectedClanFilter] = useState("all");
 
   // Clans that actually have players rostered — only these appear in the filter.
-  const rostered = clans.filter(c => players.some(p => p.clan === c));
+  const rostered = clans.filter(c => players.some(p => p.clan === c)).sort((a,b) => {
+    const o = n => n.toLowerCase().startsWith("cognition") ? 0 : n.toLowerCase().startsWith("gems") ? 10 : 5;
+    return o(a) - o(b);
+  });
 
   // Apply filter
   const filtered = selectedClanFilter === "all"
@@ -3241,7 +3244,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         {/* HEADER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName.split(" ")[0]}</span>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName}</span>
             <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
             {(promoted || demoted) && (
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>
@@ -3419,7 +3422,7 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
         {/* ── HEADER ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>Collective</span>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>Cognition Collective</span>
             <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
           </div>
           {/* Alliance stats */}
@@ -3864,7 +3867,10 @@ function RecapView({ onBack }) {
           <select value={selectedClan} onChange={e => setSelectedClan(e.target.value)}
             className="mt-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             <option value="alliance">Alliance</option>
-            {seasonHistory.map(h => (
+            {[...seasonHistory].sort((a,b) => {
+              const o = n => n.toLowerCase().startsWith("cognition") ? 0 : n.toLowerCase().startsWith("gems") ? 10 : 5;
+              return o(a.clan_name) - o(b.clan_name);
+            }).map(h => (
               <option key={h.clan_name} value={h.clan_name}>{h.clan_name}</option>
             ))}
           </select>
