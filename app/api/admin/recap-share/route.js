@@ -23,7 +23,7 @@ export async function POST(request) {
     const webhooks = await getWebhooks();
     const webhook = webhooks.find(w => Number(w.id) === Number(webhookId));
     if (!webhook) return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
-    const rawUrl = (webhook.webhook_url ?? webhook.webhookUrl || "").replace(/\?.*$/, "");
+    const rawUrl = ((webhook.webhook_url ?? webhook.webhookUrl) || "").replace(/\?.*$/, "");
     if (!rawUrl) return NextResponse.json({ error: "Webhook URL missing" }, { status: 500 });
 
     if (mode === "embed") {
