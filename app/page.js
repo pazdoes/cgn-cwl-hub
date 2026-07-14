@@ -2457,9 +2457,9 @@ function HistoryView({ onBack }) {
             </svg>
           </button>
           <span className="text-[10px] text-slate-600 uppercase tracking-widest select-none min-w-[100px]">
-            {tab === "player" ? "Player Performance" : "Clan CWL Rank"}
+            {tab === "player" ? "Player Performance" : "Clan Performance"}
           </span>
-          <button onClick={() => setTab("rank")} className="text-slate-500 hover:text-slate-300 transition p-1" title="Clan CWL Rank">
+          <button onClick={() => setTab("rank")} className="text-slate-500 hover:text-slate-300 transition p-1" title="Clan Performance">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
             </svg>
