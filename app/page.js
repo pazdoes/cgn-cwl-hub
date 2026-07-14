@@ -3253,7 +3253,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         {/* HEADER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName.split(" ")[0]}</span>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName}</span>
             <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
             {(promoted || demoted) && (
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>

@@ -580,7 +580,7 @@ function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAtta
         {/* HEADER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName.split(" ")[0]}</span>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName}</span>
             <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
             {(promoted || demoted) && (
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>
@@ -3034,7 +3034,7 @@ export default function AnnouncementsPage() {
                   <label key={clanName} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
                     <input type="checkbox" checked={scCards.clans?.[clanName] || false}
                       onChange={e => setScCards(prev => ({ ...prev, clans: { ...prev.clans, [clanName]: e.target.checked } }))} className="w-3.5 h-3.5 accent-purple-500"/>
-                    <div><p className="text-xs font-semibold text-white">{clanName.split(" ")[0]}</p><p className="text-[10px] text-slate-600">Clan recap</p></div>
+                    <div><p className="text-xs font-semibold text-white">{clanName}</p><p className="text-[10px] text-slate-600">Clan recap</p></div>
                   </label>
                 ))}
               </div>
@@ -3088,7 +3088,7 @@ export default function AnnouncementsPage() {
                   {scData.activeClanNames.map(clanName => (
                     <button key={clanName} onClick={() => addScEmbed(clanName)}
                       className="w-full py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
-                      + {clanName.split(" ")[0]} Recap
+                      + {clanName} Recap
                     </button>
                   ))}
                 </div>
