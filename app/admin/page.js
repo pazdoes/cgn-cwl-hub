@@ -787,10 +787,6 @@ export default function AdminOverviewPage() {
           </>)} {/* end dashboard tab */}
 
           {/* ── DIRECTORY TAB ── */}
-          {adminTab === "directory" && (<>
-
-
-
           {/* ── SIDE WARS TAB ── */}
           {adminTab === "sidewars" && (
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-center">
