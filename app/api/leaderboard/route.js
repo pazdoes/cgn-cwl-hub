@@ -35,7 +35,15 @@ export async function GET(request) {
         LEFT JOIN clan_season_history csh
           ON csh.clan_name = ps.clan_name
           AND csh.season = ps.season
+        LEFT JOIN accounts a ON a.player_tag = ps.player_tag
         WHERE ps.season = ${targetSeason}
+          AND (
+            a.player_tag IS NULL
+            OR (
+              COALESCE(a.active, true) = true
+              AND a.current_clan_tag IN ('#2C8QQPCL2','#2CPC8GR9R','#2Y9PGJGVC','#2YQJJUYQY','#2YV9UCJG2')
+            )
+          )
         ORDER BY ps.stars_earned DESC, ps.destruction_pct DESC
       `
     : await sql`
