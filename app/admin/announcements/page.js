@@ -1629,7 +1629,8 @@ export default function AnnouncementsPage() {
         });
         formData.append("cardCount", String(blobs.length));
         const res = await fetch("/api/admin/recap-share", { method: "POST", headers: { "x-officer-pin": pin }, body: formData });
-        const result = await res.json();
+        let result = {};
+        try { result = await res.json(); } catch { result = { error: "Invalid response from server" }; }
         if (res.ok) setScPostResult({ ok: true, message: `Posted ${blobs.length} embed${blobs.length > 1 ? "s" : ""} to Discord ✓` });
         else setScPostResult({ ok: false, message: result.error || "Failed to post" });
       }
