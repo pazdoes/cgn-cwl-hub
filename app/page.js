@@ -1226,7 +1226,7 @@ function PlayerProfileView({ onBack }) {
     e.preventDefault();
     if (!query.trim()) return;
     setSearching(true); setArmy(null); setError(null); setSelectedHero(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setTourneyHistory(null);
-    const isTag = query.trim().startsWith("#") || /^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, ""));
+    const isTag = query.trim().startsWith("#") || (/^[A-Z0-9]{5,10}$/i.test(query.trim().replace(/^#/, "")) && /[0-9]/.test(query.trim().replace(/^#/, "")));
     if (isTag) {
       // Tag search — fetch directly from CoC API via army route
       try {
