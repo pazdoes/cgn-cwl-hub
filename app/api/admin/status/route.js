@@ -38,7 +38,7 @@ export async function POST(request) {
   if (status === "confirmed" || status === "substitute") {
     const sql = getDb();
     const [clanRow] = await sql`SELECT roster_published FROM clans WHERE clan_name = ${clan} LIMIT 1`;
-    const isPublished = clanRow?.roster_published !== false;
+    const isPublished = clanRow?.roster_published === true;
     if (isPublished) {
       try {
         await writeStatusToSheet({ tag, clan, status });
