@@ -894,10 +894,8 @@ export default function AdminPoolPage() {
   const currentFormat = currentClan ? (clanFormats[currentClan] ?? 15) : 15;
   // Only Confirmed players count against the CWL format cap.
   // Substitute and Registered players sit outside the cap.
-  const isPublished = publishedClans[currentClan] === true;
-  const confirmedCount = isPublished
-    ? currentClanEntries.filter(e => e.status?.toLowerCase() === "confirmed").length
-    : currentClanEntries.length;
+  const confirmedCount = currentClanEntries.filter(e => e.status?.toLowerCase() === "confirmed").length;
+  const subCount = currentClanEntries.filter(e => e.status?.toLowerCase() === "substitute").length;
   const rosterPct = currentFormat > 0
     ? Math.min(100, Math.round(confirmedCount / currentFormat * 100))
     : 0;
@@ -1124,10 +1122,17 @@ export default function AdminPoolPage() {
                     </div>
                     {/* Counter pill + pause button — bottom row */}
                     <div className="flex items-center justify-between mt-3">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
-                        {confirmedCount}<span className="text-slate-600">/</span>{currentFormat}
-                        <span className="text-slate-600 font-normal">confirmed</span>
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
+                          {confirmedCount}<span className="text-slate-600">/</span>{currentFormat}
+                          <span className="text-slate-600 font-normal">confirmed</span>
+                        </span>
+                        {subCount > 0 && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-orange-400 border border-orange-500/40">
+                            {subCount}<span className="text-slate-600 font-normal ml-1">sub{subCount !== 1 ? "s" : ""}</span>
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
                           disabled={absentBusy === currentClan}
