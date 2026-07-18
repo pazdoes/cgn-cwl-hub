@@ -502,7 +502,7 @@ export default function AdminPoolPage() {
         const t = moveEvent.touches[0]; if (!t) return;
         const el = document.elementFromPoint(t.clientX, t.clientY);
         const zone = el?.closest("[data-clan-zone]");
-        if (!zone) { setOverClan(null); return; }
+        if (!zone) { return; }
         const clan = zone.getAttribute("data-clan-zone");
         if (!clan) return;
       };
