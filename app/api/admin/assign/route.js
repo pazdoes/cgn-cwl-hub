@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
-import { markAssigned, countConfirmed, getClanFormat } from "@/lib/pool";
+import { markAssigned } from "@/lib/pool";
 import { assignPlayerToRoster } from "@/lib/sheetsWrite";
 import { getDb } from "@/lib/db";
 
@@ -24,16 +24,6 @@ export async function POST(request) {
   const [clanRow] = await sql`SELECT roster_published FROM clans WHERE clan_name = ${clan} LIMIT 1`;
   const isPublished = clanRow?.roster_published === true;
 
-  // Check confirmed cap before assigning
-  const format = await getClanFormat(clan);
-  const currentConfirmed = await countConfirmed(clan, season);
-  if (currentConfirmed >= format) {
-    return NextResponse.json(
-      { error: `${clan} already has ${currentConfirmed} confirmed players (cap: ${format}). Move someone to Substitute first.` },
-      { status: 409 }
-    );
-  }
-
   if (isPublished) {
     // Write to Sheet first — if that fails, don't mark as assigned in the DB
     let sheetResult;
@@ -56,7 +46,7 @@ export async function POST(request) {
     try {
       await markAssigned(tag, season, clan);
       // Set status to confirmed in Neon after sheet write
-      await sql`UPDATE pool_entries SET status = 'confirmed' WHERE player_tag = ${tag} AND season = ${season}`;
+      await sql`UPDATE pool_entries SET status = 'substitute' WHERE player_tag = ${tag} AND season = ${season}`;
     } catch (err) {
       console.error("DB mark-assigned failed (non-fatal):", err);
     }
@@ -73,7 +63,7 @@ export async function POST(request) {
     // Unpublished — skip sheet write, assign in Neon only with confirmed status
     try {
       await markAssigned(tag, season, clan);
-      await sql`UPDATE pool_entries SET status = 'confirmed' WHERE player_tag = ${tag} AND season = ${season}`;
+      await sql`UPDATE pool_entries SET status = 'substitute' WHERE player_tag = ${tag} AND season = ${season}`;
     } catch (err) {
       console.error("DB mark-assigned failed:", err);
       return NextResponse.json({ error: "Failed to assign player" }, { status: 500 });
