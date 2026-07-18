@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
 import { countConfirmed, setStatus, getClanFormat } from "@/lib/pool";
 import { writeStatusToSheet } from "@/lib/sheetsWrite";
+import { getDb } from "@/lib/db";
 
 export async function POST(request) {
   const pin = request.headers.get("x-officer-pin");
@@ -33,15 +34,21 @@ export async function POST(request) {
   }
 
   // Sheet write only for confirmed/substitute — registered has no sheet representation
+  // Skip sheet write if clan roster is unpublished
   if (status === "confirmed" || status === "substitute") {
-    try {
-      await writeStatusToSheet({ tag, clan, status });
-    } catch (err) {
-      console.error("Sheet status write failed:", err);
-      return NextResponse.json(
-        { error: `Sheet write failed: ${err.message}` },
-        { status: 502 }
-      );
+    const sql = getDb();
+    const [clanRow] = await sql`SELECT roster_published FROM clans WHERE clan_name = ${clan} LIMIT 1`;
+    const isPublished = clanRow?.roster_published !== false;
+    if (isPublished) {
+      try {
+        await writeStatusToSheet({ tag, clan, status });
+      } catch (err) {
+        console.error("Sheet status write failed:", err);
+        return NextResponse.json(
+          { error: `Sheet write failed: ${err.message}` },
+          { status: 502 }
+        );
+      }
     }
   }
 

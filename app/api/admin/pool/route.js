@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
-import { getPoolEntries, getAllClanFormats, getAllClanNames, getAllClanAbsent } from "@/lib/pool";
+import { getPoolEntries, getAllClanFormats, getAllClanNames, getAllClanAbsent, getAllClanPublished } from "@/lib/pool";
 export async function GET(request) {
   const pin = request.headers.get("x-officer-pin");
   if (pin !== process.env.OFFICER_PIN) {
@@ -11,5 +11,6 @@ export async function GET(request) {
   const clanFormats = await getAllClanFormats();
   const clanNames = await getAllClanNames();
   const clanAbsent = await getAllClanAbsent();
-  return NextResponse.json({ season, entries, clanFormats, clanNames, clanAbsent });
+  const clanPublished = await getAllClanPublished();
+  return NextResponse.json({ season, entries, clanFormats, clanNames, clanAbsent, clanPublished });
 }
