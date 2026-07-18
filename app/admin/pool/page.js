@@ -37,15 +37,14 @@ function RankRefreshButton({ busy, result, onClick }) {
   const title = busy ? "Refreshing…" : result ? (result.ok ? `Updated: ${result.message}` : result.message) : "Refresh CWL Rank from CoC API";
   return (
     <button type="button" onClick={onClick} disabled={busy} title={title}
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-semibold uppercase tracking-widest transition disabled:opacity-40 ${
+      className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-40 ${
         result?.ok === false
           ? "border-red-500/40 bg-red-500/10 text-red-300"
-          : "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20"
+          : "border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300 hover:border-white/20"
       }`}>
       <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${busy ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
-      {result?.ok === false ? "Failed" : "Refresh"}
     </button>
   );
 }
@@ -1148,7 +1147,6 @@ export default function AdminPoolPage() {
                           <span className={`w-1.5 h-1.5 rounded-full ${publishedClans[currentClan] === true ? "bg-green-400" : "bg-amber-400"}`}/>
                           {publishedClans[currentClan] === true ? "Published" : "Unpublished"}
                         </button>
-                        <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                       </div>
                     </div>
 
@@ -1189,14 +1187,17 @@ export default function AdminPoolPage() {
                         {confirmedCount}<span className="text-slate-600">/</span>{currentFormat}
                         <span className="text-slate-600 font-normal">confirmed</span>
                       </span>
-                      <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
-                        disabled={absentBusy === currentClan}
-                        onClick={() => doSetAbsent(currentClan, !clanAbsent[currentClan])}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-transparent text-red-400 border-red-500/60 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
+                          disabled={absentBusy === currentClan}
+                          onClick={() => doSetAbsent(currentClan, !clanAbsent[currentClan])}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-transparent text-red-400 border-red-500/60 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </button>
+                        <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
+                      </div>
                     </div>
                   </>
                 )}
