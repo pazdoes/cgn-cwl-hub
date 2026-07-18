@@ -1128,17 +1128,15 @@ export default function AdminPoolPage() {
 
                 {currentClan && (
                   <>
-                    {/* Clan meta — format toggle left, rank refresh right */}
+                    {/* Clan meta — format pill left, publish + rank refresh right */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <FormatToggle format={currentFormat} busy={formatBusy === currentClan} error={formatError[currentClan]} onSetFormat={f => doSetFormat(currentClan, f)}/>
-                        <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
-                          disabled={absentBusy === currentClan}
-                          onClick={() => doSetAbsent(currentClan, !clanAbsent[currentClan])}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-transparent text-red-400 border-red-500/60 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
+                        {/* Format pill — cycles 15v15 / 30v30 */}
+                        <button type="button"
+                          disabled={formatBusy === currentClan}
+                          onClick={() => doSetFormat(currentClan, currentFormat === 15 ? 30 : 15)}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 text-[9px] font-semibold uppercase tracking-widest transition hover:border-purple-400/60 disabled:opacity-50">
+                          {currentFormat === 15 ? "15v15" : "30v30"}
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1185,12 +1183,20 @@ export default function AdminPoolPage() {
                         </div>
                       ))}
                     </div>
-                    {/* Counter pill — centred below roster */}
-                    <div className="flex justify-center mt-3">
+                    {/* Counter pill + pause button — bottom row */}
+                    <div className="flex items-center justify-between mt-3">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
                         {confirmedCount}<span className="text-slate-600">/</span>{currentFormat}
                         <span className="text-slate-600 font-normal">confirmed</span>
                       </span>
+                      <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
+                        disabled={absentBusy === currentClan}
+                        onClick={() => doSetAbsent(currentClan, !clanAbsent[currentClan])}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-transparent text-red-400 border-red-500/60 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      </button>
                     </div>
                   </>
                 )}
