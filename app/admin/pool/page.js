@@ -1143,12 +1143,12 @@ export default function AdminPoolPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button"
-                          title={publishedClans[currentClan] !== false ? "Roster published — click to unpublish" : "Roster unpublished — click to publish"}
+                          title={publishedClans[currentClan] === true ? "Roster published — click to unpublish" : "Roster unpublished — click to publish"}
                           disabled={publishBusy === currentClan}
                           onClick={() => doTogglePublish(currentClan, publishedClans[currentClan] === false)}
-                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${publishedClans[currentClan] !== false ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-amber-500/40 text-amber-400 bg-amber-500/10"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${publishedClans[currentClan] !== false ? "bg-green-400" : "bg-amber-400"}`}/>
-                          {publishedClans[currentClan] !== false ? "Published" : "Unpublished"}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${publishedClans[currentClan] === true ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-amber-500/40 text-amber-400 bg-amber-500/10"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${publishedClans[currentClan] === true ? "bg-green-400" : "bg-amber-400"}`}/>
+                          {publishedClans[currentClan] === true ? "Published" : "Unpublished"}
                         </button>
                         <RankRefreshButton busy={rankBusy === currentClan} result={rankResult[currentClan]} onClick={() => doRefreshRank(currentClan)}/>
                       </div>
