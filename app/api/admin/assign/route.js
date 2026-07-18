@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
-import { markAssigned } from "@/lib/pool";
+import { markAssigned, countConfirmed, getClanFormat } from "@/lib/pool";
 import { assignPlayerToRoster } from "@/lib/sheetsWrite";
+import { getDb } from "@/lib/db";
 
-// Assigns a pool entry to a specific clan:
-// 1. Validates PIN and required fields.
-// 2. Writes the assignment into the Google Sheet (the clan's tab).
-// 3. Marks the pool entry as assigned in Neon so the pool UI updates.
-// 4. Reads the Sheet row back to confirm the write succeeded.
 export async function POST(request) {
   const pin = request.headers.get("x-officer-pin");
   if (pin !== process.env.OFFICER_PIN) {
@@ -22,37 +18,67 @@ export async function POST(request) {
   }
 
   const season = await getOpenPoolSeason();
+  const sql = getDb();
 
-  // Write to Sheet first — if that fails, don't mark as assigned in the DB.
-  let sheetResult;
-  try {
-    sheetResult = await assignPlayerToRoster({
-      tag,
-      playerName: playerName || tag,
-      clan,
-      townHall: townHall || "",
-      season,
-    });
-  } catch (err) {
-    console.error("Sheet write failed:", err);
+  // Check if roster is published
+  const [clanRow] = await sql`SELECT roster_published FROM clans WHERE clan_name = ${clan} LIMIT 1`;
+  const isPublished = clanRow?.roster_published === true;
+
+  // Check confirmed cap before assigning
+  const format = await getClanFormat(clan);
+  const currentConfirmed = await countConfirmed(clan, season);
+  if (currentConfirmed >= format) {
     return NextResponse.json(
-      { error: `Sheet write failed: ${err.message}` },
-      { status: 502 }
+      { error: `${clan} already has ${currentConfirmed} confirmed players (cap: ${format}). Move someone to Substitute first.` },
+      { status: 409 }
     );
   }
 
-  // Mark assigned in Neon (non-fatal if this fails — sheet is source of truth).
-  try {
-    await markAssigned(tag, season, clan);
-  } catch (err) {
-    console.error("DB mark-assigned failed (non-fatal):", err);
-  }
+  if (isPublished) {
+    // Write to Sheet first — if that fails, don't mark as assigned in the DB
+    let sheetResult;
+    try {
+      sheetResult = await assignPlayerToRoster({
+        tag,
+        playerName: playerName || tag,
+        clan,
+        townHall: townHall || "",
+        season,
+      });
+    } catch (err) {
+      console.error("Sheet write failed:", err);
+      return NextResponse.json(
+        { error: `Sheet write failed: ${err.message}` },
+        { status: 502 }
+      );
+    }
 
-  return NextResponse.json({
-    tag,
-    clan,
-    season,
-    sheetRow: sheetResult.updatedRow,
-    confirmed: sheetResult.confirmed,
-  });
+    try {
+      await markAssigned(tag, season, clan);
+      // Set status to confirmed in Neon after sheet write
+      await sql`UPDATE pool_entries SET status = 'confirmed' WHERE player_tag = ${tag} AND season = ${season}`;
+    } catch (err) {
+      console.error("DB mark-assigned failed (non-fatal):", err);
+    }
+
+    return NextResponse.json({
+      tag,
+      clan,
+      season,
+      sheetRow: sheetResult.updatedRow,
+      confirmed: sheetResult.confirmed,
+    });
+
+  } else {
+    // Unpublished — skip sheet write, assign in Neon only with confirmed status
+    try {
+      await markAssigned(tag, season, clan);
+      await sql`UPDATE pool_entries SET status = 'confirmed' WHERE player_tag = ${tag} AND season = ${season}`;
+    } catch (err) {
+      console.error("DB mark-assigned failed:", err);
+      return NextResponse.json({ error: "Failed to assign player" }, { status: 500 });
+    }
+
+    return NextResponse.json({ tag, clan, season, confirmed: true });
+  }
 }
