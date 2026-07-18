@@ -422,6 +422,8 @@ export default function AdminPoolPage() {
   const [rankBusy, setRankBusy] = useState(null);
   const [absentBusy, setAbsentBusy] = useState(null);
   const [clanAbsent, setClanAbsent] = useState({});
+  const [publishedClans, setPublishedClans] = useState({});
+  const [publishBusy, setPublishBusy] = useState(null);
   const [rankResult, setRankResult] = useState({});
 
   const [activeClanForm, setActiveClanForm] = useState(null);
@@ -462,6 +464,7 @@ export default function AdminPoolPage() {
       setEntries(data.entries || []);
       setClanFormats(data.clanFormats || {});
       setClanAbsent(data.clanAbsent || {});
+      setPublishedClans(data.clanPublished || {});
       setClans(data.clanNames || []);
     } catch { setError("Couldn't load pool data — check your connection."); }
     finally { setLoading(false); }
@@ -789,6 +792,18 @@ export default function AdminPoolPage() {
       else { setThRefreshResult({ ok: false, message: data.error || "Refresh failed" }); }
     } catch { setThRefreshResult({ ok: false, message: "Network error" }); }
     finally { setThRefreshing(false); }
+  }
+
+  async function doTogglePublish(clanName, published) {
+    setPublishBusy(clanName);
+    try {
+      const res = await fetch("/api/admin/roster-publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ clanName, published }),
+      });
+      if (res.ok) setPublishedClans(prev => ({ ...prev, [clanName]: published }));
+    } catch {} finally { setPublishBusy(null); }
   }
 
   async function doRefreshRank(clan) {
