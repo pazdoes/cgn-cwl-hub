@@ -1024,7 +1024,6 @@ export default function AdminPoolPage() {
                       const status = assignStatus[entry.player_tag];
                       return (
                         <div key={entry.player_tag}
-                          onDragStart={() => onDragStart(entry)} onDragEnd={onDragEnd}
                           onTouchStart={e => onTouchStartPlayer(e, entry)} onTouchMove={onTouchMovePlayer} onTouchEnd={onTouchEndPlayer}
                           onClick={() => setSelectedTags(prev =>
                             prev.includes(entry.player_tag)
