@@ -33,7 +33,12 @@ export async function GET(request) {
     ORDER BY a.town_hall_level DESC NULLS LAST, a.player_name ASC
   `;
 
-  return NextResponse.json({ members, season });
+  const stats = {
+    discordLinked: members.filter(m => !!m.discord_id).length,
+    apiVerified: members.filter(m => m.api_token_verified).length,
+  };
+
+  return NextResponse.json({ members, season, stats });
 }
 
 export async function PATCH(request) {
