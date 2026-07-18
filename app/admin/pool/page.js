@@ -894,7 +894,10 @@ export default function AdminPoolPage() {
   const currentFormat = currentClan ? (clanFormats[currentClan] ?? 15) : 15;
   // Only Confirmed players count against the CWL format cap.
   // Substitute and Registered players sit outside the cap.
-  const confirmedCount = currentClanEntries.filter(e => e.status?.toLowerCase() === "confirmed").length;
+  const isPublished = publishedClans[currentClan] === true;
+  const confirmedCount = isPublished
+    ? currentClanEntries.filter(e => e.status?.toLowerCase() === "confirmed").length
+    : currentClanEntries.length;
   const rosterPct = currentFormat > 0
     ? Math.min(100, Math.round(confirmedCount / currentFormat * 100))
     : 0;
