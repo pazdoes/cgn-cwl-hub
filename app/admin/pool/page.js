@@ -51,25 +51,15 @@ function RankRefreshButton({ busy, result, onClick }) {
 
 /* ─── Status toggle ───────────────────────────────────────── */
 function StatusToggle({ status, busy, error, onSetStatus }) {
-  const isConfirmed = status === "confirmed";
-  const isSubstitute = status === "substitute";
-  const isRegistered = !status || status === "registered";
+  const isConfirmed = !status || status === "confirmed" || status === "registered";
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
-        <button type="button" disabled={busy} onClick={() => onSetStatus("confirmed")}
-          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isConfirmed ? "bg-green-500/30 text-green-200" : "text-slate-500 hover:text-slate-300"}`}>
-          Confirmed
-        </button>
-        <button type="button" disabled={busy} onClick={() => onSetStatus("registered")}
-          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isRegistered ? "bg-white/10 text-slate-300" : "text-slate-500 hover:text-slate-300"}`}>
-          Registered
-        </button>
-        <button type="button" disabled={busy} onClick={() => onSetStatus("substitute")}
-          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isSubstitute ? "bg-orange-500/30 text-orange-200" : "text-slate-500 hover:text-slate-300"}`}>
-          Sub
-        </button>
-      </div>
+      <button type="button" disabled={busy}
+        onClick={() => onSetStatus(isConfirmed ? "substitute" : "confirmed")}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${isConfirmed ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-orange-500/40 text-orange-400 bg-orange-500/10"}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${isConfirmed ? "bg-green-400" : "bg-orange-400"}`}/>
+        {isConfirmed ? "Confirmed" : "Sub"}
+      </button>
       {error && <p className="text-[9px] text-red-400 text-right max-w-[160px] leading-tight">{error}</p>}
     </div>
   );
