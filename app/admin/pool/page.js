@@ -51,15 +51,25 @@ function RankRefreshButton({ busy, result, onClick }) {
 
 /* ─── Status toggle ───────────────────────────────────────── */
 function StatusToggle({ status, busy, error, onSetStatus }) {
-  const isConfirmed = !status || status === "confirmed" || status === "registered";
+  const isConfirmed = status === "confirmed";
+  const isSubstitute = status === "substitute";
+  const isRegistered = !status || status === "registered";
   return (
     <div className="flex flex-col items-end gap-1">
-      <button type="button" disabled={busy}
-        onClick={() => onSetStatus(isConfirmed ? "substitute" : "confirmed")}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${isConfirmed ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-orange-500/40 text-orange-400 bg-orange-500/10"}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${isConfirmed ? "bg-green-400" : "bg-orange-400"}`}/>
-        {isConfirmed ? "Confirmed" : "Sub"}
-      </button>
+      <div className="flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-[10px]">
+        <button type="button" disabled={busy} onClick={() => onSetStatus("confirmed")}
+          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isConfirmed ? "bg-green-500/30 text-green-200" : "text-slate-500 hover:text-slate-300"}`}>
+          Confirmed
+        </button>
+        <button type="button" disabled={busy} onClick={() => onSetStatus("registered")}
+          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isRegistered ? "bg-white/10 text-slate-300" : "text-slate-500 hover:text-slate-300"}`}>
+          Registered
+        </button>
+        <button type="button" disabled={busy} onClick={() => onSetStatus("substitute")}
+          className={`px-2.5 py-1 rounded-full transition disabled:opacity-50 font-semibold ${isSubstitute ? "bg-orange-500/30 text-orange-200" : "text-slate-500 hover:text-slate-300"}`}>
+          Sub
+        </button>
+      </div>
       {error && <p className="text-[9px] text-red-400 text-right max-w-[160px] leading-tight">{error}</p>}
     </div>
   );
@@ -396,10 +406,6 @@ export default function AdminPoolPage() {
   const [thRefreshResult, setThRefreshResult] = useState(null);
   const [poolTab, setPoolTab] = useState("available");
 
-  const [dragging, setDragging] = useState(null);
-  const [overClan, setOverClan] = useState(null);
-  const [draggingClan, setDraggingClan] = useState(null);
-  const [overClanTile, setOverClanTile] = useState(null);
 
   const [assignStatus, setAssignStatus] = useState({});
   const [assigning, setAssigning] = useState(null);
@@ -468,17 +474,7 @@ export default function AdminPoolPage() {
     loadPool(pinInput);
   }
 
-  function onDragStart(entry) { setDragging(entry); }
-  function onDragEnd() { setDragging(null); setOverClan(null); }
-  function onDragOver(e, clan) { e.preventDefault(); setOverClan(clan); }
-  function onDragLeave() { setOverClan(null); }
-  async function onDrop(e, clan) {
-    e.preventDefault(); setOverClan(null);
-    if (!dragging) return;
-    if (dragging.assigned_clan === clan) { setDragging(null); return; }
-    await doAssign(dragging, clan);
-    setDragging(null);
-  }
+
 
   const LONG_PRESS_MS = 280;
   const MOVE_CANCEL_PX = 10;
@@ -500,7 +496,6 @@ export default function AdminPoolPage() {
 
     state.timer = setTimeout(() => {
       state.active = true;
-      onDragStart(entry);
 
       const moveListener = (moveEvent) => {
         if (moveEvent.cancelable) moveEvent.preventDefault();
@@ -510,7 +505,6 @@ export default function AdminPoolPage() {
         if (!zone) { setOverClan(null); return; }
         const clan = zone.getAttribute("data-clan-zone");
         if (!clan) return;
-        onDragOver({ preventDefault: () => {} }, clan);
       };
 
       const finish = async (endEvent) => {
@@ -520,7 +514,6 @@ export default function AdminPoolPage() {
         const clan = zone?.getAttribute("data-clan-zone");
         const entryNow = state.entry;
         cleanupPlayerTouchListeners();
-        setDragging(null); setOverClan(null);
 
         if (!clan || !entryNow || entryNow.assigned_clan === clan) {
           state.entry = null; state.active = false; return;
@@ -569,28 +562,7 @@ export default function AdminPoolPage() {
     if (!state.active) state.entry = null;
   }
 
-  function onClanTileDragStart(clan) { setDraggingClan(clan); }
-  function onClanTileDragEnd() { setDraggingClan(null); setOverClanTile(null); }
-  function onClanTileDragOver(e, clan) {
-    e.preventDefault();
-    if (clan === draggingClan) return;
-    setOverClanTile(clan);
-    setClans(prev => {
-      const from = prev.indexOf(draggingClan); const to = prev.indexOf(clan);
-      if (from === -1 || to === -1) return prev;
-      const next = [...prev]; next.splice(from, 1); next.splice(to, 0, draggingClan);
-      return next;
-    });
-  }
-  function onClanTileDragLeave() { setOverClanTile(null); }
-  async function onClanTileDrop(e, clan) {
-    e.preventDefault(); setDraggingClan(null); setOverClanTile(null);
-    let currentOrder = null;
-    setClans(prev => { currentOrder = [...prev]; return prev; });
-    try {
-      await fetch("/api/admin/clans/reorder", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ orderedNames: currentOrder }) });
-    } catch { console.error("Clan reorder error"); }
-  }
+
 
   const touchClanStateRef = useRef({ timer: null, startX: 0, startY: 0, clan: null, active: false, moveListener: null, endListener: null, cancelListener: null, snapshot: null });
 
@@ -1052,7 +1024,6 @@ export default function AdminPoolPage() {
                       const status = assignStatus[entry.player_tag];
                       return (
                         <div key={entry.player_tag}
-                          draggable
                           onDragStart={() => onDragStart(entry)} onDragEnd={onDragEnd}
                           onTouchStart={e => onTouchStartPlayer(e, entry)} onTouchMove={onTouchMovePlayer} onTouchEnd={onTouchEndPlayer}
                           onClick={() => setSelectedTags(prev =>
@@ -1063,7 +1034,6 @@ export default function AdminPoolPage() {
                           style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                           className={`rounded-2xl border p-3 transition cursor-pointer select-none
                             ${isSelected ? "border-purple-500/60 bg-purple-500/15 shadow-[0_0_12px_rgba(168,85,247,0.15)]" :
-                              dragging?.player_tag === entry.player_tag ? "border-purple-400/50 opacity-50" :
                               "border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20"}
                             ${busy ? "opacity-60 pointer-events-none" : ""}`}>
                           <div className="flex items-center gap-3">
@@ -1138,17 +1108,6 @@ export default function AdminPoolPage() {
                           {publishedClans[currentClan] === true ? "Published" : "Unpublished"}
                         </button>
                       </div>
-                    </div>
-
-                    {/* Drop zone */}
-                    <div data-clan-zone={currentClan}
-                      onDragOver={e => onDragOver(e, currentClan)} onDragLeave={onDragLeave} onDrop={e => onDrop(e, currentClan)}
-                      className={`min-h-[60px] rounded-2xl border-2 border-dashed transition mb-3 flex items-center justify-center
-                        ${overClan === currentClan ? "border-purple-400/60 bg-purple-500/10" : "border-white/10"}`}>
-                      {overClan === currentClan
-                        ? <p className="text-xs text-purple-400 animate-pulse py-3">Release to assign</p>
-                        : currentClanEntries.length === 0 && <p className="text-xs text-slate-700 py-3">Drop a player here or use tap mode</p>
-                      }
                     </div>
 
                     {/* Assigned players */}
