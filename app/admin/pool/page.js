@@ -510,7 +510,7 @@ export default function AdminPoolPage() {
         }
 
         const previousEntries = await new Promise(resolve => {
-          setEntries(prev => { resolve(prev); return prev.map(e => e.player_tag === entryNow.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString() } : e); });
+          setEntries(prev => { resolve(prev); return prev.map(e => e.player_tag === entryNow.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString(), status: "substitute" } : e); });
         });
 
         try {
@@ -636,7 +636,7 @@ export default function AdminPoolPage() {
       const data = await res.json();
       if (res.ok) {
         setAssignStatus(prev => ({ ...prev, [entry.player_tag]: { ok: true, msg: `→ ${clan}` } }));
-        setEntries(prev => prev.map(e => e.player_tag === entry.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString() } : e));
+        setEntries(prev => prev.map(e => e.player_tag === entry.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString(), status: "substitute" } : e));
       } else {
         setAssignStatus(prev => ({ ...prev, [entry.player_tag]: { ok: false, msg: data.error || "Failed" } }));
       }
@@ -662,7 +662,7 @@ export default function AdminPoolPage() {
         const { ok, data, entry } = r.value;
         if (ok) {
           setAssignStatus(prev => ({ ...prev, [entry.player_tag]: { ok: true, msg: `→ ${clan}` } }));
-          setEntries(prev => prev.map(e => e.player_tag === entry.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString() } : e));
+          setEntries(prev => prev.map(e => e.player_tag === entry.player_tag ? { ...e, assigned_clan: clan, assigned_at: new Date().toISOString(), status: "substitute" } : e));
         } else {
           setAssignStatus(prev => ({ ...prev, [entry.player_tag]: { ok: false, msg: data.error || "Failed" } }));
         }
