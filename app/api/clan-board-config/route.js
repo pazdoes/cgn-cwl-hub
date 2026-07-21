@@ -72,5 +72,13 @@ export async function POST(request) {
       updated_at     = now()
   `;
 
+  // Sync display_order to clans table so pool builder respects the same order
+  if (display_order != null) {
+    await sql`
+      UPDATE clans SET display_order = ${display_order}
+      WHERE clan_tag = ${clan_tag}
+    `;
+  }
+
   return NextResponse.json({ success: true });
 }
