@@ -19,7 +19,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const season = getOpenPoolSeason();
+  const season = await getOpenPoolSeason();
   const entries = await getPoolEntries(season);
 
   if (entries.length === 0) {
