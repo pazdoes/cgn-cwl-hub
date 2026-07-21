@@ -1,20 +1,8 @@
 import { NextResponse } from "next/server";
-import { countAssignedToClanAnySeason, deleteClan } from "@/lib/pool";
+import { deleteClan } from "@/lib/pool";
 import { deleteClanTab } from "@/lib/sheetsWrite";
+import { getDb } from "@/lib/db";
 
-// Removes a clan entirely: deletes its Sheet tab and its Neon clans row.
-// Hard-blocked if any pool_entries row, in ANY season, currently has this
-// clan as its assigned_clan — per the confirmed safety requirement, an
-// admin must unassign every rostered player first via the existing X
-// button before deletion is allowed. This is a deliberate extra
-// precaution against accidental deletion, on top of the "type the clan
-// tag to confirm" pattern already enforced by the form itself.
-//
-// Order: safety check first (cheapest, no side effects) → delete the
-// Sheet tab → delete the Neon row. If the Sheet tab deletion fails, the
-// Neon row is left in place rather than partially completing the
-// deletion — an admin can retry, and the clan still correctly appears on
-// the admin page in the meantime rather than vanishing inconsistently.
 export async function POST(request) {
   const pin = request.headers.get("x-officer-pin");
   if (pin !== process.env.OFFICER_PIN) {
@@ -28,28 +16,25 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing clan name" }, { status: 400 });
   }
 
-  let assignedCount;
+  const sql = getDb();
+
+  // Clear all pool assignments for this clan across all seasons
+  // preserves all player stats and historical data
   try {
-    assignedCount = await countAssignedToClanAnySeason(clanName);
+    await sql`
+      UPDATE pool_entries
+      SET assigned_clan = NULL, status = NULL, assigned_at = NULL
+      WHERE assigned_clan = ${clanName}
+    `;
   } catch (err) {
-    console.error("Couldn't check assigned players:", err);
+    console.error("Failed to clear clan assignments:", err);
     return NextResponse.json(
-      { error: `Couldn't verify clan is empty: ${err.message}` },
+      { error: `Failed to clear clan assignments: ${err.message}` },
       { status: 502 }
     );
   }
 
-  if (assignedCount > 0) {
-    return NextResponse.json(
-      {
-        error:
-          `"${clanName}" still has ${assignedCount} player(s) assigned (across all ` +
-          `seasons). Unassign everyone first before deleting this clan.`,
-      },
-      { status: 409 }
-    );
-  }
-
+  // Delete Google Sheets tab
   try {
     await deleteClanTab(clanName);
   } catch (err) {
@@ -60,17 +45,13 @@ export async function POST(request) {
     );
   }
 
+  // Delete clan from Neon
   try {
     await deleteClan(clanName);
   } catch (err) {
     console.error("Neon clan deletion failed:", err);
     return NextResponse.json(
-      {
-        error:
-          `The Sheet tab "${clanName}" was deleted, but removing it from the ` +
-          `database failed: ${err.message}. Contact support — the clan may ` +
-          `still appear on the admin page despite the tab being gone.`,
-      },
+      { error: `Sheet tab deleted but database removal failed: ${err.message}` },
       { status: 502 }
     );
   }
