@@ -1360,7 +1360,8 @@ export default function AnnouncementsPage() {
       fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ scheduled: [] })),
       fetch("/api/admin/discord-meta").then(r => r.json()).catch(() => ({ roles: [], channels: [], emojis: [] })),
       fetch("/api/admin/announcements/history", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ history: [] })),
-    ]).then(([wData, tData, sData, metaData, histData]) => {
+      fetch("/api/leaderboard").then(r => r.json()).catch(() => ({ seasons: [] })),
+    ]).then(([wData, tData, sData, metaData, histData, lbData]) => {
       setDiscordMeta({ roles: metaData.roles || [], channels: metaData.channels || [], emojis: metaData.emojis || [] });
       const wh = wData.webhooks || [];
       setWebhooks(wh);
@@ -1368,6 +1369,7 @@ export default function AnnouncementsPage() {
       setTemplates(tData.templates || []);
       setScheduled(sData.scheduled || []);
       setHistory(histData.history || []);
+      if (lbData.seasons?.length) setRecapSeasons(lbData.seasons);
     }).finally(() => setLoadingData(false));
   }, [authed]);
 
