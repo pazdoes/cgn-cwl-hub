@@ -3854,16 +3854,16 @@ function RecapView({ onBack }) {
             prevCwlRank={prevClanRank}
             currentCwlRank={(() => {
               // For historical seasons derive current rank from next season's cwl_rank
-              // to avoid using live clan rank which may differ
+              // use fullHistory (all seasons) to find the next season correctly
               const parseSeasonDate2 = (s) => { if (!s) return new Date(0); const d = new Date(s); return isNaN(d.getTime()) ? new Date(0) : d; };
-              const allClanSeasons = [...history]
+              const allClanSeasons = [...(fullHistory.length > 0 ? fullHistory : history)]
                 .filter(h => h.clan_name === selectedClan)
                 .sort((a, b) => parseSeasonDate2(a.season) - parseSeasonDate2(b.season));
               const thisIdx = allClanSeasons.findIndex(h => h.season === selectedSeason);
               const nextSeason = thisIdx >= 0 && thisIdx < allClanSeasons.length - 1 ? allClanSeasons[thisIdx + 1] : null;
-              return nextSeason?.cwl_rank
-                || seasonHistory.find(h => h.clan_name === selectedClan)?.current_cwl_rank
-                || null;
+              // If no next season found — show no change (same as current)
+              if (!nextSeason) return seasonHistory.find(h => h.clan_name === selectedClan)?.cwl_rank || null;
+              return nextSeason.cwl_rank || null;
             })()}
           />
         </div>
