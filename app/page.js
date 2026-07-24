@@ -3851,8 +3851,20 @@ function RecapView({ onBack }) {
             awardMostConsistent={awardMostConsistent}
             seasonMvp={top3[0]}
             rounds={clanRounds}
-            prevCwlRank={seasonHistory.find(h => h.clan_name === selectedClan)?.cwl_rank || null}
-            currentCwlRank={seasonHistory.find(h => h.clan_name === selectedClan)?.current_cwl_rank || null}
+            prevCwlRank={prevClanRank}
+            currentCwlRank={(() => {
+              // For historical seasons derive current rank from next season's cwl_rank
+              // to avoid using live clan rank which may differ
+              const parseSeasonDate2 = (s) => { if (!s) return new Date(0); const d = new Date(s); return isNaN(d.getTime()) ? new Date(0) : d; };
+              const allClanSeasons = [...history]
+                .filter(h => h.clan_name === selectedClan)
+                .sort((a, b) => parseSeasonDate2(a.season) - parseSeasonDate2(b.season));
+              const thisIdx = allClanSeasons.findIndex(h => h.season === selectedSeason);
+              const nextSeason = thisIdx >= 0 && thisIdx < allClanSeasons.length - 1 ? allClanSeasons[thisIdx + 1] : null;
+              return nextSeason?.cwl_rank
+                || seasonHistory.find(h => h.clan_name === selectedClan)?.current_cwl_rank
+                || null;
+            })()}
           />
         </div>
       )}
