@@ -33,12 +33,16 @@ export async function GET(request) {
     ORDER BY a.town_hall_level DESC NULLS LAST, a.player_name ASC
   `;
 
+  // Fetch alliance clan tags dynamically
+  const clanRows = await sql`SELECT clan_tag FROM clans WHERE clan_tag IS NOT NULL`;
+  const allianceClanTags = clanRows.map(r => r.clan_tag);
+
   const stats = {
     discordLinked: members.filter(m => !!m.discord_id).length,
     apiVerified: members.filter(m => m.api_token_verified).length,
   };
 
-  return NextResponse.json({ members, season, stats });
+  return NextResponse.json({ members, season, stats, allianceClanTags });
 }
 
 export async function PATCH(request) {

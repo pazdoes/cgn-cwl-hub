@@ -3,8 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-const ALLIANCE_CLAN_TAGS = ["#2C8QQPCL2", "#2CPC8GR9R", "#2Y9PGJGVC", "#2YQJJUYQY", "#2YV9UCJG2"];
-
 function ThIcon({ level }) {
   if (!level) return <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-[9px] text-slate-600">?</div>;
   return (
@@ -63,6 +61,7 @@ export default function AdminDirectoryPage() {
   const [pinError, setPinError] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [members, setMembers] = useState([]);
+  const [allianceClanTags, setAllianceClanTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filterPool, setFilterPool] = useState("all");
@@ -103,6 +102,7 @@ export default function AdminDirectoryPage() {
       const res = await fetch("/api/admin/members", { headers: { "x-officer-pin": p } });
       const d = await res.json();
       setMembers(d.members || []);
+      setAllianceClanTags(d.allianceClanTags || []);
     } catch {} finally { setLoading(false); }
   }
 
