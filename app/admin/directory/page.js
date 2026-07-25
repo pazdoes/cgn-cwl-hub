@@ -302,21 +302,17 @@ export default function AdminDirectoryPage() {
           {actionResult && <p className={`text-xs text-center mb-3 ${actionResult.ok ? "text-green-400" : "text-red-400"}`}>{actionResult.message}</p>}
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2 mb-4">
+          {/* Search + dropdowns */}
+          <div className="flex flex-wrap gap-2 mb-2">
             <div className="relative flex-1 min-w-[140px]">
               <input type="text" placeholder="Search name, tag or clan…" value={search} onChange={e => setSearch(e.target.value)}
                 className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               {search && <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
             </div>
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={pillSelect}>
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
             <select value={filterClan} onChange={e => setFilterClan(e.target.value)} className={pillSelect}>
               <option value="all">All Clans</option>
               <option value="alliance">In Alliance</option>
-              <option value="outside">Outside Alliance</option>
+              <option value="outside">Outside</option>
             </select>
             <select value={filterUser} onChange={e => setFilterUser(e.target.value)} className={pillSelect}>
               <option value="all">All Users</option>
@@ -324,21 +320,29 @@ export default function AdminDirectoryPage() {
                 <option key={id} value={id}>{name}</option>
               ))}
             </select>
-            <select value={filterPool} onChange={e => setFilterPool(e.target.value)} className={pillSelect}>
-              <option value="all">All Pool</option>
-              <option value="in">In Pool</option>
-              <option value="out">Not In Pool</option>
-            </select>
-            <select value={filterDiscord} onChange={e => setFilterDiscord(e.target.value)} className={pillSelect}>
-              <option value="all">All Discord</option>
-              <option value="yes">Discord ✓</option>
-              <option value="no">No Discord</option>
-            </select>
-            <select value={filterToken} onChange={e => setFilterToken(e.target.value)} className={pillSelect}>
-              <option value="all">All Token</option>
-              <option value="yes">Token ✓</option>
-              <option value="no">No Token</option>
-            </select>
+          </div>
+          {/* Toggle pill filters */}
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {[
+              { key: "filterStatus",  val: filterStatus,  set: setFilterStatus,  opts: [["all","Status"],["active","Active"],["inactive","Inactive"]], colours: { active: "green", inactive: "red" } },
+              { key: "filterPool",    val: filterPool,    set: setFilterPool,    opts: [["all","Pool"],["in","In Pool"],["out","Not In Pool"]], colours: { in: "purple", out: "slate" } },
+              { key: "filterDiscord", val: filterDiscord, set: setFilterDiscord, opts: [["all","Discord"],["yes","Discord ✓"],["no","No Discord"]], colours: { yes: "blue", no: "slate" } },
+              { key: "filterToken",   val: filterToken,   set: setFilterToken,   opts: [["all","Token"],["yes","Token ✓"],["no","No Token"]], colours: { yes: "green", no: "slate" } },
+            ].map(({ key, val, set, opts, colours }) => {
+              const isFiltered = val !== "all";
+              const colourMap = { green: "border-green-500/40 text-green-400 bg-green-500/10", blue: "border-blue-500/40 text-blue-400 bg-blue-500/10", purple: "border-purple-500/40 text-purple-300 bg-purple-500/10", red: "border-red-500/40 text-red-400 bg-red-500/10", slate: "border-white/10 text-slate-400 bg-white/[0.03]" };
+              const activeColour = isFiltered ? (colourMap[colours[val]] || colourMap.slate) : "border-white/10 text-slate-500 bg-transparent";
+              const nextIdx = (opts.findIndex(([v]) => v === val) + 1) % opts.length;
+              const label = opts.find(([v]) => v === val)?.[1] || opts[0][1];
+              return (
+                <button key={key} onClick={() => set(opts[nextIdx][0])}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-semibold uppercase tracking-widest transition ${activeColour}`}>
+                  {isFiltered && <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80"/>}
+                  {label}
+                  {isFiltered && <span onClick={e => { e.stopPropagation(); set("all"); }} className="ml-0.5 opacity-60 hover:opacity-100 text-[10px]">✕</span>}
+                </button>
+              );
+            })}
           </div>
 
           <p className="text-[10px] text-slate-700 mb-3">{filtered.length} of {members.length} accounts</p>
