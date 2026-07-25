@@ -27,14 +27,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     jwt({ token, profile }) {
       if (profile?.id) {
         token.discordId = profile.id;
+        token.discordUsername = profile.username || null;
       }
       return token;
     },
-    // Expose discordId on the session object so client components can
-    // read it via useSession() without seeing the raw JWT.
+    // Expose discordId and discordUsername on the session object so client
+    // components can read them via useSession() without seeing the raw JWT.
     session({ session, token }) {
       if (token.discordId) {
         session.user.discordId = token.discordId;
+        session.user.discordUsername = token.discordUsername || null;
       }
       return session;
     },

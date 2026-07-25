@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { linkDiscordId, getOwnerSecretByDiscordId } from "@/lib/pool";
+import { getDb } from "@/lib/db";
 import { cookies } from "next/headers";
 
 export async function POST(request) {
-  const { discordId } = await request.json().catch(() => ({}));
+  const { discordId, discordUsername } = await request.json().catch(() => ({}));
 
   if (!discordId) {
     return NextResponse.json({ error: "No discordId provided" }, { status: 401 });
@@ -20,6 +21,16 @@ export async function POST(request) {
   const existing = await getOwnerSecretByDiscordId(discordId);
   if (!existing) {
     await linkDiscordId(cookieSecret, discordId);
+  }
+
+  // Always update discord_username if provided
+  if (discordUsername) {
+    const sql = getDb();
+    await sql`
+      UPDATE accounts
+      SET discord_username = ${discordUsername}
+      WHERE discord_id = ${discordId}
+    `.catch(() => null);
   }
 
   return NextResponse.json({ linked: true, merged: !!existing });
