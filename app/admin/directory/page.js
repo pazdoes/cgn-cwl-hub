@@ -189,7 +189,7 @@ export default function AdminDirectoryPage() {
 
   // Build unique Discord user list
   const discordUsers = [...new Map(
-    members.filter(m => m.discord_id).map(m => [m.discord_id, m.discord_username || m.discord_id])
+    members.filter(m => m.discord_id && m.discord_username).map(m => [m.discord_id, m.discord_username])
   ).entries()].sort((a, b) => (a[1] || "").localeCompare(b[1] || ""));
 
   const filtered = members.filter(m => {
