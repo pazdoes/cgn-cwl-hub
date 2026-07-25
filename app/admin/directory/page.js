@@ -78,6 +78,7 @@ export default function AdminDirectoryPage() {
   const [actionResult, setActionResult] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshResult, setRefreshResult] = useState(null);
+  const [dirTab, setDirTab] = useState("members"); // "members" | "missing"
   const [missing, setMissing] = useState([]);
   const [missingLoading, setMissingLoading] = useState(false);
   const [missingLoaded, setMissingLoaded] = useState(false);
@@ -144,6 +145,13 @@ export default function AdminDirectoryPage() {
         setActionResult({ ok: true, message: "Account deleted" });
       }
     } catch {} finally { setActionLoading(false); }
+  }
+
+  function handleTabChange(tab) {
+    setDirTab(tab);
+    if (tab === "missing" && !missingLoaded && !missingLoading) {
+      handleCheckMissing();
+    }
   }
 
   async function handleCheckMissing() {
@@ -235,6 +243,20 @@ export default function AdminDirectoryPage() {
         <p className="text-slate-500 text-xs">{members.length} registered · {inAllianceCount} in alliance · {members.filter(m => m.in_pool).length} in pool</p>
       </div>
 
+      {/* Tab nav */}
+      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
+        {[["members","Members"],["missing","Missing"]].map(([key,label]) => (
+          <button key={key} onClick={() => handleTabChange(key)}
+            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+              dirTab === key
+                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
+                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Delete confirm modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
@@ -256,6 +278,7 @@ export default function AdminDirectoryPage() {
         </div>
       )}
 
+      {dirTab === "members" && (
       <div className="relative z-10 space-y-3">
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           {/* Header row */}
@@ -384,8 +407,10 @@ export default function AdminDirectoryPage() {
         </div>
       </div>
 
-      {/* Missing Members Section */}
-      <div className="relative z-10 space-y-3 mt-3">
+      )} {/* end members tab */}
+
+      {dirTab === "missing" && (
+      <div className="relative z-10 space-y-3 mt-0">
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -397,7 +422,7 @@ export default function AdminDirectoryPage() {
               <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${missingLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              {missingLoading ? "Checking…" : "Check Now"}
+              {missingLoading ? "Checking…" : "Refresh"}
             </button>
           </div>
 
@@ -435,6 +460,7 @@ export default function AdminDirectoryPage() {
           )}
         </div>
       </div>
+      )} {/* end missing tab */}
 
       <AdminFooter/>
     </main>
