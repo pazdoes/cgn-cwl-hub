@@ -24,8 +24,10 @@ export async function GET(request) {
   const clans = await sql`SELECT clan_name, clan_tag FROM clans WHERE clan_tag IS NOT NULL`;
 
   // Get all connected account tags
+  // Normalise O→0 since CoC tags never use letter O, only digit 0
+  const normaliseTag = t => t?.toUpperCase().replace(/O/g, "0") || "";
   const accounts = await sql`SELECT player_tag FROM accounts`;
-  const connectedTags = new Set(accounts.map(a => a.player_tag.toUpperCase()));
+  const connectedTags = new Set(accounts.map(a => normaliseTag(a.player_tag)));
 
   const missing = [];
 
@@ -33,7 +35,7 @@ export async function GET(request) {
     try {
       const members = await fetchClanMembers(clan.clan_tag);
       for (const m of members) {
-        const tag = m.tag?.toUpperCase();
+        const tag = normaliseTag(m.tag);
         if (tag && !connectedTags.has(tag)) {
           missing.push({
             player_tag: m.tag,
