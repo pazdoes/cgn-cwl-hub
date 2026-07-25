@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 async function fetchClanMembers(clanTag) {
   const encoded = encodeURIComponent(clanTag);
   const res = await fetch(`https://cocproxy.royaleapi.dev/v1/clans/${encoded}/members`, {
-    headers: { Authorization: `Bearer ${process.env.COC_API_TOKEN}` },
+    headers: { Authorization: `Bearer ${process.env.COC_API_KEY}` },
     next: { revalidate: 0 },
   });
   if (!res.ok) return [];
