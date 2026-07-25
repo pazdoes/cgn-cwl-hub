@@ -78,6 +78,10 @@ export default function AdminDirectoryPage() {
   const [actionResult, setActionResult] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshResult, setRefreshResult] = useState(null);
+  const [missing, setMissing] = useState([]);
+  const [missingLoading, setMissingLoading] = useState(false);
+  const [missingLoaded, setMissingLoaded] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
 
   const { status: discordStatus } = useSession();
   const SESSION_KEY = "cwl_admin_pin_confirmed";
@@ -140,6 +144,18 @@ export default function AdminDirectoryPage() {
         setActionResult({ ok: true, message: "Account deleted" });
       }
     } catch {} finally { setActionLoading(false); }
+  }
+
+  async function handleCheckMissing() {
+    setMissingLoading(true); setShowMissing(true);
+    try {
+      const res = await fetch("/api/admin/members/missing", {
+        headers: { "x-officer-pin": pin },
+      });
+      const d = await res.json();
+      setMissing(d.missing || []);
+      setMissingLoaded(true);
+    } catch {} finally { setMissingLoading(false); }
   }
 
   async function handleRefreshClanMembership() {
@@ -364,6 +380,58 @@ export default function AdminDirectoryPage() {
               ))}
               {filtered.length === 0 && <p className="text-slate-700 text-xs text-center py-6">No members match your filters</p>}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Missing Members Section */}
+      <div className="relative z-10 space-y-3 mt-3">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Missing Members</h2>
+              <p className="text-[10px] text-slate-700 mt-0.5">Alliance clan members not yet connected to the app</p>
+            </div>
+            <button onClick={handleCheckMissing} disabled={missingLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${missingLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              {missingLoading ? "Checking…" : "Check Now"}
+            </button>
+          </div>
+
+          {showMissing && (
+            <>
+              {missingLoading ? (
+                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-12 rounded-2xl bg-white/[0.04] animate-pulse"/>)}</div>
+              ) : missingLoaded && (
+                <>
+                  <p className="text-[10px] text-slate-600 mb-3">{missing.length} member{missing.length !== 1 ? "s" : ""} not connected</p>
+                  {missing.length === 0 ? (
+                    <p className="text-xs text-green-400 text-center py-4">✓ All clan members are connected to the app</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {missing.map((m, i) => (
+                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                          <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
+                            {m.town_hall_level ? <img src={`/icons/th/th${m.town_hall_level}.png`} alt={`TH${m.town_hall_level}`} className="w-5 h-5 object-contain"/> : <span className="text-[9px] text-slate-600">?</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
+                            <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[10px] text-slate-400">{m.clan_name.split(" ")[0]}</p>
+                            <p className="text-[9px] text-slate-600 capitalize">{m.role?.toLowerCase().replace(/_/g, " ")}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
