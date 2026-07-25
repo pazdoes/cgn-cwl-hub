@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
+// Alliance clan tags loaded dynamically from API
+
 function ThIcon({ level }) {
   if (!level) return <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-[9px] text-slate-600">?</div>;
   return (
@@ -102,7 +104,7 @@ export default function AdminDirectoryPage() {
       const res = await fetch("/api/admin/members", { headers: { "x-officer-pin": p } });
       const d = await res.json();
       setMembers(d.members || []);
-      setAllianceClanTags(d.allianceClanTags || []);
+      if (d.allianceClanTags) setAllianceClanTags(d.allianceClanTags);
     } catch {} finally { setLoading(false); }
   }
 
@@ -201,7 +203,7 @@ export default function AdminDirectoryPage() {
     const matchUser = filterUser === "all" || m.discord_id === filterUser;
     const matchStatus = filterStatus === "all" || (filterStatus === "active" ? m.active !== false : m.active === false);
     const matchClan = filterClan === "all"
-      || (filterClan === "alliance" ? ALLIANCE_CLAN_TAGS.includes(m.current_clan_tag) : !ALLIANCE_CLAN_TAGS.includes(m.current_clan_tag));
+      || (filterClan === "alliance" ? allianceClanTags.includes(m.current_clan_tag) : !allianceClanTags.includes(m.current_clan_tag));
     return matchSearch && matchPool && matchDiscord && matchToken && matchUser && matchStatus && matchClan;
   });
 
@@ -227,7 +229,7 @@ export default function AdminDirectoryPage() {
     );
   }
 
-  const inAllianceCount = members.filter(m => ALLIANCE_CLAN_TAGS.includes(m.current_clan_tag)).length;
+  const inAllianceCount = members.filter(m => allianceClanTags.includes(m.current_clan_tag)).length;
 
   return (
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
@@ -360,7 +362,7 @@ export default function AdminDirectoryPage() {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
                         {m.active === false && <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-red-500/40 text-red-400 uppercase tracking-widest">Inactive</span>}
-                        {!ALLIANCE_CLAN_TAGS.includes(m.current_clan_tag) && m.current_clan_tag && (
+                        {!allianceClanTags.includes(m.current_clan_tag) && m.current_clan_tag && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-amber-500/40 text-amber-400 uppercase tracking-widest">Outside</span>
                         )}
                       </div>
