@@ -492,6 +492,19 @@ export default function SignupPage() {
     }
   }
 
+  /* --- set CWL intent --- */
+  async function handleIntent(accountTag, intent) {
+    try {
+      await fetch("/api/pool/intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tag: accountTag, intent }),
+      });
+      const mine = await fetch("/api/accounts/mine").then(r => r.json());
+      setMyAccounts(mine.accounts || []);
+    } catch {}
+  }
+
   /* --- leave the pool entirely (item 5) --- */
   async function handleLeave(accountTag) {
     setLeavingTag(accountTag);
@@ -988,21 +1001,41 @@ export default function SignupPage() {
                       <p className="font-semibold text-white text-sm truncate">{acct.name}</p>
                       <p className="text-[10px] text-slate-600 font-mono">{acct.tag}</p>
                     </div>
-                    {/* Join/Leave pill */}
-                    <div className="shrink-0">
-                      {acct.inCurrentPool ? (
-                        <button onClick={() => handleLeave(acct.tag)} disabled={leavingTag === acct.tag}
-                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50 hover:shadow-[0_0_8px_rgba(239,68,68,0.15)] disabled:opacity-50 transition whitespace-nowrap">
-                          {leavingTag === acct.tag ? "Leaving…" : "✓ In Pool"}
-                        </button>
-                      ) : result?.ok ? (
-                        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)]">✓ Signed Up</span>
-                      ) : (
-                        <button onClick={() => handleJoin(acct.tag)} disabled={busy}
-                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.15)] hover:shadow-[0_0_14px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 disabled:opacity-50 transition">
-                          {busy ? "…" : "Sign Up"}
-                        </button>
-                      )}
+                    {/* Three-state CWL intent buttons */}
+                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                      {/* In Pool */}
+                      <button
+                        onClick={() => acct.inCurrentPool ? handleLeave(acct.tag) : handleJoin(acct.tag)}
+                        disabled={busy || leavingTag === acct.tag}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
+                          acct.inCurrentPool
+                            ? "bg-green-500/10 text-green-400 border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)]"
+                            : "bg-transparent text-slate-500 border-white/10 hover:text-green-400 hover:border-green-500/40"
+                        }`}>
+                        {leavingTag === acct.tag ? "…" : busy ? "…" : "✓ In"}
+                      </button>
+                      {/* Sitting Out */}
+                      <button
+                        onClick={() => handleIntent(acct.tag, acct.cwlIntent === "out" ? null : "out")}
+                        disabled={busy || leavingTag === acct.tag}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
+                          acct.cwlIntent === "out" && !acct.inCurrentPool
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.12)]"
+                            : "bg-transparent text-slate-500 border-white/10 hover:text-amber-400 hover:border-amber-500/40"
+                        }`}>
+                        Sitting Out
+                      </button>
+                      {/* No Response */}
+                      <button
+                        onClick={() => handleIntent(acct.tag, null)}
+                        disabled={busy || leavingTag === acct.tag}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
+                          !acct.inCurrentPool && acct.cwlIntent !== "out"
+                            ? "bg-white/[0.04] text-slate-400 border-white/20"
+                            : "bg-transparent text-slate-600 border-white/[0.06] hover:text-slate-400 hover:border-white/20"
+                        }`}>
+                        No Response
+                      </button>
                     </div>
                   </div>
                   {leaveError[acct.tag] && (
