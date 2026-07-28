@@ -497,15 +497,24 @@ export default function SignupPage() {
 
   /* --- set CWL intent --- */
   async function handleIntent(accountTag, intent) {
+    // Optimistic update — reflect change immediately in UI
+    setMyAccounts(prev => prev.map(a => a.tag === accountTag ? { ...a, cwlIntent: intent } : a));
     try {
-      await fetch("/api/pool/intent", {
+      const res = await fetch("/api/pool/intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tag: accountTag, intent }),
       });
+      if (!res.ok) {
+        // Revert on failure
+        const mine = await fetch("/api/accounts/mine").then(r => r.json());
+        setMyAccounts(mine.accounts || []);
+      }
+    } catch {
+      // Revert on error
       const mine = await fetch("/api/accounts/mine").then(r => r.json());
       setMyAccounts(mine.accounts || []);
-    } catch {}
+    }
   }
 
   /* --- bulk intent for selected accounts --- */
