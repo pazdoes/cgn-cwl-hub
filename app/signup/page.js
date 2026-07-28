@@ -1001,40 +1001,39 @@ export default function SignupPage() {
                       <p className="font-semibold text-white text-sm truncate">{acct.name}</p>
                       <p className="text-[10px] text-slate-600 font-mono">{acct.tag}</p>
                     </div>
-                    {/* Three-state CWL intent buttons */}
-                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                      {/* In Pool */}
+                    {/* CWL intent — In / Out */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* ✓ In */}
                       <button
-                        onClick={() => acct.inCurrentPool ? handleLeave(acct.tag) : handleJoin(acct.tag)}
+                        onClick={async () => {
+                          if (acct.inCurrentPool) {
+                            await handleLeave(acct.tag);
+                          } else {
+                            if (acct.cwlIntent === "out") await handleIntent(acct.tag, null);
+                            await handleJoin(acct.tag);
+                          }
+                        }}
                         disabled={busy || leavingTag === acct.tag}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
                           acct.inCurrentPool
                             ? "bg-green-500/10 text-green-400 border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)]"
                             : "bg-transparent text-slate-500 border-white/10 hover:text-green-400 hover:border-green-500/40"
                         }`}>
-                        {leavingTag === acct.tag ? "…" : busy ? "…" : "✓ In"}
+                        {leavingTag === acct.tag || busy ? "…" : "✓ In"}
                       </button>
-                      {/* Sitting Out */}
+                      {/* ✕ Out */}
                       <button
-                        onClick={() => handleIntent(acct.tag, acct.cwlIntent === "out" ? null : "out")}
+                        onClick={async () => {
+                          if (acct.inCurrentPool) await handleLeave(acct.tag);
+                          await handleIntent(acct.tag, acct.cwlIntent === "out" ? null : "out");
+                        }}
                         disabled={busy || leavingTag === acct.tag}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
                           acct.cwlIntent === "out" && !acct.inCurrentPool
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.12)]"
-                            : "bg-transparent text-slate-500 border-white/10 hover:text-amber-400 hover:border-amber-500/40"
+                            ? "bg-red-500/10 text-red-400 border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.12)]"
+                            : "bg-transparent text-slate-500 border-white/10 hover:text-red-400 hover:border-red-500/40"
                         }`}>
-                        Sitting Out
-                      </button>
-                      {/* No Response */}
-                      <button
-                        onClick={() => handleIntent(acct.tag, null)}
-                        disabled={busy || leavingTag === acct.tag}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
-                          !acct.inCurrentPool && acct.cwlIntent !== "out"
-                            ? "bg-white/[0.04] text-slate-400 border-white/20"
-                            : "bg-transparent text-slate-600 border-white/[0.06] hover:text-slate-400 hover:border-white/20"
-                        }`}>
-                        No Response
+                        ✕ Out
                       </button>
                     </div>
                   </div>
