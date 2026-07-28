@@ -352,6 +352,9 @@ export default function SignupPage() {
   /* --- state --- */
   const [season, setSeason]         = useState(null);
   const [myAccounts, setMyAccounts] = useState([]);   // quick-pick list from cookie
+  const [accountSearch, setAccountSearch] = useState("");
+  const [selectedTags, setSelectedTags] = useState(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [loadingMine, setLoadingMine] = useState(true);
 
   // manual drag-and-drop reordering (item 13)
@@ -503,6 +506,33 @@ export default function SignupPage() {
       const mine = await fetch("/api/accounts/mine").then(r => r.json());
       setMyAccounts(mine.accounts || []);
     } catch {}
+  }
+
+  /* --- bulk intent for selected accounts --- */
+  async function handleBulkIntent(intent) {
+    setBulkBusy(true);
+    const tags = [...selectedTags];
+    for (const tag of tags) {
+      const acct = myAccounts.find(a => a.tag === tag);
+      if (!acct) continue;
+      if (intent === "in") {
+        if (acct.cwlIntent === "out") await handleIntent(tag, null);
+        if (!acct.inCurrentPool) await handleJoin(tag);
+      } else {
+        if (acct.inCurrentPool) await handleLeave(tag);
+        await handleIntent(tag, "out");
+      }
+    }
+    setSelectedTags(new Set());
+    setBulkBusy(false);
+  }
+
+  function toggleSelectTag(tag) {
+    setSelectedTags(prev => {
+      const next = new Set(prev);
+      next.has(tag) ? next.delete(tag) : next.add(tag);
+      return next;
+    });
   }
 
   /* --- leave the pool entirely (item 5) --- */
@@ -970,9 +1000,43 @@ export default function SignupPage() {
       {!loadingMine && isReturningUser && (
         <div className="relative z-10 space-y-3">
 
+          {/* Search + select all + bulk actions */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input type="text" value={accountSearch} onChange={e => setAccountSearch(e.target.value)}
+                  placeholder="Search accounts…"
+                  className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                {accountSearch && <button onClick={() => setAccountSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white text-xs">✕</button>}
+              </div>
+              <button onClick={() => {
+                const visible = myAccounts.filter(a => !accountSearch || a.name?.toLowerCase().includes(accountSearch.toLowerCase()) || a.tag?.toLowerCase().includes(accountSearch.toLowerCase()));
+                const allSelected = visible.every(a => selectedTags.has(a.tag));
+                setSelectedTags(allSelected ? new Set() : new Set(visible.map(a => a.tag)));
+              }}
+                className="px-3 py-1.5 rounded-full border border-white/10 text-slate-500 text-xs hover:text-slate-300 hover:border-white/20 transition whitespace-nowrap">
+                {selectedTags.size > 0 ? `${selectedTags.size} selected` : "Select All"}
+              </button>
+            </div>
+            {selectedTags.size > 0 && (
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-[10px] text-slate-500 flex-1">{selectedTags.size} account{selectedTags.size !== 1 ? "s" : ""} selected</span>
+                <button onClick={() => handleBulkIntent("in")} disabled={bulkBusy}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold border border-green-500/60 text-green-400 bg-green-500/10 hover:border-green-400 transition disabled:opacity-40">
+                  {bulkBusy ? "…" : "✓ In All"}
+                </button>
+                <button onClick={() => handleBulkIntent("out")} disabled={bulkBusy}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold border border-red-500/60 text-red-400 bg-red-500/10 hover:border-red-400 transition disabled:opacity-40">
+                  {bulkBusy ? "…" : "✕ Out All"}
+                </button>
+                <button onClick={() => setSelectedTags(new Set())} className="text-slate-600 hover:text-slate-400 text-xs transition">✕</button>
+              </div>
+            )}
+          </div>
+
           {/* Account cards */}
           <div className="space-y-2">
-            {myAccounts.map(acct => {
+            {myAccounts.filter(a => !accountSearch || a.name?.toLowerCase().includes(accountSearch.toLowerCase()) || a.tag?.toLowerCase().includes(accountSearch.toLowerCase())).map(acct => {
               const result = joinResult[acct.tag];
               const busy   = joiningTag === acct.tag;
               const isDragging = draggingTag === acct.tag;
@@ -990,9 +1054,11 @@ export default function SignupPage() {
                   onTouchMove={onAccountTouchMove}
                   onTouchEnd={onAccountTouchEnd}
                   style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
-                  className={`rounded-2xl border bg-white/[0.03] p-4 transition cursor-grab active:cursor-grabbing
-                    ${isDragging ? "opacity-40 border-purple-500/40" : "border-white/10 hover:bg-white/[0.05]"}
+                  onClick={() => toggleSelectTag(acct.tag)}
+                  className={`rounded-2xl border bg-white/[0.03] p-4 transition cursor-pointer
+                    ${isDragging ? "opacity-40 border-purple-500/40" : ""}
                     ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
+                    ${selectedTags.has(acct.tag) ? "border-purple-500/60 bg-purple-500/[0.06] shadow-[0_0_12px_rgba(168,85,247,0.12)]" : "border-white/10 hover:bg-white/[0.05]"}
                   `}
                 >
                   <div className="flex items-center gap-3">
@@ -1002,7 +1068,7 @@ export default function SignupPage() {
                       <p className="text-[10px] text-slate-600 font-mono">{acct.tag}</p>
                     </div>
                     {/* CWL intent — In / Out */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                       {/* ✓ In */}
                       <button
                         onClick={async (e) => {
