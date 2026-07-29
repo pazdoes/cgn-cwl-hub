@@ -7,7 +7,7 @@ export async function GET() {
   const season = await getOpenPoolSeason();
   const [row] = await sql`
     SELECT COUNT(*) as count FROM pool_entries
-    WHERE season = ${season} AND assigned_clan IS NOT NULL
+    WHERE season = ${season}
   `;
   return NextResponse.json({ count: parseInt(row?.count || 0), season });
 }

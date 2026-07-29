@@ -322,6 +322,7 @@ export default function SignupPage() {
   const [season, setSeason]         = useState(null);
   const [myAccounts, setMyAccounts] = useState([]);   // quick-pick list from cookie
   const [accountSearch, setAccountSearch] = useState("");
+  const [poolCount, setPoolCount] = useState(null);
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [loadingMine, setLoadingMine] = useState(true);
@@ -368,6 +369,10 @@ export default function SignupPage() {
   // needed. accounts/mine already includes townHallLevel in each entry.
   // myAccounts entries now carry { tag, name, inCurrentPool, townHallLevel }.
   useEffect(() => {
+    fetch("/api/pool/count")
+      .then(r => r.json())
+      .then(d => setPoolCount(d.count ?? null))
+      .catch(() => {});
     fetch("/api/accounts/mine")
       .then(r => r.json())
       .then(data => {
@@ -869,7 +874,16 @@ export default function SignupPage() {
       {/* ── Hero card — flush to top ── */}
       <div className="relative z-10 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
-        <p className="text-slate-500 text-xs mb-4">{season ? `${season} season` : "Join the player pool"}</p>
+        <p className="text-slate-500 text-xs mb-2">Let your leaders know if you're available for CWL this season</p>
+        {season && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
+            {season}
+          </div>
+        )}
+        {poolCount !== null && (
+          <p className="text-[10px] text-slate-500 mb-2">{poolCount} player{poolCount !== 1 ? "s" : ""} signed up so far</p>
+        )}
 
         {discordStatus !== "authenticated" && (
             <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed text-center">
