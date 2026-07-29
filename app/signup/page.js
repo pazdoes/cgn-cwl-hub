@@ -323,6 +323,8 @@ export default function SignupPage() {
   const [myAccounts, setMyAccounts] = useState([]);   // quick-pick list from cookie
   const [accountSearch, setAccountSearch] = useState("");
   const [poolCount, setPoolCount] = useState(null);
+  const [outCount, setOutCount] = useState(null);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [loadingMine, setLoadingMine] = useState(true);
@@ -371,7 +373,7 @@ export default function SignupPage() {
   useEffect(() => {
     fetch("/api/pool/count")
       .then(r => r.json())
-      .then(d => setPoolCount(d.count ?? null))
+      .then(d => { setPoolCount(d.count ?? null); setOutCount(d.outCount ?? null); })
       .catch(() => {});
     fetch("/api/accounts/mine")
       .then(r => r.json())
@@ -472,7 +474,11 @@ export default function SignupPage() {
   /* --- set CWL intent --- */
   async function handleIntent(accountTag, intent) {
     // Optimistic update — reflect change immediately in UI
-    setMyAccounts(prev => prev.map(a => a.tag === accountTag ? { ...a, cwlIntent: intent } : a));
+    const prev = myAccounts.find(a => a.tag === accountTag);
+    setMyAccounts(accs => accs.map(a => a.tag === accountTag ? { ...a, cwlIntent: intent } : a));
+    // Optimistically update outCount
+    if (intent === "out" && prev?.cwlIntent !== "out") setOutCount(c => (c ?? 0) + 1);
+    if (intent !== "out" && prev?.cwlIntent === "out") setOutCount(c => Math.max(0, (c ?? 1) - 1));
     try {
       const res = await fetch("/api/pool/intent", {
         method: "POST",
@@ -480,12 +486,10 @@ export default function SignupPage() {
         body: JSON.stringify({ tag: accountTag, intent }),
       });
       if (!res.ok) {
-        // Revert on failure
         const mine = await fetch("/api/accounts/mine").then(r => r.json());
         setMyAccounts(mine.accounts || []);
       }
     } catch {
-      // Revert on error
       const mine = await fetch("/api/accounts/mine").then(r => r.json());
       setMyAccounts(mine.accounts || []);
     }
@@ -875,26 +879,60 @@ export default function SignupPage() {
       <div className="relative z-10 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
         <p className="text-slate-500 text-xs mb-2">Let your leaders know if you're available for CWL this season</p>
-        {season && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
-            {season}
-          </div>
-        )}
-        {poolCount !== null && (
-          <p className="text-[10px] text-slate-500 mb-2">{poolCount} player{poolCount !== 1 ? "s" : ""} signed up so far</p>
-        )}
+        <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
+          {season && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
+              {season}
+            </div>
+          )}
+          {poolCount !== null && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
+              {poolCount} In
+            </div>
+          )}
+          {outCount !== null && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
+              {outCount} Out
+            </div>
+          )}
+        </div>
+        {/* How to use — expandable info panel */}
+        <div className="mt-1 mb-2">
+          <button type="button" onClick={() => setInfoOpen(v => !v)}
+            className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            How does this work?
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 transition-transform ${infoOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {infoOpen && (
+            <div className="mt-2 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left space-y-2.5">
+              {[
+                ["✓ In", "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season."],
+                ["✕ Out", "Lets leaders know you're sitting this season out. No need to be chased or followed up with."],
+                ["No Response", "If neither In nor Out is selected, leaders will follow up with you directly."],
+                ["Tap a tile", "Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually."],
+                ["Select All", "Selects all your accounts at once for a bulk action."],
+                ["Bulk In / Out All", "Applies your In or Out choice to all selected accounts simultaneously."],
+                ["Account Manager", "Use the gear icon at the bottom to add or remove accounts linked to your profile."],
+              ].map(([label, desc]) => (
+                <div key={label} className="flex gap-2">
+                  <span className="text-[10px] font-semibold text-purple-300 shrink-0 w-24">{label}</span>
+                  <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {discordStatus !== "authenticated" && (
             <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed text-center">
               Sign in with Discord to permanently bind your accounts to your profile across devices
             </p>
           )}
-          {discordStatus === "authenticated" && discordUser && (
-            <p className="text-[10px] text-green-500/70">
-              ✓ Accounts bound to your Discord profile
-            </p>
-          )}
+
 
         {/* Step indicator — only for new users */}
         {(isNewUser || loadingMine) && accountsView === "accounts" && (
