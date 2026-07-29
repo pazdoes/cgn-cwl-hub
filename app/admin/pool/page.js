@@ -944,7 +944,7 @@ export default function AdminPoolPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
                 </button>
                 <span className="text-[10px] text-slate-500 uppercase tracking-widest select-none min-w-[80px] text-center">
-                  {builderTab === "pool" ? `Pool (${unassigned.length})` : `Roster`}
+                  {builderTab === "pool" ? `Pool (${unassigned.length + optedOut.length})` : `Roster`}
                 </span>
                 <button onClick={() => setBuilderTab("roster")} className="text-slate-500 hover:text-slate-300 transition p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -1045,6 +1045,7 @@ export default function AdminPoolPage() {
                     })}
                   </div>
                 )}
+                </>}
               </div>
             )}
 
