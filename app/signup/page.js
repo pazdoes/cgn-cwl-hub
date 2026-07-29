@@ -1087,7 +1087,13 @@ export default function SignupPage() {
                   className={`rounded-2xl border bg-white/[0.03] p-4 transition cursor-pointer
                     ${isDragging ? "opacity-40 border-purple-500/40" : ""}
                     ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
-                    ${selectedTags.has(acct.tag) ? "border-purple-500/60 bg-purple-500/[0.06] shadow-[0_0_12px_rgba(168,85,247,0.12)]" : "border-white/10 hover:bg-white/[0.05]"}
+                    ${selectedTags.has(acct.tag)
+                      ? "border-purple-500/60 bg-purple-500/[0.06] shadow-[0_0_12px_rgba(168,85,247,0.12)]"
+                      : acct.inCurrentPool
+                        ? "border-green-500/40 bg-green-500/[0.04] shadow-[0_0_10px_rgba(74,222,128,0.08)]"
+                        : acct.cwlIntent === "out"
+                          ? "border-red-500/40 bg-red-500/[0.04] shadow-[0_0_10px_rgba(239,68,68,0.08)]"
+                          : "border-white/10 hover:bg-white/[0.05]"}
                   `}
                 >
                   <div className="flex items-center gap-3">
@@ -1137,12 +1143,6 @@ export default function SignupPage() {
                   {leaveError[acct.tag] && (
                     <p className="text-[10px] text-red-400 mt-2 text-center">{leaveError[acct.tag]}</p>
                   )}
-                  {/* Intent status label */}
-                  <p className={`text-[9px] mt-1.5 text-center tracking-wide ${
-                    acct.inCurrentPool ? "text-green-400/70" : acct.cwlIntent === "out" ? "text-red-400/70" : "text-slate-600"
-                  }`}>
-                    {acct.inCurrentPool ? `✓ You're in for ${season || "this season"}` : acct.cwlIntent === "out" ? "✕ Sitting this one out" : "No response yet"}
-                  </p>
                 </div>
               );
             })}
