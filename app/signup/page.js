@@ -859,14 +859,15 @@ export default function SignupPage() {
     <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
 
       {/* ambient glow */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+      <img src="/roster-bg.png" alt="" className="fixed inset-0 select-none pointer-events-none opacity-20" style={{width:"100vw",height:"100dvh",objectFit:"cover",objectPosition:"center top"}}/>
       </div>
 
       <AppHeader variant="bar"/>
 
       {/* ── Hero card — flush to top ── */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
+      <div className="relative z-10 mb-4 text-center">
         <h1 className="text-2xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
         <p className="text-slate-500 text-xs mb-4">{season ? `${season} season` : "Join the player pool"}</p>
 
