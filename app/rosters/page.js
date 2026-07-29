@@ -302,7 +302,7 @@ export default function RostersPage() {
   const [highlightedAccount, setHighlightedAccount] = useState(null);
   const [currentSeason, setCurrentSeason] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [rosterProgress, setRosterProgress] = useState({ confirmedPlayers: 0, totalCapacity: 0, totalClans: 5, publishedCount: 0 });
+  const [rosterProgress, setRosterProgress] = useState({ confirmedPlayers: 0, totalCapacity: 0, unpublishedCount: 0, totalClans: 5 });
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -318,7 +318,7 @@ export default function RostersPage() {
     ]).then(([rosterData, seasonData, statusData]) => {
       setPlayers(Array.isArray(rosterData) ? rosterData : []);
       setCurrentSeason(seasonData.season || null);
-      setRosterProgress({ confirmedPlayers: statusData.confirmedPlayers || 0, totalCapacity: statusData.totalCapacity || 0, totalClans: statusData.totalClans || 5, publishedCount: statusData.publishedCount || 0 });
+      setRosterProgress({ confirmedPlayers: statusData.confirmedPlayers || 0, totalCapacity: statusData.totalCapacity || 0, unpublishedCount: statusData.unpublishedCount || 0, totalClans: statusData.totalClans || 5 });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -504,12 +504,12 @@ export default function RostersPage() {
             )}
           </div>
 
-          {/* Roster completion */}
+          {/* Roster completion — tracks unpublished clans only */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Roster Progress</p>
               <span className="text-xs text-slate-500 tabular-nums">
-                {rosterProgress.confirmedPlayers} / {rosterProgress.totalCapacity > 0 ? rosterProgress.totalCapacity : rosterProgress.totalClans * 15} players
+                {rosterProgress.confirmedPlayers} / {rosterProgress.totalCapacity || rosterProgress.unpublishedCount * 15} players
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
@@ -519,11 +519,13 @@ export default function RostersPage() {
               />
             </div>
             <p className="text-[10px] text-slate-600 mt-3 text-center">
-              {rosterProgress.confirmedPlayers === 0
-                ? "Leaders are building rosters"
-                : rosterProgress.confirmedPlayers >= rosterProgress.totalCapacity
-                  ? "Rosters complete — publishing soon"
-                  : `${rosterProgress.totalCapacity - rosterProgress.confirmedPlayers} slot${rosterProgress.totalCapacity - rosterProgress.confirmedPlayers !== 1 ? "s" : ""} remaining across ${rosterProgress.totalClans} clans`}
+              {rosterProgress.unpublishedCount === 0
+                ? "All rosters ready"
+                : rosterProgress.confirmedPlayers === 0
+                  ? `Leaders are building rosters for ${rosterProgress.unpublishedCount} clan${rosterProgress.unpublishedCount !== 1 ? "s" : ""}`
+                  : rosterProgress.confirmedPlayers >= rosterProgress.totalCapacity
+                    ? "Rosters complete — publishing soon"
+                    : `${rosterProgress.totalCapacity - rosterProgress.confirmedPlayers} slot${rosterProgress.totalCapacity - rosterProgress.confirmedPlayers !== 1 ? "s" : ""} remaining across ${rosterProgress.unpublishedCount} clan${rosterProgress.unpublishedCount !== 1 ? "s" : ""}`}
             </p>
           </div>
         </div>
