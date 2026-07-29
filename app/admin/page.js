@@ -143,7 +143,7 @@ function AdminHeader() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                   </svg>
-                  {item.label}
+                  <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                 </Link>
               ))}
             </nav>
@@ -153,7 +153,7 @@ function AdminHeader() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
-                Back to App
+                <span style={{fontFamily:"var(--font-orbitron)"}}>Back to App</span>
               </Link>
             </div>
           </div>
@@ -231,7 +231,7 @@ function AdminNav_REMOVED() {
                 <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>{item.icon}</svg>
-                  {item.label}
+                  <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                 </Link>
               ))}
             </div>

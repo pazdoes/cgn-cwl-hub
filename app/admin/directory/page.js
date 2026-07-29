@@ -52,7 +52,7 @@ function AdminFooter() {
   return (
     <div className="relative z-10 w-full py-6 flex items-center justify-center gap-3 mt-4">
       <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5 opacity-30"/>
-      <span className="text-[10px] text-slate-600 tracking-widest uppercase">Cognition {"{CGN}"} · Admin</span>
+      <span className="text-[10px] text-slate-600 tracking-widest uppercase">Cognition Collective · Admin</span>
     </div>
   );
 }
