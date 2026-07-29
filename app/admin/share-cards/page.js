@@ -840,6 +840,7 @@ export default function ShareCardsPage() {
   const [showScClanCards, setShowScClanCards] = useState({});
   const scCollectiveRef = useRef(null);
   const scClanRefs = useRef({});
+  const [webhooks, setWebhooks] = useState([]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
@@ -857,7 +858,6 @@ export default function ShareCardsPage() {
     });
   }, [authed]);
 
-  const [webhooks, setWebhooks] = useState([]);
 
   function hexToInt(hex) { return parseInt(hex.replace("#", ""), 16); }
 
