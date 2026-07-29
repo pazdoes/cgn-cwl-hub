@@ -41,7 +41,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-300 transition">
@@ -57,7 +57,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -156,7 +156,7 @@ function AdminHeader() {
                   <div className="space-y-0.5">
                     {section.items.map(item => (
                       <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -169,7 +169,7 @@ function AdminHeader() {
             </nav>
             <div className="border-t border-white/10 pt-4 mt-4">
               <Link href="/" onClick={() => setNavOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
@@ -230,7 +230,7 @@ function AdminNav_REMOVED() {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
-            className="absolute left-0 top-full mt-2 z-50 min-w-[180px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+            className="absolute left-0 top-full mt-2 z-50 min-w-[180px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
             <div className="p-1.5 space-y-0.5">
               {[
                 { href: "/admin", label: "Overview", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/> },
@@ -256,7 +256,7 @@ function AdminNav_REMOVED() {
 
 function StatTile({ label, value, colour = "text-white", sub }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
+    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 text-center">
       <p className={`text-2xl font-thin tracking-widest ${colour}`}>{value}</p>
       <p className="text-[10px] text-slate-600 uppercase tracking-widest mt-0.5">{label}</p>
       {sub && <p className="text-[9px] text-slate-700 mt-0.5">{sub}</p>}
@@ -292,7 +292,7 @@ function CwlCountdown({ season }) {
   const display = days > 0 ? `${days}d ${hours}h` : `${hours}h ${mins}m`;
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="text-center flex-1">
           <p className={`text-lg font-thin ${active ? "text-purple-300" : "text-slate-400"}`}>{display}</p>
@@ -374,7 +374,7 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Scheduled Events</h2>
@@ -390,7 +390,7 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
               {MONTH_NAMES[month]} {year}
             </button>
             {showMonthPicker && (
-              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden w-48">
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden w-48">
                 <div className="p-2 max-h-64 overflow-y-auto space-y-0.5">
                   {Array.from({length: 24}, (_, i) => {
                     const d = new Date(); d.setDate(1);
@@ -491,7 +491,7 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
             const t = new Date(s.send_at);
             const timeStr = t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             return (
-              <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+              <div key={s.id} className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -663,14 +663,14 @@ export default function AdminOverviewPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6">
         <div className="w-full max-w-xs">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
             <h1 className="text-xl font-thin tracking-widest mb-1">Admin</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePin} className="space-y-3">
               <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
               {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
-              <button type="submit" className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition">
+              <button type="submit" className="w-full py-2.5 rounded-lg text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition">
                 Enter
               </button>
             </form>
@@ -717,7 +717,7 @@ export default function AdminOverviewPage() {
       {loading ? (
         <div className="relative z-10 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            {Array.from({length:4}).map((_,i) => <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 h-20 animate-pulse"/>)}
+            {Array.from({length:4}).map((_,i) => <div key={i} className="rounded-lg border border-white/10 bg-white/[0.03] p-4 h-20 animate-pulse"/>)}
           </div>
         </div>
       ) : (
@@ -731,7 +731,7 @@ export default function AdminOverviewPage() {
 
           {/* Bar 1 — roster state (primary) */}
           {members.length > 0 && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
               <div className="flex items-center justify-between gap-3 mb-2">
                 <div className="text-center flex-1">
                   <p className="text-lg font-thin text-purple-300">{statsInPool}</p>
@@ -754,7 +754,7 @@ export default function AdminOverviewPage() {
 
           {/* Bar 2 — account health (matched style, no progress bar) */}
           {members.length > 0 && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-center flex-1">
                   <p className="text-lg font-thin text-white">{members.length}</p>
@@ -789,7 +789,7 @@ export default function AdminOverviewPage() {
           {/* ── DIRECTORY TAB ── */}
           {/* ── SIDE WARS TAB ── */}
           {adminTab === "sidewars" && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-center">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-5 text-center">
               <p className="text-slate-400 text-sm mb-3">Side Wars has moved to Clan Manager</p>
               <Link href="/admin/clans" className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-semibold border border-purple-500/40 text-purple-400 hover:border-purple-400 transition">
                 Open Clan Manager

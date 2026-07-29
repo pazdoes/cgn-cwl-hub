@@ -12,7 +12,7 @@ import { CWL_ICONS } from "../../../lib/icons";
 /* ─── helpers ──────────────────────────────────────────────── */
 function Card({ children, className = "" }) {
   return (
-    <div className={`rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 ${className}`}>
+    <div className={`rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 ${className}`}>
       {children}
     </div>
   );
@@ -55,7 +55,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-300 transition">
@@ -71,7 +71,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -170,7 +170,7 @@ function AdminHeader() {
                   <div className="space-y-0.5">
                     {section.items.map(item => (
                       <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -183,7 +183,7 @@ function AdminHeader() {
             </nav>
             <div className="border-t border-white/10 pt-4 mt-4">
               <Link href="/" onClick={() => setNavOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
@@ -245,7 +245,7 @@ function AdminNav_REMOVED() {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
-            className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+            className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
             <div className="p-1.5 space-y-0.5">
               <Link href="/admin" onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
@@ -1012,14 +1012,14 @@ function ClanBoardManager({ pin }) {
     ]);
   }
 
-  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
+  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-lg"/>;
 
   return (
     <div className="space-y-3">
       {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
       {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
       {clans.map((clan, idx) => (
-        <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
+        <div key={clan.clan_tag} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             {/* Reorder arrows */}
             <div className="flex flex-col gap-0.5 shrink-0">
@@ -1197,7 +1197,7 @@ function ClanInfoBoardTool() {
         <div className="space-y-2">
           <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
           {liveMessages.map((msg, i) => (
-            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
+            <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[10px] text-slate-500 truncate flex-1">
                   {msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}
@@ -1979,10 +1979,10 @@ export default function AnnouncementsPage() {
           <p className="text-slate-500 text-xs mb-5">Admin access required</p>
           <form onSubmit={handlePinSubmit} className="space-y-3">
             <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center tracking-widest text-lg" />
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center tracking-widest text-lg" />
             {pinError && <p className="text-red-400 text-xs">Incorrect PIN</p>}
             <button type="submit" disabled={!pinInput}
-              className="w-full py-2.5 rounded-2xl bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition font-semibold text-sm disabled:opacity-40">
+              className="w-full py-2.5 rounded-lg bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition font-semibold text-sm disabled:opacity-40">
               Enter
             </button>
           </form>
@@ -2290,14 +2290,14 @@ export default function AnnouncementsPage() {
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Title</label>
               <input type="text" value={embed.title || ""} onChange={e => setEmbedField("title", e.target.value)} placeholder="Announcement title"
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             </div>
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Description</label>
               <MarkdownToolbar textareaRef={descriptionRef} value={embed.description || ""} onChange={v => setEmbedField("description", v)}/>
               <textarea ref={descriptionRef} value={embed.description || ""} onChange={e => setEmbedField("description", e.target.value)}
                 placeholder="Main message content. Supports **bold**, *italic*, `code`" rows={4}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none mt-1"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition resize-none mt-1"/>
             </div>
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Colour</label>
@@ -2325,7 +2325,7 @@ export default function AnnouncementsPage() {
                   onChange={e => { setRoleSearch(e.target.value); if (!e.target.value) setContent(""); setRoleSearchOpen(true); }}
                   onFocus={() => { setRoleSearch(""); setRoleSearchOpen(true); }}
                   onBlur={() => setTimeout(() => setRoleSearchOpen(false), 150)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
               {content && <p className="text-[10px] text-slate-600 font-mono mt-1">{content}</p>}
               {roleSearchOpen && roleSearch && discordMeta.roles.length > 0 && typeof document !== "undefined" && (() => {
@@ -2341,7 +2341,7 @@ export default function AnnouncementsPage() {
                 const left = rect.left + window.scrollX;
                 return createPortal(
                   <div style={{ position: "absolute", top, left, width: rect.width, zIndex: 9999 }}
-                    className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
+                    className="rounded-lg border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
                     {matches.map(r => (
                       <button key={r.id} type="button"
                         onMouseDown={() => { const val = r.id === "everyone" ? "@everyone" : r.id === "here" ? "@here" : `<@&${r.id}>`; setContent(val); setRoleSearch(r.name); setRoleSearchOpen(false); }}
@@ -2364,20 +2364,20 @@ export default function AnnouncementsPage() {
                 <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Author</label>
                 <div className="space-y-2">
                   <input type="text" value={embed.author?.name || ""} onChange={e => setNestedField("author", "name", e.target.value)} placeholder="Author name"
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                   <input type="text" value={embed.author?.icon_url || ""} onChange={e => setNestedField("author", "icon_url", e.target.value)} placeholder="Author icon URL (optional)"
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 </div>
               </div>
               <div>
                 <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Thumbnail URL</label>
                 <input type="text" value={embed.thumbnail?.url || ""} onChange={e => setNestedField("thumbnail", "url", e.target.value)} placeholder="https://…"
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
               <div>
                 <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Image URL</label>
                 <input type="text" value={embed.image?.url || ""} onChange={e => setNestedField("image", "url", e.target.value)} placeholder="https://…"
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -2387,7 +2387,7 @@ export default function AnnouncementsPage() {
                 </div>
                 <div className="space-y-2">
                   {embed.fields.map((f, i) => (
-                    <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+                    <div key={i} className="rounded-lg border border-white/10 bg-white/[0.03] p-3 space-y-2">
                       <div className="flex items-center gap-2">
                         <input type="text" value={f.name} onChange={e => updateField(i, "name", e.target.value)} placeholder="Field name"
                           className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
@@ -2406,19 +2406,19 @@ export default function AnnouncementsPage() {
               <div>
                 <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Footer</label>
                 <input type="text" value={embed.footer?.text || ""} onChange={e => setNestedField("footer", "text", e.target.value)} placeholder="Footer text"
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               </div>
               <div>
                 <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Link Button <span className="text-slate-700 normal-case">(optional)</span></label>
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <input type="text" value={embed._button?.emoji || ""} onChange={e => setNestedField("_button", "emoji", e.target.value)} placeholder="🔔"
-                      className="w-14 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center"/>
+                      className="w-14 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition text-center"/>
                     <input type="text" value={embed._button?.label || ""} onChange={e => setNestedField("_button", "label", e.target.value)} placeholder="Button label"
-                      className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                      className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                   </div>
                   <input type="text" value={embed._button?.url || ""} onChange={e => setNestedField("_button", "url", e.target.value)} placeholder="https://…"
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                   <p className="text-[10px] text-slate-700">Link buttons post as Discord components alongside the embed</p>
                 </div>
               </div>
@@ -2426,12 +2426,12 @@ export default function AnnouncementsPage() {
                 <div>
                   <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Bot Name</label>
                   <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition"/>
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition"/>
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1.5">Avatar URL</label>
                   <input type="text" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://…"
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 </div>
               </div>
             </div>
@@ -2440,7 +2440,7 @@ export default function AnnouncementsPage() {
           {/* Send section */}
           <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
             {editingMessageId && (
-              <div className="mb-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 flex items-center justify-between gap-3">
+              <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-amber-300">Editing existing post</p>
                   <p className="text-[10px] text-slate-500 mt-0.5">Changes will update the original Discord message in place</p>
@@ -2452,17 +2452,17 @@ export default function AnnouncementsPage() {
             {editResult && <p className={"text-xs text-center mb-2 " + (editResult.ok ? "text-green-400" : "text-red-400")}>{editResult.message}</p>}
             {editingMessageId ? (
               <button type="button" onClick={handleSendEdit} disabled={sending || !selectedWebhookId}
-                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-amber-400 border border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.12)] hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40">
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-transparent text-amber-400 border border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.12)] hover:border-amber-400 hover:text-amber-300 transition disabled:opacity-40">
                 {sending ? "Updating…" : "Update Message"}
               </button>
             ) : (
               <button type="button" onClick={handleSend} disabled={sending || !selectedWebhookId}
-                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-transparent text-green-400 border border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)] hover:border-green-400 hover:text-green-300 transition disabled:opacity-40">
                 {sending ? "Sending…" : "Post to Discord"}
               </button>
             )}
             {sendResult && !editingMessageId && <p className={`text-xs text-center ${sendResult.ok ? "text-green-400" : "text-red-400"}`}>{sendResult.message}</p>}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] overflow-hidden">
               <button type="button" onClick={() => setShowSchedule(v => !v)}
                 className="w-full flex items-center justify-between px-4 py-2.5">
                 <span className="text-xs text-slate-400 font-semibold">Schedule</span>
@@ -2483,7 +2483,7 @@ export default function AnnouncementsPage() {
                 </div>
               )}
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] overflow-hidden">
               <button type="button" onClick={() => setShowRecurring(v => !v)}
                 className="w-full flex items-center justify-between px-4 py-2.5">
                 <span className="text-xs text-slate-400 font-semibold">Recurring</span>
@@ -2721,7 +2721,7 @@ export default function AnnouncementsPage() {
         {mainTab === "manage" && (<>
 
         {/* History */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setManageTab(manageTab==="history"?"":"history")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">History</p><p className="text-[10px] text-slate-600 mt-0.5">Recent announcements</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="history"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
@@ -2748,7 +2748,7 @@ export default function AnnouncementsPage() {
         </div>
 
         {/* Scheduled */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setManageTab(manageTab==="scheduled"?"":"scheduled")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">Scheduled</p><p className="text-[10px] text-slate-600 mt-0.5">{pendingScheduled.length} pending</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="scheduled"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
@@ -2775,7 +2775,7 @@ export default function AnnouncementsPage() {
 
 
                 {/* Webhooks */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setManageTab(manageTab==="webhooks"?"":"webhooks")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">Webhooks</p><p className="text-[10px] text-slate-600 mt-0.5">{webhooks.length} configured</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="webhooks"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
@@ -2810,7 +2810,7 @@ export default function AnnouncementsPage() {
         {mainTab === "tools" && (<>
 
         {/* Timestamp Generator */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setManageTab(manageTab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
             <div className="text-left"><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
@@ -2829,7 +2829,7 @@ export default function AnnouncementsPage() {
         {/* ── SHARE CARDS TAB ── */}
         {mainTab === "sharecards" && (<>
 
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Share Cards</h2>
             {scData && <span className="text-[10px] text-green-400">✓ {scData.currentSeason} loaded</span>}
@@ -2840,12 +2840,12 @@ export default function AnnouncementsPage() {
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Season</p>
             <div className="flex gap-2">
               <select value={scSeason} onChange={e => setScSeason(e.target.value)}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none [color-scheme:dark]">
+                className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none [color-scheme:dark]">
                 {recapSeasons.length === 0 && <option value="">Loading…</option>}
                 {recapSeasons.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <button onClick={() => fetchScData(scSeason || recapSeasons[0] || "")} disabled={scLoading}
-                className="px-4 py-2 rounded-2xl text-xs border border-purple-500/40 text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                className="px-4 py-2 rounded-lg text-xs border border-purple-500/40 text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                 {scLoading ? "Loading…" : "Load"}
               </button>
             </div>
@@ -2855,7 +2855,7 @@ export default function AnnouncementsPage() {
           <div>
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Post to</p>
             <select value={scWebhookId} onChange={e => setScWebhookId(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none [color-scheme:dark]">
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none [color-scheme:dark]">
               <option value="">Select webhook…</option>
               {webhooks.map(w => <option key={w.id} value={w.id}>{w.label}{w.channel ? ` · #${w.channel}` : ""}</option>)}
             </select>
@@ -2867,7 +2867,7 @@ export default function AnnouncementsPage() {
             <div className="flex gap-2">
               {[["image","Image Only"],["embed","Embed"]].map(([m, label]) => (
                 <button key={m} onClick={() => setScMode(m)}
-                  className={`flex-1 py-2 rounded-2xl text-xs font-semibold border transition ${scMode === m ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition ${scMode === m ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
                   {label}
                 </button>
               ))}
@@ -2885,7 +2885,7 @@ export default function AnnouncementsPage() {
               onChange={e => { setScRoleSearch(e.target.value); setScContent(e.target.value); setScRoleSearchOpen(true); }}
               onFocus={() => setScRoleSearchOpen(true)}
               onBlur={() => setTimeout(() => setScRoleSearchOpen(false), 150)}
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {scRoleSearchOpen && scRoleSearch && discordMeta.roles.length > 0 && typeof document !== "undefined" && (() => {
               const q = scRoleSearch.toLowerCase().replace(/^@/, "");
               const matches = [
@@ -2897,7 +2897,7 @@ export default function AnnouncementsPage() {
               const rect = scRoleSearchRef.current.getBoundingClientRect();
               return createPortal(
                 <div style={{ position: "absolute", top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width, zIndex: 9999 }}
-                  className="rounded-2xl border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
+                  className="rounded-lg border border-white/10 bg-[#0d1424] shadow-2xl overflow-hidden">
                   {matches.map(r => (
                     <button key={r.id} type="button"
                       onMouseDown={() => {
@@ -2920,12 +2920,12 @@ export default function AnnouncementsPage() {
             <div>
               <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Cards to Post</p>
               <div className="space-y-2">
-                <label className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
+                <label className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
                   <input type="checkbox" checked={scCards.collective} onChange={e => setScCards(prev => ({ ...prev, collective: e.target.checked }))} className="w-3.5 h-3.5 accent-purple-500"/>
                   <div><p className="text-xs font-semibold text-white">Collective</p><p className="text-[10px] text-slate-600">Full alliance overview</p></div>
                 </label>
                 {scData.activeClanNames.map(clanName => (
-                  <label key={clanName} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
+                  <label key={clanName} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition">
                     <input type="checkbox" checked={scCards.clans?.[clanName] || false}
                       onChange={e => setScCards(prev => ({ ...prev, clans: { ...prev.clans, [clanName]: e.target.checked } }))} className="w-3.5 h-3.5 accent-purple-500"/>
                     <div><p className="text-xs font-semibold text-white">{clanName}</p><p className="text-[10px] text-slate-600">Clan recap</p></div>
@@ -2945,7 +2945,7 @@ export default function AnnouncementsPage() {
 
               {/* Existing embeds */}
               {scEmbeds.map((emb, i) => (
-                <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
+                <div key={i} className="rounded-lg border border-white/10 bg-white/[0.02] p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-semibold text-slate-400">Embed {i + 1} · {emb.cardKey === "collective" ? "Collective" : emb.cardKey.split(" ")[0]}</span>
                     <button onClick={() => removeScEmbed(i)} className="text-slate-600 hover:text-red-400 text-xs transition">✕</button>
@@ -2976,12 +2976,12 @@ export default function AnnouncementsPage() {
                 <div className="space-y-1.5">
                   <p className="text-[9px] text-slate-700 uppercase tracking-widest">Add Embed</p>
                   <button onClick={() => addScEmbed("collective")}
-                    className="w-full py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
+                    className="w-full py-2 rounded-lg text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
                     + Collective Recap
                   </button>
                   {scData.activeClanNames.map(clanName => (
                     <button key={clanName} onClick={() => addScEmbed(clanName)}
-                      className="w-full py-2 rounded-2xl text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
+                      className="w-full py-2 rounded-lg text-xs border border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-left px-3">
                       + {clanName} Recap
                     </button>
                   ))}
@@ -2992,7 +2992,7 @@ export default function AnnouncementsPage() {
 
           {/* Post now */}
           <button onClick={handlePostShareCards} disabled={scPosting || !scWebhookId || !scData || scLoading}
-            className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+            className="w-full py-2.5 rounded-lg text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
             {scPosting ? "Generating & posting…" : "Post Now"}
           </button>
           {scPostResult && <p className={"text-xs text-center " + (scPostResult.ok ? "text-green-400" : "text-red-400")}>{scPostResult.message}</p>}
@@ -3001,9 +3001,9 @@ export default function AnnouncementsPage() {
           <div className="border-t border-white/[0.06] pt-3 space-y-2">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest">Schedule</p>
             <input type="datetime-local" value={scScheduleAt} onChange={e => setScScheduleAt(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
             <button onClick={handleScheduleShareCards} disabled={!scWebhookId || !scScheduleAt}
-              className="w-full py-2 rounded-2xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-purple-300 hover:border-purple-500/40 transition disabled:opacity-40">
+              className="w-full py-2 rounded-lg text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-purple-300 hover:border-purple-500/40 transition disabled:opacity-40">
               Schedule Post
             </button>
             {scScheduleResult && <p className={"text-xs text-center " + (scScheduleResult.ok ? "text-green-400" : "text-red-400")}>{scScheduleResult.message}</p>}

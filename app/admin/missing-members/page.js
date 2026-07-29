@@ -46,7 +46,7 @@ function AdminHeader() {
                   {section.label && <p className="text-[9px] text-slate-600 uppercase tracking-widest px-3 mb-1">{section.label}</p>}
                   <div className="space-y-0.5">
                     {section.items.map(item => (
-                      <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                      <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/></svg>
                         <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                       </Link>
@@ -126,14 +126,14 @@ export default function MissingMembersPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="relative z-10 w-full max-w-xs">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
             <h1 className="text-xl font-thin tracking-widest mb-1">Missing Members</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
               {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
-              <button type="submit" disabled={!pinInput} className="w-full py-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/40 text-sm font-semibold hover:bg-purple-500/30 transition disabled:opacity-40">
+              <button type="submit" disabled={!pinInput} className="w-full py-3 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 text-sm font-semibold hover:bg-purple-500/30 transition disabled:opacity-40">
                 Continue
               </button>
             </form>
@@ -154,7 +154,7 @@ export default function MissingMembersPage() {
       </div>
       <div className="relative z-10 space-y-3">
       <div className="relative z-10 space-y-3 mt-0">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Missing Members</h2>
@@ -172,7 +172,7 @@ export default function MissingMembersPage() {
           {showMissing && (
             <>
               {missingLoading ? (
-                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-12 rounded-2xl bg-white/[0.04] animate-pulse"/>)}</div>
+                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-12 rounded-lg bg-white/[0.04] animate-pulse"/>)}</div>
               ) : missingLoaded && (
                 <>
                   <p className="text-[10px] text-slate-600 mb-3">{missing.length} member{missing.length !== 1 ? "s" : ""} not connected</p>
@@ -181,7 +181,7 @@ export default function MissingMembersPage() {
                   ) : (
                     <div className="space-y-2">
                       {missing.map((m, i) => (
-                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
                           <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
                             {m.town_hall_level ? <img src={`/icons/th/th${m.town_hall_level}.png`} alt={`TH${m.town_hall_level}`} className="w-5 h-5 object-contain"/> : <span className="text-[9px] text-slate-600">?</span>}
                           </div>

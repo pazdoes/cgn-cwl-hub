@@ -33,7 +33,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-300 transition">
@@ -49,7 +49,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -136,7 +136,7 @@ function AdminHeader() {
                   <div className="space-y-0.5">
                     {section.items.map(item => (
                       <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -149,7 +149,7 @@ function AdminHeader() {
             </nav>
             <div className="border-t border-white/10 pt-4 mt-4">
               <Link href="/" onClick={() => setNavOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
@@ -236,14 +236,14 @@ function ClanBoardManager({ pin }) {
     ]);
   }
 
-  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
+  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-lg"/>;
 
   return (
     <div className="space-y-3">
       {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
       {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
       {clans.map((clan, idx) => (
-        <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
+        <div key={clan.clan_tag} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
           <div className="flex items-center gap-2">
             <div className="flex flex-col gap-0.5 shrink-0">
               <button onClick={() => reorder(clan, "up")} disabled={idx === 0 || !!saving} className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▲</button>
@@ -352,9 +352,9 @@ function ClanInfoBoardTool({ pin }) {
       <div className="space-y-2">
         <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
           placeholder="https://discord.com/api/webhooks/…"
-          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
+          className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
         <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
-          className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-green-400 border border-green-500/40 hover:border-green-400 transition disabled:opacity-40">
+          className="w-full py-2.5 rounded-lg text-xs font-semibold bg-transparent text-green-400 border border-green-500/40 hover:border-green-400 transition disabled:opacity-40">
           {posting ? "Posting…" : "Post Now"}
         </button>
         {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
@@ -364,7 +364,7 @@ function ClanInfoBoardTool({ pin }) {
         <div className="space-y-2">
           <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
           {liveMessages.map((msg, i) => (
-            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
+            <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[10px] text-slate-500 truncate flex-1">{msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}</p>
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -523,15 +523,15 @@ export default function AdminClansPage() {
           <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
         </div>
         <div className="relative z-10 w-full max-w-xs">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
             <h1 className="text-xl font-thin tracking-widest mb-1">Clan Manager</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
               {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
               <button type="submit" disabled={!pinInput}
-                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                 Enter
               </button>
             </form>
@@ -574,7 +574,7 @@ export default function AdminClansPage() {
 
         {/* ── ALLIANCE CLANS TAB ── */}
         {activeTab === "clans" && (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/10">
               <p className="text-sm font-semibold text-slate-300">Alliance Clans</p>
               <p className="text-[10px] text-slate-600 mt-0.5">Add or remove clans · {clans.length} active</p>
@@ -598,9 +598,9 @@ export default function AdminClansPage() {
                       <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Clan Tag</label>
                       <div className="flex gap-2">
                         <input type="text" placeholder="#ABC123" value={addClanTag} onChange={e => setAddClanTag(e.target.value)} onBlur={doLookupClan} autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                          className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
+                          className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
                         <button type="button" onClick={doLookupClan} disabled={addClanLookupBusy || !addClanTag.trim()}
-                          className="px-3 py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:border-white/30 hover:text-white transition disabled:opacity-40">
+                          className="px-3 py-2.5 rounded-lg text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:border-white/30 hover:text-white transition disabled:opacity-40">
                           {addClanLookupBusy ? "…" : "Lookup"}
                         </button>
                       </div>
@@ -609,19 +609,19 @@ export default function AdminClansPage() {
                     <div>
                       <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Clan Link</label>
                       <input type="text" placeholder="https://link.clashofclans.com/…" value={addClanLink} onChange={e => setAddClanLink(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition text-sm"/>
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition text-sm"/>
                     </div>
                     <div>
                       <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">CWL Rank</label>
                       <select value={addClanRank} onChange={e => setAddClanRank(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white focus:outline-none focus:border-purple-500/50 transition text-sm [color-scheme:dark]">
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white focus:outline-none focus:border-purple-500/50 transition text-sm [color-scheme:dark]">
                         <option value="">Select…</option>
                         <option value="Unranked">Unranked</option>
                         {Object.keys(CWL_ICONS).map(rank => <option key={rank} value={rank}>{rank}</option>)}
                       </select>
                     </div>
                     <button type="submit" disabled={addClanSubmitting || !addClanTag.trim() || !addClanLink.trim()}
-                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                      className="w-full py-2.5 rounded-lg text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                       {addClanSubmitting ? "Adding…" : "Add Clan"}
                     </button>
                     {addClanResult && <p className={`text-xs text-center ${addClanResult.ok ? "text-green-300" : "text-red-400"}`}>{addClanResult.message}</p>}
@@ -632,9 +632,9 @@ export default function AdminClansPage() {
                   <form onSubmit={doDeleteClan} className="space-y-3">
                     <p className="text-[11px] text-slate-500">Type the exact clan name. Blocked if players are still assigned.</p>
                     <input type="text" placeholder="e.g. Cognition {CGN}" value={deleteClanTag} onChange={e => setDeleteClanTag(e.target.value)}
-                      className="w-full rounded-2xl border border-red-500/20 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition text-sm"/>
+                      className="w-full rounded-lg border border-red-500/20 bg-white/[0.04] px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition text-sm"/>
                     <button type="submit" disabled={deleteClanSubmitting || !deleteClanTag.trim()}
-                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.12)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40">
+                      className="w-full py-2.5 rounded-lg text-xs font-semibold bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.12)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40">
                       {deleteClanSubmitting ? "Deleting…" : "Delete Clan"}
                     </button>
                     {deleteClanResult && <p className={`text-xs text-center ${deleteClanResult.ok ? "text-green-300" : "text-red-400"}`}>{deleteClanResult.message}</p>}
@@ -648,7 +648,7 @@ export default function AdminClansPage() {
 
         {/* ── INFO BOARD TAB ── */}
         {activeTab === "infoboard" && (<>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/[0.06]">
               <p className="text-sm font-semibold text-slate-300">Clan Board Manager</p>
               <p className="text-[10px] text-slate-600 mt-0.5">Configure which clans appear and set war record seed values</p>
@@ -658,7 +658,7 @@ export default function AdminClansPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/[0.06]">
               <p className="text-sm font-semibold text-slate-300">Post / Update Board</p>
               <p className="text-[10px] text-slate-600 mt-0.5">Post a live clan info board to Discord · auto-updates every 6 hours</p>

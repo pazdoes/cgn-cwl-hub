@@ -43,7 +43,7 @@ function AppHeader() {
                 <div className="space-y-0.5">
                   {section.items.map(item => (
                     <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                         <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                       </svg>
@@ -55,7 +55,7 @@ function AppHeader() {
             ))}
           </nav>
           <div className="border-t border-white/10 pt-4 mt-4">
-            <Link href="/" onClick={() => setNavOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
+            <Link href="/" onClick={() => setNavOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
               <span style={ORB}>Back to App</span>
             </Link>
@@ -160,14 +160,14 @@ export default function SideWarsPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="relative z-10 w-full max-w-xs">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
             <h1 className="text-xl font-thin tracking-widest mb-1">Side Wars</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
               {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
-              <button type="submit" disabled={!pinInput} className="w-full py-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/40 text-sm font-semibold hover:bg-purple-500/30 transition disabled:opacity-40">
+              <button type="submit" disabled={!pinInput} className="w-full py-3 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 text-sm font-semibold hover:bg-purple-500/30 transition disabled:opacity-40">
                 Continue
               </button>
             </form>
@@ -190,7 +190,7 @@ export default function SideWarsPage() {
 
       <div className="relative z-10 space-y-3">
         {sideWars.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
             <p className="text-slate-600 text-xs">No clans saved yet — add one below</p>
           </div>
         ) : sideWars.map(war => {
@@ -199,7 +199,7 @@ export default function SideWarsPage() {
           const showPicker = !war.start_time || swTimes[warId] !== undefined;
           const isRecurring = war.time_format === "recurring";
           return (
-            <div key={warId} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
+            <div key={warId} className={`rounded-xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
@@ -229,13 +229,13 @@ export default function SideWarsPage() {
                 {showPicker && (
                   <div className="flex items-center gap-2">
                     <input type="datetime-local" value={pendingTime} onChange={e => setSwTimes(p => ({...p, [warId]: e.target.value}))}
-                      className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
+                      className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
                     <button onClick={() => {
                       if (!pendingTime) { setSwTimeErrors(p => ({...p, [warId]: "Pick a date and time first"})); return; }
                       setSwTimeErrors(p => ({...p, [warId]: ""}));
                       fetch("/api/admin/side-wars", { method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ id: warId, action: "set_time", start_time: new Date(pendingTime).toISOString() }) })
                         .then(r => r.json()).then(data => { if (data.war) { setSideWars(prev => prev.map(w => w.id === warId ? data.war : w)); setSwTimes(p => { const n = {...p}; delete n[warId]; return n; }); } });
-                    }} className="flex items-center gap-1 px-3 py-1.5 rounded-2xl text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
+                    }} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
                       Set
                     </button>
                   </div>
@@ -244,7 +244,7 @@ export default function SideWarsPage() {
               </div>
               <div className="border-t border-white/[0.06] pt-3 mt-3">
                 <button onClick={() => swSetFormat(warId, isRecurring ? "countdown" : "recurring")}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl text-[10px] font-semibold border transition ${isRecurring ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-semibold border transition ${isRecurring ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                   Recurring {isRecurring ? "· On" : "· Off"}
                 </button>
@@ -261,7 +261,7 @@ export default function SideWarsPage() {
         })}
 
         {/* Manage Clans */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setSwManageOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-4 text-left">
             <div className="flex items-center gap-2">
               <img src="/icons/branding/war-shield.png" alt="" className="w-5 h-5 opacity-60"/>
@@ -279,22 +279,22 @@ export default function SideWarsPage() {
                     <div>
                       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Name</p>
                       <input value={swForm.clan_name} onChange={e => setSwForm(p => ({...p, clan_name: e.target.value}))} placeholder="Cognition {CGN}"
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                     </div>
                     <div>
                       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Tag</p>
                       <input value={swForm.clan_tag} onChange={e => setSwForm(p => ({...p, clan_tag: e.target.value}))} placeholder="#2C8QQPCL2"
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                     </div>
                   </div>
                   <div>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Link</p>
                     <input value={swForm.clan_link} onChange={e => setSwForm(p => ({...p, clan_link: e.target.value}))} placeholder="https://link.clashofclans.com/..."
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                   </div>
                   {swError && <p className="text-[11px] text-red-400">{swError}</p>}
                   <button onClick={swCreate} disabled={swLoading}
-                    className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition disabled:opacity-50">
+                    className="w-full py-2.5 rounded-lg text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition disabled:opacity-50">
                     {swLoading ? "Saving…" : "Save Clan"}
                   </button>
                 </div>
@@ -304,7 +304,7 @@ export default function SideWarsPage() {
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Remove Clan</p>
                   <div className="space-y-2">
                     {sideWars.map(war => (
-                      <div key={war.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                      <div key={war.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-white/[0.06] bg-white/[0.02]">
                         <div className="min-w-0">
                           <p className="text-xs text-white truncate">{war.clan_name}</p>
                           <p className="text-[10px] text-slate-600 font-mono">{war.clan_tag}</p>

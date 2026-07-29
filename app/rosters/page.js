@@ -66,7 +66,7 @@ function AppHeader({ variant = "bar" }) {
                   <div className="space-y-0.5">
                     {section.items.map(item => item.href ? (
                       <a key={item.key} href={item.href}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -74,7 +74,7 @@ function AppHeader({ variant = "bar" }) {
                       </a>
                     ) : (
                       <button key={item.key || "home"} onClick={() => go(item.key)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -153,7 +153,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
@@ -173,7 +173,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -287,7 +287,7 @@ function StatusPill({ children, variant = "neutral" }) {
 
 function Card({ children, className = "" }) {
   return (
-    <div className={`rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-xl ${className}`}>
+    <div className={`rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-xl ${className}`}>
       {children}
     </div>
   );
@@ -333,7 +333,7 @@ export default function RostersPage() {
       <main className="overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
         {BG}
         <AppHeader/>
-        <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
+        <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
           <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
           <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
           <p className="text-xs text-slate-400">{format}</p>
@@ -354,7 +354,7 @@ export default function RostersPage() {
           }).map((player, index) => (
             <div key={`${player.clan}-${player.account}-${index}`}
               onClick={() => window.open(`/player/${(player.playerTag||"").replace("#","")}`, "_blank")}
-              className={`rounded-2xl border backdrop-blur-xl p-3 transition cursor-pointer ${highlightedAccount && player.playerTag === highlightedAccount ? "border-purple-500/40 bg-purple-500/10" : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"}`}>
+              className={`rounded-lg border backdrop-blur-xl p-3 transition cursor-pointer ${highlightedAccount && player.playerTag === highlightedAccount ? "border-purple-500/40 bg-purple-500/10" : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"}`}>
               <div className="flex items-center w-full justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-xs text-slate-600 w-5 text-right shrink-0">{index + 1}</span>
@@ -402,7 +402,7 @@ export default function RostersPage() {
           )}
         </div>
         {search && searchResults.length > 0 && (
-          <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+          <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
             {searchResults.map((player, i) => (
               <div key={i} onClick={() => { setHighlightedAccount(player.playerTag); setSelectedClan(player.clan); setSearch(""); }}
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.05] transition border-b border-white/[0.04] last:border-0">
@@ -420,7 +420,7 @@ export default function RostersPage() {
           </div>
         )}
         {search && searchResults.length === 0 && (
-          <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
+          <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
             <p className="text-xs text-slate-600">No players found</p>
           </div>
         )}
@@ -430,15 +430,15 @@ export default function RostersPage() {
       {!loading && players.length > 0 && (
         <div className="space-y-2 mb-8 relative z-10">
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center shadow-xl">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center shadow-xl">
               <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{players.length}</div>
               <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Players</div>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
               <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{clans.length}</div>
               <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Clans</div>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
               <div className="text-3xl font-thin tracking-widest text-white tabular-nums">
                 {players.length ? (players.reduce((s, p) => s + Number(p.townHall || 0), 0) / players.length).toFixed(1) : "-"}
               </div>
@@ -448,10 +448,10 @@ export default function RostersPage() {
         </div>
       )}
 
-      {loading && <div className="space-y-4">{[...Array(3)].map((_,i) => <div key={i} className="h-[280px] rounded-3xl bg-white/[0.04] animate-pulse"/>)}</div>}
+      {loading && <div className="space-y-4">{[...Array(3)].map((_,i) => <div key={i} className="h-[280px] rounded-xl bg-white/[0.04] animate-pulse"/>)}</div>}
 
       {!loading && players.length === 0 && (
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-10 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-10 text-center">
           <p className="text-slate-500 text-sm">No rosters published yet.</p>
           <p className="text-slate-600 text-xs mt-1">Check back soon — rosters will appear here once published by an officer.</p>
         </div>
@@ -467,7 +467,7 @@ export default function RostersPage() {
             return (
               <motion.div key={clan} onClick={() => setSelectedClan(clan)}
                 whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 min-h-[280px] w-full max-w-full flex flex-col items-center justify-between cursor-pointer shadow-xl">
+                className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 min-h-[280px] w-full max-w-full flex flex-col items-center justify-between cursor-pointer shadow-xl">
                 <div className="text-center">
                   <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">{rank}</div>
                   <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-24 h-24 mx-auto mb-4"/>

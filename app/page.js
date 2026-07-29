@@ -92,7 +92,7 @@ function PlayersView({ players, onBack, rosterSeasons = [], onNavigateProfile })
         )}
       </div>
 
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+      <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
         <div className="space-y-2">
           {loadingHist ? <div className="text-slate-500 text-sm text-center py-6 animate-pulse">Loading…</div> : [...displayPlayers]
             .sort((a, b) => Number(b.townHall || b.town_hall_level || 0) - Number(a.townHall || a.town_hall_level || 0))
@@ -100,7 +100,7 @@ function PlayersView({ players, onBack, rosterSeasons = [], onNavigateProfile })
             <div
               key={player.player_tag || `${player.clan}-${player.account}-${player.position}`}
               onClick={() => onNavigateProfile ? onNavigateProfile(player.player_tag || "") : null}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 cursor-pointer hover:border-white/20 hover:bg-white/[0.05] transition"
+              className="rounded-lg border border-white/10 bg-white/[0.03] p-3.5 cursor-pointer hover:border-white/20 hover:bg-white/[0.05] transition"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -158,7 +158,7 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
           const clanLink = clanPlayers[0]?.clanLink || "";
 
           return (
-            <div key={clan} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div key={clan} className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <h2 className="text-lg font-bold truncate">{clan}</h2>
@@ -350,7 +350,7 @@ function AvgThView({ players, clans, onBack }) {
       </div>
 
       {/* Chart tile */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 flex flex-col items-center">
+      <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 flex flex-col items-center">
         {total === 0 ? (
           <p className="text-slate-600 text-sm py-8">No players to chart yet.</p>
         ) : chartType === "pie" ? (
@@ -591,7 +591,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
       <h2 className="text-sm font-semibold text-slate-300 mb-0.5">Player Performance History</h2>
       <p className="text-slate-600 text-xs mb-4">Track up to 3 players across seasons</p>
 
@@ -606,7 +606,7 @@ function PlayerPerformanceChart({ allData, seasons }) {
               onChange={e => setPlayerSearch(e.target.value)}
               className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {searchResults.length > 0 && (
-              <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
                 {searchResults.map(p => (
                   <button key={p.tag} type="button" onClick={() => addPlayer(p)}
                     className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
@@ -863,7 +863,7 @@ function ClanPerformanceChart({ history }) {
   const groups = ["CGN Rating", ...new Set(CLAN_STAT_OPTIONS.filter(o=>o.group!=="CGN Rating").map(o => o.group))];
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
       <h2 className="text-sm font-semibold text-slate-300 mb-0.5">Clan Performance History</h2>
       <p className="text-slate-600 text-xs mb-4">Track up to 3 clans across seasons</p>
 
@@ -885,7 +885,7 @@ function ClanPerformanceChart({ history }) {
               onChange={e => setClanSearch(e.target.value)}
               className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {searchResults.length > 0 && (
-              <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
                 {searchResults.map(tag => (
                   <button key={tag} type="button" onClick={() => addClan(tag)}
                     className="w-full px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
@@ -981,7 +981,7 @@ function MatchupsPanel({ matchupData }) {
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">3★ Rate by TH Matchup</p>
       <p className="text-[9px] text-slate-700 mb-4">Attacker TH → Defender TH · min 3 attacks</p>
       {!matchupData?.length ? (
@@ -989,12 +989,12 @@ function MatchupsPanel({ matchupData }) {
       ) : (
         <>
           <div className="flex gap-2 mb-4">
-            <div className="flex-1 rounded-2xl border border-green-500/20 bg-green-500/[0.06] px-3 py-2">
+            <div className="flex-1 rounded-lg border border-green-500/20 bg-green-500/[0.06] px-3 py-2">
               <p className="text-[9px] text-green-500/70 uppercase tracking-widest mb-1">Strength</p>
               <p className="text-xs text-green-300 font-semibold">TH{best?.attacker_th} → TH{best?.defender_th}</p>
               <p className="text-[10px] text-green-400">{parseFloat(best?.three_star_rate||0).toFixed(0)}% 3★ rate</p>
             </div>
-            <div className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-3 py-2">
+            <div className="flex-1 rounded-lg border border-red-500/20 bg-red-500/[0.06] px-3 py-2">
               <p className="text-[9px] text-red-500/70 uppercase tracking-widest mb-1">Weakness</p>
               <p className="text-xs text-red-300 font-semibold">TH{worst?.attacker_th} → TH{worst?.defender_th}</p>
               <p className="text-[10px] text-red-400">{parseFloat(worst?.three_star_rate||0).toFixed(0)}% 3★ rate</p>
@@ -1039,7 +1039,7 @@ function WarMomentumChart({ dayAggregates }) {
   const path = cumulativeData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos(d.value)}`).join(" ");
   const perfectLine = cumulativeData.map((d, i) => `${i === 0 ? "M" : "L"} ${xPos(i)} ${yPos((i + 1) * (maxCumulative / cumulativeData.length))}`).join(" ");
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-[9px] text-slate-600 uppercase tracking-widest">War Momentum</p>
         <p className="text-[9px] text-slate-700">Cumulative avg ★ across days</p>
@@ -1352,7 +1352,7 @@ function PlayerProfileView({ onBack }) {
         <AppHeader variant="bar"/>
 
         {/* Page title card — centred, no back button */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
           <h1 className="text-4xl font-thin tracking-widest text-white">Player Profile</h1>
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army · Upgrades</p>
         </div>
@@ -1361,7 +1361,7 @@ function PlayerProfileView({ onBack }) {
 
         {/* Info tile + search — shown only before any search */}
         {!army && !searching && !error && !nameResults.length && (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest">About This Section</p>
             <p className="text-sm text-slate-300 leading-relaxed">Search for any player by their tag, or use a Cognition alliance member's name to view their full Clash profile.</p>
             <div className="space-y-3">
@@ -1411,9 +1411,9 @@ function PlayerProfileView({ onBack }) {
         {searching && !nameResults.length && (
           <div className="space-y-3 animate-pulse">
             {/* Profile header skeleton */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-white/[0.06] shrink-0"/>
+                <div className="w-16 h-16 rounded-lg bg-white/[0.06] shrink-0"/>
                 <div className="flex-1 space-y-2 pt-1">
                   <div className="h-5 w-32 bg-white/[0.06] rounded"/>
                   <div className="h-3 w-20 bg-white/[0.06] rounded"/>
@@ -1426,13 +1426,13 @@ function PlayerProfileView({ onBack }) {
               </div>
             </div>
             {/* Heroes + equipment skeleton */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <div className="flex gap-3">
                 <div className="flex flex-col gap-3 shrink-0" style={{width:"38%"}}>
                   <div>
                     <div className="h-2 w-10 bg-white/[0.06] rounded mb-2"/>
                     <div className="flex gap-1.5">
-                      {[...Array(5)].map((_,i) => <div key={i} className="w-14 h-14 rounded-2xl bg-white/[0.06]"/>)}
+                      {[...Array(5)].map((_,i) => <div key={i} className="w-14 h-14 rounded-lg bg-white/[0.06]"/>)}
                     </div>
                   </div>
                   <div>
@@ -1456,7 +1456,7 @@ function PlayerProfileView({ onBack }) {
 
         {/* Name search results */}
         {nameResults.length > 0 && (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest px-4 pt-3 pb-2">Alliance Members</p>
             {nameResults.map(r => (
               <button key={r.tag} type="button" onClick={() => loadPlayerByTag(r.tag)}
@@ -1475,9 +1475,9 @@ function PlayerProfileView({ onBack }) {
 
         {army && !iconsReady && (
           <div className="space-y-3 animate-pulse">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-white/[0.06] shrink-0"/>
+                <div className="w-16 h-16 rounded-lg bg-white/[0.06] shrink-0"/>
                 <div className="flex-1 space-y-2 pt-1">
                   <div className="h-5 w-32 bg-white/[0.06] rounded"/>
                   <div className="h-3 w-20 bg-white/[0.06] rounded"/>
@@ -1488,17 +1488,17 @@ function PlayerProfileView({ onBack }) {
                 {[...Array(4)].map((_,i) => <div key={i} className="h-8 rounded-xl bg-white/[0.06]"/>)}
               </div>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 h-48"/>
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 h-48"/>
           </div>
         )}
 
         {army && iconsReady && (
           <>
             {/* Profile header card */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               {/* Top row: TH + name/clan centred + league */}
               <div className="flex items-center gap-4">
-                <div className="shrink-0 w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.06] flex items-center justify-center overflow-hidden">
+                <div className="shrink-0 w-16 h-16 rounded-lg border border-white/10 bg-white/[0.06] flex items-center justify-center overflow-hidden">
                   {army.townHallLevel ? (
                     <img src={`/icons/th/th${army.townHallLevel}.png`} alt={`TH${army.townHallLevel}`}
                       className="w-14 h-14 object-contain"
@@ -1570,7 +1570,7 @@ function PlayerProfileView({ onBack }) {
             </div>
 
             {/* ── View navigation ── */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 flex items-center justify-between">
               <button type="button"
                 onClick={() => {
                   if (profileView === "army") { setProfileView("ranked"); if (!tourneyHistory) fetchTourneyHistory(army.tag); }
@@ -1600,11 +1600,11 @@ function PlayerProfileView({ onBack }) {
 
             {/* ── UPGRADES VIEW ── */}
             {profileView === "ranked" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">Weekly Tournament History</p>
                 {tourneyLoading && (
                   <div className="animate-pulse space-y-2">
-                    {[...Array(4)].map((_,i) => <div key={i} className="h-20 bg-white/[0.04] rounded-2xl"/>)}
+                    {[...Array(4)].map((_,i) => <div key={i} className="h-20 bg-white/[0.04] rounded-lg"/>)}
                   </div>
                 )}
                 {!tourneyLoading && tourneyHistory?.length === 0 && (
@@ -1633,7 +1633,7 @@ function PlayerProfileView({ onBack }) {
                   // (passed from API in future; placeholder for now)
 
                   return (
-                    <div key={i} className={`rounded-2xl border p-3 space-y-2.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                    <div key={i} className={`rounded-lg border p-3 space-y-2.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
 
                       {/* Row 1: date range + result badge */}
                       <div className="flex items-center justify-between">
@@ -1686,7 +1686,7 @@ function PlayerProfileView({ onBack }) {
             )}
 
             {profileView === "upgrades" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-3">
                 {upgradesLoading && (
                   <div className="animate-pulse space-y-2">
                     {[...Array(4)].map((_,i) => (
@@ -1772,7 +1772,7 @@ function PlayerProfileView({ onBack }) {
             {/* ── ARMY VIEW ── */}
             {profileView === "army" && <>
             {/* Heroes + Pets + Equipment */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <div className="flex gap-3">
                 {/* Left — Heroes + Pets */}
                 <div className="flex flex-col gap-3 shrink-0" style={{width:"38%"}}>
@@ -1786,7 +1786,7 @@ function PlayerProfileView({ onBack }) {
                           return (
                             <button key={hero.name} type="button"
                               onClick={() => setSelectedHero(selectedHero === hero.name ? null : hero.name)}
-                              className={`relative shrink-0 w-14 h-14 rounded-2xl overflow-hidden border-2 transition ${selectedHero === hero.name ? "border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.4)]" : isMaxed ? "border-amber-500/60" : "border-white/10"}`}>
+                              className={`relative shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition ${selectedHero === hero.name ? "border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.4)]" : isMaxed ? "border-amber-500/60" : "border-white/10"}`}>
                               <div className="w-full h-full bg-white/[0.06]">
                                 <img src={`/icons/heroes/${slug}.png`} alt={hero.name} loading="eager"
                                   className="w-full h-full object-cover object-top" onError={e=>{e.target.style.display="none"}}/>
@@ -1882,7 +1882,7 @@ function PlayerProfileView({ onBack }) {
             </div>
 
             {/* Troops + Spells + Siege */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
               <button type="button" onClick={() => setShowTroops(v => !v)}
                 className="w-full flex items-center justify-between px-5 py-4">
                 <span className="text-[10px] text-slate-500 uppercase tracking-widest">Troops, Spells & Siege</span>
@@ -1986,7 +1986,7 @@ function RankedLeaderboardView({ onBack }) {
         <AppHeader variant="bar"/>
 
         {/* Title card — centred, matches app design spec */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
           <h1 className="text-4xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
           <div className="flex justify-center mt-4">
@@ -2008,9 +2008,9 @@ function RankedLeaderboardView({ onBack }) {
         {loading && (
           <div className="space-y-3 animate-pulse">
             {[...Array(3)].map((_,i) => (
-              <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-2">
+              <div key={i} className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-2">
                 <div className="h-3 w-24 bg-white/[0.06] rounded"/>
-                {[...Array(4)].map((_,j) => <div key={j} className="h-10 bg-white/[0.06] rounded-2xl"/>)}
+                {[...Array(4)].map((_,j) => <div key={j} className="h-10 bg-white/[0.06] rounded-lg"/>)}
               </div>
             ))}
           </div>
@@ -2021,7 +2021,7 @@ function RankedLeaderboardView({ onBack }) {
         {data && !loading && (
           <>
             {data.groups.map(group => (
-              <div key={group.league} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+              <div key={group.league} className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
                 {/* League header */}
                 <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]">
                   {group.iconUrl && <img src={group.iconUrl} alt={group.league} className="w-8 h-8 object-contain"/>}
@@ -2074,7 +2074,7 @@ function RankedLeaderboardView({ onBack }) {
                           <div className="px-3 pb-3 pt-2 border-t border-white/[0.04] space-y-2">
                             {historyLoading === player.player_tag && (
                               <div className="animate-pulse space-y-2">
-                                {[...Array(2)].map((_,i) => <div key={i} className="h-16 bg-white/[0.04] rounded-2xl"/>)}
+                                {[...Array(2)].map((_,i) => <div key={i} className="h-16 bg-white/[0.04] rounded-lg"/>)}
                               </div>
                             )}
                             {historyCache[player.player_tag]?.length === 0 && (
@@ -2091,7 +2091,7 @@ function RankedLeaderboardView({ onBack }) {
                               const prev = historyCache[player.player_tag][i + 1];
                               const trophyDiff = prev?.pre_trophies && r.pre_trophies ? r.pre_trophies - prev.pre_trophies : null;
                               return (
-                                <div key={i} className={`rounded-2xl border p-2.5 space-y-1.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                                <div key={i} className={`rounded-lg border p-2.5 space-y-1.5 ${isPromoted ? "border-green-500/30 bg-green-500/[0.03]" : isDemoted ? "border-red-500/30 bg-red-500/[0.03]" : "border-white/[0.06] bg-white/[0.02]"}`}>
                                   <div className="flex items-center justify-between">
                                     <span className="text-[8px] text-slate-500 uppercase tracking-widest">{dateRange}</span>
                                     <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
@@ -2260,7 +2260,7 @@ function WarIntelView({ onBack }) {
 
       {loading ? (
         <div className="space-y-3">
-          {[1,2,3].map(i => <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] h-24 animate-pulse"/>)}
+          {[1,2,3].map(i => <div key={i} className="rounded-xl border border-white/10 bg-white/[0.04] h-24 animate-pulse"/>)}
         </div>
       ) : (
         <div className="relative z-10 space-y-4">
@@ -2272,7 +2272,7 @@ function WarIntelView({ onBack }) {
               {dayAggregates.length >= 2 && <WarMomentumChart dayAggregates={dayAggregates} />}
 
               {/* Avg stars bar chart */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Avg Stars Per War Day</p>
                 {dayAggregates.length === 0 ? (
                   <p className="text-slate-700 text-xs text-center py-6">No data available</p>
@@ -2308,7 +2308,7 @@ function WarIntelView({ onBack }) {
 
           {/* ── ATTENDANCE TAB ── */}
           {tab === "attendance" && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Missed Attacks by Player</p>
               {attendanceData.length === 0 ? (
                 <p className="text-slate-700 text-xs text-center py-6">No missed attacks on record</p>
@@ -2329,7 +2329,7 @@ function WarIntelView({ onBack }) {
 
           {/* ── CLANS TAB ── */}
           {tab === "clans" && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">Clan Comparison</p>
               {clanData.length === 0 ? (
                 <p className="text-slate-700 text-xs text-center py-6">No data available</p>
@@ -2475,7 +2475,7 @@ function HistoryView({ onBack }) {
       {tab === "rank" && (
         <div className="relative z-10">
           {loading ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 animate-pulse">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 animate-pulse">
               <div className="h-48 rounded-xl bg-white/[0.06]"/>
             </div>
           ) : (
@@ -2666,10 +2666,10 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sor
   };
 
   return (
-    <div className={`rounded-2xl border bg-white/[0.03] backdrop-blur-xl transition-all ${rankBorderClass} ${isExpanded ? "shadow-lg" : ""}`}>
+    <div className={`rounded-lg border bg-white/[0.03] backdrop-blur-xl transition-all ${rankBorderClass} ${isExpanded ? "shadow-lg" : ""}`}>
 
       {/* Header row — only this triggers expand/collapse */}
-      <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-2xl transition">
+      <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-lg transition">
         <div className="shrink-0 w-6 flex items-center justify-center">
           <RankBadge rank={rank} />
         </div>
@@ -2856,9 +2856,9 @@ function ClanCard({ c, rank, isExpanded, onToggle }) {
   ) : null;
 
   return (
-    <div className={`rounded-2xl border bg-white/[0.03] backdrop-blur-xl transition-all ${rankBorderClass}`}>
+    <div className={`rounded-lg border bg-white/[0.03] backdrop-blur-xl transition-all ${rankBorderClass}`}>
       {/* Header row */}
-      <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-2xl transition">
+      <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-lg transition">
         <div className="shrink-0 w-6 flex items-center justify-center">
           <RankBadge rank={rank}/>
         </div>
@@ -3012,7 +3012,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
@@ -3032,7 +3032,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -3101,12 +3101,12 @@ function SeasonAwards({ stats }) {
   if (!awards.length) return null;
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Season Awards</p>
       <div className="grid grid-cols-2 gap-2">
         {awards.map((award, i) => (
           <a key={i} href={`/player/${award.player.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
+            className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
             <div className="flex items-center gap-1.5 mb-1">
               <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${award.iconColour}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 {award.icon}
@@ -3132,22 +3132,22 @@ function AlliancePerformanceTile({ stats, totalAllianceStars }) {
   const clutchPlayers = withAtks.filter(p => p.clutch_rate != null);
   const allianceClutch = clutchPlayers.length ? (clutchPlayers.reduce((s,p)=>s+parseFloat(p.clutch_rate||0),0)/clutchPlayers.length).toFixed(2) : "—";
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance Performance</p>
       <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
           <p className="text-3xl font-thin text-amber-300" style={{fontFamily:"var(--font-orbitron)"}}>{totalAllianceStars}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Total Alliance Stars</p>
         </div>
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-center">
           <p className="text-xl font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{totalThreeStars}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">3★ Hits ({allianceThreeStarRate})</p>
         </div>
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-center">
           <p className="text-xl font-thin text-blue-300" style={{fontFamily:"var(--font-orbitron)"}}>{alliancePunchUp}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Punch-Up</p>
         </div>
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
           <p className="text-xl font-thin text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{allianceClutch}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Clutch Rate (Days 5-7)</p>
         </div>
@@ -3903,7 +3903,7 @@ function RecapView({ onBack }) {
           {/* Top Clan (alliance) or Clan Header (per-clan) */}
           {selectedClan === "alliance" ? (
             topClan && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">Top Clan</p>
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={medalColours[1]} strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
@@ -3942,7 +3942,7 @@ function RecapView({ onBack }) {
             const threeStarCount = filteredStats.reduce((s,p) => s + (p.three_stars||0), 0);
             const totalAtks = filteredStats.reduce((s,p) => s + (p.attacks_used||0), 0);
             return (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">{clanData.cwl_rank}</p>
                 <p className="text-2xl font-thin tracking-widest text-white">{selectedClan.split(" ")[0]}</p>
                 <div className="flex items-center justify-center gap-4 w-full pt-2 border-t border-white/[0.06]">
@@ -3972,12 +3972,12 @@ function RecapView({ onBack }) {
           })()}
 
           {/* Top 3 players */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Top Players · CGN Rating</p>
             <div className="space-y-2">
               {top3.map((p, i) => (
                 <a key={p.player_tag} href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
+                  className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
@@ -3995,7 +3995,7 @@ function RecapView({ onBack }) {
 
           {/* Per-clan round breakdown */}
           {selectedClan !== "alliance" && clanRounds.length > 0 && (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">CWL Round Breakdown</p>
               <div className="space-y-1.5">
                 {clanRounds.map((r, i) => {
@@ -4003,7 +4003,7 @@ function RecapView({ onBack }) {
                   const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && r.destruction_pct < r.defence_pct);
                   const colour = won ? "text-green-400 border-green-500/20" : lost ? "text-red-400 border-red-500/20" : "text-slate-400 border-white/10";
                   return (
-                    <div key={i} className={`flex items-center justify-between rounded-2xl border ${colour} bg-white/[0.02] px-3 py-2`}>
+                    <div key={i} className={`flex items-center justify-between rounded-lg border ${colour} bg-white/[0.02] px-3 py-2`}>
                       <div className="flex items-center gap-2">
                         <span className="text-[9px] text-slate-600 uppercase tracking-widest w-12">R{r.war_day}</span>
                         <span className="text-xs text-slate-400 truncate max-w-[100px]">{r.opponent_clan}</span>
@@ -4024,12 +4024,12 @@ function RecapView({ onBack }) {
           )}
 
           {/* Standout performers */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Standout Performers</p>
             <div className="grid grid-cols-2 gap-2">
               {bestAttacker && (
                 <a href={`/player/${bestAttacker.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
+                  className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
                   <div className="flex items-center gap-1.5 mb-1">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -4042,7 +4042,7 @@ function RecapView({ onBack }) {
               )}
               {bestDefender && (
                 <a href={`/player/${bestDefender.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
+                  className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/20 hover:bg-white/[0.04] transition no-underline">
                   <div className="flex items-center gap-1.5 mb-1">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -4065,18 +4065,18 @@ function RecapView({ onBack }) {
           )}
 
           {/* Alliance war record */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance War Record</p>
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
+              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-center">
                 <p className="text-2xl font-thin text-green-300">{totalWins}</p>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Won</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
+              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-center">
                 <p className="text-2xl font-thin text-red-400">{totalLosses}</p>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Lost</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center">
+              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-center">
                 <p className="text-2xl font-thin text-slate-500">{totalDraws}</p>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Drawn</p>
               </div>
@@ -4084,7 +4084,7 @@ function RecapView({ onBack }) {
             {/* Clan breakdown */}
             <div className="mt-3 space-y-1.5">
               {clanWithOverall.map((c, i) => (
-                <div key={c.clan_tag || c.clan_name} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                <div key={c.clan_tag || c.clan_name} className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                   <div className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
@@ -4468,7 +4468,7 @@ function LeaderboardView({ onBack }) {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowFiltersModal(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
             <div onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[75dvh] sm:max-h-[90vh]">
+              className="relative z-10 w-full sm:w-auto sm:max-w-2xl rounded-t-3xl sm:rounded-xl border border-white/10 bg-[#0d1424] flex flex-col max-h-[75dvh] sm:max-h-[90vh]">
               <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
                 <h3 className="text-sm font-semibold text-white">Filters</h3>
                 <button onClick={() => setShowFiltersModal(false)} className="text-slate-500 hover:text-white transition">
@@ -4497,7 +4497,7 @@ function LeaderboardView({ onBack }) {
                             : null,
                         })))).catch(()=>setData([]));
                       }
-                    }} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                    }} className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
                       <option value="all">All Time</option>
                       {seasons.map(s=><option key={s} value={s}>{s}</option>)}
                     </select>
@@ -4507,7 +4507,7 @@ function LeaderboardView({ onBack }) {
                     <div className="sm:w-44">
                       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Clan</p>
                       <select value={clanFilter} onChange={e=>setClanFilter(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
                         <option value="all">All Clans</option>
                         {clans.map(c=><option key={c} value={c}>{c}</option>)}
                       </select>
@@ -4518,7 +4518,7 @@ function LeaderboardView({ onBack }) {
                     <div className="sm:w-44">
                       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Town Hall</p>
                       <select value={thFilter} onChange={e=>setThFilter(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none [color-scheme:dark]">
                         <option value="all">All TH</option>
                         {[...new Set((displayData||[]).map(p=>p.town_hall_level).filter(Boolean))].sort((a,b)=>b-a).map(th=>(
                           <option key={th} value={String(th)}>TH{th}</option>
@@ -4564,7 +4564,7 @@ function LeaderboardView({ onBack }) {
 
         <div className="relative max-w-xs mx-auto mb-4">
           <input type="text" placeholder={lbTab === "player" ? "Search player or tag…" : "Search clan…"} value={search} onChange={e=>setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
+            className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"/>
           {search && (
             <button onClick={()=>setSearch("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
@@ -4590,9 +4590,9 @@ function LeaderboardView({ onBack }) {
       </div>
       <div className="relative z-10 space-y-2">
         {displayData === null ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
         ) : sorted.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
             <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
           </div>
         ) : lbTab === "player" ? sorted.map((p, i) => (
@@ -4607,9 +4607,9 @@ function LeaderboardView({ onBack }) {
         {/* Clan leaderboard cards */}
         {lbTab === "clan" && (
           clanHistory === null ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
           ) : filteredClans.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
               <p className="text-slate-600 text-sm">{search ? "No clans match your search." : "No clan data yet."}</p>
             </div>
           ) : filteredClans.map((c, i) => (
@@ -4713,7 +4713,7 @@ function AppHeader({ variant = "bar" }) {
                   <div className="space-y-0.5">
                     {section.items.map(item => item.href ? (
                       <a key={item.key} href={item.href}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -4721,7 +4721,7 @@ function AppHeader({ variant = "bar" }) {
                       </a>
                     ) : (
                       <button key={item.key || "home"} onClick={() => go(item.key)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -4827,7 +4827,7 @@ function CwlProgressTile({ onNavigate }) {
   const medalColours = ["#D4AF37", "#A7A7AD", "#CD7F32"];
 
   return (
-    <div className="rounded-3xl border border-purple-500/20 bg-white/[0.04] overflow-hidden">
+    <div className="rounded-xl border border-purple-500/20 bg-white/[0.04] overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500/[0.08] to-indigo-500/[0.06] px-5 py-4 flex items-center justify-between">
         <div>
@@ -5035,10 +5035,10 @@ function SideWarsSection({ onNavigate }) {
       {/* Sign Up (pre-publish) or View Rosters (post-publish) */}
       {anyRosterPublished ? (
         <a href="/rosters"
-          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-green-500/30 transition group">
+          className="block rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-green-500/30 transition group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-green-500/[0.1] border border-green-500/20 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-green-500/[0.1] border border-green-500/20 flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
                 </svg>
@@ -5055,10 +5055,10 @@ function SideWarsSection({ onNavigate }) {
         </a>
       ) : (
         <a href="/signup"
-          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          className="block rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -5083,7 +5083,7 @@ function SideWarsSection({ onNavigate }) {
     <>
       {wars.map(war => (
         <div key={war.id}
-          className="rounded-3xl border border-pink-500/20 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          className="rounded-xl border border-pink-500/20 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           {/* Header strip */}
           <div className="relative h-16 bg-gradient-to-r from-pink-500/[0.08] to-purple-500/[0.08] flex items-center px-5 gap-3 overflow-hidden">
             <img src="/icons/branding/war-shield.png" alt="Side War" className="w-10 h-10 shrink-0"/>
@@ -5185,7 +5185,7 @@ function StatsHighlightReel() {
   }, []);
 
   if (!data) {
-    return <div className="h-24 rounded-2xl bg-white/[0.03] animate-pulse"/>;
+    return <div className="h-24 rounded-lg bg-white/[0.03] animate-pulse"/>;
   }
   if (data.length === 0) {
     return <p className="text-slate-700 text-xs text-center py-4">No stats yet this season</p>;
@@ -5313,7 +5313,7 @@ export default function Home() {
       <div className="relative z-10 space-y-4 max-w-lg mx-auto">
 
         {/* Countdown — standalone, centred */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           <CwlCountdown/>
         </div>
 
@@ -5326,7 +5326,7 @@ export default function Home() {
         {/* Stats gateway — hidden during CWL week (CwlProgressTile takes over) */}
         {!cwlActive && (
         <button onClick={() => navigate("leaderboard")}
-          className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          className="w-full text-left rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] text-slate-500 uppercase tracking-widest">Stats &amp; Overview</span>
             <span className="flex items-center gap-1 text-[10px] text-purple-400 group-hover:text-purple-300 transition">
@@ -5456,7 +5456,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       <img src="/roster-bg.png" alt="" className="fixed inset-0 select-none pointer-events-none opacity-20" style={{width:"100vw",height:"100dvh",objectFit:"cover",objectPosition:"center top"}}/>
       </div>
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
+      <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
         <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
         <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
         <p className="text-xs text-slate-400">{format}</p>
@@ -5482,7 +5482,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
           .map((player, index) => (
           <div key={`${player.clan}-${player.account}-${player.position}`}
             onClick={() => window.open(`/player/${(player.playerTag||"").replace("#","")}`, "_blank")}
-            className={`rounded-2xl border backdrop-blur-xl p-3 transition cursor-pointer
+            className={`rounded-lg border backdrop-blur-xl p-3 transition cursor-pointer
               ${highlightedAccount && player.playerTag === highlightedAccount
                 ? "border-purple-500/40 bg-purple-500/10"
                 : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"
@@ -5565,7 +5565,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   initial={{ opacity: 0, y: 15 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.5 }}
-  className="relative z-20 mb-4 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
+  className="relative z-20 mb-4 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
 >
 
   <h1 className="text-4xl font-thin tracking-widest">
@@ -5595,7 +5595,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         placeholder="Search players..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"
+        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition"
       />
       {search && (
         <button onClick={() => setSearch("")}
@@ -5606,7 +5606,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         </button>
       )}
       {search && searchResults.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+        <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
           {searchResults.map(player => (
             <div key={`${player.clan}-${player.account}-${player.position}`}
               onClick={() => { window.history.pushState({}, "", `#${player.clan}`); setHighlightedAccount(player.playerTag); setSelectedClan(player.clan); setSearch(""); }}
@@ -5641,7 +5641,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         </div>
       )}
       {search && searchResults.length === 0 && (
-        <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
+        <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
           <p className="text-xs text-slate-600">No players found</p>
         </div>
       )}
@@ -5655,19 +5655,19 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       <div className="grid grid-cols-3 gap-2">
         <div
           onClick={() => { window.history.pushState({}, "", "#players"); setStatView("players"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition shadow-xl">
+          className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition shadow-xl">
           <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{players.length}</div>
           <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Players</div>
         </div>
         <div
           onClick={() => { window.history.pushState({}, "", "#clans"); setStatView("clans"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
+          className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
           <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{clans.length}</div>
           <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Clans</div>
         </div>
         <div
           onClick={() => { window.history.pushState({}, "", "#avgth"); setStatView("avgth"); }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
+          className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
           <div className="text-3xl font-thin tracking-widest text-white tabular-nums">
             {players.length ? (players.reduce((sum, p) => sum + Number(p.townHall || 0), 0) / players.length).toFixed(1) : "-"}
           </div>
@@ -5720,7 +5720,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
                 scale: 0.98
               }}
               className="
-              rounded-3xl
+              rounded-xl
               border
               border-white/10
               bg-white/[0.04]

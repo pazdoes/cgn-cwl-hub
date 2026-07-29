@@ -83,7 +83,7 @@ function FormatToggle({ format, busy, error, onSetFormat }) {
 /* ─── tiny helpers ────────────────────────────────────────── */
 function Card({ children, className = "" }) {
   return (
-    <div className={`rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 shadow-xl ${className}`}>
+    <div className={`rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 shadow-xl ${className}`}>
       {children}
     </div>
   );
@@ -130,7 +130,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-300 transition">
@@ -146,7 +146,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -245,7 +245,7 @@ function AdminHeader() {
                   <div className="space-y-0.5">
                     {section.items.map(item => (
                       <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -258,7 +258,7 @@ function AdminHeader() {
             </nav>
             <div className="border-t border-white/10 pt-4 mt-4">
               <Link href="/" onClick={() => setNavOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
@@ -331,7 +331,7 @@ function AdminNav_REMOVED() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
+            className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden"
           >
             <div className="p-1.5 space-y-0.5">
               <Link href="/admin" onClick={() => setOpen(false)}
@@ -873,15 +873,15 @@ export default function AdminPoolPage() {
           <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
         </div>
         <div className="relative z-10 w-full max-w-xs">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
             <h1 className="text-xl font-thin tracking-widest mb-1">Pool Manager</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
               {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
               <button type="submit" disabled={!pinInput}
-                className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40">
                 Enter
               </button>
             </form>
@@ -932,7 +932,7 @@ export default function AdminPoolPage() {
 
       {loading && (
         <div className="relative z-10 space-y-3">
-          {Array.from({length:3}).map((_,i) => <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] h-20 animate-pulse"/>)}
+          {Array.from({length:3}).map((_,i) => <div key={i} className="rounded-xl border border-white/10 bg-white/[0.04] h-20 animate-pulse"/>)}
         </div>
       )}
       {error && <div className="relative z-10 text-center text-red-400 text-sm py-6">{error}</div>}
@@ -942,7 +942,7 @@ export default function AdminPoolPage() {
 
           {/* ── ROSTER TAB ── */}
           {mainPoolTab === "roster" && (<>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             {/* Builder header */}
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center justify-between mb-3">
@@ -989,7 +989,7 @@ export default function AdminPoolPage() {
                     {optedOut.length === 0 ? (
                       <p className="text-slate-600 text-xs text-center py-6">No players have opted out</p>
                     ) : optedOut.map(entry => (
-                      <div key={entry.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-red-500/20 bg-red-500/[0.04]">
+                      <div key={entry.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-red-500/20 bg-red-500/[0.04]">
                         <div className="w-7 h-7 shrink-0 flex items-center justify-center">
                           <img src={`/icons/th/th${entry.town_hall_level}.png`} alt={`TH${entry.town_hall_level}`} className="w-6 h-6 object-contain"/>
                         </div>
@@ -1028,7 +1028,7 @@ export default function AdminPoolPage() {
                 </div>
                 {/* Multi-select assign panel */}
                 {selectedTags.length > 0 && (
-                  <div className="mb-3 rounded-2xl border border-purple-500/40 bg-purple-500/10 p-3 space-y-2">
+                  <div className="mb-3 rounded-lg border border-purple-500/40 bg-purple-500/10 p-3 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-purple-200 font-semibold flex-1">{selectedTags.length} player{selectedTags.length > 1 ? "s" : ""} selected</span>
                       <button onClick={() => setSelectedTags([])} className="text-slate-500 hover:text-white transition text-xs">✕</button>
@@ -1072,7 +1072,7 @@ export default function AdminPoolPage() {
                               : [...prev, entry.player_tag]
                           )}
                           style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
-                          className={`rounded-2xl border p-3 transition cursor-pointer select-none
+                          className={`rounded-lg border p-3 transition cursor-pointer select-none
                             ${isSelected ? "border-purple-500/60 bg-purple-500/15 shadow-[0_0_12px_rgba(168,85,247,0.15)]" :
                               "border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20"}
                             ${busy ? "opacity-60 pointer-events-none" : ""}`}>

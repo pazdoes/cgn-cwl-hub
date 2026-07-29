@@ -70,7 +70,7 @@ function AppHeader({ variant = "bar" }) {
                   <div className="space-y-0.5">
                     {section.items.map(item => item.href ? (
                       <a key={item.key} href={item.href}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -78,7 +78,7 @@ function AppHeader({ variant = "bar" }) {
                       </a>
                     ) : (
                       <button key={item.key || "home"} onClick={() => go(item.key)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
@@ -157,7 +157,7 @@ function FaqButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}/>
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[360px] sm:left-auto sm:right-4 sm:translate-x-0 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Help & FAQ</p>
@@ -177,7 +177,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-lg border border-white/[0.06] bg-white/[0.03] overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
@@ -291,7 +291,7 @@ function StatusPill({ children, variant = "neutral" }) {
 
 function Card({ children, className = "" }) {
   return (
-    <div className={`rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-xl ${className}`}>
+    <div className={`rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-xl ${className}`}>
       {children}
     </div>
   );
@@ -909,7 +909,7 @@ export default function SignupPage() {
             <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 transition-transform ${infoOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           {infoOpen && (
-            <div className="mt-2 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left space-y-2.5">
+            <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] p-4 text-left space-y-2.5">
               {[
                 ["✓ In", "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season."],
                 ["✕ Out", "Lets leaders know you're sitting this season out. No need to be chased or followed up with."],
@@ -947,9 +947,9 @@ export default function SignupPage() {
 
       {/* ── State A: Loading ── */}
       {loadingMine && (
-        <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
+        <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div key={i} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4">
               <div className="flex items-center gap-3 min-w-0">
                 <Skeleton className="w-8 h-8 rounded-full shrink-0"/>
                 <div className="flex flex-col gap-1.5">
@@ -967,7 +967,7 @@ export default function SignupPage() {
       {!loadingMine && isNewUser && (
         <div className="relative z-10 space-y-4">
           {/* Step card */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <span className="w-6 h-6 rounded-full bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center shrink-0">1</span>
               <h2 className="text-sm font-semibold text-slate-300">Link Your Account</h2>
@@ -979,7 +979,7 @@ export default function SignupPage() {
                   onChange={e => setTag(e.target.value)}
                   onPaste={e => { e.preventDefault(); setTag(e.clipboardData.getData("text")); }}
                   autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm"/>
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1.5 ml-1">
@@ -988,11 +988,11 @@ export default function SignupPage() {
                 </div>
                 <input type="text" placeholder="Paste from in-game settings, or leave blank" value={token}
                   onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
                 <p className="text-[10px] text-slate-600 mt-1.5 ml-1 leading-relaxed">Providing your token confirms account ownership and enables future personalisation features</p>
               </div>
               <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                className="w-full py-3 rounded-2xl font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="w-full py-3 rounded-lg font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {verifying ? "Verifying…" : "Verify & Sign Up"}
               </button>
               {verifyStatus && (
@@ -1002,7 +1002,7 @@ export default function SignupPage() {
           </div>
 
           {/* How it works */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">How it works</h2>
             <ol className="space-y-3">
               {[
@@ -1083,7 +1083,7 @@ export default function SignupPage() {
                   onTouchEnd={onAccountTouchEnd}
                   style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                   onClick={() => toggleSelectTag(acct.tag)}
-                  className={`rounded-2xl border bg-white/[0.03] backdrop-blur-xl p-4 transition cursor-pointer
+                  className={`rounded-lg border bg-white/[0.03] backdrop-blur-xl p-4 transition cursor-pointer
                     ${isDragging ? "opacity-40 border-purple-500/40" : ""}
                     ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
                     ${selectedTags.has(acct.tag)
@@ -1148,7 +1148,7 @@ export default function SignupPage() {
           </div>
 
           {/* Account Manager — collapsible */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
             <button type="button" onClick={() => setAccountManagerOpen(v => !v)}
               className="w-full flex items-center justify-between px-5 py-4 text-left">
               <div className="flex items-center gap-2">
@@ -1192,7 +1192,7 @@ export default function SignupPage() {
                       onChange={e => setTag(e.target.value)}
                       onPaste={e => { e.preventDefault(); setTag(e.clipboardData.getData("text")); }}
                       autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm"/>
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono tracking-wide text-sm"/>
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1.5 ml-1">
@@ -1201,10 +1201,10 @@ export default function SignupPage() {
                     </div>
                     <input type="text" placeholder="From in-game settings" value={token}
                       onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
                   </div>
                   <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {verifying ? "Verifying…" : "Add Account"}
                   </button>
                   {verifyStatus && (
@@ -1220,10 +1220,10 @@ export default function SignupPage() {
                     <input type="text" placeholder="#ABC123" value={manageTag}
                       onChange={e => setManageTag(e.target.value)}
                       autoCapitalize="characters" autoCorrect="off" spellCheck={false}
-                      className="w-full rounded-2xl border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm"/>
+                      className="w-full rounded-lg border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm"/>
                   </div>
                   <button type="button" onClick={handleManageSubmit} disabled={manageSubmitting || !manageTag.trim()}
-                    className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_16px_rgba(239,68,68,0.25)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_16px_rgba(239,68,68,0.25)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {manageSubmitting ? "Removing…" : "Remove Account"}
                   </button>
                   {manageResult && (
