@@ -4744,7 +4744,15 @@ function AppHeader({ variant = "bar" }) {
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest px-3 mb-1">{section.label}</p>
                   )}
                   <div className="space-y-0.5">
-                    {section.items.map(item => (
+                    {section.items.map(item => item.href ? (
+                      <a key={item.key} href={item.href}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                        </svg>
+                        {item.label}
+                      </a>
+                    ) : (
                       <button key={item.key || "home"} onClick={() => go(item.key)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -5040,39 +5048,66 @@ function SideWarTime({ war }) {
 
 function SideWarsSection({ onNavigate }) {
   const [wars, setWars] = useState(null);
+  const [anyRosterPublished, setAnyRosterPublished] = useState(false);
 
   useEffect(() => {
     fetch("/api/side-wars")
       .then(r => r.json())
       .then(d => setWars(d.wars || []))
       .catch(() => setWars([]));
+    fetch("/api/roster-status")
+      .then(r => r.json())
+      .then(d => setAnyRosterPublished(d.anyPublished || false))
+      .catch(() => {});
   }, []);
 
   // null = still loading, don't render anything yet
   if (wars === null) return null;
-  // no active wars — render the default Sign Up + Rosters tiles
+  // no active wars — render Sign Up or View Rosters tile based on published state
   if (wars.length === 0) return (
     <>
-      {/* Sign Up */}
-      <a href="/signup"
-        className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
-              </svg>
+      {/* Sign Up (pre-publish) or View Rosters (post-publish) */}
+      {anyRosterPublished ? (
+        <a href="/rosters"
+          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-green-500/30 transition group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-green-500/[0.1] border border-green-500/20 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">View Rosters</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">CWL rosters are live — see your clan lineup</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-green-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
           </div>
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
-        </div>
-      </a>
+        </a>
+      ) : (
+        <a href="/signup"
+          className="block rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+      )}
 
       {/* Rosters */}
       <button onClick={() => onNavigate("roster")}
