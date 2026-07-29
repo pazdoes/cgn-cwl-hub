@@ -11,6 +11,8 @@ import { CWL_ICONS } from "../../../lib/icons";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 
+function hexToInt(hex) { return parseInt(hex.replace("#", ""), 16); }
+
 function AppHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const ORB = {fontFamily:"var(--font-orbitron)"};
@@ -41,7 +43,7 @@ function AppHeader() {
         <div onClick={e => e.stopPropagation()} className={`relative z-10 w-72 max-w-[80vw] h-full bg-[#0b1020]/80 backdrop-blur-2xl border-r border-white/10 flex flex-col p-5 transition-transform duration-150 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex items-center gap-2 mb-8">
             <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
-            <span className="text-sm text-white tracking-widest uppercase" style={ORB}>Cognition Collective</span>
+            <span className="text-sm text-white tracking-widest uppercase" style={{...ORB}}>Cognition Collective</span>
           </div>
           <nav className="flex-1 space-y-4 overflow-y-auto">
             {navSections.map((section, si) => (
@@ -54,7 +56,7 @@ function AppHeader() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                         <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                       </svg>
-                      <span style={ORB}>{item.label}</span>
+                      <span style={{...ORB}}>{item.label}</span>
                     </Link>
                   ))}
                 </div>
@@ -64,18 +66,18 @@ function AppHeader() {
           <div className="border-t border-white/10 pt-4 mt-4">
             <Link href="/" onClick={() => setNavOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-              <span style={ORB}>Back to App</span>
+              <span style={{...ORB}}>Back to App</span>
             </Link>
           </div>
         </div>
       </div>
       <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
-        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0" title="Menu">
+        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div className="flex items-center gap-2 shrink-0">
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
-          <span className="text-xs text-slate-400 tracking-widest uppercase" style={ORB}>Cognition Collective</span>
+          <span className="text-xs text-slate-400 tracking-widest uppercase" style={{...ORB}}>Cognition Collective</span>
         </div>
         <div className="w-8"/>
       </div>
@@ -95,7 +97,7 @@ function AdminFooter() {
       <div className="flex-1 flex justify-center">
         <Link href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 no-underline">
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5"/>
-          <span className="text-[11px] text-slate-400 tracking-widest" style={ORB}>Cognition Collective</span>
+          <span className="text-[11px] text-slate-400 tracking-widest" style={{...ORB}}>Cognition Collective</span>
         </Link>
       </div>
       <div className="w-16"/>
@@ -536,266 +538,6 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
   );
 }
 
-
-function ClanBoardManager({ pin }) {
-  const [clans, setClans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(null);
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => { loadClans(); }, []);
-
-  async function loadClans() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/clan-board-config");
-      const d = await res.json();
-      setClans(d.clans || []);
-    } catch {} finally { setLoading(false); }
-  }
-
-  async function save(clan, updates) {
-    setSaving(clan.clan_tag); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-board-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin, clan_tag: clan.clan_tag, clan_name: clan.clan_name, ...updates }),
-      });
-      const d = await res.json();
-      if (d.success) { setStatus({ ok: "Saved" }); loadClans(); }
-      else setStatus({ error: d.error || "Failed" });
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setSaving(null); }
-  }
-
-  async function reorder(clan, direction) {
-    const idx = clans.findIndex(c => c.clan_tag === clan.clan_tag);
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= clans.length) return;
-    const swap = clans[swapIdx];
-    const newOrder = idx + 1;
-    const swapOrder = swapIdx + 1;
-    await Promise.all([
-      save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: swapOrder }),
-      save(swap, { included: swap.included, seed_wins: swap.seed_wins, seed_draws: swap.seed_draws, seed_losses: swap.seed_losses, cwl_only: swap.cwl_only, side_war_only: swap.side_war_only, display_order: newOrder }),
-    ]);
-  }
-
-  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
-
-  return (
-    <div className="space-y-3">
-      {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
-      {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-      {clans.map((clan, idx) => (
-        <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            {/* Reorder arrows */}
-            <div className="flex flex-col gap-0.5 shrink-0">
-              <button onClick={() => reorder(clan, "up")} disabled={idx === 0 || saving === clan.clan_tag}
-                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▲</button>
-              <button onClick={() => reorder(clan, "down")} disabled={idx === clans.length - 1 || saving === clan.clan_tag}
-                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▼</button>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-white truncate">{clan.clan_name}</p>
-              <p className="text-[9px] text-slate-600">{clan.is_side_war ? "Side War Clan" : clan.cwl_rank || "—"}</p>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* CWL Only toggle — alliance clans only */}
-              {!clan.is_side_war && (
-                <button onClick={() => save(clan, {
-                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                  seed_losses: clan.seed_losses, display_order: clan.display_order,
-                  cwl_only: !clan.cwl_only, side_war_only: clan.side_war_only
-                })} disabled={saving === clan.clan_tag}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
-                  CWL Only
-                </button>
-              )}
-              {/* Side War Only toggle — side war clans only */}
-              {clan.is_side_war && (
-                <button onClick={() => save(clan, {
-                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                  seed_losses: clan.seed_losses, display_order: clan.display_order,
-                  cwl_only: clan.cwl_only, side_war_only: !clan.side_war_only
-                })} disabled={saving === clan.clan_tag}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
-                  Side War Only
-                </button>
-              )}
-              {/* Include/Exclude toggle */}
-              <button onClick={() => save(clan, {
-                included: !clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                seed_losses: clan.seed_losses, display_order: clan.display_order,
-                cwl_only: clan.cwl_only, side_war_only: clan.side_war_only
-              })} disabled={saving === clan.clan_tag}
-                className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
-                {clan.included ? "In" : "Out"}
-              </button>
-            </div>
-          </div>
-          {/* Seed values — only show when not CWL only */}
-          {!clan.cwl_only && (
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Seed W", key: "seed_wins",   val: clan.seed_wins },
-                { label: "Seed D", key: "seed_draws",  val: clan.seed_draws },
-                { label: "Seed L", key: "seed_losses", val: clan.seed_losses },
-              ].map(field => (
-                <div key={field.key}>
-                  <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1">{field.label}</p>
-                  <input type="number" min="0" defaultValue={field.val}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
-                    onBlur={e => save(clan, {
-                      included: clan.included, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: clan.display_order,
-                      seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
-                      seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
-                      seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,
-                    })}/>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ClanInfoBoardTool() {
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [status, setStatus] = useState(null);
-  const [posting, setPosting] = useState(false);
-  const [liveMessages, setLiveMessages] = useState([]);
-
-  useEffect(() => { loadMessages(); }, []);
-
-  async function loadMessages() {
-    try {
-      const res = await fetch("/api/clan-info-board");
-      const d = await res.json();
-      setLiveMessages(d.messages || []);
-    } catch {}
-  }
-
-  async function handleDeleteBoard(id) {
-    if (!confirm("Delete this board? The Discord message will remain but will no longer auto-update.")) return;
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, pin: "070226" }),
-      });
-      const d = await res.json();
-      if (d.success) { setStatus({ ok: "Board deleted" }); loadMessages(); }
-      else setStatus({ error: d.error || "Failed to delete" });
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  async function handlePost() {
-    if (!webhookUrl.trim()) { setStatus({ error: "Enter a webhook URL" }); return; }
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhook_url: webhookUrl.trim(), pin: "070226" }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        const now = new Date();
-        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-        setStatus({ ok: `Posted ${d.clansPosted} clans · ${ts}` });
-        setWebhookUrl("");
-        loadMessages();
-      } else {
-        setStatus({ error: d.error || "Failed to post" });
-      }
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  async function handleUpdate(url) {
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhook_url: url, pin: "070226" }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        const now = new Date();
-        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-        setStatus({ ok: `Updated · ${ts}` });
-        loadMessages();
-      } else {
-        setStatus({ error: d.error || "Failed to update" });
-      }
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  return (
-    <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
-      <div>
-        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Clan Board Manager</p>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3">Select which clans appear in the board and set their historical war record seed values. Draws and losses are entered manually — wins, draws and losses from tracked wars are added on top automatically.</p>
-        <ClanBoardManager pin="070226"/>
-      </div>
-      <div className="border-t border-white/[0.06] pt-4">
-      <p className="text-xs text-slate-400 leading-relaxed">Paste a Discord webhook URL to post a live clan info board. It auto-updates every 6 hours. New clans added to the app appear automatically on the next update.</p>
-
-      <div className="space-y-2">
-        <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
-          placeholder="https://discord.com/api/webhooks/…"
-          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
-        <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
-          className="w-full rounded-full border border-green-500/40 bg-transparent text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
-          {posting ? "Posting…" : "Post Now"}
-        </button>
-        {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
-        {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-      </div>
-
-      </div>
-      {liveMessages.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
-          {liveMessages.map((msg, i) => (
-            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] text-slate-500 truncate flex-1">
-                  {msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}
-                </p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
-                    className="rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
-                    {posting ? "…" : "Update"}
-                  </button>
-                  <button onClick={() => handleDeleteBoard(msg.id)} disabled={posting}
-                    className="rounded-full border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">
-                    Delete
-                  </button>
-                </div>
-              </div>
-              {msg.last_updated && (
-                <p className="text-[9px] text-slate-700">
-                  Last updated {new Date(msg.last_updated).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ShareCardsPage() {
   const [pin, setPin] = useState("");
   const [pinInput, setPinInput] = useState("");
@@ -803,22 +545,10 @@ export default function ShareCardsPage() {
   const [authed, setAuthed] = useState(false);
   const SESSION_KEY = "cgn_officer_pin";
 
-    const [recapSeasons, setRecapSeasons] = useState([]);
-  const [recapSeason, setRecapSeason] = useState("");
-  const [recapData, setRecapData] = useState(null);
-  const [recapLoading, setRecapLoading] = useState(false);
-  const [recapWebhookId, setRecapWebhookId] = useState("");
-  const [recapPosting, setRecapPosting] = useState(false);
-  const [recapPostResult, setRecapPostResult] = useState(null);
-  const [showRecapCard, setShowRecapCard] = useState(false);
-  const recapCardRef = useRef(null);
-  const [recapRolePing, setRecapRolePing] = useState("");
-  const [recapScheduleAt, setRecapScheduleAt] = useState("");
-  const [recapRecurring, setRecapRecurring] = useState(false);
-  const [recapScheduleResult, setRecapScheduleResult] = useState(null);
-  const [composeMode, setComposeMode] = useState("quick");
-
-  // ── Share Cards tab state ────────────────────────────────────────────────
+  const [recapSeasons, setRecapSeasons] = useState([]);
+  const [webhooks, setWebhooks] = useState([]);
+  const [recapSeasons, setRecapSeasons] = useState([]);
+// ── Share Cards tab state ────────────────────────────────────────────────
   const [scWebhookId, setScWebhookId] = useState("");
   const [scSeason, setScSeason] = useState("");
   const [scData, setScData] = useState(null);
@@ -840,7 +570,6 @@ export default function ShareCardsPage() {
   const [showScClanCards, setShowScClanCards] = useState({});
   const scCollectiveRef = useRef(null);
   const scClanRefs = useRef({});
-  const [webhooks, setWebhooks] = useState([]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
@@ -855,13 +584,10 @@ export default function ShareCardsPage() {
     ]).then(([lbData, whData]) => {
       if (lbData.seasons?.length) setRecapSeasons(lbData.seasons);
       if (whData.webhooks) setWebhooks(whData.webhooks);
-    });
+    }).catch(() => {});
   }, [authed]);
 
-
-  function hexToInt(hex) { return parseInt(hex.replace("#", ""), 16); }
-
-    async function fetchScData(season) {
+async function fetchScData(season) {
     setScLoading(true); setScData(null); setScPostResult(null);
     try {
       const seasonParam = season ? `?season=${encodeURIComponent(season)}` : "";
@@ -1156,12 +882,11 @@ export default function ShareCardsPage() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
       <AppHeader/>
-      <div className="relative z-10 mb-4 text-center">
+      <div className="relative z-10 mb-6 text-center">
         <h1 className="text-4xl font-thin tracking-widest mb-1">Share Cards</h1>
       </div>
       <div className="relative z-10 space-y-3">
-
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
+<div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Share Cards</h2>
             {scData && <span className="text-[10px] text-green-400">✓ {scData.currentSeason} loaded</span>}
@@ -1341,7 +1066,6 @@ export default function ShareCardsPage() {
             {scScheduleResult && <p className={"text-xs text-center " + (scScheduleResult.ok ? "text-green-400" : "text-red-400")}>{scScheduleResult.message}</p>}
           </div>
         </div>
-
       </div>
       {/* Hidden recap share card — rendered off-screen during Discord post */}
       {showRecapCard && recapData && (

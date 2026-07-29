@@ -540,6 +540,265 @@ function TimestampTool() {
 }
 
 /* ─── main page ───────────────────────────────────────────── */
+function ClanBoardManager({ pin }) {
+  const [clans, setClans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => { loadClans(); }, []);
+
+  async function loadClans() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/clan-board-config");
+      const d = await res.json();
+      setClans(d.clans || []);
+    } catch {} finally { setLoading(false); }
+  }
+
+  async function save(clan, updates) {
+    setSaving(clan.clan_tag); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-board-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin, clan_tag: clan.clan_tag, clan_name: clan.clan_name, ...updates }),
+      });
+      const d = await res.json();
+      if (d.success) { setStatus({ ok: "Saved" }); loadClans(); }
+      else setStatus({ error: d.error || "Failed" });
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setSaving(null); }
+  }
+
+  async function reorder(clan, direction) {
+    const idx = clans.findIndex(c => c.clan_tag === clan.clan_tag);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= clans.length) return;
+    const swap = clans[swapIdx];
+    const newOrder = idx + 1;
+    const swapOrder = swapIdx + 1;
+    await Promise.all([
+      save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: swapOrder }),
+      save(swap, { included: swap.included, seed_wins: swap.seed_wins, seed_draws: swap.seed_draws, seed_losses: swap.seed_losses, cwl_only: swap.cwl_only, side_war_only: swap.side_war_only, display_order: newOrder }),
+    ]);
+  }
+
+  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
+
+  return (
+    <div className="space-y-3">
+      {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
+      {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
+      {clans.map((clan, idx) => (
+        <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            {/* Reorder arrows */}
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <button onClick={() => reorder(clan, "up")} disabled={idx === 0 || saving === clan.clan_tag}
+                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▲</button>
+              <button onClick={() => reorder(clan, "down")} disabled={idx === clans.length - 1 || saving === clan.clan_tag}
+                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▼</button>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-white truncate">{clan.clan_name}</p>
+              <p className="text-[9px] text-slate-600">{clan.is_side_war ? "Side War Clan" : clan.cwl_rank || "—"}</p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* CWL Only toggle — alliance clans only */}
+              {!clan.is_side_war && (
+                <button onClick={() => save(clan, {
+                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
+                  seed_losses: clan.seed_losses, display_order: clan.display_order,
+                  cwl_only: !clan.cwl_only, side_war_only: clan.side_war_only
+                })} disabled={saving === clan.clan_tag}
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  CWL Only
+                </button>
+              )}
+              {/* Side War Only toggle — side war clans only */}
+              {clan.is_side_war && (
+                <button onClick={() => save(clan, {
+                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
+                  seed_losses: clan.seed_losses, display_order: clan.display_order,
+                  cwl_only: clan.cwl_only, side_war_only: !clan.side_war_only
+                })} disabled={saving === clan.clan_tag}
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  Side War Only
+                </button>
+              )}
+              {/* Include/Exclude toggle */}
+              <button onClick={() => save(clan, {
+                included: !clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
+                seed_losses: clan.seed_losses, display_order: clan.display_order,
+                cwl_only: clan.cwl_only, side_war_only: clan.side_war_only
+              })} disabled={saving === clan.clan_tag}
+                className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
+                {clan.included ? "In" : "Out"}
+              </button>
+            </div>
+          </div>
+          {/* Seed values — only show when not CWL only */}
+          {!clan.cwl_only && (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Seed W", key: "seed_wins",   val: clan.seed_wins },
+                { label: "Seed D", key: "seed_draws",  val: clan.seed_draws },
+                { label: "Seed L", key: "seed_losses", val: clan.seed_losses },
+              ].map(field => (
+                <div key={field.key}>
+                  <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1">{field.label}</p>
+                  <input type="number" min="0" defaultValue={field.val}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
+                    onBlur={e => save(clan, {
+                      included: clan.included, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: clan.display_order,
+                      seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
+                      seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
+                      seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,
+                    })}/>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ClanInfoBoardTool() {
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [status, setStatus] = useState(null);
+  const [posting, setPosting] = useState(false);
+  const [liveMessages, setLiveMessages] = useState([]);
+
+  useEffect(() => { loadMessages(); }, []);
+
+  async function loadMessages() {
+    try {
+      const res = await fetch("/api/clan-info-board");
+      const d = await res.json();
+      setLiveMessages(d.messages || []);
+    } catch {}
+  }
+
+  async function handleDeleteBoard(id) {
+    if (!confirm("Delete this board? The Discord message will remain but will no longer auto-update.")) return;
+    setPosting(true); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-info-board", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, pin: "070226" }),
+      });
+      const d = await res.json();
+      if (d.success) { setStatus({ ok: "Board deleted" }); loadMessages(); }
+      else setStatus({ error: d.error || "Failed to delete" });
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setPosting(false); }
+  }
+
+  async function handlePost() {
+    if (!webhookUrl.trim()) { setStatus({ error: "Enter a webhook URL" }); return; }
+    setPosting(true); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-info-board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_url: webhookUrl.trim(), pin: "070226" }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        const now = new Date();
+        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        setStatus({ ok: `Posted ${d.clansPosted} clans · ${ts}` });
+        setWebhookUrl("");
+        loadMessages();
+      } else {
+        setStatus({ error: d.error || "Failed to post" });
+      }
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setPosting(false); }
+  }
+
+  async function handleUpdate(url) {
+    setPosting(true); setStatus(null);
+    try {
+      const res = await fetch("/api/clan-info-board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_url: url, pin: "070226" }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        const now = new Date();
+        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        setStatus({ ok: `Updated · ${ts}` });
+        loadMessages();
+      } else {
+        setStatus({ error: d.error || "Failed to update" });
+      }
+    } catch { setStatus({ error: "Network error" }); }
+    finally { setPosting(false); }
+  }
+
+  return (
+    <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
+      <div>
+        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Clan Board Manager</p>
+        <p className="text-xs text-slate-400 leading-relaxed mb-3">Select which clans appear in the board and set their historical war record seed values. Draws and losses are entered manually — wins, draws and losses from tracked wars are added on top automatically.</p>
+        <ClanBoardManager pin="070226"/>
+      </div>
+      <div className="border-t border-white/[0.06] pt-4">
+      <p className="text-xs text-slate-400 leading-relaxed">Paste a Discord webhook URL to post a live clan info board. It auto-updates every 6 hours. New clans added to the app appear automatically on the next update.</p>
+
+      <div className="space-y-2">
+        <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
+          placeholder="https://discord.com/api/webhooks/…"
+          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
+        <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
+          className="w-full rounded-full border border-green-500/40 bg-transparent text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
+          {posting ? "Posting…" : "Post Now"}
+        </button>
+        {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
+        {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
+      </div>
+
+      </div>
+      {liveMessages.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
+          {liveMessages.map((msg, i) => (
+            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] text-slate-500 truncate flex-1">
+                  {msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}
+                </p>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
+                    className="rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
+                    {posting ? "…" : "Update"}
+                  </button>
+                  <button onClick={() => handleDeleteBoard(msg.id)} disabled={posting}
+                    className="rounded-full border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">
+                    Delete
+                  </button>
+                </div>
+              </div>
+              {msg.last_updated && (
+                <p className="text-[9px] text-slate-700">
+                  Last updated {new Date(msg.last_updated).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AnnouncementsPage() {
   const { data: session, status: discordStatus } = useSession();
   const [pin, setPin] = useState("");
@@ -622,6 +881,20 @@ export default function AnnouncementsPage() {
   const [manageTab, setManageTab] = useState(""); // accordion within manage
 
   // ── Recap Share state ────────────────────────────────────────────────────
+  const [recapSeason, setRecapSeason] = useState("");
+  const [recapData, setRecapData] = useState(null);
+  const [recapLoading, setRecapLoading] = useState(false);
+  const [recapWebhookId, setRecapWebhookId] = useState("");
+  const [recapPosting, setRecapPosting] = useState(false);
+  const [recapPostResult, setRecapPostResult] = useState(null);
+  const [showRecapCard, setShowRecapCard] = useState(false);
+  const recapCardRef = useRef(null);
+  const [recapRolePing, setRecapRolePing] = useState("");
+  const [recapScheduleAt, setRecapScheduleAt] = useState("");
+  const [recapRecurring, setRecapRecurring] = useState(false);
+  const [recapScheduleResult, setRecapScheduleResult] = useState(null);
+  const [composeMode, setComposeMode] = useState("quick");
+
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
