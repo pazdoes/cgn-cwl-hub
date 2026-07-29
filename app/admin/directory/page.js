@@ -17,23 +17,20 @@ function ThIcon({ level }) {
 function AdminHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const navSections = [
-    { label: null, items: [
-      { href: "/admin", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    ]},
+    { label: null, items: [{ href: "/admin", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" }]},
     { label: "CWL", items: [
       { href: "/admin/pool", label: "Pool Manager", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
       { href: "/admin/season", label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
       { href: "/admin/clans", label: "Clan Manager", icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
     ]},
-    { label: "SIDE WARS", items: [
-      { href: "/admin/side-wars", label: "Side Wars", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-    ]},
+    { label: "SIDE WARS", items: [{ href: "/admin/side-wars", label: "Side Wars", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" }]},
     { label: "ANNOUNCEMENTS", items: [
       { href: "/admin/announcements", label: "Announcements", icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
       { href: "/admin/share-cards", label: "Share Cards", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
     ]},
-    { label: null, items: [
+    { label: "DIRECTORY", items: [
       { href: "/admin/directory", label: "Directory", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
+      { href: "/admin/missing-members", label: "Missing Members", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" },
     ]},
   ];
   return (
@@ -101,11 +98,6 @@ export default function AdminDirectoryPage() {
   const [actionResult, setActionResult] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshResult, setRefreshResult] = useState(null);
-  const [dirTab, setDirTab] = useState("members"); // "members" | "missing"
-  const [missing, setMissing] = useState([]);
-  const [missingLoading, setMissingLoading] = useState(false);
-  const [missingLoaded, setMissingLoaded] = useState(false);
-  const [showMissing, setShowMissing] = useState(false);
 
   const { status: discordStatus } = useSession();
   const SESSION_KEY = "cwl_admin_pin_confirmed";
@@ -171,11 +163,36 @@ export default function AdminDirectoryPage() {
     } catch {} finally { setActionLoading(false); }
   }
 
-  function handleTabChange(tab) {
-    setDirTab(tab);
-    if (tab === "missing" && !missingLoaded && !missingLoading) {
-      handleCheckMissing();
-    }
+  async function handleSetActive(playerTag, active) {
+    setActionLoading(true); setActionResult(null);
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ playerTag, action: "setActive", active }),
+      });
+      if (res.ok) {
+        setMembers(prev => prev.map(m => m.player_tag === playerTag ? { ...m, active } : m));
+        setActionResult({ ok: true, message: active ? "Account activated" : "Account deactivated" });
+      }
+    } catch {} finally { setActionLoading(false); }
+  }
+
+  async function handleDelete(playerTag) {
+    if (confirmInput !== "CONFIRM") return;
+    setActionLoading(true); setActionResult(null);
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ playerTag }),
+      });
+      if (res.ok) {
+        setMembers(prev => prev.filter(m => m.player_tag !== playerTag));
+        setConfirmDelete(null); setConfirmInput(""); setManagingTag(null);
+        setActionResult({ ok: true, message: "Account deleted" });
+      }
+    } catch {} finally { setActionLoading(false); }
   }
 
   async function handleCheckMissing() {
@@ -269,16 +286,6 @@ export default function AdminDirectoryPage() {
 
       {/* Tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["members","Members"],["missing","Missing"]].map(([key,label]) => (
-          <button key={key} onClick={() => handleTabChange(key)}
-            className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
-              dirTab === key
-                ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
-                : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
-            }`}>
-            {label}
-          </button>
-        ))}
       </div>
 
       {/* Delete confirm modal */}
@@ -302,7 +309,6 @@ export default function AdminDirectoryPage() {
         </div>
       )}
 
-      {dirTab === "members" && (
       <div className="relative z-10 space-y-3">
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           {/* Header row */}
@@ -435,60 +441,7 @@ export default function AdminDirectoryPage() {
         </div>
       </div>
 
-      )} {/* end members tab */}
 
-      {dirTab === "missing" && (
-      <div className="relative z-10 space-y-3 mt-0">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Missing Members</h2>
-              <p className="text-[10px] text-slate-700 mt-0.5">Alliance clan members not yet connected to the app</p>
-            </div>
-            <button onClick={handleCheckMissing} disabled={missingLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${missingLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-              {missingLoading ? "Checking…" : "Refresh"}
-            </button>
-          </div>
-
-          {showMissing && (
-            <>
-              {missingLoading ? (
-                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-12 rounded-2xl bg-white/[0.04] animate-pulse"/>)}</div>
-              ) : missingLoaded && (
-                <>
-                  <p className="text-[10px] text-slate-600 mb-3">{missing.length} member{missing.length !== 1 ? "s" : ""} not connected</p>
-                  {missing.length === 0 ? (
-                    <p className="text-xs text-green-400 text-center py-4">✓ All clan members are connected to the app</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {missing.map((m, i) => (
-                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
-                          <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-                            {m.town_hall_level ? <img src={`/icons/th/th${m.town_hall_level}.png`} alt={`TH${m.town_hall_level}`} className="w-5 h-5 object-contain"/> : <span className="text-[9px] text-slate-600">?</span>}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
-                            <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-[10px] text-slate-400">{m.clan_name.split(" ")[0]}</p>
-                            <p className="text-[9px] text-slate-600 capitalize">{m.role?.toLowerCase().replace(/_/g, " ")}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      )} {/* end missing tab */}
 
       <AdminFooter/>
     </main>
