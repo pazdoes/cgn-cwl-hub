@@ -302,16 +302,40 @@ export default function RostersPage() {
   const [highlightedAccount, setHighlightedAccount] = useState(null);
   const [currentSeason, setCurrentSeason] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [rosterProgress, setRosterProgress] = useState({ published: 0, total: 5 });
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/roster").then(r => r.json()),
       fetch("/api/season").then(r => r.json()),
-    ]).then(([rosterData, seasonData]) => {
+      fetch("/api/roster-status").then(r => r.json()),
+    ]).then(([rosterData, seasonData, statusData]) => {
       setPlayers(Array.isArray(rosterData) ? rosterData : []);
       setCurrentSeason(seasonData.season || null);
+      setRosterProgress({ published: statusData.publishedCount || 0, total: statusData.totalClans || 5 });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  // CWL countdown — 1st of month at 08:00 UTC
+  const utcNow = new Date(now.toISOString());
+  const thisMonthStart = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), 1, 8, 0, 0));
+  const isLive = utcNow >= thisMonthStart && utcNow < new Date(thisMonthStart.getTime() + 8 * 24 * 60 * 60 * 1000);
+  const nextStart = utcNow < thisMonthStart
+    ? thisMonthStart
+    : new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 1, 8, 0, 0));
+  const msLeft = Math.max(0, nextStart - utcNow);
+  const totalSeconds = Math.floor(msLeft / 1000);
+  const timeLeft = {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+  };
 
   const clans = [...new Set(players.map(p => p.clan))];
   const searchResults = players.filter(p => p.account?.toLowerCase().includes(search.toLowerCase()));
@@ -451,9 +475,55 @@ export default function RostersPage() {
       {loading && <div className="space-y-4">{[...Array(3)].map((_,i) => <div key={i} className="h-[280px] rounded-xl bg-white/[0.04] animate-pulse"/>)}</div>}
 
       {!loading && players.length === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-10 text-center">
-          <p className="text-slate-500 text-sm">No rosters published yet.</p>
-          <p className="text-slate-600 text-xs mt-1">Check back soon — rosters will appear here once published by an officer.</p>
+        <div className="space-y-4">
+          {/* CWL Countdown */}
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-4">{isLive ? "CWL War Week" : "Next CWL Starts In"}</p>
+            {isLive ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+                <span className="text-3xl font-thin tracking-widest text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>Live Now</span>
+              </div>
+            ) : (
+              <div className="flex items-baseline justify-center gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{timeLeft.days}</span>
+                  <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">days</span>
+                </div>
+                <span className="text-2xl text-slate-600 font-thin">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.hours).padStart(2,"0")}</span>
+                  <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">hrs</span>
+                </div>
+                <span className="text-2xl text-slate-600 font-thin">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.minutes).padStart(2,"0")}</span>
+                  <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">min</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Roster completion */}
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Roster Progress</p>
+              <span className="text-xs text-slate-500">{rosterProgress.published} / {rosterProgress.total} ready</span>
+            </div>
+            <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-purple-500/60 transition-all duration-700"
+                style={{width: `${rosterProgress.total > 0 ? (rosterProgress.published / rosterProgress.total) * 100 : 0}%`}}
+              />
+            </div>
+            <p className="text-[10px] text-slate-600 mt-3 text-center">
+              {rosterProgress.published === 0
+                ? "Rosters are being prepared by leaders"
+                : rosterProgress.published === rosterProgress.total
+                  ? "All rosters ready — publishing soon"
+                  : `${rosterProgress.total - rosterProgress.published} clan${rosterProgress.total - rosterProgress.published !== 1 ? "s" : ""} still being finalised`}
+            </p>
+          </div>
         </div>
       )}
 
