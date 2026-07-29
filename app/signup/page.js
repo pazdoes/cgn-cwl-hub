@@ -1083,6 +1083,12 @@ export default function SignupPage() {
                   {leaveError[acct.tag] && (
                     <p className="text-[10px] text-red-400 mt-2 text-center">{leaveError[acct.tag]}</p>
                   )}
+                  {/* Intent status label */}
+                  <p className={`text-[9px] mt-1.5 text-center tracking-wide ${
+                    acct.inCurrentPool ? "text-green-400/70" : acct.cwlIntent === "out" ? "text-red-400/70" : "text-slate-600"
+                  }`}>
+                    {acct.inCurrentPool ? `✓ You're in for ${season || "this season"}` : acct.cwlIntent === "out" ? "✕ Sitting this one out" : "No response yet"}
+                  </p>
                 </div>
               );
             })}
