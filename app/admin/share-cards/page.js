@@ -547,7 +547,6 @@ export default function ShareCardsPage() {
 
   const [recapSeasons, setRecapSeasons] = useState([]);
   const [webhooks, setWebhooks] = useState([]);
-  const [recapSeasons, setRecapSeasons] = useState([]);
 // ── Share Cards tab state ────────────────────────────────────────────────
   const [scWebhookId, setScWebhookId] = useState("");
   const [scSeason, setScSeason] = useState("");
