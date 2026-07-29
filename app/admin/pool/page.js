@@ -955,6 +955,43 @@ export default function AdminPoolPage() {
             {/* Pool tab */}
             {builderTab === "pool" && (
               <div className="p-4">
+                {/* In / Out tab nav */}
+                <div className="flex items-center gap-1 mb-3">
+                  {[["available", `In (${unassigned.length})`], ["out", `Out (${optedOut.length})`]].map(([key, label]) => (
+                    <button key={key} onClick={() => setPoolTab(key)}
+                      className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+                        poolTab === key
+                          ? key === "out"
+                            ? "border-red-500/40 bg-red-500/10 text-red-400"
+                            : "border-green-500/40 bg-green-500/10 text-green-400"
+                          : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
+                      }`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {/* Out tab */}
+                {poolTab === "out" && (
+                  <div className="space-y-2">
+                    {optedOut.length === 0 ? (
+                      <p className="text-slate-600 text-xs text-center py-6">No players have opted out</p>
+                    ) : optedOut.map(entry => (
+                      <div key={entry.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-red-500/20 bg-red-500/[0.04]">
+                        <div className="w-7 h-7 shrink-0 flex items-center justify-center">
+                          <img src={`/icons/th/th${entry.town_hall_level}.png`} alt={`TH${entry.town_hall_level}`} className="w-6 h-6 object-contain"/>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{entry.player_name}</p>
+                          <p className="text-[10px] text-slate-600 font-mono">{entry.player_tag}</p>
+                        </div>
+                        <span className="text-[9px] text-red-400 border border-red-500/30 rounded-full px-2 py-0.5 uppercase tracking-widest">Out</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* In tab */}
+                {poolTab === "available" && (
+                <div>
                 {/* Search + Select All */}
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative flex-1">
@@ -1045,7 +1082,8 @@ export default function AdminPoolPage() {
                     })}
                   </div>
                 )}
-                </div>}
+                </div>
+                )}
               </div>
             )}
 
