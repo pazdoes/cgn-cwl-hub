@@ -196,25 +196,19 @@ function AdminHeader() {
 
 function AdminFooter() {
   return (
-    <div className="relative z-10 w-full py-4 flex items-center px-4">
-      <div className="w-16 shrink-0 flex items-center">
-        <Link href="/" className="text-slate-500 hover:text-slate-300 transition p-1" title="Back to App">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-          </svg>
+    <div className="relative z-10 w-full py-4 flex items-center px-4 mt-8">
+      <div className="w-16 shrink-0">
+        <Link href="/admin" className="text-slate-500 hover:text-slate-300 transition p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         </Link>
       </div>
       <div className="flex-1 flex justify-center">
-        <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 no-underline">
+        <Link href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 no-underline">
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5"/>
           <span className="text-[11px] text-slate-400 tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
-        </a>
+        </Link>
       </div>
-      <div className="flex items-center gap-2">
-        <ContrastToggle />
-        <FaqButton />
-      </div>
+      <div className="w-16"/>
     </div>
   );
 }

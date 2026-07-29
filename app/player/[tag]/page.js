@@ -216,7 +216,7 @@ function AppFooter({ onNavigateHome }) {
     if (typeof window !== "undefined") window.location.href = "/";
   }
   return (
-    <div className="relative z-10 w-full py-4 flex items-center px-4">
+    <div className="relative z-10 w-full py-4 flex items-center px-4 mt-8">
       <div className="w-16 shrink-0 flex items-center">
         <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -228,11 +228,10 @@ function AppFooter({ onNavigateHome }) {
         <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 no-underline">
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5"/>
-          <span className="text-[11px] text-slate-400 tracking-widest">Cognition {"{CGN}"}</span>
+          <span className="text-[11px] text-slate-400 tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
         </a>
       </div>
-      <div className="flex items-center gap-2">
-        <ContrastToggle />
+      <div className="w-16 flex items-center justify-end">
         <FaqButton />
       </div>
     </div>

@@ -4775,7 +4775,7 @@ function AppFooter({ onNavigateHome, showHome = true }) {
     if (typeof window !== "undefined") window.location.href = "/";
   }
   return (
-    <div className="relative z-10 w-full py-4 flex items-center px-4">
+    <div className="relative z-10 w-full py-4 flex items-center px-4 mt-8">
       <div className="w-16 shrink-0 flex items-center">
         {showHome && (
           <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
@@ -4792,7 +4792,7 @@ function AppFooter({ onNavigateHome, showHome = true }) {
           <span className="text-[11px] text-slate-400 tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
         </a>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="w-16 flex items-center justify-end">
         <FaqButton />
       </div>
     </div>
