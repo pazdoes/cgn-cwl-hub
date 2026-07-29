@@ -1083,7 +1083,7 @@ export default function SignupPage() {
                   onTouchEnd={onAccountTouchEnd}
                   style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
                   onClick={() => toggleSelectTag(acct.tag)}
-                  className={`rounded-2xl border bg-white/[0.03] p-4 transition cursor-pointer
+                  className={`rounded-2xl border bg-white/[0.03] backdrop-blur-xl p-4 transition cursor-pointer
                     ${isDragging ? "opacity-40 border-purple-500/40" : ""}
                     ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
                     ${selectedTags.has(acct.tag)

@@ -1411,7 +1411,7 @@ function PlayerProfileView({ onBack }) {
         {searching && !nameResults.length && (
           <div className="space-y-3 animate-pulse">
             {/* Profile header skeleton */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/[0.06] shrink-0"/>
                 <div className="flex-1 space-y-2 pt-1">
@@ -1426,7 +1426,7 @@ function PlayerProfileView({ onBack }) {
               </div>
             </div>
             {/* Heroes + equipment skeleton */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4">
               <div className="flex gap-3">
                 <div className="flex flex-col gap-3 shrink-0" style={{width:"38%"}}>
                   <div>
@@ -1475,7 +1475,7 @@ function PlayerProfileView({ onBack }) {
 
         {army && !iconsReady && (
           <div className="space-y-3 animate-pulse">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/[0.06] shrink-0"/>
                 <div className="flex-1 space-y-2 pt-1">
@@ -1488,7 +1488,7 @@ function PlayerProfileView({ onBack }) {
                 {[...Array(4)].map((_,i) => <div key={i} className="h-8 rounded-xl bg-white/[0.06]"/>)}
               </div>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 h-48"/>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 h-48"/>
           </div>
         )}
 
@@ -2008,7 +2008,7 @@ function RankedLeaderboardView({ onBack }) {
         {loading && (
           <div className="space-y-3 animate-pulse">
             {[...Array(3)].map((_,i) => (
-              <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 space-y-2">
+              <div key={i} className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 space-y-2">
                 <div className="h-3 w-24 bg-white/[0.06] rounded"/>
                 {[...Array(4)].map((_,j) => <div key={j} className="h-10 bg-white/[0.06] rounded-2xl"/>)}
               </div>
@@ -2475,7 +2475,7 @@ function HistoryView({ onBack }) {
       {tab === "rank" && (
         <div className="relative z-10">
           {loading ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 animate-pulse">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 animate-pulse">
               <div className="h-48 rounded-xl bg-white/[0.06]"/>
             </div>
           ) : (
@@ -2666,7 +2666,7 @@ function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sor
   };
 
   return (
-    <div className={`rounded-2xl border bg-white/[0.03] transition-all ${rankBorderClass} ${isExpanded ? "shadow-lg" : ""}`}>
+    <div className={`rounded-2xl border bg-white/[0.03] backdrop-blur-xl transition-all ${rankBorderClass} ${isExpanded ? "shadow-lg" : ""}`}>
 
       {/* Header row — only this triggers expand/collapse */}
       <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-2xl transition">
@@ -2856,7 +2856,7 @@ function ClanCard({ c, rank, isExpanded, onToggle }) {
   ) : null;
 
   return (
-    <div className={`rounded-2xl border bg-white/[0.03] transition-all ${rankBorderClass}`}>
+    <div className={`rounded-2xl border bg-white/[0.03] backdrop-blur-xl transition-all ${rankBorderClass}`}>
       {/* Header row */}
       <div onClick={handleToggle} className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-white/[0.03] rounded-2xl transition">
         <div className="shrink-0 w-6 flex items-center justify-center">
@@ -4590,9 +4590,9 @@ function LeaderboardView({ onBack }) {
       </div>
       <div className="relative z-10 space-y-2">
         {displayData === null ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
         ) : sorted.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
             <p className="text-slate-600 text-sm">{search ? "No players match your search." : "No leaderboard data yet."}</p>
           </div>
         ) : lbTab === "player" ? sorted.map((p, i) => (
@@ -4607,9 +4607,9 @@ function LeaderboardView({ onBack }) {
         {/* Clan leaderboard cards */}
         {lbTab === "clan" && (
           clanHistory === null ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center text-slate-500 text-sm animate-pulse">Loading…</div>
           ) : filteredClans.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
               <p className="text-slate-600 text-sm">{search ? "No clans match your search." : "No clan data yet."}</p>
             </div>
           ) : filteredClans.map((c, i) => (

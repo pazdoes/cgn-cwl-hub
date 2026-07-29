@@ -173,7 +173,7 @@ function FaqButton() {
                       const key = `${si}-${ii}`;
                       const isOpen = expanded === key;
                       return (
-                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+                        <div key={ii} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl overflow-hidden">
                           <button type="button" onClick={() => setExpanded(isOpen ? null : key)}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left">
                             <span className="text-xs text-slate-300">{item.q}</span>
