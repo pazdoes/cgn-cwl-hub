@@ -843,7 +843,8 @@ export default function AdminPoolPage() {
     finally { setDeleteClanSubmitting(false); }
   }
 
-  const unassigned = entries.filter(e => !e.assigned_clan).sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
+  const unassigned = entries.filter(e => !e.assigned_clan && e.cwl_intent !== "out").sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
+  const optedOut = entries.filter(e => e.cwl_intent === "out").sort((a, b) => (b.town_hall_level ?? 0) - (a.town_hall_level ?? 0));
   const assigned = entries.filter(e => e.assigned_clan);
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
