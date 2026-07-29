@@ -302,7 +302,7 @@ export default function RostersPage() {
   const [highlightedAccount, setHighlightedAccount] = useState(null);
   const [currentSeason, setCurrentSeason] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [rosterProgress, setRosterProgress] = useState({ confirmed: 0, inPool: 0, pct: 0 });
+  const [rosterProgress, setRosterProgress] = useState({ assigned: 0, inPool: 0, pct: 0 });
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -318,7 +318,7 @@ export default function RostersPage() {
     ]).then(([rosterData, seasonData, statusData]) => {
       setPlayers(Array.isArray(rosterData) ? rosterData : []);
       setCurrentSeason(seasonData.season || null);
-      setRosterProgress({ confirmed: statusData.confirmed || 0, inPool: statusData.inPool || 0, pct: statusData.pct || 0 });
+      setRosterProgress({ assigned: statusData.assigned || 0, inPool: statusData.inPool || 0, pct: statusData.pct || 0 });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -514,7 +514,7 @@ export default function RostersPage() {
               <div className="h-full rounded-full bg-purple-500/60 transition-all duration-700" style={{width: `${rosterProgress.pct}%`}}/>
             </div>
             <p className="text-[10px] text-slate-600 mt-3 text-center">
-              {rosterProgress.confirmed} confirmed · {rosterProgress.inPool} assigned
+              {rosterProgress.assigned} assigned · {rosterProgress.inPool} in pool
             </p>
           </div>
         </div>
