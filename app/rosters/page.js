@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { CWL_ICONS, TH_ICONS } from "../../lib/icons";
 import { BRANDING } from "../../lib/branding";
 
-// ─── Shared branded header + hamburger nav ──────────────────────────────────
+// ─── AppHeader — matches signup page exactly ─────────────────────────────────
 function AppHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const tapCount = useRef(0);
@@ -74,30 +76,24 @@ function AppHeader() {
         </div>
       </div>
       <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#070b17]/80 backdrop-blur-xl">
-        <div className="max-w-md mx-auto flex items-center gap-3 px-4 py-3">
+        <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => setNavOpen(true)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/[0.06] transition text-slate-400 hover:text-white shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
-          <div className="flex items-center gap-2 flex-1">
-            <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
-            <span className="text-xs text-slate-400 tracking-widest uppercase font-medium">Cognition {"{CGN}"}</span>
-          </div>
+          <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
+          <span className="text-xs text-slate-400 tracking-widest uppercase font-medium">Cognition {"{CGN}"}</span>
         </div>
       </header>
     </>
   );
 }
 
-function ThIcon({ level }) {
-  if (!level) return <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10"/>;
-  return <img src={`/icons/th/th${level}.png`} alt={`TH${level}`} className="w-8 h-8 object-contain"/>;
-}
-
 export default function RostersPage() {
   const [players, setPlayers] = useState([]);
-  const [clans, setClans] = useState([]);
+  const [search, setSearch] = useState("");
   const [selectedClan, setSelectedClan] = useState(null);
-  const [season, setSeason] = useState(null);
+  const [highlightedAccount, setHighlightedAccount] = useState(null);
+  const [currentSeason, setCurrentSeason] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -105,105 +101,179 @@ export default function RostersPage() {
       fetch("/api/roster").then(r => r.json()),
       fetch("/api/season").then(r => r.json()),
     ]).then(([rosterData, seasonData]) => {
-      const allPlayers = Array.isArray(rosterData) ? rosterData : [];
-      setPlayers(allPlayers);
-      const uniqueClans = [...new Set(allPlayers.map(p => p.clan).filter(Boolean))];
-      setClans(uniqueClans);
-      if (uniqueClans.length > 0) setSelectedClan(uniqueClans[0]);
-      setSeason(seasonData.season || null);
+      setPlayers(Array.isArray(rosterData) ? rosterData : []);
+      setCurrentSeason(seasonData.season || null);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const clanPlayers = players.filter(p => p.clan === selectedClan);
-  const confirmed = clanPlayers.filter(p => p.status === "confirmed" || !p.status);
-  const subs = clanPlayers.filter(p => p.status === "substitute");
+  const clans = [...new Set(players.map(p => p.clan))];
+  const searchResults = players.filter(p => p.account?.toLowerCase().includes(search.toLowerCase()));
+  const clanPlayers = selectedClan ? players.filter(p => p.clan === selectedClan) : [];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f]">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+  // Clan detail view
+  if (selectedClan) {
+    const rank = clanPlayers[0]?.cwlRank ?? "unranked";
+    const format = clanPlayers[0]?.cwlFormat || (clanPlayers.length >= 30 ? "30v30" : "15v15");
+    const clanLink = clanPlayers[0]?.clanLink || "";
+    return (
+      <div className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white">
+        <div className="absolute inset-0 pointer-events-none"><div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/></div>
+        <AppHeader/>
+        <main className="relative z-10 p-4 pb-12">
+          <button onClick={() => setSelectedClan(null)} className="mb-4 flex items-center gap-2 text-slate-500 hover:text-white transition text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Back
+          </button>
+          <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
+            <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
+            <h1 className="text-2xl font-thin tracking-widest">{selectedClan}</h1>
+            <p className="text-xs text-slate-400">{format}</p>
+            {clanLink && (
+              <a href={clanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                Open Clan
+              </a>
+            )}
+          </div>
+          <div className="relative z-10 space-y-2">
+            {[...clanPlayers].sort((a, b) => {
+              const ORDER = { confirmed: 0, registered: 1, substitute: 2 };
+              const sa = ORDER[a.status?.toLowerCase()] ?? 1;
+              const sb = ORDER[b.status?.toLowerCase()] ?? 1;
+              if (sa !== sb) return sa - sb;
+              return Number(b.townHall || 0) - Number(a.townHall || 0);
+            }).map((player, index) => (
+              <div key={`${player.clan}-${player.account}-${index}`}
+                onClick={() => window.open(`/player/${(player.playerTag||"").replace("#","")}`, "_blank")}
+                className={`rounded-2xl border backdrop-blur-xl p-3 transition cursor-pointer ${highlightedAccount && player.playerTag === highlightedAccount ? "border-purple-500/40 bg-purple-500/10" : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"}`}>
+                <div className="flex items-center w-full justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-xs text-slate-600 w-5 text-right shrink-0">{index + 1}</span>
+                    {TH_ICONS[player.townHall] && <img src={TH_ICONS[player.townHall]} alt={`TH${player.townHall}`} className="w-8 h-8 shrink-0"/>}
+                    <span className="text-sm font-semibold text-white truncate">{player.account}</span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold shrink-0 ${
+                    player.status?.toLowerCase() === "confirmed" || player.status?.toLowerCase() === "active" ? "bg-green-500/10 text-green-400 border-green-500/30"
+                    : player.status?.toLowerCase() === "substitute" ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                    : "bg-white/[0.04] text-slate-500 border-white/10"
+                  }`}>
+                    {player.status?.toLowerCase() === "confirmed" ? "Confirmed" : player.status?.toLowerCase() === "substitute" ? "Substitute" : player.status || "Registered"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
+    );
+  }
+
+  // Hub view
+  return (
+    <div className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white">
+      <div className="absolute inset-0 pointer-events-none"><div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/></div>
       <AppHeader/>
-      <main className="relative z-10 max-w-md mx-auto px-4 py-6 pb-16 space-y-4">
-        {/* Hero tile */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
-          <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Rosters</h1>
-          {season && <p className="text-slate-500 text-xs uppercase tracking-widest">{season}</p>}
+      <main className="relative z-10 p-6 pb-6">
+        {/* Title */}
+        <div className="relative z-10 mb-6 text-center">
+          <h1 className="text-4xl font-thin tracking-widest mb-1">CWL Rosters</h1>
+          {currentSeason && <p className="text-slate-500 text-xs uppercase tracking-widest">{currentSeason}</p>}
         </div>
 
-        {loading ? (
-          <div className="space-y-3">{[...Array(4)].map((_,i) => <div key={i} className="h-16 rounded-3xl bg-white/[0.04] animate-pulse"/>)}</div>
-        ) : players.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center">
+        {/* Search */}
+        <div className="relative z-20 mb-6">
+          <div className="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search players…" value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 pl-10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            )}
+          </div>
+          {search && searchResults.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+              {searchResults.map((player, i) => (
+                <div key={i} onClick={() => { setHighlightedAccount(player.playerTag); setSelectedClan(player.clan); setSearch(""); }}
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.05] transition border-b border-white/[0.04] last:border-0">
+                  {TH_ICONS[String(player.townHall)] && <img src={TH_ICONS[String(player.townHall)]} alt={`TH${player.townHall}`} className="w-7 h-7 shrink-0"/>}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{player.account}</p>
+                    <p className="text-[10px] text-slate-500 truncate">{player.clan}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {player.status?.toLowerCase() === "confirmed" && <span className="w-2 h-2 rounded-full bg-green-400"/>}
+                    {player.status?.toLowerCase() === "substitute" && <span className="w-2 h-2 rounded-full bg-orange-400"/>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {search && searchResults.length === 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-2xl p-4 text-center z-50">
+              <p className="text-xs text-slate-600">No players found</p>
+            </div>
+          )}
+        </div>
+
+        {/* Stats */}
+        {!loading && players.length > 0 && (
+          <div className="space-y-2 mb-8 relative z-10">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center shadow-xl">
+                <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{players.length}</div>
+                <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Players</div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
+                <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{clans.length}</div>
+                <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Clans</div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
+                <div className="text-3xl font-thin tracking-widest text-white tabular-nums">
+                  {players.length ? (players.reduce((s, p) => s + Number(p.townHall || 0), 0) / players.length).toFixed(1) : "-"}
+                </div>
+                <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Avg TH</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && <div className="space-y-4">{[...Array(3)].map((_,i) => <div key={i} className="h-[280px] rounded-3xl bg-white/[0.04] animate-pulse"/>)}</div>}
+
+        {/* No rosters */}
+        {!loading && players.length === 0 && (
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-10 text-center">
             <p className="text-slate-500 text-sm">No rosters published yet.</p>
             <p className="text-slate-600 text-xs mt-1">Check back soon — rosters will appear here once published by an officer.</p>
           </div>
-        ) : (
-          <>
-            {/* Clan selector pills */}
-            {clans.length > 1 && (
-              <div className="flex flex-wrap gap-1.5">
-                {clans.map(c => (
-                  <button key={c} onClick={() => setSelectedClan(c)}
-                    className={`px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
-                      selectedClan === c
-                        ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
-                        : "border-white/10 bg-white/[0.02] text-slate-500 hover:text-slate-300 hover:border-white/20"
-                    }`}>
-                    {c.split(" ")[0]}
-                  </button>
-                ))}
-              </div>
-            )}
+        )}
 
-            {/* Roster tile */}
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-              {/* Clan header */}
-              <div className="px-5 pt-5 pb-3 border-b border-white/[0.06] flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold text-white">{selectedClan}</h2>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{confirmed.length} confirmed · {subs.length} sub{subs.length !== 1 ? "s" : ""}</p>
-                </div>
-              </div>
-
-              {/* Confirmed */}
-              {confirmed.length > 0 && (
-                <div className="divide-y divide-white/[0.04]">
-                  {confirmed.map((p, i) => (
-                    <div key={p.tag || i} className="flex items-center gap-3 px-5 py-3">
-                      <span className="text-[10px] text-slate-600 w-5 shrink-0 text-right">{i + 1}</span>
-                      <ThIcon level={p.townHall || p.town_hall_level}/>
-                      <p className="text-sm text-white font-semibold flex-1 truncate">{p.name}</p>
-                      <span className="text-[9px] text-green-400 border border-green-500/30 rounded-full px-2 py-0.5 uppercase tracking-widest shrink-0">Confirmed</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Subs */}
-              {subs.length > 0 && (
-                <>
-                  <div className="px-5 py-2 border-t border-white/[0.06]">
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Substitutes</p>
+        {/* Clan cards grid */}
+        {!loading && players.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {clans.map(clan => {
+              const members = players.filter(p => p.clan === clan);
+              const rank = members[0]?.cwlRank ?? "unranked";
+              const format = members[0]?.cwlFormat || (members.length >= 30 ? "30v30" : "15v15");
+              const season = members[0]?.season || "";
+              return (
+                <motion.div key={clan} onClick={() => setSelectedClan(clan)}
+                  whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 min-h-[280px] w-full max-w-full flex flex-col items-center justify-between cursor-pointer shadow-xl">
+                  <div className="text-center">
+                    <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">{rank}</div>
+                    <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-24 h-24 mx-auto mb-4"/>
+                    <div className="text-2xl font-bold mt-2">{clan}</div>
+                    <div className="text-lg text-slate-300 mt-4">{format}</div>
+                    <div className="text-sm text-slate-500 mt-2">{season}</div>
                   </div>
-                  <div className="divide-y divide-white/[0.04]">
-                    {subs.map((p, i) => (
-                      <div key={p.tag || i} className="flex items-center gap-3 px-5 py-3 opacity-75">
-                        <span className="text-[10px] text-slate-600 w-5 shrink-0 text-right">—</span>
-                        <ThIcon level={p.townHall || p.town_hall_level}/>
-                        <p className="text-sm text-white font-semibold flex-1 truncate">{p.name}</p>
-                        <span className="text-[9px] text-orange-400 border border-orange-500/30 rounded-full px-2 py-0.5 uppercase tracking-widest shrink-0">Sub</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {clanPlayers.length === 0 && (
-                <p className="text-slate-600 text-xs text-center py-8">No players on this roster yet.</p>
-              )}
-            </div>
-          </>
+                  <div className="text-slate-500 text-sm">View Roster</div>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </main>
     </div>
