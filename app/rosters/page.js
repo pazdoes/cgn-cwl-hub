@@ -335,7 +335,7 @@ export default function RostersPage() {
         <AppHeader/>
         <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
           <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
-          <h1 className="text-2xl font-thin tracking-widest">{selectedClan}</h1>
+          <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
           <p className="text-xs text-slate-400">{format}</p>
           {clanLink && (
             <a href={clanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition mt-1">

@@ -1018,7 +1018,7 @@ export default function PlayerProfilePage() {
               <img src={TH_ICONS[String(data.town_hall_level)]} alt={`TH${data.town_hall_level}`} className="w-10 h-10 shrink-0"/>
             )}
             {rank <= 3 && <MedalIcon rank={rank}/>}
-            <h1 className="text-2xl font-thin tracking-widest" style={{color: rankColour || "white"}}>{data.player_name}</h1>
+            <h1 className="text-4xl font-thin tracking-widest" style={{color: rankColour || "white"}}>{data.player_name}</h1>
           </div>
 
           {latestOverall != null && (

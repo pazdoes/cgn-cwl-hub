@@ -79,7 +79,7 @@ function PlayersView({ players, onBack, rosterSeasons = [], onNavigateProfile })
 
 
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-2xl font-thin tracking-widest">All Players</h1>
+        <h1 className="text-4xl font-thin tracking-widest">All Players</h1>
         <p className="text-slate-500 text-xs mt-1">{displayPlayers.length} {isHistorical ? `in ${histSeason}` : "rostered this season"}</p>
         {rosterSeasons.length > 0 && (
           <div className="mt-3 flex justify-center">
@@ -146,7 +146,7 @@ function ClansView({ clans, players, onBack, onOpenClan }) {
 
 
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-2xl font-thin tracking-widest">All Clans</h1>
+        <h1 className="text-4xl font-thin tracking-widest">All Clans</h1>
         <p className="text-slate-500 text-xs mt-1">{clans.length} clans rostered this season</p>
       </div>
 
@@ -311,7 +311,7 @@ function AvgThView({ players, clans, onBack }) {
 
       {/* Header tile — title, chart toggle, clan filter */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Town Hall Breakdown</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">Town Hall Breakdown</h1>
         <p className="text-slate-500 text-xs mb-4">
           {total} player{total !== 1 ? "s" : ""}{selectedClanFilter !== "all" ? ` · ${selectedClanFilter}` : " · all clans"}
         </p>
@@ -1353,7 +1353,7 @@ function PlayerProfileView({ onBack }) {
 
         {/* Page title card — centred, no back button */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
-          <h1 className="text-2xl font-thin tracking-widest text-white">Player Profile</h1>
+          <h1 className="text-4xl font-thin tracking-widest text-white">Player Profile</h1>
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army · Upgrades</p>
         </div>
 
@@ -1987,7 +1987,7 @@ function RankedLeaderboardView({ onBack }) {
 
         {/* Title card — centred, matches app design spec */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
-          <h1 className="text-2xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
+          <h1 className="text-4xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
           <div className="flex justify-center mt-4">
             <button onClick={handleRefresh} disabled={refreshing}
@@ -2230,7 +2230,7 @@ function WarIntelView({ onBack }) {
 
       {/* Hero card */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">War Intel</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">War Intel</h1>
         <p className="text-slate-500 text-xs mb-4">Alliance war performance analytics</p>
         <div className="flex items-center justify-center gap-4 mb-3">
           <button onClick={onBack} className="text-slate-500 hover:text-slate-300 transition p-1">
@@ -2444,7 +2444,7 @@ function HistoryView({ onBack }) {
 
       {/* Hero card */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">History</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">History</h1>
         <p className="text-slate-500 text-xs mb-4">CWL performance records by season</p>
 
         {/* Tab indicator dots */}
@@ -3842,7 +3842,7 @@ function RecapView({ onBack }) {
 
       {/* Header */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Season Recap</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">Season Recap</h1>
         {seasons.length > 1 ? (
           <select value={selectedSeason||""} onChange={e => { setSelectedSeason(e.target.value); setSelectedClan("alliance"); }}
             className="mt-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
@@ -4396,7 +4396,7 @@ function LeaderboardView({ onBack }) {
       <AppHeader variant="bar"/>
 
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}
@@ -5478,7 +5478,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       </div>
       <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
         <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
-        <h1 className="text-2xl font-thin tracking-widest">{selectedClan}</h1>
+        <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
         <p className="text-xs text-slate-400">{format}</p>
         {clanLink && (
           <a href={clanLink} target="_blank" rel="noopener noreferrer"
@@ -5588,7 +5588,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   className="relative z-20 mb-4 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
 >
 
-  <h1 className="text-2xl font-thin tracking-widest">
+  <h1 className="text-4xl font-thin tracking-widest">
     {currentSeason || players[0]?.season || "CWL Hub"}
   </h1>
 

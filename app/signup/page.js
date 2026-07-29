@@ -879,8 +879,7 @@ export default function SignupPage() {
 
       {/* ── Hero card — flush to top ── */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
-        <p className="text-slate-500 text-xs mb-2">Let your leaders know if you're available for CWL this season</p>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
         <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
           {season && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
