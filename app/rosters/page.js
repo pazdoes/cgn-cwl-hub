@@ -117,7 +117,10 @@ export default function RostersPage() {
     const clanLink = clanPlayers[0]?.clanLink || "";
     return (
       <div className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white">
-        <div className="absolute inset-0 pointer-events-none"><div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/></div>
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+          <img src="/roster-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-20 select-none pointer-events-none"/>
+        </div>
         <AppHeader/>
         <main className="relative z-10 p-4 pb-12">
           <button onClick={() => setSelectedClan(null)} className="mb-4 flex items-center gap-2 text-slate-500 hover:text-white transition text-sm">
@@ -171,7 +174,10 @@ export default function RostersPage() {
   // Hub view
   return (
     <div className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white">
-      <div className="absolute inset-0 pointer-events-none"><div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/></div>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
+        <img src="/roster-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-20 select-none pointer-events-none"/>
+      </div>
       <AppHeader/>
       <main className="relative z-10 p-6 pb-6">
         {/* Title */}
