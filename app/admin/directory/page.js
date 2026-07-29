@@ -290,8 +290,8 @@ export default function AdminDirectoryPage() {
       <AdminHeader/>
 
       {/* Hero */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Members</h1>
+      <div className="relative z-10 mb-6 text-center">
+        <h1 className="text-4xl font-thin tracking-widest mb-1">Members</h1>
         <p className="text-slate-500 text-xs">{members.length} registered · {inAllianceCount} in alliance · {members.filter(m => m.in_pool).length} in pool</p>
       </div>
 

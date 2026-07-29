@@ -709,8 +709,8 @@ export default function AdminOverviewPage() {
       <AdminHeader/>
 
       {/* Hero card */}
-      <div className="relative z-10 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 text-center">
-        <h1 className="text-2xl font-thin tracking-widest mb-1">Overview</h1>
+      <div className="relative z-10 mb-6 text-center">
+        <h1 className="text-4xl font-thin tracking-widest mb-1">Overview</h1>
         <p className="text-slate-500 text-xs">{season} · Admin Dashboard</p>
       </div>
 
