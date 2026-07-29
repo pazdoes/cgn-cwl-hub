@@ -5015,6 +5015,8 @@ function SideWarTime({ war }) {
 function SideWarsSection({ onNavigate }) {
   const [wars, setWars] = useState(null);
   const [anyRosterPublished, setAnyRosterPublished] = useState(false);
+  const [season, setSeason] = useState(null);
+  const [poolCount, setPoolCount] = useState(null);
 
   useEffect(() => {
     fetch("/api/side-wars")
@@ -5024,6 +5026,14 @@ function SideWarsSection({ onNavigate }) {
     fetch("/api/roster-status")
       .then(r => r.json())
       .then(d => setAnyRosterPublished(d.anyPublished || false))
+      .catch(() => {});
+    fetch("/api/season")
+      .then(r => r.json())
+      .then(d => setSeason(d.season || null))
+      .catch(() => {});
+    fetch("/api/pool/count")
+      .then(r => r.json())
+      .then(d => setPoolCount(d.count ?? null))
       .catch(() => {});
   }, []);
 
@@ -5045,7 +5055,9 @@ function SideWarsSection({ onNavigate }) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">View Rosters</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">CWL rosters are live — see your clan lineup</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {season ? `${season} · Rosters live` : "CWL rosters are live — see your clan lineup"}
+                </p>
               </div>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-green-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -5065,7 +5077,10 @@ function SideWarsSection({ onNavigate }) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">Sign Up for CWL</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Link your accounts &amp; join the player pool</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {season ? season : "Join the player pool"}
+                  {poolCount !== null && <span className="ml-1.5 text-purple-400">· {poolCount} signed up</span>}
+                </p>
               </div>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -5075,26 +5090,6 @@ function SideWarsSection({ onNavigate }) {
         </a>
       )}
 
-      {/* Rosters */}
-      <button onClick={() => onNavigate("roster")}
-        className="w-full text-left rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 hover:bg-white/[0.06] hover:border-purple-500/30 transition group">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/[0.1] border border-purple-500/20 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white">View Published Rosters</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">See clan rosters &amp; league standings</p>
-            </div>
-          </div>
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-purple-300 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
-        </div>
-      </button>
     </>
   );
 
