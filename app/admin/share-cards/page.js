@@ -11,28 +11,24 @@ import { CWL_ICONS } from "../../../lib/icons";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 
+function hexToInt(hex) { return parseInt(hex.replace("#", ""), 16); }
+
 function AppHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const ORB = {fontFamily:"var(--font-orbitron)"};
   const navSections = [
-    { label: null, items: [
-      { href: "/admin", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    ]},
+    { label: null, items: [{ href: "/admin", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" }]},
     { label: "CWL", items: [
       { href: "/admin/pool", label: "Pool Manager", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
       { href: "/admin/season", label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
       { href: "/admin/clans", label: "Clan Manager", icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
     ]},
-    { label: "SIDE WARS", items: [
-      { href: "/admin/side-wars", label: "Side Wars", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-    ]},
+    { label: "SIDE WARS", items: [{ href: "/admin/side-wars", label: "Side Wars", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" }]},
     { label: "ANNOUNCEMENTS", items: [
       { href: "/admin/announcements", label: "Announcements", icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
       { href: "/admin/share-cards", label: "Share Cards", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
     ]},
-    { label: null, items: [
-      { href: "/admin/directory", label: "Directory", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
-    ]},
+    { label: null, items: [{ href: "/admin/directory", label: "Directory", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" }]},
   ];
   return (
     <>
@@ -70,7 +66,7 @@ function AppHeader() {
         </div>
       </div>
       <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
-        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0" title="Menu">
+        <button onClick={() => setNavOpen(true)} className="text-slate-400 hover:text-white transition p-1 shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div className="flex items-center gap-2 shrink-0">
@@ -536,274 +532,13 @@ function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, 
   );
 }
 
-
-function ClanBoardManager({ pin }) {
-  const [clans, setClans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(null);
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => { loadClans(); }, []);
-
-  async function loadClans() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/clan-board-config");
-      const d = await res.json();
-      setClans(d.clans || []);
-    } catch {} finally { setLoading(false); }
-  }
-
-  async function save(clan, updates) {
-    setSaving(clan.clan_tag); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-board-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin, clan_tag: clan.clan_tag, clan_name: clan.clan_name, ...updates }),
-      });
-      const d = await res.json();
-      if (d.success) { setStatus({ ok: "Saved" }); loadClans(); }
-      else setStatus({ error: d.error || "Failed" });
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setSaving(null); }
-  }
-
-  async function reorder(clan, direction) {
-    const idx = clans.findIndex(c => c.clan_tag === clan.clan_tag);
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= clans.length) return;
-    const swap = clans[swapIdx];
-    const newOrder = idx + 1;
-    const swapOrder = swapIdx + 1;
-    await Promise.all([
-      save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: swapOrder }),
-      save(swap, { included: swap.included, seed_wins: swap.seed_wins, seed_draws: swap.seed_draws, seed_losses: swap.seed_losses, cwl_only: swap.cwl_only, side_war_only: swap.side_war_only, display_order: newOrder }),
-    ]);
-  }
-
-  if (loading) return <div className="animate-pulse h-20 bg-white/[0.04] rounded-2xl"/>;
-
-  return (
-    <div className="space-y-3">
-      {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
-      {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-      {clans.map((clan, idx) => (
-        <div key={clan.clan_tag} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            {/* Reorder arrows */}
-            <div className="flex flex-col gap-0.5 shrink-0">
-              <button onClick={() => reorder(clan, "up")} disabled={idx === 0 || saving === clan.clan_tag}
-                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▲</button>
-              <button onClick={() => reorder(clan, "down")} disabled={idx === clans.length - 1 || saving === clan.clan_tag}
-                className="text-slate-600 hover:text-slate-300 transition disabled:opacity-20 text-xs leading-none">▼</button>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-white truncate">{clan.clan_name}</p>
-              <p className="text-[9px] text-slate-600">{clan.is_side_war ? "Side War Clan" : clan.cwl_rank || "—"}</p>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* CWL Only toggle — alliance clans only */}
-              {!clan.is_side_war && (
-                <button onClick={() => save(clan, {
-                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                  seed_losses: clan.seed_losses, display_order: clan.display_order,
-                  cwl_only: !clan.cwl_only, side_war_only: clan.side_war_only
-                })} disabled={saving === clan.clan_tag}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
-                  CWL Only
-                </button>
-              )}
-              {/* Side War Only toggle — side war clans only */}
-              {clan.is_side_war && (
-                <button onClick={() => save(clan, {
-                  included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                  seed_losses: clan.seed_losses, display_order: clan.display_order,
-                  cwl_only: clan.cwl_only, side_war_only: !clan.side_war_only
-                })} disabled={saving === clan.clan_tag}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
-                  Side War Only
-                </button>
-              )}
-              {/* Include/Exclude toggle */}
-              <button onClick={() => save(clan, {
-                included: !clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws,
-                seed_losses: clan.seed_losses, display_order: clan.display_order,
-                cwl_only: clan.cwl_only, side_war_only: clan.side_war_only
-              })} disabled={saving === clan.clan_tag}
-                className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
-                {clan.included ? "In" : "Out"}
-              </button>
-            </div>
-          </div>
-          {/* Seed values — only show when not CWL only */}
-          {!clan.cwl_only && (
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Seed W", key: "seed_wins",   val: clan.seed_wins },
-                { label: "Seed D", key: "seed_draws",  val: clan.seed_draws },
-                { label: "Seed L", key: "seed_losses", val: clan.seed_losses },
-              ].map(field => (
-                <div key={field.key}>
-                  <p className="text-[8px] text-slate-600 uppercase tracking-widest mb-1">{field.label}</p>
-                  <input type="number" min="0" defaultValue={field.val}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-white/20"
-                    onBlur={e => save(clan, {
-                      included: clan.included, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only, display_order: clan.display_order,
-                      seed_wins:   field.key === "seed_wins"   ? parseInt(e.target.value)||0 : clan.seed_wins,
-                      seed_draws:  field.key === "seed_draws"  ? parseInt(e.target.value)||0 : clan.seed_draws,
-                      seed_losses: field.key === "seed_losses" ? parseInt(e.target.value)||0 : clan.seed_losses,
-                    })}/>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ClanInfoBoardTool() {
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [status, setStatus] = useState(null);
-  const [posting, setPosting] = useState(false);
-  const [liveMessages, setLiveMessages] = useState([]);
-
-  useEffect(() => { loadMessages(); }, []);
-
-  async function loadMessages() {
-    try {
-      const res = await fetch("/api/clan-info-board");
-      const d = await res.json();
-      setLiveMessages(d.messages || []);
-    } catch {}
-  }
-
-  async function handleDeleteBoard(id) {
-    if (!confirm("Delete this board? The Discord message will remain but will no longer auto-update.")) return;
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, pin: "070226" }),
-      });
-      const d = await res.json();
-      if (d.success) { setStatus({ ok: "Board deleted" }); loadMessages(); }
-      else setStatus({ error: d.error || "Failed to delete" });
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  async function handlePost() {
-    if (!webhookUrl.trim()) { setStatus({ error: "Enter a webhook URL" }); return; }
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhook_url: webhookUrl.trim(), pin: "070226" }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        const now = new Date();
-        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-        setStatus({ ok: `Posted ${d.clansPosted} clans · ${ts}` });
-        setWebhookUrl("");
-        loadMessages();
-      } else {
-        setStatus({ error: d.error || "Failed to post" });
-      }
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  async function handleUpdate(url) {
-    setPosting(true); setStatus(null);
-    try {
-      const res = await fetch("/api/clan-info-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ webhook_url: url, pin: "070226" }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        const now = new Date();
-        const ts = now.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-        setStatus({ ok: `Updated · ${ts}` });
-        loadMessages();
-      } else {
-        setStatus({ error: d.error || "Failed to update" });
-      }
-    } catch { setStatus({ error: "Network error" }); }
-    finally { setPosting(false); }
-  }
-
-  return (
-    <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
-      <div>
-        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Clan Board Manager</p>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3">Select which clans appear in the board and set their historical war record seed values. Draws and losses are entered manually — wins, draws and losses from tracked wars are added on top automatically.</p>
-        <ClanBoardManager pin="070226"/>
-      </div>
-      <div className="border-t border-white/[0.06] pt-4">
-      <p className="text-xs text-slate-400 leading-relaxed">Paste a Discord webhook URL to post a live clan info board. It auto-updates every 6 hours. New clans added to the app appear automatically on the next update.</p>
-
-      <div className="space-y-2">
-        <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
-          placeholder="https://discord.com/api/webhooks/…"
-          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
-        <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
-          className="w-full rounded-full border border-green-500/40 bg-transparent text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
-          {posting ? "Posting…" : "Post Now"}
-        </button>
-        {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
-        {status?.error && <p className="text-red-400 text-xs">{status.error}</p>}
-      </div>
-
-      </div>
-      {liveMessages.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[9px] text-slate-600 uppercase tracking-widest">Active Boards</p>
-          {liveMessages.map((msg, i) => (
-            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] text-slate-500 truncate flex-1">
-                  {msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}
-                </p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
-                    className="rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
-                    {posting ? "…" : "Update"}
-                  </button>
-                  <button onClick={() => handleDeleteBoard(msg.id)} disabled={posting}
-                    className="rounded-full border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">
-                    Delete
-                  </button>
-                </div>
-              </div>
-              {msg.last_updated && (
-                <p className="text-[9px] text-slate-700">
-                  Last updated {new Date(msg.last_updated).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ShareCardsPage() {
   const [pin, setPin] = useState("");
   const [pinInput, setPinInput] = useState("");
-  const [pinError, setPinError] = useState(false);
   const [authed, setAuthed] = useState(false);
   const SESSION_KEY = "cgn_officer_pin";
-
-    const [recapSeasons, setRecapSeasons] = useState([]);
+  const [webhooks, setWebhooks] = useState([]);
+const [recapSeasons, setRecapSeasons] = useState([]);
   const [recapSeason, setRecapSeason] = useState("");
   const [recapData, setRecapData] = useState(null);
   const [recapLoading, setRecapLoading] = useState(false);
@@ -854,14 +589,10 @@ export default function ShareCardsPage() {
     ]).then(([lbData, whData]) => {
       if (lbData.seasons?.length) setRecapSeasons(lbData.seasons);
       if (whData.webhooks) setWebhooks(whData.webhooks);
-    });
+    }).catch(() => {});
   }, [authed]);
 
-  const [webhooks, setWebhooks] = useState([]);
-
-  function hexToInt(hex) { return parseInt(hex.replace("#", ""), 16); }
-
-    async function fetchScData(season) {
+async function fetchScData(season) {
     setScLoading(true); setScData(null); setScPostResult(null);
     try {
       const seasonParam = season ? `?season=${encodeURIComponent(season)}` : "";
@@ -1125,7 +856,7 @@ export default function ShareCardsPage() {
 
   function handlePinSubmit(e) {
     e.preventDefault();
-    setPin(pinInput); setAuthed(true); setPinError(false);
+    setPin(pinInput); setAuthed(true);
     sessionStorage.setItem(SESSION_KEY, pinInput);
   }
 
@@ -1137,9 +868,8 @@ export default function ShareCardsPage() {
             <h1 className="text-xl font-thin tracking-widest mb-1">Share Cards</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
-              <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
+              <input type="password" inputMode="numeric" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
                 className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white text-center placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition tracking-widest text-lg"/>
-              {pinError && <p className="text-xs text-red-400">Incorrect PIN</p>}
               <button type="submit" disabled={!pinInput} className="w-full py-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/40 text-sm font-semibold hover:bg-purple-500/30 transition disabled:opacity-40">
                 Continue
               </button>
@@ -1156,12 +886,11 @@ export default function ShareCardsPage() {
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       </div>
       <AppHeader/>
-      <div className="relative z-10 mb-4 text-center">
+      <div className="relative z-10 mb-6 text-center">
         <h1 className="text-4xl font-thin tracking-widest mb-1">Share Cards</h1>
       </div>
       <div className="relative z-10 space-y-3">
-
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
+<div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Share Cards</h2>
             {scData && <span className="text-[10px] text-green-400">✓ {scData.currentSeason} loaded</span>}
@@ -1341,7 +1070,6 @@ export default function ShareCardsPage() {
             {scScheduleResult && <p className={"text-xs text-center " + (scScheduleResult.ok ? "text-green-400" : "text-red-400")}>{scScheduleResult.message}</p>}
           </div>
         </div>
-
       </div>
       {/* Hidden recap share card — rendered off-screen during Discord post */}
       {showRecapCard && recapData && (
