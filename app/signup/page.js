@@ -871,11 +871,8 @@ export default function SignupPage() {
         <h1 className="text-2xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
         <p className="text-slate-500 text-xs mb-4">{season ? `${season} season` : "Join the player pool"}</p>
 
-        {/* Discord section */}
-        <div className="flex flex-col items-center gap-1.5">
-          <DiscordWidget variant="center" />
-          {discordStatus !== "authenticated" && (
-            <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed">
+        {discordStatus !== "authenticated" && (
+            <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed text-center">
               Sign in with Discord to permanently bind your accounts to your profile across devices
             </p>
           )}
@@ -884,7 +881,6 @@ export default function SignupPage() {
               ✓ Accounts bound to your Discord profile
             </p>
           )}
-        </div>
 
         {/* Step indicator — only for new users */}
         {(isNewUser || loadingMine) && accountsView === "accounts" && (
