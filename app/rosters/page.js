@@ -360,7 +360,7 @@ export default function RostersPage() {
   const BG = (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
-      <img src="/roster-bg.png" alt="" className="fixed inset-0 w-full h-full object-contain object-center opacity-20 select-none pointer-events-none"/>
+      <img src="/roster-bg.png" alt="" className="fixed inset-0 w-full h-full object-cover object-top opacity-20 select-none pointer-events-none"/>
     </div>
   );
 
