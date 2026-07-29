@@ -57,7 +57,7 @@ function AppHeader({ variant = "bar" }) {
             className={`relative z-10 w-72 max-w-[80vw] h-full bg-[#0b1020]/80 backdrop-blur-2xl border-r border-white/10 flex flex-col p-5 transition-transform duration-150 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
             <div className="flex items-center gap-2 mb-8 cursor-default select-none" onClick={handleBrandTap}>
               <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/>
-              <span className="text-sm text-white tracking-widest uppercase">Cognition {"{CGN}"}</span>
+              <span className="text-sm text-white tracking-widest uppercase" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
             </div>
             <nav className="flex-1 space-y-4 overflow-y-auto">
               {sections.map((section, si) => (
@@ -103,7 +103,7 @@ function AppHeader({ variant = "bar" }) {
         </button>
         <div className="flex items-center gap-2 shrink-0">
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
-          <span className="text-xs text-slate-400 tracking-widest uppercase">Cognition {"{CGN}"}</span>
+          <span className="text-xs text-slate-400 tracking-widest uppercase" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
         </div>
         <DiscordWidget variant="corner" />
       </div>
@@ -218,7 +218,7 @@ function AppFooter({ onNavigateHome }) {
         <a href="https://discord.gg/czqKKSF4Ta" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 no-underline">
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-5 h-5"/>
-          <span className="text-[11px] text-slate-400 tracking-widest">Cognition {"{CGN}"}</span>
+          <span className="text-[11px] text-slate-400 tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
         </a>
       </div>
       <div className="flex items-center gap-2">
