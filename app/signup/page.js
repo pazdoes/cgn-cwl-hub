@@ -452,6 +452,7 @@ export default function SignupPage() {
           ...prev,
           [accountTag]: { ok: true, message: `Signed up for ${data.season}.` },
         }));
+        setPoolCount(c => (c ?? 0) + 1); // optimistic increment
         // refresh list so inCurrentPool updates
         const mine = await fetch("/api/accounts/mine").then(r => r.json());
         setMyAccounts(mine.accounts || []);
@@ -535,6 +536,7 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (res.ok) {
+        setPoolCount(c => Math.max(0, (c ?? 1) - 1)); // optimistic decrement
         // refresh list so inCurrentPool updates and the leave button
         // reverts back to a "Sign up" button
         const mine = await fetch("/api/accounts/mine").then(r => r.json());

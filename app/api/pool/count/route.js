@@ -7,7 +7,7 @@ export async function GET() {
   const season = await getOpenPoolSeason();
   const [inRow] = await sql`
     SELECT COUNT(*) as count FROM pool_entries
-    WHERE season = ${season} AND assigned_clan IS NOT NULL
+    WHERE season = ${season} AND (cwl_intent IS NULL OR cwl_intent = 'in')
   `;
   const [outRow] = await sql`
     SELECT COUNT(*) as count FROM pool_entries
