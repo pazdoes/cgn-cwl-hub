@@ -540,6 +540,440 @@ function TimestampTool() {
 }
 
 /* ─── main page ───────────────────────────────────────────── */
+function ClanRecapShareCard({ clanName, selectedSeason, clanData, top3, bestAttacker, bestDefender, awardMostThreeStars, awardClutchKing, awardPunchUpKing, awardIronDefence, awardMostConsistent, seasonMvp, rounds, prevCwlRank, currentCwlRank }) {
+  const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
+  const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
+
+  function cwlIconUrl(rank) {
+    if (!rank) return null;
+    const l = rank.toLowerCase();
+    const tier = l.includes("champion") ? "champion" : l.includes("master") ? "master" : l.includes("crystal") ? "crystal" : l.includes("gold") ? "gold" : l.includes("silver") ? "silver" : l.includes("bronze") ? "bronze" : null;
+    const num = l.endsWith("iii") ? "3" : l.endsWith("ii") ? "2" : "1";
+    return tier ? `https://cgnco.vercel.app/icons/cwl/${tier}-${num}.png` : null;
+  }
+
+  const RANKS = ["Bronze III","Bronze II","Bronze I","Silver III","Silver II","Silver I","Gold III","Gold II","Gold I","Crystal III","Crystal II","Crystal I","Master III","Master II","Master I","Champion III","Champion II","Champion I"];
+  const displayRank = currentCwlRank || clanData?.cwl_rank || null;
+  const curIdx = displayRank ? RANKS.indexOf(displayRank) : -1;
+  const preIdx = prevCwlRank ? RANKS.indexOf(prevCwlRank) : -1;
+  const delta = (curIdx >= 0 && preIdx >= 0) ? curIdx - preIdx : 0;
+  const promoted = delta > 0;
+  const demoted = delta < 0;
+  const iconUrl = cwlIconUrl(displayRank);
+
+  const tiles = [
+    { label: "Best Attacker",   player: bestAttacker,        value: bestAttacker        ? parseFloat(bestAttacker.efficiency).toFixed(2)               : null, unit: "Atk EFF",    colour: "#c4b5fd", bg: "rgba(139,92,246,0.07)",  border: "rgba(139,92,246,0.22)",  icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+    { label: "3★ Machine",      player: awardMostThreeStars, value: awardMostThreeStars ? String(awardMostThreeStars.three_stars)                      : null, unit: "3-Stars",    colour: "#fbbf24", bg: "rgba(251,191,36,0.07)",  border: "rgba(251,191,36,0.22)",  icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+    { label: "Best Defender",   player: bestDefender,        value: bestDefender        ? parseFloat(bestDefender.defence_efficiency).toFixed(2)       : null, unit: "Def EFF",    colour: "#93c5fd", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.22)",  icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { label: "Brave Heart",     player: awardPunchUpKing,    value: awardPunchUpKing    ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%`  : null, unit: "Punch-Up",   colour: "#86efac", bg: "rgba(34,197,94,0.07)",   border: "rgba(34,197,94,0.22)",   icon: "M5 10l7-7m0 0l7 7m-7-7v18" },
+    { label: "Clutch King",     player: awardClutchKing,     value: awardClutchKing     ? parseFloat(awardClutchKing.clutch_rate).toFixed(2)           : null, unit: "Clutch Rate",colour: "#f472b6", bg: "rgba(244,114,182,0.07)", border: "rgba(244,114,182,0.22)", icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" },
+    { label: "Iron Wall",       player: awardIronDefence,    value: awardIronDefence    ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2): null, unit: "Def EFF",    colour: "#34d399", bg: "rgba(52,211,153,0.07)",  border: "rgba(52,211,153,0.22)",  icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { label: "Season MVP",      player: seasonMvp,           value: seasonMvp           ? parseFloat(seasonMvp.overall).toFixed(2)                     : null, unit: "CGN Rating", colour: "#D4AF37", bg: "rgba(212,175,55,0.07)",  border: "rgba(212,175,55,0.22)",  icon: MEDAL_PATH },
+    { label: "Most Consistent", player: awardMostConsistent, value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score||0).toFixed(2): null, unit: "Consistency",colour: "#a78bfa", bg: "rgba(167,139,250,0.07)", border: "rgba(167,139,250,0.22)", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
+  ];
+
+  const clanStats = clanData ? [
+    { label: "Stars",      value: clanData.total_stars,                                                                                                        colour: "#fbbf24" },
+    { label: "Wins",       value: clanData.wars_won,                                                                                                           colour: "#86efac" },
+    { label: "Losses",     value: clanData.wars_lost,                                                                                                          colour: "#f87171" },
+    { label: "Atk EFF",   value: parseFloat(clanData.attack_efficiency||0).toFixed(2),                                                                         colour: "#c4b5fd" },
+    { label: "Def EFF",   value: parseFloat(clanData.defence_efficiency||0).toFixed(2),                                                                        colour: "#93c5fd" },
+    { label: "CGN Rating", value: clanData.attack_efficiency ? ((parseFloat(clanData.attack_efficiency||0)*0.6)+((3-parseFloat(clanData.defence_efficiency||0))*0.4)).toFixed(2) : "—", colour: "#D4AF37" },
+  ] : [];
+
+  return (
+    <div style={{ width: 1200, height: 630, background: "#070b17", borderRadius: 28, border: "1px solid rgba(168,85,247,0.3)", padding: "24px 30px 18px", fontFamily: "ui-sans-serif, system-ui, sans-serif", color: "white", boxSizing: "border-box", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+      {/* Background */}
+      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bgclan" cx="25%" cy="15%" r="65%"><stop offset="0%" stopColor="#16092e"/><stop offset="60%" stopColor="#070b17"/><stop offset="100%" stopColor="#030508"/></radialGradient>
+          <radialGradient id="glclan" cx="85%" cy="85%" r="45%"><stop offset="0%" stopColor="#6d28d9" stopOpacity="0.14"/><stop offset="100%" stopColor="#6d28d9" stopOpacity="0"/></radialGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bgclan)"/>
+        <rect width="100%" height="100%" fill="url(#glclan)"/>
+      </svg>
+
+      <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
+
+        {/* HEADER */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>{clanName}</span>
+            <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
+            {(promoted || demoted) && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                </svg>
+                <span style={{ fontSize: 10, fontWeight: 700, color: promoted ? "#4ade80" : "#f87171", textTransform: "uppercase", letterSpacing: "0.1em" }}>{promoted ? "Promoted" : "Demoted"}</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
+            {clanStats.map((s, i) => (
+              <div key={i} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 200, color: s.colour, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 8, color: "#334155", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 3 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* DIVIDER */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
+
+        {/* BODY */}
+        <div style={{ display: "flex", gap: 14, flex: 1 }}>
+
+          {/* LEFT: Top Players + CWL icon */}
+          <div style={{ width: 295, flexShrink: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+
+            {/* Top Players */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Top Players</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
+                  <span style={{ fontSize: 8, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.1em" }}>CGN Rating</span>
+                </div>
+              </div>
+              {top3.map((p, i) => (
+                <div key={p.player_tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: i < 2 ? 8 : 0, paddingBottom: i < 2 ? 8 : 0, borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: medalColours[i+1] }}>{p.player_name}</div>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa" }}>{p.overall?.toFixed(2)}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* CWL rank movement visual */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+              {(promoted || demoted) ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%" }}>
+                  {/* Transition row: prev icon → arrow → current icon */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, width: "100%" }}>
+                    {/* Previous rank */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                      <span style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "center" }}>Previous</span>
+                      {cwlIconUrl(prevCwlRank) && <img src={cwlIconUrl(prevCwlRank)} style={{ width: 80, height: 80, objectFit: "contain", opacity: 0.75 }} alt=""/>}
+                      <span style={{ fontSize: 8, color: "#475569", textAlign: "center" }}>{prevCwlRank}</span>
+                    </div>
+                    {/* Arrow */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                    </svg>
+                    {/* Current rank */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                      <span style={{ fontSize: 7, color: promoted ? "#4ade80" : "#f87171", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "center" }}>{promoted ? "Promoted" : "Demoted"}</span>
+                      {iconUrl && <img src={iconUrl} style={{ width: 130, height: 130, objectFit: "contain" }} alt=""/>}
+                      <span style={{ fontSize: 10, color: "#a78bfa", textAlign: "center" }}>{displayRank}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* No change — single large icon centred */
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                  {iconUrl && <img src={iconUrl} style={{ width: 155, height: 155, objectFit: "contain" }} alt=""/>}
+                  <span style={{ fontSize: 12, color: "#a78bfa", textAlign: "center" }}>{displayRank}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* MIDDLE: CWL Rounds */}
+          <div style={{ width: 240, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, flexShrink: 0 }}>CWL Rounds</div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              {rounds.map((r, i) => {
+                const won  = r.stars_earned > r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) > parseFloat(r.defence_pct||0));
+                const lost = r.stars_earned < r.stars_conceded || (r.stars_earned === r.stars_conceded && parseFloat(r.destruction_pct||0) < parseFloat(r.defence_pct||0));
+                const rc   = won ? "#4ade80" : lost ? "#f87171" : "#94a3b8";
+                const ourStarCol = won ? "#fbbf24" : "#475569";
+                const oppStarCol = lost ? "#f87171" : "#475569";
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, height: 20, overflow: "visible" }}>
+                    <span style={{ fontSize: 9, color: "#334155", width: 16, flexShrink: 0, display: "block", lineHeight: "20px" }}>R{r.war_day}</span>
+                    <span style={{ fontSize: 10, color: "#64748b", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, lineHeight: "20px" }}>{r.opponent_clan}</span>
+                    <span style={{ fontSize: 10, color: ourStarCol, fontWeight: won ? 700 : 400, flexShrink: 0, lineHeight: "20px" }}>{r.stars_earned}★</span>
+                    <span style={{ fontSize: 9, color: "#1e293b", flexShrink: 0, margin: "0 1px", lineHeight: "20px" }}>·</span>
+                    <span style={{ fontSize: 10, color: oppStarCol, fontWeight: lost ? 700 : 400, flexShrink: 0, lineHeight: "20px" }}>{r.stars_conceded}★</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: rc, width: 10, textAlign: "right", flexShrink: 0, lineHeight: "20px" }}>{won ? "W" : lost ? "L" : "D"}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT: 8 tiles 2×4 grid */}
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 10 }}>
+            {tiles.map((tile, i) => tile.player && tile.value ? (
+              <div key={i} style={{ background: tile.bg, borderRadius: 12, border: `1px solid ${tile.border}`, padding: "10px 12px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={tile.colour} strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/>
+                  </svg>
+                  <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{tile.label}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "white", marginBottom: 2 }}>{tile.player.player_name}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: tile.colour, lineHeight: 1 }}>{tile.value}</div>
+                  {tile.unit && <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>{tile.unit}</div>}
+                </div>
+              </div>
+            ) : (
+              <div key={i} style={{ background: "rgba(255,255,255,0.02)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ fontSize: 9, color: "#1e293b", textTransform: "uppercase", letterSpacing: "0.1em" }}>No data</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 8, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>cgnco.vercel.app</span>
+          <span style={{ fontSize: 8, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>Cognition Collective</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function RecapShareCard({ topClan, top3, bestAttacker, bestDefender, totalWins, totalLosses, totalDraws, clanWithOverall, selectedSeason, totalAllianceStars, awardMostThreeStars, awardClutchKing, awardPunchUpKing, awardIronDefence, awardMostConsistent, seasonMvp }) {
+  const MEDAL_PATH = "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z";
+  const medalColours = { 1: "#D4AF37", 2: "#A7A7AD", 3: "#CD7F32" };
+
+  const tiles = [
+    { label: "Best Attacker",   player: bestAttacker,        value: bestAttacker        ? parseFloat(bestAttacker.efficiency).toFixed(2)               : null, unit: "Atk EFF",    colour: "#c4b5fd", bg: "rgba(139,92,246,0.07)",  border: "rgba(139,92,246,0.22)",  icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+    { label: "3★ Machine",      player: awardMostThreeStars, value: awardMostThreeStars ? String(awardMostThreeStars.three_stars)                      : null, unit: "3-Stars",    colour: "#fbbf24", bg: "rgba(251,191,36,0.07)",  border: "rgba(251,191,36,0.22)",  icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+    { label: "Best Defender",   player: bestDefender,        value: bestDefender        ? parseFloat(bestDefender.defence_efficiency).toFixed(2)       : null, unit: "Def EFF",    colour: "#93c5fd", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.22)",  icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { label: "Brave Heart",     player: awardPunchUpKing,    value: awardPunchUpKing    ? `${parseFloat(awardPunchUpKing.punch_up_rate).toFixed(0)}%`  : null, unit: "Punch-Up",   colour: "#86efac", bg: "rgba(34,197,94,0.07)",   border: "rgba(34,197,94,0.22)",   icon: "M5 10l7-7m0 0l7 7m-7-7v18" },
+    { label: "Clutch King",     player: awardClutchKing,     value: awardClutchKing     ? parseFloat(awardClutchKing.clutch_rate).toFixed(2)           : null, unit: "Clutch Rate",colour: "#f472b6", bg: "rgba(244,114,182,0.07)", border: "rgba(244,114,182,0.22)", icon: "M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" },
+    { label: "Iron Wall",       player: awardIronDefence,    value: awardIronDefence    ? parseFloat(awardIronDefence.defence_efficiency||0).toFixed(2): null, unit: "Def EFF",    colour: "#34d399", bg: "rgba(52,211,153,0.07)",  border: "rgba(52,211,153,0.22)",  icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { label: "Season MVP",      player: seasonMvp,           value: seasonMvp           ? parseFloat(seasonMvp.overall).toFixed(2)                     : null, unit: "CGN Rating", colour: "#D4AF37", bg: "rgba(212,175,55,0.07)",  border: "rgba(212,175,55,0.22)",  icon: MEDAL_PATH },
+    { label: "Most Consistent", player: awardMostConsistent, value: awardMostConsistent ? parseFloat(awardMostConsistent.consistency_score||0).toFixed(2): null, unit: "Consistency",colour: "#a78bfa", bg: "rgba(167,139,250,0.07)", border: "rgba(167,139,250,0.22)", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
+  ];
+
+  return (
+    <div style={{ width: 1200, height: 630, background: "#070b17", borderRadius: 28, border: "1px solid rgba(212,175,55,0.35)", padding: "24px 30px 18px", fontFamily: "ui-sans-serif, system-ui, sans-serif", color: "white", boxSizing: "border-box", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+      {/* Background */}
+      <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bg-recap" cx="50%" cy="35%" r="65%"><stop offset="0%" stopColor="#1c1408"/><stop offset="45%" stopColor="#0d0c0a"/><stop offset="100%" stopColor="#04060e"/></radialGradient>
+          <radialGradient id="tint-recap" cx="50%" cy="20%" r="55%"><stop offset="0%" stopColor="#d4a017" stopOpacity="0.10"/><stop offset="100%" stopColor="#d4a017" stopOpacity="0"/></radialGradient>
+          <pattern id="grain-recap" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse"><line x1="0" y1="4" x2="4" y2="0" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bg-recap)"/>
+        <rect width="100%" height="100%" fill="url(#tint-recap)"/>
+        <rect width="100%" height="100%" fill="url(#grain-recap)"/>
+      </svg>
+
+      <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
+
+        {/* ── HEADER ── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+            <span style={{ fontSize: 38, fontWeight: 100, letterSpacing: "0.03em", color: "white" }}>Cognition Collective</span>
+            <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: "0.14em" }}>Season Recap · {selectedSeason}</span>
+          </div>
+          {/* Alliance stats */}
+          <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
+            {[
+              { label: "Stars",   value: totalAllianceStars,                                                                                                                                                              colour: "#fbbf24" },
+              { label: "Wins",    value: totalWins,                                                                                                                                                                        colour: "#86efac" },
+              { label: "Losses",  value: totalLosses,                                                                                                                                                                      colour: "#f87171" },
+              { label: "Atk EFF", value: clanWithOverall.length > 0 ? (clanWithOverall.reduce((s,c) => s + parseFloat(c.attack_efficiency||0), 0) / clanWithOverall.length).toFixed(2) : "—",                            colour: "#c4b5fd" },
+              { label: "Def EFF", value: clanWithOverall.length > 0 ? (clanWithOverall.reduce((s,c) => s + parseFloat(c.defence_efficiency||0), 0) / clanWithOverall.length).toFixed(2) : "—",                           colour: "#93c5fd" },
+              { label: "CGN Rating", value: clanWithOverall.filter(c=>c.overall).length > 0 ? (clanWithOverall.filter(c=>c.overall).reduce((s,c) => s + c.overall, 0) / clanWithOverall.filter(c=>c.overall).length).toFixed(2) : "—", colour: "#D4AF37" },
+            ].map(({ label, value, colour }) => (
+              <div key={label} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 200, color: colour, lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 8, color: "#334155", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}/>
+
+        {/* ── BODY: 3 columns ── */}
+        <div style={{ display: "flex", gap: 14, flex: 1 }}>
+
+          {/* LEFT: Top Players + Top Clan */}
+          <div style={{ width: 295, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+
+            {/* Top Players */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em" }}>Top Players</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
+                  <span style={{ fontSize: 8, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.1em" }}>CGN Rating</span>
+                </div>
+              </div>
+              {top3.map((p, i) => (
+                <div key={p.player_tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: i < 2 ? 8 : 0, paddingBottom: i < 2 ? 8 : 0, borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1]} strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: medalColours[i+1] }}>{p.player_name}</div>
+                      <div style={{ fontSize: 8, color: "#64748b" }}>{p.clan_name?.split(" ")[0]}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa" }}>{p.overall?.toFixed(2)}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* CWL Rank Movement */}
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>CWL Rank Movement</div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
+                {[...clanWithOverall].filter(c => c.cwl_rank && c.current_cwl_rank).sort((a, b) => {
+                  const RANKS2 = ["Bronze III","Bronze II","Bronze I","Silver III","Silver II","Silver I","Gold III","Gold II","Gold I","Crystal III","Crystal II","Crystal I","Master III","Master II","Master I","Champion III","Champion II","Champion I"];
+                  return RANKS2.indexOf(b.current_cwl_rank) - RANKS2.indexOf(a.current_cwl_rank);
+                }).map((c, i, arr) => {
+                  const RANKS = ["Bronze III","Bronze II","Bronze I","Silver III","Silver II","Silver I","Gold III","Gold II","Gold I","Crystal III","Crystal II","Crystal I","Master III","Master II","Master I","Champion III","Champion II","Champion I"];
+                  const prevIdx = RANKS.indexOf(c.cwl_rank);
+                  const curIdx = RANKS.indexOf(c.current_cwl_rank);
+                  const delta = (prevIdx >= 0 && curIdx >= 0) ? curIdx - prevIdx : 0;
+                  const promoted = delta > 0;
+                  const demoted = delta < 0;
+                  function rankIcon(rank) {
+                    if (!rank) return null;
+                    const l = rank.toLowerCase();
+                    const tier = l.includes("champion") ? "champion" : l.includes("master") ? "master" : l.includes("crystal") ? "crystal" : l.includes("gold") ? "gold" : l.includes("silver") ? "silver" : l.includes("bronze") ? "bronze" : null;
+                    const num = l.endsWith("iii") ? "3" : l.endsWith("ii") ? "2" : "1";
+                    return tier ? `https://cgnco.vercel.app/icons/cwl/${tier}-${num}.png` : null;
+                  }
+                  const prevIcon = rankIcon(c.cwl_rank);
+                  const curIcon = rankIcon(c.current_cwl_rank);
+                  return (
+                    <div key={c.clan_name} style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: i < arr.length - 1 ? 8 : 0, marginBottom: i < arr.length - 1 ? 8 : 0, borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                      {/* Clan name */}
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "white", width: 72, flexShrink: 0 }}>{c.clan_name.split(" ")[0]}</span>
+                      {/* Rank movement */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
+                        {prevIcon && <img src={prevIcon} style={{ width: 26, height: 26, objectFit: "contain", opacity: 0.65 }} alt=""/>}
+                        {delta !== 0 && (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                          </svg>
+                        )}
+                        {curIcon && <img src={curIcon} style={{ width: 34, height: 34, objectFit: "contain" }} alt=""/>}
+                      </div>
+                      {/* Indicator */}
+                      {(promoted || demoted) ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="none" viewBox="0 0 24 24" stroke={promoted ? "#4ade80" : "#f87171"} strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d={promoted ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}/>
+                          </svg>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: promoted ? "#4ade80" : "#f87171", textTransform: "uppercase", letterSpacing: "0.07em" }}>{promoted ? "Promoted" : "Demoted"}</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 8, color: "#334155", flexShrink: 0 }}>—</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* MIDDLE: Alliance War Record */}
+          <div style={{ width: 230, flexShrink: 0, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", padding: "12px 14px", display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 8, color: "#475569", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12 }}>Alliance War Record</div>
+
+            {/* W/D/L totals */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {[
+                { label: "Won",   value: totalWins,   colour: "#86efac", bg: "rgba(34,197,94,0.07)",   border: "rgba(34,197,94,0.2)" },
+                { label: "Lost",  value: totalLosses, colour: "#f87171", bg: "rgba(239,68,68,0.07)",   border: "rgba(239,68,68,0.2)" },
+                { label: "Drawn", value: totalDraws,  colour: "#64748b", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.07)" },
+              ].map(({ label, value, colour, bg, border }) => (
+                <div key={label} style={{ background: bg, borderRadius: 8, border: `1px solid ${border}`, padding: "8px 6px", flex: 1, textAlign: "center" }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: colour, lineHeight: 1 }}>{value}</div>
+                  <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em", marginTop: 4 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Per-clan breakdown */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {clanWithOverall.slice(0, 3).map((c, i) => (
+                <div key={c.clan_tag || c.clan_name} style={{ background: "rgba(255,255,255,0.02)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)", padding: "8px 10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={medalColours[i+1] || "#475569"} strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/></svg>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "white" }}>{c.clan_name.split(" ")[0]}</span>
+                    </div>
+                    <span style={{ fontSize: 9, color: "#64748b" }}>{c.cwl_rank}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#86efac" }}>{c.wars_won}</div>
+                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Won</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#f87171" }}>{c.wars_lost}</div>
+                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Lost</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#c4b5fd" }}>{parseFloat(c.attack_efficiency||0).toFixed(2)}</div>
+                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Atk EFF</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#93c5fd" }}>{parseFloat(c.defence_efficiency||0).toFixed(2)}</div>
+                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Def EFF</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#D4AF37" }}>{c.overall?.toFixed(2)}</div>
+                      <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 1 }}>Rating</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT: 2×4 award tiles */}
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 10 }}>
+            {tiles.map((tile, i) => tile.player && tile.value ? (
+              <div key={i} style={{ background: tile.bg, borderRadius: 12, border: `1px solid ${tile.border}`, padding: "10px 12px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke={tile.colour} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d={tile.icon}/></svg>
+                  <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.09em" }}>{tile.label}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "white", marginBottom: 2 }}>{tile.player.player_name}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: tile.colour, lineHeight: 1 }}>{tile.value}</div>
+                  <div style={{ fontSize: 7, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>{tile.unit}</div>
+                </div>
+              </div>
+            ) : (
+              <div key={i} style={{ background: "rgba(255,255,255,0.02)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ fontSize: 9, color: "#1e293b", textTransform: "uppercase", letterSpacing: "0.1em" }}>No data</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 8, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>cgnco.vercel.app</span>
+          <span style={{ fontSize: 8, color: "#1e293b", letterSpacing: "0.12em", textTransform: "uppercase" }}>Cognition Collective</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function ClanBoardManager({ pin }) {
   const [clans, setClans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -881,6 +1315,7 @@ export default function AnnouncementsPage() {
   const [manageTab, setManageTab] = useState(""); // accordion within manage
 
   // ── Recap Share state ────────────────────────────────────────────────────
+  const [recapSeasons, setRecapSeasons] = useState([]);
   const [recapSeason, setRecapSeason] = useState("");
   const [recapData, setRecapData] = useState(null);
   const [recapLoading, setRecapLoading] = useState(false);
@@ -895,6 +1330,28 @@ export default function AnnouncementsPage() {
   const [recapScheduleResult, setRecapScheduleResult] = useState(null);
   const [composeMode, setComposeMode] = useState("quick");
 
+  // ── Share Cards tab state ────────────────────────────────────────────────
+  const [scWebhookId, setScWebhookId] = useState("");
+  const [scSeason, setScSeason] = useState("");
+  const [scData, setScData] = useState(null);
+  const [scLoading, setScLoading] = useState(false);
+  const [scPosting, setScPosting] = useState(false);
+  const [scPostResult, setScPostResult] = useState(null);
+  const [scMode, setScMode] = useState("image"); // "image" | "embed"
+  const [scCards, setScCards] = useState({ collective: true, clans: {} }); // which cards to include
+  const [scContent, setScContent] = useState(""); // message-level content / role ping
+  const [scEmbed, setScEmbed] = useState({ title: "", description: "", color: 0x6d28d9, footer: { text: "" }, timestamp: false });
+  const [scScheduleAt, setScScheduleAt] = useState("");
+  const [scEmbeds, setScEmbeds] = useState([]); // array of embed configs
+  const [scRoleSearch, setScRoleSearch] = useState("");
+  const [scRoleSearchOpen, setScRoleSearchOpen] = useState(false);
+  const scRoleSearchRef = useRef(null);
+  const [scScheduleResult, setScScheduleResult] = useState(null);
+  const [scClanRounds, setScClanRounds] = useState({}); // { clanName: rounds[] }
+  const [showScCollectiveCard, setShowScCollectiveCard] = useState(false);
+  const [showScClanCards, setShowScClanCards] = useState({});
+  const scCollectiveRef = useRef(null);
+  const scClanRefs = useRef({});
   const [showSchedule, setShowSchedule] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -931,6 +1388,7 @@ export default function AnnouncementsPage() {
       setTemplates(tData.templates || []);
       setScheduled(sData.scheduled || []);
       setHistory(histData.history || []);
+      if (lbData.seasons?.length) setRecapSeasons(lbData.seasons);
     }).finally(() => setLoadingData(false));
   }, [authed]);
 
@@ -1048,6 +1506,268 @@ export default function AnnouncementsPage() {
       console.error("fetchRecapData error:", e);
       setRecapData(null);
     } finally { setRecapLoading(false); }
+  }
+
+  async function fetchScData(season) {
+    setScLoading(true); setScData(null); setScPostResult(null);
+    try {
+      const seasonParam = season ? `?season=${encodeURIComponent(season)}` : "";
+      const [lb, hist] = await Promise.all([
+        fetch(`/api/leaderboard${seasonParam}`).then(r => r.json()),
+        fetch(`/api/history${seasonParam}`).then(r => r.json()),
+      ]);
+      const currentSeason = season || lb.currentSeason || lb.seasons?.[0];
+      const withOverall = (lb.stats || []).map(p => ({
+        ...p,
+        overall: (p.attacks_used > 0 && p.attacks_available > 0)
+          ? parseFloat(((parseFloat(p.efficiency||0)*0.6)+((3-parseFloat(p.defence_efficiency||0))*0.4)).toFixed(2))
+          : null,
+      }));
+      const seasonHistory = (hist.history || []).filter(r => r.season === currentSeason);
+      const clanWithOverall = seasonHistory.map(c => ({
+        ...c,
+        overall: parseFloat(((parseFloat(c.attack_efficiency||0)*0.5)+((3-parseFloat(c.defence_efficiency||0))*0.3)+((c.wars_won||0)/7*3*0.2)).toFixed(2))
+      })).sort((a,b) => b.overall - a.overall);
+      const withAttacks = withOverall.filter(p => p.attacks_used > 0);
+      const validPlayers = withOverall.filter(p => p.overall != null).sort((a,b) => b.overall - a.overall);
+      const activeClanNames = clanWithOverall
+        .map(c => c.clan_name)
+        .sort((a,b) => {
+          const o = n => n.toLowerCase().startsWith("cognition") ? 0 : n.toLowerCase().startsWith("gems") ? 10 : 5;
+          return o(a) - o(b);
+        });
+      // Initialise clan checkboxes
+      const initialClans = {};
+      activeClanNames.forEach(n => { initialClans[n] = false; });
+      setScCards(prev => ({ collective: prev.collective, clans: initialClans }));
+      // Fetch rounds for all active clans
+      const roundsMap = {};
+      await Promise.all(activeClanNames.map(async (clanName) => {
+        try {
+          const r = await fetch(`/api/clan-rounds?season=${encodeURIComponent(currentSeason)}&clan=${encodeURIComponent(clanName)}`).then(r => r.json());
+          roundsMap[clanName] = r.rounds || [];
+        } catch { roundsMap[clanName] = []; }
+      }));
+      setScClanRounds(roundsMap);
+      setScData({
+        currentSeason,
+        seasons: lb.seasons || [],
+        clanWithOverall,
+        activeClanNames,
+        top3: validPlayers.slice(0, 3),
+        topClan: clanWithOverall[0] || null,
+        bestAttacker: [...withAttacks].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0] || null,
+        bestDefender: [...withOverall].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||0) - parseFloat(b.defence_efficiency||0))[0] || null,
+        totalWins: seasonHistory.reduce((s,r) => s + (r.wars_won||0), 0),
+        totalLosses: seasonHistory.reduce((s,r) => s + (r.wars_lost||0), 0),
+        totalDraws: seasonHistory.reduce((s,r) => s + (r.wars_drawn||0), 0),
+        totalAllianceStars: seasonHistory.reduce((s,r) => s + (r.total_stars||0), 0),
+        awardMostThreeStars: [...withAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0] || null,
+        awardClutchKing: [...withAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0] || null,
+        awardPunchUpKing: [...withAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0] || null,
+        awardIronDefence: [...withOverall].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0] || null,
+        awardMostConsistent: [...withAttacks].filter(p => p.consistency_score != null).sort((a,b) => parseFloat(b.consistency_score||0) - parseFloat(a.consistency_score||0))[0] || null,
+        seasonMvp: validPlayers[0] || null,
+        // Per clan derived stats
+        clanStats: Object.fromEntries(activeClanNames.map(clanName => {
+          const clanPlayers = withOverall.filter(p => p.clan_name === clanName);
+          const clanAttacks = clanPlayers.filter(p => p.attacks_used > 0);
+          const clanValid = clanPlayers.filter(p => p.overall != null).sort((a,b) => b.overall - a.overall);
+          return [clanName, {
+            top3: clanValid.slice(0, 3),
+            bestAttacker: [...clanAttacks].sort((a,b) => parseFloat(b.efficiency||0) - parseFloat(a.efficiency||0))[0] || null,
+            bestDefender: [...clanPlayers].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||0) - parseFloat(b.defence_efficiency||0))[0] || null,
+            awardMostThreeStars: [...clanAttacks].sort((a,b) => (b.three_stars||0) - (a.three_stars||0))[0] || null,
+            awardClutchKing: [...clanAttacks].filter(p => p.clutch_rate != null).sort((a,b) => parseFloat(b.clutch_rate||0) - parseFloat(a.clutch_rate||0))[0] || null,
+            awardPunchUpKing: [...clanAttacks].filter(p => p.punch_up_rate != null).sort((a,b) => parseFloat(b.punch_up_rate||0) - parseFloat(a.punch_up_rate||0))[0] || null,
+            awardIronDefence: [...clanPlayers].filter(p => p.attacks_available > 0).sort((a,b) => parseFloat(a.defence_efficiency||999) - parseFloat(b.defence_efficiency||999))[0] || null,
+            awardMostConsistent: [...clanAttacks].filter(p => p.consistency_score != null).sort((a,b) => parseFloat(b.consistency_score||0) - parseFloat(a.consistency_score||0))[0] || null,
+            seasonMvp: clanValid[0] || null,
+            clanData: clanWithOverall.find(c => c.clan_name === clanName) || null,
+          }];
+        })),
+      });
+      if (currentSeason) setScSeason(currentSeason);
+    } catch (e) {
+      console.error("fetchScData error:", e);
+    } finally { setScLoading(false); }
+  }
+
+  async function handlePostShareCards() {
+    if (!scWebhookId || !scData) return;
+    setScPosting(true); setScPostResult(null);
+    const html2canvas = (await import("html2canvas")).default;
+    const h2cOpts = { backgroundColor: "#070b17", scale: 2, useCORS: true, allowTaint: true, logging: false, removeContainer: true };
+
+    if (scMode === "image") {
+      // Image only — post each checked card as a raw image message
+      const cardsToPost = [];
+      if (scCards.collective) cardsToPost.push("collective");
+      Object.entries(scCards.clans || {}).forEach(([n, sel]) => { if (sel) cardsToPost.push(n); });
+      if (!cardsToPost.length) { setScPostResult({ ok: false, message: "Select at least one card" }); setScPosting(false); return; }
+      // Reveal off-screen
+      setShowScCollectiveCard(cardsToPost.includes("collective"));
+      const clanShows = {};
+      cardsToPost.filter(k => k !== "collective").forEach(k => { clanShows[k] = true; });
+      setShowScClanCards(clanShows);
+      await new Promise(r => setTimeout(r, 300));
+      try {
+        let count = 0;
+        for (const key of cardsToPost) {
+          const el = key === "collective" ? scCollectiveRef.current : scClanRefs.current[key];
+          if (!el) continue;
+          const canvas = await html2canvas(el, h2cOpts);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+          const form = new FormData();
+          form.append("webhookId", scWebhookId);
+          form.append("season", scData.currentSeason || "Season Recap");
+          form.append("image", blob, `cgn-recap-${key.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
+          if (scContent) form.append("rolePing", scContent);
+          await fetch("/api/admin/recap-share", { method: "POST", headers: { "x-officer-pin": pin }, body: form });
+          count++;
+        }
+        setScPostResult({ ok: true, message: `Posted ${count} image${count > 1 ? "s" : ""} to Discord ✓` });
+      } catch (e) {
+        setScPostResult({ ok: false, message: "Error: " + e.message });
+      } finally {
+        setScPosting(false);
+        setShowScCollectiveCard(false);
+        setShowScClanCards({});
+      }
+      return;
+    }
+
+    // Embed mode — each embed in scEmbeds array is posted sequentially as its own webhook call
+    if (!scEmbeds.length) { setScPostResult({ ok: false, message: "Add at least one embed" }); setScPosting(false); return; }
+
+    // Reveal all needed cards off-screen
+    const needsCollective = scEmbeds.some(e => e.cardKey === "collective");
+    setShowScCollectiveCard(needsCollective);
+    const clanShows = {};
+    scEmbeds.filter(e => e.cardKey !== "collective").forEach(e => { clanShows[e.cardKey] = true; });
+    setShowScClanCards(clanShows);
+    await new Promise(r => setTimeout(r, 300));
+
+    try {
+      let posted = 0;
+      for (let i = 0; i < scEmbeds.length; i++) {
+        const emb = scEmbeds[i];
+        const el = emb.cardKey === "collective" ? scCollectiveRef.current : scClanRefs.current[emb.cardKey];
+        if (!el) continue;
+        const canvas = await html2canvas(el, h2cOpts);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        const filename = `cgn-recap-${emb.cardKey.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`;
+        // Build Discord payload — one embed with image attachment
+        const discordForm = new FormData();
+        discordForm.append("file", blob, filename);
+        const embedPayload = {
+          color: emb.color || 0x6d28d9,
+          image: { url: `attachment://${filename}` },
+        };
+        if (emb.title) embedPayload.title = emb.title;
+        if (emb.description) embedPayload.description = emb.description;
+        if (emb.footer) embedPayload.footer = { text: emb.footer };
+        if (emb.timestamp) embedPayload.timestamp = new Date().toISOString();
+        discordForm.append("payload_json", JSON.stringify({
+          username: "Cognition {CGN}",
+          avatar_url: "https://cdn.discordapp.com/attachments/1480200113082208346/1484473662198251692/IMG_0364.png?ex=6a477755&is=6a4625d5&hm=439a8a5863af157f40fc94811e8f195e2a2a0cf649c94c2a24bf2c857c15e6d3&",
+          // Only include content (role ping) on first embed
+          ...(i === 0 && scContent ? { content: scContent } : {}),
+          embeds: [embedPayload],
+        }));
+        // Get webhook URL via our route
+        const form = new FormData();
+        form.append("webhookId", scWebhookId);
+        form.append("mode", "direct");
+        form.append("image", blob, filename);
+        form.append("embedJson", JSON.stringify(embedPayload));
+        if (i === 0 && scContent) form.append("content", scContent);
+        const res = await fetch("/api/admin/recap-share", { method: "POST", headers: { "x-officer-pin": pin }, body: form });
+        if (res.ok) posted++;
+        else { const t = await res.text(); console.error("Embed post failed:", t); }
+        // Small delay between posts
+        if (i < scEmbeds.length - 1) await new Promise(r => setTimeout(r, 500));
+      }
+      setScPostResult({ ok: true, message: `Posted ${posted} embed${posted > 1 ? "s" : ""} to Discord ✓` });
+    } catch (e) {
+      setScPostResult({ ok: false, message: "Error: " + e.message });
+    } finally {
+      setScPosting(false);
+      setShowScCollectiveCard(false);
+      setShowScClanCards({});
+    }
+  }
+
+  async function handleScheduleShareCards() {
+    if (!scWebhookId || !scScheduleAt) return;
+    setScScheduleResult(null);
+    try {
+      const res = await fetch("/api/admin/announcements/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({
+          webhookId: scWebhookId,
+          embed: { title: scEmbed.title || "Season Recap" },
+          content: scContent || undefined,
+          sendAt: new Date(scScheduleAt).toISOString(),
+          isRecapImage: true,
+          title: "Share Cards (Scheduled)",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) setScScheduleResult({ ok: true, message: "Scheduled ✓" });
+      else setScScheduleResult({ ok: false, message: data.error || "Failed" });
+    } catch { setScScheduleResult({ ok: false, message: "Network error" }); }
+  }
+
+  function addScEmbed(cardKey) {
+    setScEmbeds(prev => [...prev, {
+      cardKey, // "collective" or clan name
+      title: "",
+      description: "",
+      color: 0x6d28d9,
+      footer: "",
+      timestamp: false,
+    }]);
+  }
+  function updateScEmbed(i, key, value) {
+    setScEmbeds(prev => { const arr = [...prev]; arr[i] = { ...arr[i], [key]: value }; return arr; });
+  }
+  function removeScEmbed(i) {
+    setScEmbeds(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  async function handlePostRecap() {
+    if (!recapWebhookId || !recapData) return;
+    setRecapPosting(true); setRecapPostResult(null);
+    setShowRecapCard(true);
+    await new Promise(r => setTimeout(r, 150)); // allow card to render
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(recapCardRef.current, {
+        backgroundColor: "#070b17", scale: 2, useCORS: true,
+        allowTaint: true, logging: false, removeContainer: true,
+      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      const form = new FormData();
+      form.append("webhookId", recapWebhookId);
+      form.append("season", recapSeason || recapData.currentSeason || "Season Recap");
+      form.append("image", blob, "cgn-recap.png");
+      if (recapRolePing) form.append("rolePing", recapRolePing);
+      const res = await fetch("/api/admin/recap-share", {
+        method: "POST",
+        headers: { "x-officer-pin": pin },
+        body: form,
+      });
+      const result = await res.json();
+      if (res.ok) setRecapPostResult({ ok: true, message: "Posted to Discord ✓" });
+      else setRecapPostResult({ ok: false, message: result.error || "Failed to post" });
+    } catch (e) {
+      setRecapPostResult({ ok: false, message: "Error: " + e.message });
+    } finally {
+      setRecapPosting(false);
+      setShowRecapCard(false);
+    }
   }
 
   async function handleScheduleRecap() {
