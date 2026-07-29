@@ -302,7 +302,7 @@ export default function RostersPage() {
   const [highlightedAccount, setHighlightedAccount] = useState(null);
   const [currentSeason, setCurrentSeason] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [rosterProgress, setRosterProgress] = useState({ confirmedPlayers: 0, totalCapacity: 0, unpublishedCount: 0, totalClans: 5 });
+  const [rosterProgress, setRosterProgress] = useState({ confirmed: 0, inPool: 0, pct: 0 });
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -318,7 +318,7 @@ export default function RostersPage() {
     ]).then(([rosterData, seasonData, statusData]) => {
       setPlayers(Array.isArray(rosterData) ? rosterData : []);
       setCurrentSeason(seasonData.season || null);
-      setRosterProgress({ confirmedPlayers: statusData.confirmedPlayers || 0, totalCapacity: statusData.totalCapacity || 0, unpublishedCount: statusData.unpublishedCount || 0, totalClans: statusData.totalClans || 5 });
+      setRosterProgress({ confirmed: statusData.confirmed || 0, inPool: statusData.inPool || 0, pct: statusData.pct || 0 });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -504,28 +504,17 @@ export default function RostersPage() {
             )}
           </div>
 
-          {/* Roster completion — tracks unpublished clans only */}
+          {/* Roster completion */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Roster Progress</p>
-              <span className="text-xs text-slate-500 tabular-nums">
-                {rosterProgress.confirmedPlayers} / {rosterProgress.totalCapacity || rosterProgress.unpublishedCount * 15} players
-              </span>
+              <p className={`text-lg font-thin ${rosterProgress.pct === 100 ? "text-green-300" : rosterProgress.pct >= 75 ? "text-amber-300" : "text-purple-300"}`}>{rosterProgress.pct}%</p>
             </div>
-            <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
-              <div
-                className="h-full rounded-full bg-purple-500/60 transition-all duration-700"
-                style={{width: `${rosterProgress.totalCapacity > 0 ? Math.min(100, (rosterProgress.confirmedPlayers / rosterProgress.totalCapacity) * 100) : 0}%`}}
-              />
+            <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="h-full rounded-full bg-purple-500/60 transition-all duration-700" style={{width: `${rosterProgress.pct}%`}}/>
             </div>
             <p className="text-[10px] text-slate-600 mt-3 text-center">
-              {rosterProgress.unpublishedCount === 0
-                ? "All rosters ready"
-                : rosterProgress.confirmedPlayers === 0
-                  ? `Leaders are building rosters for ${rosterProgress.unpublishedCount} clan${rosterProgress.unpublishedCount !== 1 ? "s" : ""}`
-                  : rosterProgress.confirmedPlayers >= rosterProgress.totalCapacity
-                    ? "Rosters complete — publishing soon"
-                    : `${rosterProgress.totalCapacity - rosterProgress.confirmedPlayers} slot${rosterProgress.totalCapacity - rosterProgress.confirmedPlayers !== 1 ? "s" : ""} remaining across ${rosterProgress.unpublishedCount} clan${rosterProgress.unpublishedCount !== 1 ? "s" : ""}`}
+              {rosterProgress.confirmed} confirmed · {rosterProgress.inPool} assigned
             </p>
           </div>
         </div>
