@@ -98,13 +98,24 @@ function ContrastToggle() {
 /* ─── Admin header ───────────────────────────────────────────── */
 function AdminHeader() {
   const [navOpen, setNavOpen] = useState(false);
-  const items = [
-    { href: "/admin",               label: "Overview",     icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    { href: "/admin/pool",          label: "Pool Manager", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
-    { href: "/admin/clans",         label: "Clan Manager", icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
-    { href: "/admin/season",        label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-    { href: "/admin/directory",     label: "Directory",      icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
-    { href: "/admin/announcements", label: "Announcements",icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
+  const navSections = [
+    { label: null, items: [
+      { href: "/admin", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    ]},
+    { label: "CWL", items: [
+      { href: "/admin/pool", label: "Pool Manager", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
+      { href: "/admin/season", label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
+      { href: "/admin/clans", label: "Clan Manager", icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
+    ]},
+    { label: "SIDE WARS", items: [
+      { href: "/admin/side-wars", label: "Side Wars", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    ]},
+    { label: "ANNOUNCEMENTS", items: [
+      { href: "/admin/announcements", label: "Announcements", icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" },
+    ]},
+    { label: null, items: [
+      { href: "/admin/directory", label: "Directory", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
+    ]},
   ];
   return (
     <>
@@ -116,25 +127,33 @@ function AdminHeader() {
             <span className="text-sm text-white tracking-widest uppercase" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
           </div>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-6 pl-9">Admin</p>
-          <nav className="flex-1 space-y-1">
-            {items.map(item => (
-              <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm transition ${item.href === "/admin/clans" ? "text-white bg-white/[0.06]" : "text-slate-300 hover:text-white hover:bg-white/[0.06]"}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                      <nav className="flex-1 space-y-4 overflow-y-auto">
+              {navSections.map((section, si) => (
+                <div key={si}>
+                  {section.label && <p className="text-[9px] text-slate-600 uppercase tracking-widest px-3 mb-1">{section.label}</p>}
+                  <div className="space-y-0.5">
+                    {section.items.map(item => (
+                      <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                        </svg>
+                        <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </nav>
+            <div className="border-t border-white/10 pt-4 mt-4">
+              <Link href="/" onClick={() => setNavOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
-                <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
+                <span style={{fontFamily:"var(--font-orbitron)"}}>Back to App</span>
               </Link>
-            ))}
-          </nav>
-          <div className="border-t border-white/10 pt-4 mt-4">
-            <Link href="/" onClick={() => setNavOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-              </svg>
-              Back to App
-            </Link>
-          </div>
+            </div>
         </div>
       </div>
       <div className="relative z-10 flex items-center justify-between mb-4 gap-2">
@@ -544,7 +563,7 @@ export default function AdminClansPage() {
 
       {/* Tab nav */}
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-        {[["clans","Alliance Clans"],["sidewars","Side Wars"],["infoboard","Info Board"]].map(([key,label]) => (
+        {[["clans","Alliance Clans"],["infoboard","Info Board"]].map(([key,label]) => (
           <button key={key} onClick={() => setActiveTab(key)}
             className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               activeTab === key
@@ -631,137 +650,6 @@ export default function AdminClansPage() {
         )}
 
         {/* ── SIDE WARS TAB ── */}
-        {activeTab === "sidewars" && (<>
-          {sideWars.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-              <p className="text-slate-600 text-xs">No clans saved yet — add one below</p>
-            </div>
-          ) : sideWars.map(war => {
-            const warId = war.id;
-            const pendingTime = swTimes[warId] ?? "";
-            const showPicker = !war.start_time || swTimes[warId] !== undefined;
-            const isRecurring = war.time_format === "recurring";
-            return (
-              <div key={warId} className={`rounded-3xl border ${war.is_active ? "border-pink-500/30 bg-pink-500/[0.04]" : "border-white/10 bg-white/[0.04]"} backdrop-blur-xl p-4`}>
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img src="/icons/branding/war-shield.png" alt="" className={`w-8 h-8 shrink-0 ${war.is_active ? "opacity-100" : "opacity-40"}`}/>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{war.clan_name}</p>
-                      <p className="text-[10px] text-slate-500 font-mono">{war.clan_tag}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => swToggle(war)}
-                    className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition shrink-0 ${war.is_active ? "bg-pink-500/20 border-pink-500/60 text-pink-300" : war.start_time ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300" : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"}`}>
-                    {war.is_active ? "Live" : "Off"}
-                  </button>
-                </div>
-                <div className="border-t border-white/[0.06] pt-3">
-                  {war.start_time && !showPicker && (
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div>
-                        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
-                        <p className="text-[11px] text-slate-300">{new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC</p>
-                      </div>
-                      <button onClick={() => setSwTimes(p => ({...p, [warId]: ""}))} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1">
-                        Change
-                      </button>
-                    </div>
-                  )}
-                  {!war.start_time && <p className="text-[10px] text-slate-600 mb-2">No start time — schedule before activating</p>}
-                  {showPicker && (
-                    <div className="flex items-center gap-2">
-                      <input type="datetime-local" value={pendingTime} onChange={e => setSwTimes(p => ({...p, [warId]: e.target.value}))}
-                        className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/20 transition [color-scheme:dark]"/>
-                      <button onClick={() => {
-                        if (!pendingTime) { setSwTimeErrors(p => ({...p, [warId]: "Pick a date and time first"})); return; }
-                        setSwTimeErrors(p => ({...p, [warId]: ""}));
-                        fetch("/api/admin/side-wars", { method: "PATCH", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ id: warId, action: "set_time", start_time: new Date(pendingTime).toISOString() }) })
-                          .then(r => r.json()).then(data => { if (data.war) { setSideWars(prev => prev.map(w => w.id === warId ? data.war : w)); setSwTimes(p => { const n = {...p}; delete n[warId]; return n; }); } });
-                      }} className="flex items-center gap-1 px-3 py-1.5 rounded-2xl text-[10px] font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 transition shrink-0">
-                        Set
-                      </button>
-                    </div>
-                  )}
-                  {swTimeErrors[warId] && <p className="text-[10px] text-red-400 mt-1">{swTimeErrors[warId]}</p>}
-                </div>
-                <div className="border-t border-white/[0.06] pt-3 mt-3">
-                  <button onClick={() => swSetFormat(warId, isRecurring ? "countdown" : "recurring")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl text-[10px] font-semibold border transition ${isRecurring ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Recurring {isRecurring ? "· On" : "· Off"}
-                  </button>
-                  {isRecurring && <p className="text-[9px] text-slate-600 mt-1.5">Resets every 48h from start time</p>}
-                </div>
-                {war.is_active && (
-                  <div className="mt-3 pt-3 border-t border-pink-500/10 flex items-center justify-between">
-                    <p className="text-[10px] text-pink-400">Visible on homepage</p>
-                    <a href={war.clan_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-500 hover:text-slate-300 transition underline">View clan link</a>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Manage Clans */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-            <button onClick={() => setSwManageOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-4 text-left">
-              <div className="flex items-center gap-2">
-                <img src="/icons/branding/war-shield.png" alt="" className="w-5 h-5 opacity-60"/>
-                <span className="text-sm font-semibold text-white">Manage Clans</span>
-                {sideWars.length > 0 && <span className="text-[10px] text-slate-500">{sideWars.length} saved</span>}
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-500 transition-transform ${swManageOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            {swManageOpen && (
-              <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
-                <div>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Add Clan</p>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Name</p>
-                        <input value={swForm.clan_name} onChange={e => setSwForm(p => ({...p, clan_name: e.target.value}))} placeholder="Cognition {CGN}"
-                          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                      </div>
-                      <div>
-                        <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Tag</p>
-                        <input value={swForm.clan_tag} onChange={e => setSwForm(p => ({...p, clan_tag: e.target.value}))} placeholder="#2C8QQPCL2"
-                          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Clan Link</p>
-                      <input value={swForm.clan_link} onChange={e => setSwForm(p => ({...p, clan_link: e.target.value}))} placeholder="https://link.clashofclans.com/..."
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                    </div>
-                    {swError && <p className="text-[11px] text-red-400">{swError}</p>}
-                    <button onClick={swCreate} disabled={swLoading}
-                      className="w-full py-2.5 rounded-2xl text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition disabled:opacity-50">
-                      {swLoading ? "Saving…" : "Save Clan"}
-                    </button>
-                  </div>
-                </div>
-                {sideWars.length > 0 && (
-                  <div>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Remove Clan</p>
-                    <div className="space-y-2">
-                      {sideWars.map(war => (
-                        <div key={war.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
-                          <div className="min-w-0">
-                            <p className="text-xs text-white truncate">{war.clan_name}</p>
-                            <p className="text-[10px] text-slate-600 font-mono">{war.clan_tag}</p>
-                          </div>
-                          <button onClick={() => swDelete(war.id)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-red-400 border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 transition shrink-0">Remove</button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </>)}
 
         {/* ── INFO BOARD TAB ── */}
         {activeTab === "infoboard" && (<>
