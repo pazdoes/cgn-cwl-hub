@@ -3136,19 +3136,19 @@ function AlliancePerformanceTile({ stats, totalAllianceStars }) {
       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance Performance</p>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
-          <p className="text-3xl font-thin text-amber-300">{totalAllianceStars}</p>
+          <p className="text-3xl font-thin text-amber-300" style={{fontFamily:"var(--font-orbitron)"}}>{totalAllianceStars}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Total Alliance Stars</p>
         </div>
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
-          <p className="text-xl font-thin text-green-300">{totalThreeStars}</p>
+          <p className="text-xl font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{totalThreeStars}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">3★ Hits ({allianceThreeStarRate})</p>
         </div>
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
-          <p className="text-xl font-thin text-blue-300">{alliancePunchUp}</p>
+          <p className="text-xl font-thin text-blue-300" style={{fontFamily:"var(--font-orbitron)"}}>{alliancePunchUp}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Punch-Up</p>
         </div>
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center col-span-2">
-          <p className="text-xl font-thin text-purple-300">{allianceClutch}</p>
+          <p className="text-xl font-thin text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{allianceClutch}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Avg Clutch Rate (Days 5-7)</p>
         </div>
       </div>
@@ -4717,7 +4717,7 @@ function AppHeader({ variant = "bar" }) {
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
-                        {item.label}
+                        <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                       </a>
                     ) : (
                       <button key={item.key || "home"} onClick={() => go(item.key)}
@@ -4725,7 +4725,7 @@ function AppHeader({ variant = "bar" }) {
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
-                        {item.label}
+                        <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -4999,12 +4999,12 @@ function SideWarTime({ war }) {
       ) : (
         <div className="flex items-baseline gap-1.5">
           {days > 0 && <>
-            <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{days}</span>
+            <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{days}</span>
             <span className="text-[10px] text-slate-500 mr-1">d</span>
           </>}
-          <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{String(hours).padStart(2,"0")}</span>
+          <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(hours).padStart(2,"0")}</span>
           <span className="text-[10px] text-slate-500">h</span>
-          <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums">{String(mins).padStart(2,"0")}</span>
+          <span className="text-2xl font-thin tracking-widest text-pink-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(mins).padStart(2,"0")}</span>
           <span className="text-[10px] text-slate-500">m</span>
         </div>
       )}
@@ -5089,7 +5089,7 @@ function SideWarsSection({ onNavigate }) {
             <img src="/icons/branding/war-shield.png" alt="Side War" className="w-10 h-10 shrink-0"/>
             <div>
               <p className="text-[9px] text-pink-400 uppercase tracking-widest font-semibold">Side War · Ore War</p>
-              <p className="text-sm font-semibold text-white leading-tight">{war.clan_name}</p>
+              <p className="text-sm font-semibold text-white leading-tight" style={{fontFamily:"var(--font-orbitron)"}}>{war.clan_name}</p>
             </div>
             <img src="/icons/branding/ores.png" alt="Ores" className="absolute right-0 bottom-0 h-14 w-auto object-contain opacity-90 pointer-events-none"/>
           </div>
@@ -5148,22 +5148,22 @@ function CwlCountdown() {
       {isLive ? (
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
-          <span className="text-3xl font-thin tracking-widest text-green-300">Live Now</span>
+          <span className="text-3xl font-thin tracking-widest text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>Live Now</span>
         </div>
       ) : (
         <div className="flex items-baseline gap-3">
           <div className="flex flex-col items-center">
-            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{timeLeft.days}</span>
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{timeLeft.days}</span>
             <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">days</span>
           </div>
           <span className="text-2xl text-slate-600 font-thin">:</span>
           <div className="flex flex-col items-center">
-            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{String(timeLeft.hours).padStart(2,"0")}</span>
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.hours).padStart(2,"0")}</span>
             <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">hrs</span>
           </div>
           <span className="text-2xl text-slate-600 font-thin">:</span>
           <div className="flex flex-col items-center">
-            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums">{String(timeLeft.minutes).padStart(2,"0")}</span>
+            <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.minutes).padStart(2,"0")}</span>
             <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">min</span>
           </div>
         </div>
@@ -5758,7 +5758,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   className="w-24 h-24 mx-auto mb-4"
 />
 
-                <div className="text-2xl font-bold mt-2">
+                <div className="text-2xl font-bold mt-2" style={{fontFamily:"var(--font-orbitron)"}}>
   {clan}
 </div>
 

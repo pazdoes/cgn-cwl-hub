@@ -74,7 +74,7 @@ function AppHeader({ variant = "bar" }) {
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
-                        {item.label}
+                        <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                       </a>
                     ) : (
                       <button key={item.key || "home"} onClick={() => go(item.key)}
@@ -82,7 +82,7 @@ function AppHeader({ variant = "bar" }) {
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
                         </svg>
-                        {item.label}
+                        <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
                       </button>
                     ))}
                   </div>
