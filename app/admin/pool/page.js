@@ -1045,7 +1045,7 @@ export default function AdminPoolPage() {
                     })}
                   </div>
                 )}
-                </>}
+                </div>}
               </div>
             )}
 
