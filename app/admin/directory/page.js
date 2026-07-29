@@ -32,7 +32,7 @@ function AdminHeader() {
           <div className="flex items-center gap-2 mb-8"><img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-7 h-7"/><span className="text-sm text-white tracking-widest uppercase">Admin Panel</span></div>
           <nav className="flex-1 space-y-1">
             {navItems.map(item => (
-              <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition">{item.label}</Link>
+              <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition"><span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span></Link>
             ))}
           </nav>
         </div>
