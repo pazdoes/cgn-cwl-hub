@@ -302,7 +302,7 @@ export default function RostersPage() {
   const [highlightedAccount, setHighlightedAccount] = useState(null);
   const [currentSeason, setCurrentSeason] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [rosterProgress, setRosterProgress] = useState({ published: 0, total: 5 });
+  const [rosterProgress, setRosterProgress] = useState({ published: 0, total: 5, players: 0 });
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -318,7 +318,7 @@ export default function RostersPage() {
     ]).then(([rosterData, seasonData, statusData]) => {
       setPlayers(Array.isArray(rosterData) ? rosterData : []);
       setCurrentSeason(seasonData.season || null);
-      setRosterProgress({ published: statusData.publishedCount || 0, total: statusData.totalClans || 5 });
+      setRosterProgress({ published: statusData.publishedCount || 0, total: statusData.totalClans || 5, players: statusData.totalPlayers || 0 });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -506,19 +506,28 @@ export default function RostersPage() {
 
           {/* Roster completion */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Roster Progress</p>
-              <span className="text-xs text-slate-500">{rosterProgress.published} / {rosterProgress.total} ready</span>
+              <span className="text-xs text-slate-500">{rosterProgress.published} / {rosterProgress.total} clans</span>
             </div>
+            {rosterProgress.players > 0 && (
+              <p className="text-[10px] text-purple-400 mb-3">{rosterProgress.players} player{rosterProgress.players !== 1 ? "s" : ""} registered</p>
+            )}
+            {rosterProgress.players === 0 && <div className="mb-3"/>}
             <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
                 className="h-full rounded-full bg-purple-500/60 transition-all duration-700"
                 style={{width: `${rosterProgress.total > 0 ? (rosterProgress.published / rosterProgress.total) * 100 : 0}%`}}
               />
             </div>
+            <div className="flex justify-between mt-2">
+              {Array.from({length: rosterProgress.total}).map((_, i) => (
+                <div key={i} className={`w-2 h-2 rounded-full ${i < rosterProgress.published ? "bg-purple-400" : "bg-white/[0.08]"}`}/>
+              ))}
+            </div>
             <p className="text-[10px] text-slate-600 mt-3 text-center">
               {rosterProgress.published === 0
-                ? "Rosters are being prepared by leaders"
+                ? "Leaders are preparing rosters"
                 : rosterProgress.published === rosterProgress.total
                   ? "All rosters ready — publishing soon"
                   : `${rosterProgress.total - rosterProgress.published} clan${rosterProgress.total - rosterProgress.published !== 1 ? "s" : ""} still being finalised`}
