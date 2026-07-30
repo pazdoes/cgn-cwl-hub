@@ -1,14 +1,7 @@
 "use client";
 import { useState } from "react";
-
 import { useSession, signIn, signOut } from "next-auth/react";
 
-// Discord identity widget — two layout variants:
-//   variant="center"  — full-width centred bar, used at the top of the
-//                       homepage and admin page above the header card
-//   variant="corner"  — compact pill aligned to the right, used on all
-//                       other pages (signup, stat views, etc.)
-// Both are static inline DOM elements — no position:fixed anywhere.
 export default function DiscordWidget({ variant = "corner" }) {
   const { data: session, status } = useSession();
   const [showInfo, setShowInfo] = useState(false);
@@ -28,16 +21,18 @@ export default function DiscordWidget({ variant = "corner" }) {
     return (
       <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto" : "ml-auto w-fit"}`}>
         <button type="button" onClick={() => setShowInfo(v => !v)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-white/[0.06] transition">
+          className={isCenter
+            ? "flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-white/[0.06] transition"
+            : "flex items-center rounded-full border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06] transition p-0.5"
+          }>
           {user.image && (
-            <img src={user.image} alt={user.name}
-              className="w-5 h-5 rounded-full border border-white/20 shrink-0" />
+            <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full border border-white/20 shrink-0"/>
           )}
-          <span className="font-medium max-w-[120px] truncate">{user.name}</span>
+          {isCenter && <span className="font-medium max-w-[120px] truncate">{user.name}</span>}
         </button>
         {showInfo && (
           <div className="absolute right-0 top-full mt-2 z-[200] w-52 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3 space-y-2">
-            <p className="text-[11px] text-slate-400 leading-relaxed">Disconnect your Discord account?</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed">Signed in as <span className="text-white font-medium">{user.name}</span></p>
             <div className="flex gap-2">
               <button type="button" onClick={() => { signOut(); setShowInfo(false); }}
                 className="flex-1 py-1.5 rounded-xl text-[10px] font-semibold bg-transparent text-red-400 border border-red-500/40 hover:border-red-400 transition">
@@ -59,11 +54,11 @@ export default function DiscordWidget({ variant = "corner" }) {
       <button onClick={() => signIn("discord")}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-[#7289da] text-xs font-semibold hover:bg-white/[0.06] hover:border-white/20 hover:text-white transition">
         <DiscordLogo />
-        Discord
+        {isCenter && "Discord"}
       </button>
       <div className="relative">
         <button type="button" onClick={() => setShowInfo(v => !v)}
-          className="w-5 h-5 rounded-xl flex items-center justify-center text-purple-400 transition border border-purple-500/40 bg-transparent hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)] shrink-0">
+          className="w-6 h-6 rounded-xl flex items-center justify-center text-purple-400 transition border border-purple-500/40 bg-transparent hover:border-purple-400 shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
@@ -71,7 +66,7 @@ export default function DiscordWidget({ variant = "corner" }) {
         {showInfo && (
           <div className="absolute right-0 top-full mt-2 z-[200] w-56 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3">
             <p className="text-[11px] text-slate-300 leading-relaxed">
-              Sign in with Discord to keep your CoC accounts linked across devices. Your accounts are always accessible, even on a new browser or device.
+              Sign in with Discord to keep your CoC accounts linked across devices.
             </p>
           </div>
         )}
