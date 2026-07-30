@@ -1,10 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getLeagueStyles } from "@/lib/leagueColors";
-import { CWL_ICONS, TH_ICONS } from "@/lib/icons";
-import { MiniPie, LargePie, StarIcons, StatPill, RankBadge } from "@/lib/components";
 import DiscordWidget from "@/app/components/DiscordWidget";
 
 function FaqButton() {
