@@ -1341,7 +1341,7 @@ function PlayerProfileView({ onBack }) {
   })();
 
   return (
-    <main className="pb-16 min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 sm:p-6 pb-12">
+    <main className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 sm:p-6 pb-12">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[100vw] max-w-[600px] h-[100vw] max-h-[600px] bg-purple-500/10 blur-3xl rounded-full"/>
       <img src="/roster-bg.png" alt="" className="fixed inset-0 select-none pointer-events-none opacity-20" style={{width:"100vw",height:"100dvh",objectFit:"cover",objectPosition:"center top"}}/>
@@ -4778,7 +4778,7 @@ function AppFooter({ onNavigateHome, showHome = true }) {
     if (typeof window !== "undefined") window.location.href = "/";
   }
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-10 w-full py-4 flex items-center px-4">
+    <div className="relative z-10 w-full py-4 flex items-center px-4 mt-auto">
       <div className="w-16 shrink-0 flex items-center">
         {showHome && (
           <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
