@@ -4,6 +4,58 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DiscordWidget from "@/app/components/DiscordWidget";
 
+const PLAYER_COLORS = ["#a78bfa", "#34d399", "#fb923c"];
+
+const STAT_OPTIONS = [
+  { key: "overall",            label: "CGN Rating" },
+  { key: "efficiency",         label: "Atk Efficiency" },
+  { key: "stars_earned",       label: "Stars Earned" },
+  { key: "destruction_pct",    label: "Destruction %" },
+  { key: "defence_efficiency", label: "Def Efficiency" },
+  { key: "stars_conceded",     label: "Stars Conceded" },
+  { key: "defence_pct",        label: "Defence %" },
+  { key: "attacks_used",       label: "Attacks Used" },
+  { key: "missed_attacks",     label: "Missed Attacks" },
+  { key: "cwl_rank",           label: "CWL Rank (Clan)" },
+];
+
+const CWL_RANK_ORDER_HIST = [
+  "Champion I","Champion II","Champion III",
+  "Master I","Master II","Master III",
+  "Crystal I","Crystal II","Crystal III",
+  "Gold I","Gold II","Gold III",
+  "Silver I","Silver II","Silver III",
+  "Bronze I","Bronze II","Bronze III","Unranked",
+];
+
+const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
+
+const CLAN_STAT_OPTIONS = [
+  { group: "CGN Rating", key: "overall",                label: "CGN Rating" },
+  { group: "Rank",    key: "cwl_rank",               label: "CWL Rank" },
+  { group: "Attack",  key: "total_stars",             label: "Total Stars" },
+  { group: "Attack",  key: "attack_efficiency",       label: "Attack Efficiency" },
+  { group: "Attack",  key: "avg_destruction_pct",     label: "Destruction %" },
+  { group: "Attack",  key: "three_star_rate",         label: "Three Star Rate %" },
+  { group: "Attack",  key: "total_attacks_used",      label: "Attacks Used" },
+  { group: "Attack",  key: "total_attacks_missed",    label: "Missed Attacks" },
+  { group: "Defence", key: "total_stars_conceded",    label: "Stars Conceded" },
+  { group: "Defence", key: "defence_efficiency",      label: "Defence Efficiency" },
+  { group: "Defence", key: "avg_defence_pct",         label: "Defence %" },
+  { group: "Record",  key: "wars_won",                label: "Wars Won" },
+  { group: "Record",  key: "wars_lost",               label: "Wars Lost" },
+  { group: "Record",  key: "wars_drawn",              label: "Wars Drawn" },
+];
+
+const CWL_RANK_LIST = [
+  "Champion I","Champion II","Champion III",
+  "Master I","Master II","Master III",
+  "Crystal I","Crystal II","Crystal III",
+  "Gold I","Gold II","Gold III",
+  "Silver I","Silver II","Silver III",
+  "Bronze I","Bronze II","Bronze III","Unranked",
+];
+
 function FaqButton() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null);
