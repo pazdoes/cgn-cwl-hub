@@ -316,13 +316,13 @@ export default function RostersPage() {
     Promise.all([
       fetch("/api/roster").then(r => r.json()),
       fetch("/api/season").then(r => r.json()),
-      fetch("/api/roster-status").then(r => r.json()),
-    ]).then(([rosterData, seasonData, statusData]) => {
+      fetch("/api/pool/count").then(r => r.json()),
+    ]).then(([rosterData, seasonData, poolData]) => {
       setPlayers(Array.isArray(rosterData) ? rosterData : []);
       setCurrentSeason(seasonData.season || null);
-      setInPool(statusData.inPool || 0);
-      setAssigned(statusData.assigned || 0);
-      setPct(statusData.pct || 0);
+      setInPool(poolData.inPool || 0);
+      setAssigned(poolData.assigned || 0);
+      setPct(poolData.pct || 0);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
