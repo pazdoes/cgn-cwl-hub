@@ -201,9 +201,9 @@ function AdminHeader() {
           <span className="text-xs text-slate-400 tracking-widest uppercase" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
         </div>
         <div className="w-8"/>
-      </div>
-      <div className="fixed top-3 right-3 z-40">
-        <DiscordWidget variant="corner"/>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+          <DiscordWidget variant="corner"/>
+        </div>
       </div>
     </>
   );

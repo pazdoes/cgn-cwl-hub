@@ -4752,7 +4752,10 @@ function AppHeader({ variant = "bar" }) {
             <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
             <span className="text-xs text-slate-400 tracking-widest uppercase" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
           </div>
-          <DiscordWidget variant="corner"/>
+          <div className="w-8"/>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <DiscordWidget variant="corner"/>
+          </div>
         </div>
       )}
       {variant === "icon" && (
