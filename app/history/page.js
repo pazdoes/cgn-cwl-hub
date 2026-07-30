@@ -787,7 +787,6 @@ export default function HistoryPage() {
 
 function HistoryViewInner() {
   const router = useRouter();
-function HistoryView(()) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("player"); // "rank" | "player"
