@@ -63,6 +63,9 @@ function AdminHeader() {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <Link href="/admin" className="flex items-center gap-2"><img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/><span className="text-xs text-slate-400 tracking-widest uppercase">Admin</span></Link>
+        <div className="w-8"/>
+      </div>
+      <div className="fixed top-3 right-3 z-40">
         <DiscordWidget variant="corner"/>
       </div>
     </>

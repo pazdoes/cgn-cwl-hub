@@ -156,6 +156,9 @@ function AdminHeader() {
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
           <span className="text-xs text-slate-400 tracking-widest uppercase" style={{fontFamily:"var(--font-orbitron)"}}>Cognition Collective</span>
         </div>
+        <div className="w-8"/>
+      </div>
+      <div className="fixed top-3 right-3 z-40">
         <DiscordWidget variant="corner"/>
       </div>
     </>
