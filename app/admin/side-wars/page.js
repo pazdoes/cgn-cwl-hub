@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import DiscordWidget from "@/app/components/DiscordWidget";
 
 function AppHeader() {
   const [navOpen, setNavOpen] = useState(false);
@@ -71,7 +70,7 @@ function AppHeader() {
           <img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/>
           <span className="text-xs text-slate-400 tracking-widest uppercase" style={ORB}>Cognition Collective</span>
         </div>
-        <DiscordWidget variant="corner"/>
+        <div className="w-8"/>
       </div>
     </>
   );
