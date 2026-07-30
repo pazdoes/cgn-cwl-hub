@@ -31,7 +31,7 @@ export default function DiscordWidget({ variant = "corner" }) {
           {isCenter && <span className="font-medium max-w-[120px] truncate">{user.name}</span>}
         </button>
         {showInfo && (
-          <div className="absolute right-0 top-full mt-2 z-[200] w-52 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3 space-y-2">
+          <div className="fixed top-14 right-3 z-[999] w-52 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3 space-y-2">
             <p className="text-[11px] text-slate-400 leading-relaxed">Signed in as <span className="text-white font-medium">{user.name}</span></p>
             <div className="flex gap-2">
               <button type="button" onClick={() => { signOut(); setShowInfo(false); }}
@@ -64,7 +64,7 @@ export default function DiscordWidget({ variant = "corner" }) {
           </svg>
         </button>
         {showInfo && (
-          <div className="absolute right-0 top-full mt-2 z-[200] w-56 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3">
+          <div className="fixed top-14 right-3 z-[999] w-56 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3">
             <p className="text-[11px] text-slate-300 leading-relaxed">
               Sign in with Discord to keep your CoC accounts linked across devices.
             </p>
