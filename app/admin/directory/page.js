@@ -74,7 +74,7 @@ function AdminHeader() {
 
 function AdminFooter() {
   return (
-    <div className="sticky bottom-0 z-10 w-full py-4 flex items-center px-4">
+    <div className="fixed bottom-0 left-0 right-0 z-10 w-full py-4 flex items-center px-4">
       <div className="w-16 shrink-0">
         <Link href="/admin" className="text-slate-500 hover:text-slate-300 transition p-1">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -263,7 +263,7 @@ export default function AdminDirectoryPage() {
 
   if (!authed) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
+      <main className="pb-16 min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="relative z-10 w-full max-w-xs">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
             <h1 className="text-xl font-thin tracking-widest mb-1">Members</h1>

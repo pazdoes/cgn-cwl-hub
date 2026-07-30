@@ -213,7 +213,7 @@ function AppFooter({ onNavigateHome }) {
     if (typeof window !== "undefined") window.location.href = "/";
   }
   return (
-    <div className="sticky bottom-0 z-10 w-full py-4 flex items-center px-4">
+    <div className="fixed bottom-0 left-0 right-0 z-10 w-full py-4 flex items-center px-4">
       <div className="w-16 shrink-0 flex items-center">
         <button onClick={goHome} className="text-slate-500 hover:text-slate-300 transition p-1" title="Home">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -870,7 +870,7 @@ export default function SignupPage() {
   const [accountManagerOpen, setAccountManagerOpen] = useState(false);
 
   return (
-    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+    <main className="pb-16 min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
 
       {/* ambient glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
