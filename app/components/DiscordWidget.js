@@ -28,7 +28,7 @@ export default function DiscordWidget({ variant = "corner" }) {
     return (
       <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto" : "ml-auto w-fit"}`}>
         <button type="button" onClick={() => setShowInfo(v => !v)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-black/40 transition">
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-white/[0.06] transition">
           {user.image && (
             <img src={user.image} alt={user.name}
               className="w-5 h-5 rounded-full border border-white/20 shrink-0" />
@@ -36,7 +36,7 @@ export default function DiscordWidget({ variant = "corner" }) {
           <span className="font-medium max-w-[120px] truncate">{user.name}</span>
         </button>
         {showInfo && (
-          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-52 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3 space-y-2">
+          <div className="absolute right-0 top-full mt-2 z-[200] w-52 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3 space-y-2">
             <p className="text-[11px] text-slate-400 leading-relaxed">Disconnect your Discord account?</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => { signOut(); setShowInfo(false); }}
@@ -48,7 +48,6 @@ export default function DiscordWidget({ variant = "corner" }) {
                 Cancel
               </button>
             </div>
-            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
           </div>
         )}
       </div>
@@ -58,23 +57,22 @@ export default function DiscordWidget({ variant = "corner" }) {
   return (
     <div className={`relative flex items-center gap-1.5 ${isCenter ? "mx-auto justify-center" : "ml-auto w-fit"}`}>
       <button onClick={() => signIn("discord")}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#5865F2]/20 backdrop-blur-md border border-[#5865F2]/30 text-[#7289da] text-xs font-semibold hover:bg-[#5865F2]/35 hover:text-white transition">
+        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-[#7289da] text-xs font-semibold hover:bg-white/[0.06] hover:border-white/20 hover:text-white transition">
         <DiscordLogo />
         Discord
       </button>
       <div className="relative">
         <button type="button" onClick={() => setShowInfo(v => !v)}
-          className="w-5 h-5 rounded-full flex items-center justify-center text-purple-400 transition border border-purple-500/40 bg-transparent hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)] shrink-0">
+          className="w-5 h-5 rounded-xl flex items-center justify-center text-purple-400 transition border border-purple-500/40 bg-transparent hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)] shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </button>
         {showInfo && (
-          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-56 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl p-3">
+          <div className="absolute right-0 top-full mt-2 z-[200] w-56 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-xl p-3">
             <p className="text-[11px] text-slate-300 leading-relaxed">
               Sign in with Discord to keep your CoC accounts linked across devices. Your accounts are always accessible, even on a new browser or device.
             </p>
-            <div className="absolute -top-1.5 right-2 w-3 h-3 rotate-45 bg-[#0d1424] border-l border-t border-white/10"/>
           </div>
         )}
       </div>
