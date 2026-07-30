@@ -883,26 +883,6 @@ export default function SignupPage() {
       {/* ── Hero card — flush to top ── */}
       <div className="relative z-10 mb-4 text-center">
         <h1 className="text-4xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
-          {season && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
-              {season}
-            </div>
-          )}
-          {poolCount !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
-              {poolCount} In
-            </div>
-          )}
-          {outCount !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
-              {outCount} Out
-            </div>
-          )}
-        </div>
         {/* How to use — expandable info panel */}
         <div className="mt-1 mb-2">
           <button type="button" onClick={() => setInfoOpen(v => !v)}
@@ -927,6 +907,26 @@ export default function SignupPage() {
                   <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
+          {season && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
+              {season}
+            </div>
+          )}
+          {poolCount !== null && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
+              {poolCount} In
+            </div>
+          )}
+          {outCount !== null && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
+              {outCount} Out
             </div>
           )}
         </div>
