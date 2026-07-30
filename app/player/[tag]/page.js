@@ -823,7 +823,7 @@ export default function PlayerProfilePage() {
   );
 
   if (error || !data) return (
-    <main className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] flex items-center justify-center p-6">
+    <main className="min-h-screen flex flex-col bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] flex items-center justify-center p-6">
       <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8 text-center max-w-xs">
         <p className="text-slate-400 text-sm mb-1">Player not found</p>
         <p className="text-slate-600 text-xs">This player has no CWL stats on record.</p>
@@ -972,7 +972,7 @@ export default function PlayerProfilePage() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
+    <main className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
       {/* Hidden share card — only mounted when Share is tapped */}
       {showShareCard && (
         <div
