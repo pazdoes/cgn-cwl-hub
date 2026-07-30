@@ -64,7 +64,7 @@ function AdminHeader() {
         </button>
         <Link href="/admin" className="flex items-center gap-2"><img src="/icons/branding/cgn-skull.png" alt="CGN" className="w-6 h-6"/><span className="text-xs text-slate-400 tracking-widest uppercase">Admin</span></Link>
         <div className="w-8"/>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+        <div className="absolute right-0 top-0 bottom-0 flex items-center">
           <DiscordWidget variant="corner"/>
         </div>
       </div>
