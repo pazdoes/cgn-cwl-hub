@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function DiscordWidget({ variant = "corner" }) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [showInfo, setShowInfo] = useState(false);
 
   if (status === "loading") return null;
@@ -20,7 +20,7 @@ export default function DiscordWidget({ variant = "corner" }) {
     const user = session.user;
     return (
       <div className={`relative flex items-center gap-1.5 ${isCenter ? "justify-center mx-auto" : "ml-auto w-fit"}`}>
-        <button type="button" onClick={() => setShowInfo(v => !v)}
+        <button type="button" onClick={() => { setShowInfo(v => !v); update(); }}
           className={isCenter
             ? "flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:bg-white/[0.06] transition"
             : "flex items-center rounded-full border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06] transition p-0.5"
@@ -57,7 +57,7 @@ export default function DiscordWidget({ variant = "corner" }) {
         {isCenter && "Discord"}
       </button>
       <div className="relative">
-        <button type="button" onClick={() => setShowInfo(v => !v)}
+        <button type="button" onClick={() => { setShowInfo(v => !v); update(); }}
           className="w-6 h-6 rounded-xl flex items-center justify-center text-purple-400 transition border border-purple-500/40 bg-transparent hover:border-purple-400 shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
