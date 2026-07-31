@@ -28,15 +28,13 @@ export function StarBars({ three, two, one, zero }) {
     </div>
   );
 }
-import { BRANDING } from "../lib/branding";
-import DiscordWidget from "./components/DiscordWidget";
 
 // CWL_ICONS' key order already encodes the correct league hierarchy
 // (Champion I/II/III highest, down to Bronze I/II/III lowest) — reusing
 // that order here rather than maintaining a second ranking list. Ranks
 // not found in CWL_ICONS (including "Unranked" and any genuinely unset
 // value) sort after every real league, lowest priority.
-const CWL_RANK_ORDER = Object.keys(CWL_ICONS);
+
 
 export function rankSortIndex(rank) {
   const idx = CWL_RANK_ORDER.indexOf(rank);
@@ -457,32 +455,10 @@ export function PlayerPerformanceChart({ allData, seasons }) {
     </div>
   );
 }
-const CLAN_COLORS_CHART = ["#a78bfa", "#34d399", "#fb923c"];
-const CLAN_STAT_OPTIONS = [
-  { group: "CGN Rating", key: "overall",                label: "CGN Rating" },
-  { group: "Rank",    key: "cwl_rank",               label: "CWL Rank" },
-  { group: "Attack",  key: "total_stars",             label: "Total Stars" },
-  { group: "Attack",  key: "attack_efficiency",       label: "Attack Efficiency" },
-  { group: "Attack",  key: "avg_destruction_pct",     label: "Destruction %" },
-  { group: "Attack",  key: "three_star_rate",         label: "Three Star Rate %" },
-  { group: "Attack",  key: "total_attacks_used",      label: "Attacks Used" },
-  { group: "Attack",  key: "total_attacks_missed",    label: "Missed Attacks" },
-  { group: "Defence", key: "total_stars_conceded",    label: "Stars Conceded" },
-  { group: "Defence", key: "defence_efficiency",      label: "Defence Efficiency" },
-  { group: "Defence", key: "avg_defence_pct",         label: "Defence %" },
-  { group: "Record",  key: "wars_won",                label: "Wars Won" },
-  { group: "Record",  key: "wars_lost",               label: "Wars Lost" },
-  { group: "Record",  key: "wars_drawn",              label: "Wars Drawn" },
-];
 
-const CWL_RANK_LIST = [
-  "Champion I","Champion II","Champion III",
-  "Master I","Master II","Master III",
-  "Crystal I","Crystal II","Crystal III",
-  "Gold I","Gold II","Gold III",
-  "Silver I","Silver II","Silver III",
-  "Bronze I","Bronze II","Bronze III","Unranked",
-];
+
+
+
 
 export function ClanPerformanceChart({ history }) {
   const [clanSearch, setClanSearch] = useState("");
@@ -875,8 +851,8 @@ const PROFILE_EQUIPMENT_LOOKUP = {
   "Rocket Backpack":      { hero: "Dragon Duke",     rarity: "Epic",   order: 42 },
 };
 
-const PROFILE_HERO_ORDER = ["Barbarian King","Archer Queen","Minion Prince","Grand Warden","Royal Champion","Dragon Duke"];
-const PROFILE_ROLE_LABELS = { leader: "Leader", coLeader: "Co-Leader", admin: "Elder", member: "Member" };
+
+
 
 export function ProfileEqTile({ eq }) {
   const slug = eq.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -1089,15 +1065,11 @@ export function ClansView({ clans, players, onBack, onOpenClan }) {
 // Accepts a clan filter (default: all clans combined) and a chart type
 // toggle (pie | bar). Both charts use PIE_COLORS keyed by TH level for
 // visual consistency. Built as plain SVG — no charting library needed.
-const PIE_COLORS = [
-  "#a78bfa", "#818cf8", "#60a5fa", "#38bdf8", "#22d3ee",
-  "#2dd4bf", "#34d399", "#a3e635", "#facc15", "#fb923c",
-  "#f87171", "#f472b6",
-];
+
 
 // Stable color assignment by TH level so the same TH always gets the
 // same color regardless of which clans/levels are present in the view.
-const ALL_TH_LEVELS = ["17","16","15","14","13","12","11","10","9","8","7","6","5","4","3","2","1"];
+
 
 export function AvgThView({ players, clans, onBack }) {
   const [chartType, setChartType] = useState("pie"); // "pie" | "bar"
@@ -1292,29 +1264,11 @@ export function AvgThView({ players, clans, onBack }) {
 
 
 // ── Player Performance History Chart ─────────────────────────────────────────
-const PLAYER_COLORS = ["#a78bfa", "#34d399", "#fb923c"];
-const STAT_OPTIONS = [
-  { key: "overall",            label: "CGN Rating" },
-  { key: "efficiency",         label: "Atk Efficiency" },
-  { key: "stars_earned",       label: "Stars Earned" },
-  { key: "destruction_pct",    label: "Destruction %" },
-  { key: "defence_efficiency", label: "Def Efficiency" },
-  { key: "stars_conceded",     label: "Stars Conceded" },
-  { key: "defence_pct",        label: "Defence %" },
-  { key: "attacks_used",       label: "Attacks Used" },
-  { key: "missed_attacks",     label: "Missed Attacks" },
-  { key: "cwl_rank",           label: "CWL Rank (Clan)" },
-];
+
+
 
 // CWL Rank order for Y axis positioning
-const CWL_RANK_ORDER_HIST = [
-  "Champion I","Champion II","Champion III",
-  "Master I","Master II","Master III",
-  "Crystal I","Crystal II","Crystal III",
-  "Gold I","Gold II","Gold III",
-  "Silver I","Silver II","Silver III",
-  "Bronze I","Bronze II","Bronze III","Unranked",
-];
+
 
 export function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seasons, sortBy }) {
   const [cardView, setCardView] = useState("stats"); // "stats" | "breakdown"
