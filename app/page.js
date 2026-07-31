@@ -2773,7 +2773,7 @@ export default function Home() {
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-      if (["roster","leaderboard","ranked","profile"].includes(hash)) {
+      if (["roster","ranked","profile"].includes(hash)) {
         setPage(hash);
       } else {
         setPage("home");
@@ -2793,7 +2793,8 @@ export default function Home() {
     return <RosterHubView onNavigateHome={() => navigate("home")} onNavigateProfile={tag => { sessionStorage.setItem("profileSearchTag", tag); navigate("profile"); }} />;
   }
   if (page === "leaderboard") {
-    return <LeaderboardView onBack={() => navigate("home")} />;
+    if (typeof window !== "undefined") window.location.href = "/leaderboard";
+    return null;
   }
   if (page === "history") {
     if (typeof window !== "undefined") window.location.href = "/history";
