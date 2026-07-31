@@ -17,6 +17,10 @@ function ThIcon({ level }) {
   return <img src={src} alt={`TH${level}`} className="w-7 h-7 shrink-0"/>;
 }
 
+function normaliseTag(raw) {
+  return raw.trim().toUpperCase().replace(/^#*/, "#");
+}
+
 function Skeleton({ className = "" }) {
   return <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />;
 }
