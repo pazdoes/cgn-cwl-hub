@@ -64,6 +64,7 @@ export async function GET(request, { params }) {
       WHERE player_tag = ${playerTag}
         AND data->'heroes' IS NOT NULL
         AND jsonb_array_length(data->'heroes') > 0
+        AND data->'troops' IS NOT NULL
       ORDER BY captured_at DESC
       LIMIT 1
     `;
