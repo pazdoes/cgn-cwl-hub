@@ -4,6 +4,7 @@ import { AppHeader, AppFooter } from "@/app/components/shared-views";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { CWL_ICONS, TH_ICONS } from "../../lib/icons";
+import { CWL_RANK_ORDER_HIST } from "@/lib/shared-constants";
 import { BRANDING } from "../../lib/branding";
 import DiscordWidget from "../components/DiscordWidget";
 
@@ -56,7 +57,16 @@ export default function RostersPage() {
     minutes: Math.floor((totalSeconds % 3600) / 60),
   };
 
-  const clans = [...new Set(players.map(p => p.clan))];
+  const CWL_RANK_ORDER = CWL_RANK_ORDER_HIST.map(r => r.toLowerCase());
+  const clans = [...new Set(players.map(p => p.clan))].sort((a, b) => {
+    const aRank = (players.find(p => p.clan === a)?.cwlRank || "").toLowerCase();
+    const bRank = (players.find(p => p.clan === b)?.cwlRank || "").toLowerCase();
+    const aIdx = CWL_RANK_ORDER.indexOf(aRank);
+    const bIdx = CWL_RANK_ORDER.indexOf(bRank);
+    const aSort = aIdx === -1 ? 999 : aIdx;
+    const bSort = bIdx === -1 ? 999 : bIdx;
+    return aSort - bSort;
+  });
   const searchResults = players.filter(p => p.account?.toLowerCase().includes(search.toLowerCase()));
   const clanPlayers = selectedClan ? players.filter(p => p.clan === selectedClan) : [];
 
