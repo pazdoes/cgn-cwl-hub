@@ -27,7 +27,7 @@ export default function RostersPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/roster").then(r => r.json()),
+      fetch("/api/roster-db").then(r => r.json()),
       fetch("/api/season").then(r => r.json()),
       fetch("/api/pool/count").then(r => r.json()),
     ]).then(([rosterData, seasonData, poolData]) => {
