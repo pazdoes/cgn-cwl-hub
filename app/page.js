@@ -2773,7 +2773,7 @@ export default function Home() {
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-      if (["roster","leaderboard","ranked","recap","profile"].includes(hash)) {
+      if (["roster","leaderboard","ranked","profile"].includes(hash)) {
         setPage(hash);
       } else {
         setPage("home");
@@ -2800,7 +2800,8 @@ export default function Home() {
     return null;
   }
   if (page === "recap") {
-    return <RecapView onBack={() => navigate("home")} />;
+    if (typeof window !== "undefined") window.location.href = "/recap";
+    return null;
   }
   if (page === "warintel") {
     if (typeof window !== "undefined") window.location.href = "/war-intel";
