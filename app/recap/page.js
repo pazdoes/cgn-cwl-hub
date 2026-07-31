@@ -156,7 +156,6 @@ function RecapView() {
         setTimeout(() => setCopied(false), 2500);
       }
     } catch (e) {
-      console.error("Share failed", e);
     } finally {
       setSharing(false);
       setShowShareCard(false);
@@ -177,7 +176,6 @@ function RecapView() {
         setTimeout(() => setCopiedClan(false), 2500);
       }
     } catch (e) {
-      console.error("Clan share failed", e);
     } finally {
       setSharingClan(false);
       setShowClanShareCard(false);
