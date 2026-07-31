@@ -1,26 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import {useEffect, useRef, useState} from "react";
+import {createPortal} from "react-dom";
+import {motion} from "framer-motion";
 import Link from "next/link";
-import { getLeagueStyles } from "@/lib/leagueColors";
-import { BRANDING } from "@/lib/branding";
-import { CWL_ICONS, TH_ICONS } from "@/lib/icons";
-import { MiniPie, LargePie, StarIcons, StatPill, RankBadge } from "@/lib/components";
-import {
-  StarBars, rankSortIndex, rankToNum, leagueTierNum, leagueSlug,
-  thColor, polarPoint, PlayerSparkline, getRowTiles,
-  PlayerPerformanceChart, ClanPerformanceChart, MatchupsPanel, WarMomentumChart,
-  ProfileEqTile, ProfileUnitTile, PlayersView, ClansView, AvgThView,
-  PlayerCard, ClanCard, LbInfoButton, SeasonAwards, AlliancePerformanceTile,
-  ClanRecapShareCard, RecapShareCard, FaqButton, AppHeader, AppFooter,
-} from "@/app/components/shared-views";
-import {
-  CWL_RANK_ORDER, PIE_COLORS, ALL_TH_LEVELS, PLAYER_COLORS, STAT_OPTIONS,
-  CWL_RANK_ORDER_HIST, CLAN_COLORS_CHART, CLAN_STAT_OPTIONS, CWL_RANK_LIST,
-  PROFILE_HERO_ORDER, PROFILE_ROLE_LABELS, LB_METRIC_INFO,
-} from "@/lib/shared-constants";
+import {getLeagueStyles} from "@/lib/leagueColors";
+import {BRANDING} from "@/lib/branding";
+import {CWL_ICONS, TH_ICONS} from "@/lib/icons";
+import {rankSortIndex, leagueSlug, getRowTiles, PlayerPerformanceChart, ClanPerformanceChart, MatchupsPanel, WarMomentumChart, ProfileEqTile, ProfileUnitTile, PlayersView, ClansView, AvgThView, PlayerCard, ClanCard, LbInfoButton, SeasonAwards, AlliancePerformanceTile, ClanRecapShareCard, RecapShareCard, AppHeader, AppFooter} from "@/app/components/shared-views";
+import {PROFILE_HERO_ORDER, PROFILE_ROLE_LABELS} from "@/lib/shared-constants";
 
 function PlayerProfileView({ onBack }) {
   const [query, setQuery] = useState(() => {
@@ -46,7 +34,6 @@ function PlayerProfileView({ onBack }) {
   const [upgradeSnapshots, setUpgradeSnapshots] = useState(0);
   const [tourneyHistory, setTourneyHistory] = useState(null);
   const [tourneyLoading, setTourneyLoading] = useState(false);
-
 
   // Auto-search if tag was pre-filled from roster — runs after all functions defined
   useEffect(() => {
@@ -1004,7 +991,6 @@ function RankedLeaderboardView({ onBack }) {
   );
 }
 
-
 function WarIntelView({ onBack }) {
   const [tab, setTab] = useState("days");
   const [loading, setLoading] = useState(true);
@@ -1286,8 +1272,6 @@ function HistoryView({ onBack }) {
       .catch(() => setAllData([]));
   }, []);
 
-
-
   return (
     <main className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -1350,11 +1334,7 @@ function HistoryView({ onBack }) {
   );
 }
 
-
-
 // ─── CWL player performance leaderboard ────────────────────────────────────
-
-
 
 function RecapView({ onBack }) {
   const [seasons, setSeasons] = useState([]);
@@ -1868,10 +1848,7 @@ function RecapView({ onBack }) {
   );
 }
 
-
-
 // ─── Leaderboard metric info modal ───────────────────────────────────────────
-
 
 function LeaderboardView({ onBack }) {
   const [lbTab, setLbTab] = useState("player"); // "player" | "clan"
@@ -3305,7 +3282,6 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         })}
 
       </div>
-
 
     <AppFooter onNavigateHome={onNavigateHome}/>
   </main>
