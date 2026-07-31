@@ -11,6 +11,10 @@ import DiscordWidget from "../components/DiscordWidget";
 
 // ─── Shared branded header + hamburger nav — self-contained copy, since
 // this route can't share component definitions with the main app file ───
+function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />;
+}
+
 export default function SignupPage() {
   // Discord session (item 17) — useSession() reads the JWT cookie set
   // by Auth.js after a successful Discord sign-in. Status can be:
