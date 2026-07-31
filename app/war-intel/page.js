@@ -17,6 +17,7 @@ function WarIntelView() {
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState("all");
   const [registeredClanTags, setRegisteredClanTags] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch("/api/war-intel/days").then(r => r.json()).catch(() => ({})).then(d => {
@@ -33,6 +34,7 @@ function WarIntelView() {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const seasonParam = selectedSeason === "all" ? "" : `?season=${encodeURIComponent(selectedSeason)}`;
     Promise.all([
       fetch(`/api/war-intel/matchups${seasonParam}`).then(r => r.json()).catch(() => ({})),
@@ -75,6 +77,22 @@ function WarIntelView() {
   })();
 
   const maxStars = Math.max(...dayAggregates.map(d => parseFloat(d.avg_stars || 0)), 1);
+
+  if (error) return (
+    <main className="min-h-screen flex flex-col bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4">
+      <AppHeader/>
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-4">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] backdrop-blur-xl p-6 text-center max-w-xs w-full">
+          <p className="text-sm text-red-400 mb-4">{error}</p>
+          <button onClick={() => { setError(null); setLoading(true); }}
+            className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.04] text-xs text-slate-300 hover:bg-white/[0.06] transition">
+            Retry
+          </button>
+        </div>
+      </div>
+      <AppFooter/>
+    </main>
+  );
 
   return (
     <main className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-12">
