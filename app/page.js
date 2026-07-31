@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { getLeagueStyles } from "@/lib/leagueColors";
+import { BRANDING } from "@/lib/branding";
 import { CWL_ICONS, TH_ICONS } from "@/lib/icons";
 import { MiniPie, LargePie, StarIcons, StatPill, RankBadge } from "@/lib/components";
 import {
