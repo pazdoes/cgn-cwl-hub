@@ -2773,7 +2773,7 @@ export default function Home() {
   useEffect(() => {
     const syncFromHash = () => {
       const hash = decodeURIComponent(window.location.hash.replace("#", ""));
-      if (["roster","leaderboard","ranked","profile"].includes(hash)) {
+      if (["roster"].includes(hash)) {
         setPage(hash);
       } else {
         setPage("home");
@@ -2790,7 +2790,7 @@ export default function Home() {
   }
 
   if (page === "roster") {
-    return <RosterHubView onNavigateHome={() => navigate("home")} onNavigateProfile={tag => { sessionStorage.setItem("profileSearchTag", tag); navigate("profile"); }} />;
+    return <RosterHubView onNavigateHome={() => navigate("home")} onNavigateProfile={tag => { sessionStorage.setItem("profileSearchTag", tag); window.location.href = "/profile"; }} />;
   }
   if (page === "leaderboard") {
     return <LeaderboardView onBack={() => navigate("home")} />;
@@ -2809,7 +2809,8 @@ export default function Home() {
   }
 
   if (page === "profile") {
-    return <PlayerProfileView onBack={() => navigate("home")} />;
+    if (typeof window !== "undefined") window.location.href = "/profile";
+    return null;
   }
 
   if (page === "ranked") {
