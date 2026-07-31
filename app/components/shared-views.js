@@ -806,7 +806,7 @@ export function WarMomentumChart({ dayAggregates }) {
 
 // ── War Intelligence View ────────────────────────────────────────────────────
 // ─── Player Profile View ──────────────────────────────────────────────────────
-const PROFILE_EQUIPMENT_LOOKUP = {
+export const PROFILE_EQUIPMENT_LOOKUP = {
   "Barbarian Puppet":     { hero: "Barbarian King",  rarity: "Common", order: 1  },
   "Rage Vial":            { hero: "Barbarian King",  rarity: "Common", order: 2  },
   "Earthquake Boots":     { hero: "Barbarian King",  rarity: "Common", order: 3  },

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  leagueSlug, ProfileEqTile, ProfileUnitTile, AppHeader,
+  leagueSlug, ProfileEqTile, ProfileUnitTile, AppHeader, PROFILE_EQUIPMENT_LOOKUP,
 } from "@/app/components/shared-views";
 import {
   PROFILE_HERO_ORDER, PROFILE_ROLE_LABELS,
