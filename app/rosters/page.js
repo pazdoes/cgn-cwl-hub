@@ -27,7 +27,7 @@ export default function RostersPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/roster").then(r => r.json()),
+      fetch("/api/roster-db").then(r => r.json()),
       fetch("/api/season").then(r => r.json()),
       fetch("/api/pool/count").then(r => r.json()),
     ]).then(([rosterData, seasonData, poolData]) => {
@@ -96,8 +96,7 @@ export default function RostersPage() {
             return Number(b.townHall || 0) - Number(a.townHall || 0);
           }).map((player, index) => (
             <div key={`${player.clan}-${player.account}-${index}`}
-              onClick={() => window.open(`/player/${(player.playerTag||"").replace("#","")}`, "_blank")}
-              className={`rounded-lg border backdrop-blur-xl p-3 transition cursor-pointer ${highlightedAccount && player.playerTag === highlightedAccount ? "border-purple-500/40 bg-purple-500/10" : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"}`}>
+              className={`rounded-lg border backdrop-blur-xl p-3 ${highlightedAccount && player.playerTag === highlightedAccount ? "border-purple-500/40 bg-purple-500/10" : "border-white/10 bg-white/[0.04]"}`}>
               <div className="flex items-center w-full justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-xs text-slate-600 w-5 text-right shrink-0">{index + 1}</span>
