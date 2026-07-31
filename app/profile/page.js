@@ -122,7 +122,7 @@ function PlayerProfileView() {
   }
 
   async function loadPlayerByTag(tag) {
-    setSearching(true); setArmy(null); setError(null); setNameResults([]);
+    setSearching(true); setArmy(null); setError(null); setNameResults([]); setIconsReady(false); setProfileView("army"); setUpgrades(null); setTourneyHistory(null); setSelectedHero(null);
     try {
       const res = await fetch(`/api/army/${tag.replace("#","")}`);
       const d = await res.json();
