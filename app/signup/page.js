@@ -11,6 +11,12 @@ import DiscordWidget from "../components/DiscordWidget";
 
 // ─── Shared branded header + hamburger nav — self-contained copy, since
 // this route can't share component definitions with the main app file ───
+function ThIcon({ level }) {
+  const src = level ? TH_ICONS[String(level)] : null;
+  if (!src) return <div className="w-7 h-7 rounded-full bg-white/[0.06] shrink-0"/>;
+  return <img src={src} alt={`TH${level}`} className="w-7 h-7 shrink-0"/>;
+}
+
 function Skeleton({ className = "" }) {
   return <div className={`animate-pulse rounded-xl bg-white/[0.06] ${className}`} />;
 }
