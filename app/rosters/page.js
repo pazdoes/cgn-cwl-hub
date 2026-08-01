@@ -79,7 +79,7 @@ export default function RostersPage() {
 
   // Clan detail view
   if (selectedClan) {
-    const rank = clanPlayers[0]?.cwlRank ?? "unranked";
+    const rank = (clanPlayers[0]?.cwlRank ?? "unranked").trim();
     const format = clanPlayers[0]?.cwlFormat || (clanPlayers.length >= 30 ? "30v30" : "15v15");
     const clanLink = clanPlayers[0]?.clanLink || "";
     return (
@@ -268,7 +268,7 @@ export default function RostersPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {clans.map(clan => {
             const members = players.filter(p => p.clan === clan);
-            const rank = members[0]?.cwlRank ?? "unranked";
+            const rank = (members[0]?.cwlRank ?? "unranked").trim();
             const format = members[0]?.cwlFormat || (members.length >= 30 ? "30v30" : "15v15");
             const season = members[0]?.season || "";
             return (
