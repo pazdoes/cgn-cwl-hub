@@ -71,9 +71,10 @@ export default function RostersPage() {
   };
 
   const CWL_RANK_ORDER = CWL_RANK_ORDER_HIST.map(r => r.toLowerCase());
+  const cleanRank = r => (r || "").replace(/\bLeague\s+/i, "").trim().toLowerCase();
   const clans = [...new Set(players.map(p => p.clan))].sort((a, b) => {
-    const aRank = (players.find(p => p.clan === a)?.cwlRank || "").toLowerCase();
-    const bRank = (players.find(p => p.clan === b)?.cwlRank || "").toLowerCase();
+    const aRank = cleanRank(players.find(p => p.clan === a)?.cwlRank);
+    const bRank = cleanRank(players.find(p => p.clan === b)?.cwlRank);
     const aIdx = CWL_RANK_ORDER.indexOf(aRank);
     const bIdx = CWL_RANK_ORDER.indexOf(bRank);
     const aSort = aIdx === -1 ? 999 : aIdx;
