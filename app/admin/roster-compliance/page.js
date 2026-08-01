@@ -108,6 +108,15 @@ export default function RosterCompliancePage() {
     if (saved) { setPinState(saved); setAuthed(true); }
   }, []);
 
+  // Fetch automatically once authed (covers both a fresh PIN submit and
+  // returning with an already-saved PIN session) rather than requiring
+  // a manual Refresh press every time the page loads.
+  useEffect(() => {
+    if (authed && pin && !checkLoaded && !checkLoading) {
+      handleCheckCompliance();
+    }
+  }, [authed, pin]);
+
   async function handleCheckCompliance() {
     setCheckLoading(true); setShowResults(true);
     try {
@@ -124,7 +133,8 @@ export default function RosterCompliancePage() {
     const p = pinInput.trim();
     setPinState(p); setAuthed(true); setPinError(false);
     sessionStorage.setItem(SESSION_KEY, p);
-    handleCheckCompliance();
+    // Fetch is handled by the authed/pin useEffect below — avoids a
+    // double-fetch race between this direct call and that effect.
   }
 
   if (!authed) {
