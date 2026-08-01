@@ -5,6 +5,18 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { CWL_ICONS, TH_ICONS } from "../../lib/icons";
 import { CWL_RANK_ORDER_HIST } from "@/lib/shared-constants";
+
+// CWL_ICONS keys are exact-case ("Champion II"). Sheet values may not
+// match that casing exactly even though CSS text-transform makes them
+// look identical on screen — this does a case-insensitive lookup so the
+// icon always resolves correctly regardless of how the rank string was
+// typed/stored.
+const CWL_ICON_LOOKUP = Object.fromEntries(
+  Object.entries(CWL_ICONS).map(([k, v]) => [k.toLowerCase(), v])
+);
+function getRankIcon(rank) {
+  return CWL_ICON_LOOKUP[(rank || "").trim().toLowerCase()] || CWL_ICON_LOOKUP["unranked"];
+}
 import { BRANDING } from "../../lib/branding";
 import DiscordWidget from "../components/DiscordWidget";
 
@@ -87,7 +99,7 @@ export default function RostersPage() {
         {BG}
         <AppHeader/>
         <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
-          <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
+          <img src={getRankIcon(rank)} alt={rank} className="w-12 h-12"/>
           <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
           <p className="text-xs text-slate-400">{format}</p>
           {clanLink && (
@@ -277,7 +289,7 @@ export default function RostersPage() {
                 className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 min-h-[280px] w-full max-w-full flex flex-col items-center justify-between cursor-pointer shadow-xl">
                 <div className="text-center">
                   <div className="text-xs uppercase tracking-[0.2em] text-purple-300 mb-4">{rank}</div>
-                  <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-24 h-24 mx-auto mb-4"/>
+                  <img src={getRankIcon(rank)} alt={rank} className="w-24 h-24 mx-auto mb-4"/>
                   <div className="text-2xl font-bold mt-2">{clan}</div>
                   <div className="text-lg text-slate-300 mt-4">{format}</div>
                   <div className="text-sm text-slate-500 mt-2">{season}</div>
