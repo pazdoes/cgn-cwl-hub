@@ -15,7 +15,8 @@ const CWL_ICON_LOOKUP = Object.fromEntries(
   Object.entries(CWL_ICONS).map(([k, v]) => [k.toLowerCase(), v])
 );
 function getRankIcon(rank) {
-  return CWL_ICON_LOOKUP[(rank || "").trim().toLowerCase()] || CWL_ICON_LOOKUP["unranked"];
+  const cleaned = (rank || "").replace(/\bLeague\s+/i, "").trim().toLowerCase();
+  return CWL_ICON_LOOKUP[cleaned] || CWL_ICON_LOOKUP["unranked"];
 }
 import { BRANDING } from "../../lib/branding";
 import DiscordWidget from "../components/DiscordWidget";
