@@ -3,6 +3,64 @@ import { getDb } from "@/lib/db";
 import { getOpenPoolSeason } from "@/lib/season";
 import { assignPlayerToRoster } from "@/lib/sheetsWrite";
 import { getPlayer } from "@/lib/coc";
+import { getAccessToken } from "@/lib/googleAuth";
+
+const SHEET_ID = process.env.GOOGLE_SHEET_ID;
+const CWL_RANK_COL = 8; // column I (0-indexed)
+
+async function getSheetTabsForForceWrite(token) {
+  const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties.title`;
+  const res = await fetch(metaUrl, { headers: { Authorization: `Bearer ${token}` } });
+  const meta = await res.json();
+  return (meta.sheets || []).map(s => s.properties.title);
+}
+
+async function getSheetValuesForForceWrite(token, tabName) {
+  const range = encodeURIComponent(`${tabName}!A:K`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  return data.values || [];
+}
+
+async function writeRangeForForceWrite(token, tabName, a1Range, values) {
+  const range = encodeURIComponent(`${tabName}!${a1Range}`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ range: `${tabName}!${a1Range}`, majorDimension: "ROWS", values }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Sheets write failed (${res.status})`);
+  }
+  return res.json();
+}
+
+// Forces the CWL Rank column (I) to match the current value in Neon's
+// clans.cwl_rank for every data row in the clan's tab. This exists because
+// assignPlayerToRoster's carryForward logic preserves whatever rank value
+// is already sitting in an existing row — correct for most fields (so
+// manual sheet edits aren't clobbered), but wrong for rank specifically
+// right after a publish, since the DB is the source of truth for CWL
+// rank and the sheet row may be stale from an earlier point in the season.
+async function forceCwlRankColumn(clanName, cwlRank) {
+  if (!cwlRank) return { skipped: true, reason: "no cwl_rank set in clans table" };
+  const token = await getAccessToken();
+  const tabs = await getSheetTabsForForceWrite(token);
+  const tabName = tabs.find(t => t.toLowerCase().includes(clanName.toLowerCase()));
+  if (!tabName) return { skipped: true, reason: `no tab found for ${clanName}` };
+
+  const rows = await getSheetValuesForForceWrite(token, tabName);
+  const dataRowCount = Math.max(rows.length - 1, 0);
+  if (dataRowCount === 0) return { rowsUpdated: 0 };
+
+  const col = String.fromCharCode("A".charCodeAt(0) + CWL_RANK_COL); // "I"
+  const values = Array.from({ length: dataRowCount }, () => [cwlRank]);
+  await writeRangeForForceWrite(token, tabName, `${col}2:${col}${dataRowCount + 1}`, values);
+  return { tabName, rowsUpdated: dataRowCount, cwlRank };
+}
 
 export async function POST(request) {
   const pin = request.headers.get("x-officer-pin");
@@ -86,7 +144,17 @@ export async function POST(request) {
         }
       }
 
-      return NextResponse.json({ ok: true, clanName, published, sheetsSync: results });
+      // Force the CWL Rank column to the current DB value for every row —
+      // corrects any stale rank carried forward from existing sheet rows.
+      let rankSync = null;
+      try {
+        const [clan] = await sql`SELECT cwl_rank FROM clans WHERE clan_name = ${clanName} LIMIT 1`;
+        rankSync = await forceCwlRankColumn(clanName, clan?.cwl_rank || null);
+      } catch (err) {
+        rankSync = { error: err.message };
+      }
+
+      return NextResponse.json({ ok: true, clanName, published, sheetsSync: results, rankSync });
     } catch (err) {
       return NextResponse.json({ ok: true, clanName, published, sheetsError: err.message });
     }
