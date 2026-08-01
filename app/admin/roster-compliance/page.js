@@ -4,8 +4,6 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import DiscordWidget from "@/app/components/DiscordWidget";
 
-// Alliance clan tags loaded dynamically from API
-
 function ThIcon({ level }) {
   if (!level) return <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-[9px] text-slate-600">?</div>;
   return (
@@ -92,15 +90,16 @@ function AdminFooter() {
   );
 }
 
-export default function MissingMembersPage() {
+export default function RosterCompliancePage() {
   const [pin, setPinState] = useState("");
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
   const [authed, setAuthed] = useState(false);
-  const [missing, setMissing] = useState([]);
-  const [missingLoading, setMissingLoading] = useState(false);
-  const [missingLoaded, setMissingLoaded] = useState(false);
-  const [showMissing, setShowMissing] = useState(false);
+  const [mismatches, setMismatches] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [checkLoading, setCheckLoading] = useState(false);
+  const [checkLoaded, setCheckLoaded] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const { status: discordStatus } = useSession();
   const SESSION_KEY = "cwl_admin_pin_confirmed";
 
@@ -109,14 +108,15 @@ export default function MissingMembersPage() {
     if (saved) { setPinState(saved); setAuthed(true); }
   }, []);
 
-  async function handleCheckMissing() {
-    setMissingLoading(true); setShowMissing(true);
+  async function handleCheckCompliance() {
+    setCheckLoading(true); setShowResults(true);
     try {
-      const res = await fetch("/api/admin/members/missing", { headers: { "x-officer-pin": pin } });
+      const res = await fetch("/api/admin/roster-compliance", { headers: { "x-officer-pin": pin } });
       const d = await res.json();
-      setMissing(d.missing || []);
-      setMissingLoaded(true);
-    } catch {} finally { setMissingLoading(false); }
+      setMismatches(d.mismatches || []);
+      setSummary(d);
+      setCheckLoaded(true);
+    } catch {} finally { setCheckLoading(false); }
   }
 
   function handlePinSubmit(e) {
@@ -124,7 +124,7 @@ export default function MissingMembersPage() {
     const p = pinInput.trim();
     setPinState(p); setAuthed(true); setPinError(false);
     sessionStorage.setItem(SESSION_KEY, p);
-    handleCheckMissing();
+    handleCheckCompliance();
   }
 
   if (!authed) {
@@ -132,7 +132,7 @@ export default function MissingMembersPage() {
       <main className="min-h-screen flex flex-col flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="relative z-10 w-full max-w-xs">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
-            <h1 className="text-xl font-thin tracking-widest mb-1">Missing Members</h1>
+            <h1 className="text-xl font-thin tracking-widest mb-1">Roster Compliance</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
@@ -155,48 +155,53 @@ export default function MissingMembersPage() {
       </div>
       <AdminHeader/>
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Missing Members</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">Roster Compliance</h1>
       </div>
       <div className="relative z-10 space-y-3">
-      <div className="relative z-10 space-y-3 mt-0">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Missing Members</h2>
-              <p className="text-[10px] text-slate-700 mt-0.5">Alliance clan members not yet connected to the app</p>
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Roster Compliance</h2>
+              <p className="text-[10px] text-slate-700 mt-0.5">Rostered players not currently in their assigned CWL clan</p>
             </div>
-            <button onClick={handleCheckMissing} disabled={missingLoading}
+            <button onClick={handleCheckCompliance} disabled={checkLoading}
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${missingLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${checkLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              {missingLoading ? "Checking…" : "Refresh"}
+              {checkLoading ? "Checking…" : "Refresh"}
             </button>
           </div>
 
-          {showMissing && (
+          {showResults && (
             <>
-              {missingLoading ? (
-                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-12 rounded-lg bg-white/[0.04] animate-pulse"/>)}</div>
-              ) : missingLoaded && (
+              {checkLoading ? (
+                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-14 rounded-lg bg-white/[0.04] animate-pulse"/>)}</div>
+              ) : checkLoaded && (
                 <>
-                  <p className="text-[10px] text-slate-600 mb-3">{missing.length} member{missing.length !== 1 ? "s" : ""} not connected</p>
-                  {missing.length === 0 ? (
-                    <p className="text-xs text-green-400 text-center py-4">✓ All clan members are connected to the app</p>
+                  {summary && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <p className="text-[10px] text-slate-600">{summary.totalRostered} rostered · {summary.correctCount} correct · {mismatches.length} flagged</p>
+                    </div>
+                  )}
+                  {mismatches.length === 0 ? (
+                    <p className="text-xs text-green-400 text-center py-4">✓ Every rostered player is in their assigned clan</p>
                   ) : (
                     <div className="space-y-2">
-                      {missing.map((m, i) => (
-                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-                          <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-                            {m.town_hall_level ? <img src={`/icons/th/th${m.town_hall_level}.png`} alt={`TH${m.town_hall_level}`} className="w-5 h-5 object-contain"/> : <span className="text-[9px] text-slate-600">?</span>}
-                          </div>
+                      {mismatches.map(m => (
+                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-red-500/20 bg-red-500/[0.04]">
+                          <ThIcon level={m.town_hall_level}/>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
                             <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-[10px] text-slate-400">{m.clan_name.split(" ")[0]}</p>
-                            <p className="text-[9px] text-slate-600 capitalize">{m.role?.toLowerCase().replace(/_/g, " ")}</p>
+                            <p className="text-[10px] text-slate-400">
+                              Rostered: <span className="text-purple-300">{m.rostered_clan.split(" ")[0]}</span>
+                            </p>
+                            <p className="text-[10px] text-red-400">
+                              {m.live_clan ? `In: ${m.live_clan.split(" ")[0]}` : "Not in alliance"}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -207,7 +212,6 @@ export default function MissingMembersPage() {
             </>
           )}
         </div>
-      </div>
       </div>
       <AdminFooter/>
     </main>
