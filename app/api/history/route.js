@@ -11,6 +11,7 @@ export async function GET(request) {
         SELECT
           csh.clan_tag, csh.clan_name, csh.season, csh.cwl_rank,
           c.cwl_rank as current_cwl_rank,
+          c.clan_tag as current_clan_tag,
           (
             SELECT prev.cwl_rank
             FROM clan_season_history prev
@@ -44,6 +45,7 @@ export async function GET(request) {
         SELECT
           csh.clan_tag, csh.clan_name, csh.season, csh.cwl_rank,
           c.cwl_rank as current_cwl_rank,
+          c.clan_tag as current_clan_tag,
           (
             SELECT prev.cwl_rank
             FROM clan_season_history prev

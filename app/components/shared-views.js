@@ -477,6 +477,30 @@ export function ClanPerformanceChart({ history }) {
   }
   const allClans = allClanTags.map(tag => clanNameByTag[tag]).sort();
 
+  // Which tag is the CURRENT incarnation of each clan_name, per the `clans`
+  // table (via /api/history's current_clan_tag). A clan_name can have
+  // multiple tags across its history if it was disbanded and recreated —
+  // only the one matching current_clan_tag is "current"; the rest are shown
+  // as former clans rather than silently blended into the same series.
+  const currentTagByName = {};
+  if (history) for (const r of history) {
+    if (r.current_clan_tag && !currentTagByName[r.clan_name]) {
+      currentTagByName[r.clan_name] = r.current_clan_tag;
+    }
+  }
+  function isFormerTag(tag) {
+    const name = clanNameByTag[tag];
+    const current = currentTagByName[name];
+    return !!current && tag !== current;
+  }
+  // Human season range label for a former clan's run, e.g. "Apr 2026 – May 2026"
+  function formerRangeLabel(tag) {
+    const seasonsForTag = allSeasons.filter(s => history.some(r => (r.clan_tag || r.clan_name) === tag && r.season === s));
+    if (seasonsForTag.length === 0) return "";
+    const first = seasonsForTag[0], last = seasonsForTag[seasonsForTag.length - 1];
+    return first === last ? first : `${first} – ${last}`;
+  }
+
   // All seasons — API returns oldest-first (ASC from season_registry join)
   const allSeasons = history ? [...new Set(history.map(r => r.season))] : [];
 
@@ -550,9 +574,27 @@ export function ClanPerformanceChart({ history }) {
     for (const r of sorted) {
       const tag = r.clan_tag || r.clan_name;
       if (seen.has(tag)) continue;
+      // Prefer currently-active clans on first load — a strong-performing
+      // disbanded clan should not silently outrank a real current one just
+      // because its historical numbers happen to be better. Former clans
+      // remain fully searchable and trackable, just not auto-selected.
+      const currentTag = currentTagByName[r.clan_name];
+      if (currentTag && tag !== currentTag) continue;
       seen.add(tag);
       top3.push({ tag, name: r.clan_name });
       if (top3.length >= 3) break;
+    }
+    // Fallback: if fewer than 3 currently-active clans have data (shouldn't
+    // happen with a full 4-clan alliance, but stay safe if that ever changes),
+    // fill remaining slots from former clans rather than showing fewer than 3.
+    if (top3.length < 3) {
+      for (const r of sorted) {
+        const tag = r.clan_tag || r.clan_name;
+        if (seen.has(tag)) continue;
+        seen.add(tag);
+        top3.push({ tag, name: r.clan_name });
+        if (top3.length >= 3) break;
+      }
     }
     setTrackedClans(top3.map(({tag, name}) => ({ tag, name, data: buildClanData(tag, selectedStat) })));
   }, [history]);
@@ -624,8 +666,11 @@ export function ClanPerformanceChart({ history }) {
               <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
                 {searchResults.map(tag => (
                   <button key={tag} type="button" onClick={() => addClan(tag)}
-                    className="w-full px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left">
-                    {clanNameByTag[tag]}
+                    className="w-full px-3 py-2 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white transition text-left flex items-baseline gap-1.5">
+                    <span>{clanNameByTag[tag]}</span>
+                    {isFormerTag(tag) && (
+                      <span className="text-[10px] text-slate-600">Former · {formerRangeLabel(tag)}</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -637,9 +682,12 @@ export function ClanPerformanceChart({ history }) {
       {trackedClans.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {trackedClans.map((c, i) => (
-            <div key={c.tag} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CLAN_COLORS_CHART[i] }}/>
+            <div key={c.tag} title={isFormerTag(c.tag) ? `${c.name} — Former · ${formerRangeLabel(c.tag)}` : c.name}
+              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${isFormerTag(c.tag) ? "border border-dashed" : ""}`}
+                style={isFormerTag(c.tag) ? { borderColor: CLAN_COLORS_CHART[i], background: "transparent" } : { background: CLAN_COLORS_CHART[i] }}/>
               <span className="text-xs text-slate-300 max-w-[100px] truncate">{c.name.split(" ")[0]}</span>
+              {isFormerTag(c.tag) && <span className="text-[9px] text-slate-600 uppercase tracking-wide">former</span>}
               <button onClick={() => removeClan(c.tag)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
             </div>
           ))}
