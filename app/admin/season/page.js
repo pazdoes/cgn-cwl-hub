@@ -203,6 +203,9 @@ export default function AdminSeasonPage() {
   const [fetchingCwl, setFetchingCwl] = useState(false);
   const [fetchCwlResult, setFetchCwlResult] = useState(null);
 
+  const [recomputing, setRecomputing] = useState(false);
+  const [recomputeResult, setRecomputeResult] = useState(null);
+
   const { status: discordStatus } = useSession();
   const SESSION_KEY = "cwl_admin_pin_confirmed";
 
@@ -259,6 +262,19 @@ export default function AdminSeasonPage() {
       else { setFetchCwlResult({ ok: false, message: data.error || "Fetch failed" }); }
     } catch { setFetchCwlResult({ ok: false, message: "Network error" }); }
     finally { setFetchingCwl(false); }
+  }
+
+  async function doRecomputeStats() {
+    setRecomputing(true); setRecomputeResult(null);
+    try {
+      const res = await fetch("/api/admin/recompute-cwl-stats", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ season }) });
+      const data = await res.json();
+      if (res.ok) {
+        const errSuffix = data.errors?.length ? ` · ${data.errors.length} error(s)` : "";
+        setRecomputeResult({ ok: (data.errors?.length ?? 0) === 0, message: `${data.playersUpdated} players · ${data.clansUpdated} clans updated for ${data.season}${errSuffix}` });
+      } else { setRecomputeResult({ ok: false, message: data.error || "Recompute failed" }); }
+    } catch { setRecomputeResult({ ok: false, message: "Network error" }); }
+    finally { setRecomputing(false); }
   }
 
   /* ─── PIN gate ────────────────────────────────────────────── */
@@ -334,6 +350,22 @@ export default function AdminSeasonPage() {
             {fetchingCwl ? "Fetching…" : "Fetch CWL Data"}
           </button>
           {fetchCwlResult && <p className={`text-[11px] text-center ${fetchCwlResult.ok ? "text-blue-300" : "text-red-400"}`}>{fetchCwlResult.message}</p>}
+        </div>
+
+        {/* Recompute stats from DB */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-slate-300 mb-1">Recompute Stats from DB</p>
+            <p className="text-[10px] text-slate-600">Rebuilds player &amp; clan season totals from war_attacks/war_defences/war_days directly — use this after a manual backfill when the CWL war league group has already expired and Fetch CWL Data can no longer pull it</p>
+          </div>
+          <button onClick={doRecomputeStats} disabled={recomputing}
+            className="w-full py-2.5 rounded-lg text-xs font-semibold bg-transparent text-emerald-400 border border-emerald-500/60 hover:border-emerald-400 hover:text-emerald-300 transition disabled:opacity-40 flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${recomputing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {recomputing ? "Recomputing…" : "Recompute Stats from DB"}
+          </button>
+          {recomputeResult && <p className={`text-[11px] text-center ${recomputeResult.ok ? "text-emerald-300" : "text-red-400"}`}>{recomputeResult.message}</p>}
         </div>
 
       </div>
