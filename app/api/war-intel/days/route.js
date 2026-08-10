@@ -15,13 +15,14 @@ export async function GET() {
   const [days, seasonRows] = await Promise.all([
     sql`
       SELECT
-        wd.season, wd.clan_tag, wd.clan_name, wd.war_day,
+        wd.season, c.clan_tag, wd.clan_name, wd.war_day,
         wd.war_result,
         ROUND(AVG(wd.stars_earned)::NUMERIC, 2) AS avg_stars,
         COUNT(*) AS war_count
       FROM war_days wd
       LEFT JOIN season_registry sr ON sr.season = wd.season
-      GROUP BY wd.season, wd.clan_tag, wd.clan_name, wd.war_day, wd.war_result, sr.season_date
+      LEFT JOIN clans c ON c.clan_name = wd.clan_name
+      GROUP BY wd.season, c.clan_tag, wd.clan_name, wd.war_day, wd.war_result, sr.season_date
       ORDER BY sr.season_date DESC NULLS LAST, wd.war_day ASC
     `,
     sql`
