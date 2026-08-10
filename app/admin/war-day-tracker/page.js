@@ -4,17 +4,6 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import DiscordWidget from "@/app/components/DiscordWidget";
 
-// Alliance clan tags loaded dynamically from API
-
-function ThIcon({ level }) {
-  if (!level) return <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-[9px] text-slate-600">?</div>;
-  return (
-    <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-      <img src={`/icons/th/th${level}.png`} alt={`TH${level}`} className="w-5 h-5 object-contain"/>
-    </div>
-  );
-}
-
 function AdminHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const navSections = [
@@ -24,7 +13,6 @@ function AdminHeader() {
       { href: "/admin/war-day-tracker", label: "War Day Tracker", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
       { href: "/admin/pool", label: "Pool Manager", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
       { href: "/admin/season", label: "Season Manager", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-      { href: "/admin/clans", label: "Clan Manager", icon: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" },
     ]},
     { label: "SIDE WARS", items: [{ href: "/admin/side-wars", label: "Side Wars", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" }]},
     { label: "ANNOUNCEMENTS", items: [
@@ -93,16 +81,14 @@ function AdminFooter() {
   );
 }
 
-export default function MissingMembersPage() {
+export default function WarDayTrackerPage() {
   const [pin, setPinState] = useState("");
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
   const [authed, setAuthed] = useState(false);
-  const [missing, setMissing] = useState([]);
-  const [missingLoading, setMissingLoading] = useState(false);
-  const [missingLoaded, setMissingLoaded] = useState(false);
-  const [showMissing, setShowMissing] = useState(false);
-  const { status: discordStatus } = useSession();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const SESSION_KEY = "cwl_admin_pin_confirmed";
 
   useEffect(() => {
@@ -110,22 +96,30 @@ export default function MissingMembersPage() {
     if (saved) { setPinState(saved); setAuthed(true); }
   }, []);
 
-  async function handleCheckMissing() {
-    setMissingLoading(true); setShowMissing(true);
+  async function handleFetch() {
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/members/missing", { headers: { "x-officer-pin": pin } });
+      const res = await fetch("/api/admin/war-day-tracker", { headers: { "x-officer-pin": pin } });
       const d = await res.json();
-      setMissing(d.missing || []);
-      setMissingLoaded(true);
-    } catch {} finally { setMissingLoading(false); }
+      setData(d);
+      setLoaded(true);
+    } catch {} finally { setLoading(false); }
   }
+
+  // Fetch automatically once authed — covers a fresh PIN submit and a
+  // returning session with a saved PIN — no manual Refresh press needed.
+  useEffect(() => {
+    if (authed && pin && !loaded && !loading) {
+      handleFetch();
+    }
+  }, [authed, pin]);
 
   function handlePinSubmit(e) {
     e.preventDefault();
     const p = pinInput.trim();
     setPinState(p); setAuthed(true); setPinError(false);
     sessionStorage.setItem(SESSION_KEY, p);
-    handleCheckMissing();
+    // Fetch is handled by the authed/pin useEffect above.
   }
 
   if (!authed) {
@@ -133,7 +127,7 @@ export default function MissingMembersPage() {
       <main className="min-h-screen flex flex-col flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="relative z-10 w-full max-w-xs">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
-            <h1 className="text-xl font-thin tracking-widest mb-1">Missing Members</h1>
+            <h1 className="text-xl font-thin tracking-widest mb-1">War Day Tracker</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
@@ -156,59 +150,64 @@ export default function MissingMembersPage() {
       </div>
       <AdminHeader/>
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Missing Members</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1">War Day Tracker</h1>
+        {data?.season && <p className="text-[10px] text-slate-600 uppercase tracking-widest">{data.season}</p>}
       </div>
+
       <div className="relative z-10 space-y-3">
-      <div className="relative z-10 space-y-3 mt-0">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Missing Members</h2>
-              <p className="text-[10px] text-slate-700 mt-0.5">Alliance clan members not yet connected to the app</p>
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Capture Coverage</h2>
+              <p className="text-[10px] text-slate-700 mt-0.5">War day capture status per clan, days 1–7</p>
             </div>
-            <button onClick={handleCheckMissing} disabled={missingLoading}
+            <button onClick={handleFetch} disabled={loading}
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
-              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${missingLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              {missingLoading ? "Checking…" : "Refresh"}
+              {loading ? "Checking…" : "Refresh"}
             </button>
           </div>
 
-          {showMissing && (
-            <>
-              {missingLoading ? (
-                <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-12 rounded-lg bg-white/[0.04] animate-pulse"/>)}</div>
-              ) : missingLoaded && (
-                <>
-                  <p className="text-[10px] text-slate-600 mb-3">{missing.length} member{missing.length !== 1 ? "s" : ""} not connected</p>
-                  {missing.length === 0 ? (
-                    <p className="text-xs text-green-400 text-center py-4">✓ All clan members are connected to the app</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {missing.map((m, i) => (
-                        <div key={m.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-                          <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-                            {m.town_hall_level ? <img src={`/icons/th/th${m.town_hall_level}.png`} alt={`TH${m.town_hall_level}`} className="w-5 h-5 object-contain"/> : <span className="text-[9px] text-slate-600">?</span>}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
-                            <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-[10px] text-slate-400">{m.clan_name.split(" ")[0]}</p>
-                            <p className="text-[9px] text-slate-600 capitalize">{m.role?.toLowerCase().replace(/_/g, " ")}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </>
+          {loading ? (
+            <div className="space-y-2">{[...Array(4)].map((_,i) => <div key={i} className="h-16 rounded-lg bg-white/[0.04] animate-pulse"/>)}</div>
+          ) : loaded && data?.clans && (
+            <div className="space-y-3">
+              {data.clans.map(clan => (
+                <div key={clan.clanName} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-white">{clan.clanName}</p>
+                    <p className="text-[10px] text-slate-500">{clan.daysCaptured}/7 days captured</p>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {clan.days.map(d => (
+                      <div key={d.day}
+                        className={`rounded-lg border p-2 text-center ${
+                          d.captured
+                            ? "border-green-500/30 bg-green-500/[0.08]"
+                            : "border-red-500/30 bg-red-500/[0.08]"
+                        }`}
+                        title={d.captured ? `${d.attacksUsed}/${d.attacksAvailable} attacks · ${d.warResult}` : "Not captured"}>
+                        <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Day {d.day}</p>
+                        {d.captured ? (
+                          <>
+                            <p className="text-[10px] text-green-400 font-semibold">{d.attacksUsed}/{d.attacksAvailable}</p>
+                            <p className={`text-[9px] mt-0.5 ${
+                              d.warResult === "win" ? "text-green-500" : d.warResult === "loss" ? "text-red-400" : "text-slate-400"
+                            }`}>{d.warResult}</p>
+                          </>
+                        ) : (
+                          <p className="text-[10px] text-red-400 font-semibold">✕</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-      </div>
       </div>
       <AdminFooter/>
     </main>
