@@ -243,7 +243,7 @@ export default function AdminDirectoryPage() {
     } finally { setRefreshing(false); }
   }
 
-  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
+  const pillSelect = "rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
 
   // Build unique Discord user list
   const discordUsers = [...new Map(
@@ -334,12 +334,12 @@ export default function AdminDirectoryPage() {
             <div className="flex items-center gap-2">
               {refreshResult && <span className={`text-[10px] ${refreshResult.ok ? "text-green-400" : "text-red-400"}`}>{refreshResult.message}</span>}
               <button onClick={handleRefreshClanMembership} disabled={refreshing}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:border-amber-400/60 hover:bg-amber-500/20 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:border-amber-400/60 hover:bg-amber-500/20 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 {refreshing ? "Refreshing…" : "Refresh Clans"}
               </button>
               <button onClick={() => loadMembers(pin)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold">
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Refresh
               </button>
@@ -353,7 +353,7 @@ export default function AdminDirectoryPage() {
           <div className="flex flex-wrap gap-2 mb-2">
             <div className="relative flex-1 min-w-[140px]">
               <input type="text" placeholder="Search name, tag or clan…" value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               {search && <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
             </div>
             <select value={filterClan} onChange={e => setFilterClan(e.target.value)} className={pillSelect}>
@@ -383,7 +383,7 @@ export default function AdminDirectoryPage() {
               const label = opts.find(([v]) => v === val)?.[1] || opts[0][1];
               return (
                 <button key={key} onClick={() => set(opts[nextIdx][0])}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-semibold uppercase tracking-widest transition ${activeColour}`}>
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-widest transition ${activeColour}`}>
                   {isFiltered && <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80"/>}
                   {label}
                   {isFiltered && <span onClick={e => { e.stopPropagation(); set("all"); }} className="ml-0.5 opacity-60 hover:opacity-100 text-[10px]">✕</span>}
@@ -406,9 +406,9 @@ export default function AdminDirectoryPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-white truncate">{m.player_name}</p>
-                        {m.active === false && <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-red-500/40 text-red-400 uppercase tracking-widest">Inactive</span>}
+                        {m.active === false && <span className="text-[9px] px-1.5 py-0.5 rounded-lg border border-red-500/40 text-red-400 uppercase tracking-widest">Inactive</span>}
                         {!allianceClanTags.includes(m.current_clan_tag) && m.current_clan_tag && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-amber-500/40 text-amber-400 uppercase tracking-widest">Outside</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-lg border border-amber-500/40 text-amber-400 uppercase tracking-widest">Outside</span>
                         )}
                       </div>
                       <p className="text-[10px] text-slate-600 font-mono">{m.player_tag}</p>
@@ -416,22 +416,22 @@ export default function AdminDirectoryPage() {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span title={m.in_pool ? "In pool" : "Not in pool"}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] border ${m.in_pool ? "border-purple-500/40 text-purple-400" : "border-white/10 text-slate-700"}`}>
+                        className={`w-5 h-5 rounded-lg flex items-center justify-center text-[9px] border ${m.in_pool ? "border-purple-500/40 text-purple-400" : "border-white/10 text-slate-700"}`}>
                         {m.in_pool ? "✓" : "—"}
                       </span>
                       <span title={m.discord_id ? "Discord linked" : "No Discord"}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.discord_id ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-700"}`}>
+                        className={`w-5 h-5 rounded-lg flex items-center justify-center border ${m.discord_id ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-700"}`}>
                         <svg className="w-2.5 h-2.5" viewBox="0 0 127.14 96.36" fill="currentColor">
                           <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
                         </svg>
                       </span>
                       <span title={m.api_token_verified ? "Token verified" : "No token"}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center border ${m.api_token_verified ? "border-green-500/40 text-green-400" : "border-white/10 text-slate-700"}`}>
+                        className={`w-5 h-5 rounded-lg flex items-center justify-center border ${m.api_token_verified ? "border-green-500/40 text-green-400" : "border-white/10 text-slate-700"}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                       </span>
                       {/* Manage toggle */}
                       <button onClick={() => setManagingTag(managingTag === m.player_tag ? null : m.player_tag)}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center border transition ${managingTag === m.player_tag ? "border-purple-500/60 text-purple-400 bg-purple-500/10" : "border-white/10 text-slate-600 hover:text-slate-300 hover:border-white/20"}`}>
+                        className={`w-5 h-5 rounded-lg flex items-center justify-center border transition ${managingTag === m.player_tag ? "border-purple-500/60 text-purple-400 bg-purple-500/10" : "border-white/10 text-slate-600 hover:text-slate-300 hover:border-white/20"}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                       </button>
                     </div>
@@ -440,11 +440,11 @@ export default function AdminDirectoryPage() {
                   {managingTag === m.player_tag && (
                     <div className="px-3 pb-3 pt-1 border-t border-white/[0.06] flex items-center gap-2 flex-wrap">
                       <button onClick={() => handleSetActive(m.player_tag, m.active === false)} disabled={actionLoading}
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-semibold border transition disabled:opacity-40 ${m.active === false ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-amber-500/40 text-amber-400 hover:border-amber-400"}`}>
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold border transition disabled:opacity-40 ${m.active === false ? "bg-green-500/10 border-green-500/40 text-green-400 hover:border-green-400" : "bg-amber-500/10 border-amber-500/40 text-amber-400 hover:border-amber-400"}`}>
                         {m.active === false ? "Set Active" : "Set Inactive"}
                       </button>
                       <button onClick={() => { setConfirmDelete({ tag: m.player_tag, name: m.player_name }); setConfirmInput(""); }}
-                        className="px-3 py-1.5 rounded-full text-[10px] font-semibold border border-red-500/40 text-red-400 hover:border-red-400 transition">
+                        className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-red-500/10 border border-red-500/40 text-red-400 hover:border-red-400 transition">
                         Delete Account
                       </button>
                       {m.discord_username && <span className="text-[10px] text-slate-600 ml-auto">Discord: {m.discord_username}</span>}

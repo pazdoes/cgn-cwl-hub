@@ -176,7 +176,7 @@ export default function RosterCompliancePage() {
               <p className="text-[10px] text-slate-700 mt-0.5">Rostered players not currently in their assigned CWL clan</p>
             </div>
             <button onClick={handleCheckCompliance} disabled={checkLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
               <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${checkLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>

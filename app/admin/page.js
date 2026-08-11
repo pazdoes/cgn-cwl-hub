@@ -35,7 +35,7 @@ function FaqButton() {
   return (
     <div className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
-        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+        className={`w-6 h-6 rounded-lg flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
         ?
       </button>
       {open && (
@@ -97,7 +97,7 @@ function ContrastToggle() {
   }
   return (
     <button type="button" onClick={toggle} title={high ? "Normal contrast" : "High contrast"}
-      className={`w-6 h-6 rounded-full flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+      className={`w-6 h-6 rounded-lg flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
       {high ? (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -227,7 +227,7 @@ function AdminNav_REMOVED() {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(v => !v)}
-        className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
+        className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
@@ -426,7 +426,7 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
       <div className="flex items-center gap-2 mb-4">
         {/* CWL toggle */}
         <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("cwl") ? prev.filter(v=>v!=="cwl") : [...prev,"cwl"]); }}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("cwl") ? "text-green-400 border-green-500/60 bg-green-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition ${eventFilter.includes("cwl") ? "text-green-400 border-green-500/60 bg-green-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
           </svg>
@@ -434,7 +434,7 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
         </button>
         {/* Announcements toggle */}
         <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("announcement") ? prev.filter(v=>v!=="announcement") : [...prev,"announcement"]); }}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("announcement") ? "text-purple-400 border-purple-500/60 bg-purple-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition ${eventFilter.includes("announcement") ? "text-purple-400 border-purple-500/60 bg-purple-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
           </svg>
@@ -442,7 +442,7 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
         </button>
         {/* Side Wars toggle */}
         <button type="button" onClick={() => { setSelectedDate(null); setEventFilter(prev => prev.includes("sidewar") ? prev.filter(v=>v!=="sidewar") : [...prev,"sidewar"]); }}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition ${eventFilter.includes("sidewar") ? "text-pink-400 border-pink-500/60 bg-pink-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition ${eventFilter.includes("sidewar") ? "text-pink-400 border-pink-500/60 bg-pink-500/10" : "text-slate-600 border-white/10 hover:text-slate-400"}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
           </svg>
@@ -507,12 +507,12 @@ function ScheduledCalendar({ scheduled, sideWars = [], calMonth, setCalMonth, se
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {s.recurrence && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full border border-purple-500/30 text-purple-400">
+                      <span className="text-[9px] px-2 py-0.5 rounded-lg border border-purple-500/30 text-purple-400">
                         {RECURRENCE_LABELS[s.recurrence] || s.recurrence}
                       </span>
                     )}
                     {s.sent && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full border border-green-500/30 text-green-400">Sent</span>
+                      <span className="text-[9px] px-2 py-0.5 rounded-lg border border-green-500/30 text-green-400">Sent</span>
                     )}
                   </div>
                 </div>
@@ -590,7 +590,7 @@ export default function AdminOverviewPage() {
     loadData(pin);
   }, [authed, pin]);
 
-  const pillSelect = "rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
+  const pillSelect = "rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
   const [adminTab, setAdminTab] = useState("dashboard");
 
   // ── Side Wars state ──────────────────────────────────────────────────────
@@ -796,7 +796,7 @@ export default function AdminOverviewPage() {
           {adminTab === "sidewars" && (
             <div className="rounded-xl border border-white/10 bg-white/[0.04] p-5 text-center">
               <p className="text-slate-400 text-sm mb-3">Side Wars has moved to Clan Manager</p>
-              <Link href="/admin/clans" className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-semibold border border-purple-500/40 text-purple-400 hover:border-purple-400 transition">
+              <Link href="/admin/clans" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs uppercase tracking-widest font-semibold bg-purple-600/30 border border-purple-500/30 text-purple-200 hover:bg-purple-600/50 transition">
                 Open Clan Manager
               </Link>
             </div>

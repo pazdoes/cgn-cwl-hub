@@ -49,7 +49,7 @@ function FaqButton() {
   return (
     <div className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
-        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+        className={`w-6 h-6 rounded-lg flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
         ?
       </button>
       {open && (
@@ -111,7 +111,7 @@ function ContrastToggle() {
   }
   return (
     <button type="button" onClick={toggle} title={high ? "Normal contrast" : "High contrast"}
-      className={`w-6 h-6 rounded-full flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+      className={`w-6 h-6 rounded-lg flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
       {high ? (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -241,7 +241,7 @@ function AdminNav_REMOVED() {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(v => !v)}
-        className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
+        className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
         title="Admin menu">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -1045,7 +1045,7 @@ function ClanBoardManager({ pin }) {
                   seed_losses: clan.seed_losses, display_order: clan.display_order,
                   cwl_only: !clan.cwl_only, side_war_only: clan.side_war_only
                 })} disabled={saving === clan.clan_tag}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  className={`rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "bg-amber-500/10 border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
                   CWL Only
                 </button>
               )}
@@ -1056,7 +1056,7 @@ function ClanBoardManager({ pin }) {
                   seed_losses: clan.seed_losses, display_order: clan.display_order,
                   cwl_only: clan.cwl_only, side_war_only: !clan.side_war_only
                 })} disabled={saving === clan.clan_tag}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  className={`rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "bg-blue-500/10 border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
                   Side War Only
                 </button>
               )}
@@ -1066,7 +1066,7 @@ function ClanBoardManager({ pin }) {
                 seed_losses: clan.seed_losses, display_order: clan.display_order,
                 cwl_only: clan.cwl_only, side_war_only: clan.side_war_only
               })} disabled={saving === clan.clan_tag}
-                className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
+                className={`rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "bg-green-500/10 border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
                 {clan.included ? "In" : "Out"}
               </button>
             </div>
@@ -1188,9 +1188,9 @@ function ClanInfoBoardTool() {
       <div className="space-y-2">
         <input type="text" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)}
           placeholder="https://discord.com/api/webhooks/…"
-          className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
+          className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"/>
         <button onClick={handlePost} disabled={posting || !webhookUrl.trim()}
-          className="w-full rounded-full border border-green-500/40 bg-transparent text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
+          className="w-full rounded-lg bg-green-500/10 border border-green-500/40 text-green-400 px-3 py-1.5 text-xs font-semibold hover:border-green-400 transition disabled:opacity-40">
           {posting ? "Posting…" : "Post Now"}
         </button>
         {status?.ok && <p className="text-green-400 text-xs">{status.ok}</p>}
@@ -1209,11 +1209,11 @@ function ClanInfoBoardTool() {
                 </p>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting}
-                    className="rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
+                    className="rounded-lg bg-blue-500/10 border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">
                     {posting ? "…" : "Update"}
                   </button>
                   <button onClick={() => handleDeleteBoard(msg.id)} disabled={posting}
-                    className="rounded-full border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">
+                    className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">
                     Delete
                   </button>
                 </div>
@@ -2245,7 +2245,7 @@ export default function AnnouncementsPage() {
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["compose","Compose"],["templates","Templates"],["sharecards","Share Cards"],["manage","Manage"],["tools","Tools"]].map(([key,label]) => (
           <button key={key} onClick={() => setMainTab(key)}
-            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               mainTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
@@ -2284,7 +2284,7 @@ export default function AnnouncementsPage() {
               <p className="text-xs text-slate-600">No webhooks configured — add one below</p>
             ) : (
               <select value={selectedWebhookId || ""} onChange={e => setSelectedWebhookId(e.target.value)}
-                className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none [color-scheme:dark]">
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white focus:outline-none [color-scheme:dark]">
                 {webhooks.map(w => <option key={w.id} value={w.id}>{w.label}{w.channel ? ` · #${w.channel}` : ""}</option>)}
               </select>
             )}
@@ -2310,11 +2310,11 @@ export default function AnnouncementsPage() {
                 <input type="color" value={hexColor} onChange={e => setEmbedField("color", hexToInt(e.target.value))}
                   className="w-10 h-8 rounded-lg border border-white/10 bg-transparent cursor-pointer"/>
                 <input type="text" value={hexColor} onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) setEmbedField("color", hexToInt(e.target.value.padEnd(7, "0"))); }}
-                  className="w-24 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white font-mono focus:outline-none focus:border-white/20 transition"/>
+                  className="w-24 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white font-mono focus:outline-none focus:border-white/20 transition"/>
                 <div className="flex gap-1.5">
                   {["#a78bfa","#34d399","#fb923c","#60a5fa","#f472b6","#5865f2"].map(c => (
                     <button key={c} type="button" onClick={() => setEmbedField("color", hexToInt(c))}
-                      className="w-5 h-5 rounded-full border border-white/20 hover:scale-110 transition" style={{background:c}}/>
+                      className="w-5 h-5 rounded-lg border border-white/20 hover:scale-110 transition" style={{background:c}}/>
                   ))}
                 </div>
               </div>
@@ -2388,7 +2388,7 @@ export default function AnnouncementsPage() {
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-[10px] text-slate-500 uppercase tracking-widest">Fields</label>
                   <button type="button" onClick={addField}
-                    className="text-[10px] text-purple-400 border border-purple-500/40 px-2 py-0.5 rounded-full hover:border-purple-400 transition">+ Add</button>
+                    className="text-[10px] text-purple-200 bg-purple-600/30 border border-purple-500/30 px-2 py-0.5 rounded-lg hover:border-purple-400 transition">+ Add</button>
                 </div>
                 <div className="space-y-2">
                   {embed.fields.map((f, i) => (
@@ -2451,7 +2451,7 @@ export default function AnnouncementsPage() {
                   <p className="text-[10px] text-slate-500 mt-0.5">Changes will update the original Discord message in place</p>
                 </div>
                 <button type="button" onClick={() => { setEditingMessageId(null); setEmbed({...DEFAULT_EMBED}); setContent(""); setEditResult(null); }}
-                  className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1 transition shrink-0">Cancel</button>
+                  className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] rounded-lg px-2.5 py-1 transition shrink-0">Cancel</button>
               </div>
             )}
             {editResult && <p className={"text-xs text-center mb-2 " + (editResult.ok ? "text-green-400" : "text-red-400")}>{editResult.message}</p>}
@@ -2506,7 +2506,7 @@ export default function AnnouncementsPage() {
                     <div className="flex flex-wrap gap-1.5">
                       {[["24hr","Daily"],["48hr","48 hrs"],["7days","Weekly"],["14days","2 weeks"],["30days","Monthly"]].map(([val,label]) => (
                         <button key={val} type="button" onClick={() => setRecurrence(recurrence === val ? null : val)}
-                          className={`px-2.5 py-1 rounded-full text-xs border transition font-semibold ${recurrence === val ? "text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.12)]" : "text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>
+                          className={`px-2.5 py-1 rounded-lg text-xs border transition font-semibold ${recurrence === val ? "text-purple-200 bg-purple-600/30 border-purple-500/30 shadow-[0_0_6px_rgba(168,85,247,0.12)]" : "text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>
                           {label}
                         </button>
                       ))}
@@ -2624,7 +2624,7 @@ export default function AnnouncementsPage() {
             <div className="flex flex-wrap gap-2">
               {templates.filter(t => t.use_count > 0).sort((a,b) => (b.use_count||0)-(a.use_count||0)).slice(0,3).map(t => (
                 <button key={t.id} type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
-                  className="px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/30 hover:text-purple-300 hover:border-purple-400 transition flex items-center gap-1.5">
+                  className="px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition flex items-center gap-1.5">
                   {t.name}
                   <span className="text-[9px] text-purple-600">{t.use_count}×</span>
                 </button>
@@ -2645,7 +2645,7 @@ export default function AnnouncementsPage() {
               )}
             </div>
             <button onClick={() => { setTemplateManageMode(v => !v); setTemplateDeleteConfirm({}); }}
-              className={"px-3 py-1.5 rounded-full text-[10px] font-semibold border transition " + (templateManageMode ? "bg-red-500/10 border-red-500/40 text-red-400" : "border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20")}>
+              className={"px-3 py-1.5 rounded-lg text-[10px] font-semibold border transition " + (templateManageMode ? "bg-red-500/10 border-red-500/40 text-red-400" : "border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20")}>
               {templateManageMode ? "Done" : "Manage"}
             </button>
           </div>
@@ -2667,9 +2667,9 @@ export default function AnnouncementsPage() {
                     {t.use_count > 0 && <span className="text-[9px] text-slate-700 shrink-0">{t.use_count}×</span>}
                     {!templateManageMode && <>
                       <button type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
-                        className="text-[10px] text-purple-400 hover:text-purple-300 border border-purple-500/30 hover:border-purple-400 rounded-full px-2 py-0.5 transition shrink-0">Use</button>
+                        className="text-[10px] text-purple-200 bg-purple-600/30 border border-purple-500/30 hover:bg-purple-600/50 rounded-lg px-2 py-0.5 transition shrink-0">Use</button>
                       <button type="button" onClick={() => { setTemplateOverwriteId(t.id); setTemplateName(t.name); setShowSaveTemplate(true); }}
-                        className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 hover:border-white/20 rounded-full px-2 py-0.5 transition shrink-0">Edit</button>
+                        className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] rounded-lg px-2 py-0.5 transition shrink-0">Edit</button>
                     </>}
                   </div>
                   {/* Template embed preview */}
@@ -2741,7 +2741,7 @@ export default function AnnouncementsPage() {
                   </div>
                   {h.discord_message_id && h.embed_json && (
                     <button type="button" onClick={() => handleEditMessage(h)}
-                      className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-purple-300 border border-white/10 hover:border-purple-500/40 rounded-full px-2.5 py-1 transition shrink-0">
+                      className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-purple-300 border border-white/10 bg-white/[0.04] hover:border-purple-500/40 hover:bg-white/[0.08] rounded-lg px-2.5 py-1 transition shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                       Edit
                     </button>

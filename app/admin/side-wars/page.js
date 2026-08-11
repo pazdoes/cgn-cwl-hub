@@ -215,7 +215,7 @@ export default function SideWarsPage() {
                   </div>
                 </div>
                 <button onClick={() => swToggle(war)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-semibold border transition shrink-0 ${war.is_active ? "bg-pink-500/20 border-pink-500/60 text-pink-300" : war.start_time ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300" : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"}`}>
+                  className={`px-3 py-1 rounded-lg text-[10px] font-semibold border transition shrink-0 ${war.is_active ? "bg-pink-500/20 border-pink-500/60 text-pink-300" : war.start_time ? "bg-transparent border-white/10 text-slate-400 hover:border-pink-500/40 hover:text-pink-300" : "bg-transparent border-white/[0.06] text-slate-600 cursor-not-allowed"}`}>
                   {war.is_active ? "Live" : "Off"}
                 </button>
               </div>
@@ -226,7 +226,7 @@ export default function SideWarsPage() {
                       <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-0.5">Scheduled</p>
                       <p className="text-[11px] text-slate-300">{new Date(war.start_time).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC</p>
                     </div>
-                    <button onClick={() => setSwTimes(p => ({...p, [warId]: ""}))} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1">
+                    <button onClick={() => setSwTimes(p => ({...p, [warId]: ""}))} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] rounded-lg px-2.5 py-1">
                       Change
                     </button>
                   </div>
@@ -315,7 +315,7 @@ export default function SideWarsPage() {
                           <p className="text-xs text-white truncate">{war.clan_name}</p>
                           <p className="text-[10px] text-slate-600 font-mono">{war.clan_tag}</p>
                         </div>
-                        <button onClick={() => swDelete(war.id)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-red-400 border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 transition shrink-0">Remove</button>
+                        <button onClick={() => swDelete(war.id)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/20 transition shrink-0">Remove</button>
                       </div>
                     ))}
                   </div>

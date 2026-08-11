@@ -17,7 +17,7 @@ function Skeleton({ className = "" }) {
 function XButton({ onClick, busy, title }) {
   return (
     <button type="button" onClick={onClick} disabled={busy} title={title}
-      className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.06] border border-white/10 text-slate-400 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition disabled:opacity-40 disabled:pointer-events-none">
+      className="shrink-0 w-5 h-5 rounded-lg flex items-center justify-center bg-white/[0.06] border border-white/10 text-slate-400 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition disabled:opacity-40 disabled:pointer-events-none">
       <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
@@ -37,7 +37,7 @@ function RankRefreshButton({ busy, result, onClick }) {
   const title = busy ? "Refreshing…" : result ? (result.ok ? `Updated: ${result.message}` : result.message) : "Refresh CWL Rank from CoC API";
   return (
     <button type="button" onClick={onClick} disabled={busy} title={title}
-      className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-40 ${
+      className={`w-6 h-6 rounded-lg flex items-center justify-center border transition disabled:opacity-40 ${
         result?.ok === false
           ? "border-red-500/40 bg-red-500/10 text-red-300"
           : "border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300 hover:border-white/20"
@@ -56,7 +56,7 @@ function StatusToggle({ status, busy, error, onSetStatus }) {
     <div className="flex flex-col items-end gap-1">
       <button type="button" disabled={busy}
         onClick={() => onSetStatus(isConfirmed ? "substitute" : "confirmed")}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${isConfirmed ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-orange-500/40 text-orange-400 bg-orange-500/10"}`}>
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${isConfirmed ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-orange-500/40 text-orange-400 bg-orange-500/10"}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${isConfirmed ? "bg-green-400" : "bg-orange-400"}`}/>
         {isConfirmed ? "Confirmed" : "Sub"}
       </button>
@@ -71,9 +71,9 @@ function FormatToggle({ format, busy, error, onSetFormat }) {
     <div className="flex flex-col items-start gap-1">
       <div className="flex items-center gap-1.5 text-[10px]">
         <button type="button" disabled={busy} onClick={() => onSetFormat(15)}
-          className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 15 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>15v15</button>
+          className={`px-2.5 py-1 rounded-lg border transition disabled:opacity-50 font-semibold ${format === 15 ? "bg-purple-600/30 text-purple-200 border-purple-500/30 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>15v15</button>
         <button type="button" disabled={busy} onClick={() => onSetFormat(30)}
-          className={`px-2.5 py-1 rounded-full border transition disabled:opacity-50 font-semibold ${format === 30 ? "bg-transparent text-purple-400 border-purple-500/60 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>30v30</button>
+          className={`px-2.5 py-1 rounded-lg border transition disabled:opacity-50 font-semibold ${format === 30 ? "bg-purple-600/30 text-purple-200 border-purple-500/30 shadow-[0_0_6px_rgba(168,85,247,0.15)]" : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"}`}>30v30</button>
       </div>
       {error && <p className="text-[9px] text-red-400 text-right max-w-[180px] leading-tight">{error}</p>}
     </div>
@@ -97,7 +97,7 @@ function Pill({ children, variant = "neutral" }) {
     purple:  "bg-purple-500/20 text-purple-300 border border-purple-500/30",
     neutral: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
   };
-  return <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${c[variant]}`}>{children}</span>;
+  return <span className={`inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold ${c[variant]}`}>{children}</span>;
 }
 
 /* ─── Hamburger nav menu ──────────────────────────────────── */
@@ -124,7 +124,7 @@ function FaqButton() {
   return (
     <div className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
-        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+        className={`w-6 h-6 rounded-lg flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
         ?
       </button>
       {open && (
@@ -186,7 +186,7 @@ function ContrastToggle() {
   }
   return (
     <button type="button" onClick={toggle} title={high ? "Normal contrast" : "High contrast"}
-      className={`w-6 h-6 rounded-full flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+      className={`w-6 h-6 rounded-lg flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
       {high ? (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -321,7 +321,7 @@ function AdminNav_REMOVED() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
+        className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition"
         title="Admin menu"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -977,7 +977,7 @@ export default function AdminPoolPage() {
                 <div className="flex items-center gap-1 mb-3">
                   {[["available", `In (${unassigned.length})`], ["out", `Out (${optedOut.length})`]].map(([key, label]) => (
                     <button key={key} onClick={() => setPoolTab(key)}
-                      className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold border transition ${
+                      className={`px-3 py-1 rounded-lg text-[10px] uppercase tracking-widest font-semibold border transition ${
                         poolTab === key
                           ? key === "out"
                             ? "border-red-500/40 bg-red-500/10 text-red-400"
@@ -1002,7 +1002,7 @@ export default function AdminPoolPage() {
                           <p className="text-sm font-semibold text-white truncate">{entry.player_name}</p>
                           <p className="text-[10px] text-slate-600 font-mono">{entry.player_tag}</p>
                         </div>
-                        <span className="text-[9px] text-red-400 border border-red-500/30 rounded-full px-2 py-0.5 uppercase tracking-widest">Out</span>
+                        <span className="text-[9px] text-red-400 border border-red-500/30 rounded-lg px-2 py-0.5 uppercase tracking-widest">Out</span>
                       </div>
                     ))}
                   </div>
@@ -1014,7 +1014,7 @@ export default function AdminPoolPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative flex-1">
                     <input type="text" placeholder="Search pool…" value={poolSearch} onChange={e => setPoolSearch(e.target.value)}
-                      className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                     {poolSearch && <button onClick={() => setPoolSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
                   </div>
                   {filteredUnassigned.length > 0 && (
@@ -1026,7 +1026,7 @@ export default function AdminPoolPage() {
                           setSelectedTags(filteredUnassigned.map(e => e.player_tag));
                         }
                       }}
-                      className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-slate-400 hover:text-white hover:border-white/20 transition uppercase tracking-widest font-semibold">
+                      className="shrink-0 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-[10px] text-slate-400 hover:text-white hover:border-white/20 transition uppercase tracking-widest font-semibold">
                       {selectedTags.length === filteredUnassigned.length ? "None" : "All"}
                     </button>
                   )}
@@ -1088,7 +1088,7 @@ export default function AdminPoolPage() {
                               <p className="text-[10px] text-slate-600 font-mono">{entry.player_tag}</p>
                             </div>
                             {isSelected && (
-                              <span className="w-5 h-5 rounded-full bg-purple-500/30 border border-purple-500/60 flex items-center justify-center shrink-0">
+                              <span className="w-5 h-5 rounded-lg bg-purple-500/30 border border-purple-500/60 flex items-center justify-center shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                               </span>
                             )}
@@ -1141,7 +1141,7 @@ export default function AdminPoolPage() {
                         <button type="button"
                           disabled={formatBusy === currentClan}
                           onClick={() => doSetFormat(currentClan, currentFormat === 15 ? 30 : 15)}
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 text-[9px] font-semibold uppercase tracking-widest transition hover:border-purple-400/60 disabled:opacity-50">
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 text-[9px] font-semibold uppercase tracking-widest transition hover:border-purple-400/60 disabled:opacity-50">
                           {currentFormat === 15 ? "15v15" : "30v30"}
                         </button>
                       </div>
@@ -1150,7 +1150,7 @@ export default function AdminPoolPage() {
                           title={publishedClans[currentClan] === true ? "Roster published — click to unpublish" : "Roster unpublished — click to publish"}
                           disabled={publishBusy === currentClan}
                           onClick={() => doTogglePublish(currentClan, publishedClans[currentClan] === false)}
-                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${publishedClans[currentClan] === true ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-amber-500/40 text-amber-400 bg-amber-500/10"}`}>
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-semibold uppercase tracking-widest transition disabled:opacity-50 ${publishedClans[currentClan] === true ? "border-green-500/40 text-green-400 bg-green-500/10" : "border-amber-500/40 text-amber-400 bg-amber-500/10"}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${publishedClans[currentClan] === true ? "bg-green-400" : "bg-amber-400"}`}/>
                           {publishedClans[currentClan] === true ? "Published" : "Unpublished"}
                         </button>
@@ -1180,12 +1180,12 @@ export default function AdminPoolPage() {
                     {/* Counter pill + pause button — bottom row */}
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.12)]">
                           {confirmedCount}<span className="text-slate-600">/</span>{currentFormat}
                           <span className="text-slate-600 font-normal">confirmed</span>
                         </span>
                         {subCount > 0 && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-transparent text-orange-400 border border-orange-500/40">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-transparent text-orange-400 border border-orange-500/40">
                             {subCount}<span className="text-slate-600 font-normal ml-1">sub{subCount !== 1 ? "s" : ""}</span>
                           </span>
                         )}
@@ -1194,7 +1194,7 @@ export default function AdminPoolPage() {
                         <button type="button" title={clanAbsent[currentClan] ? "Mark active in CWL" : "Mark absent from CWL"}
                           disabled={absentBusy === currentClan}
                           onClick={() => doSetAbsent(currentClan, !clanAbsent[currentClan])}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-transparent text-red-400 border-red-500/60 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center border transition disabled:opacity-50 ${clanAbsent[currentClan] ? "bg-red-600/30 text-red-200 border-red-500/30 shadow-[0_0_6px_rgba(239,68,68,0.15)]" : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>

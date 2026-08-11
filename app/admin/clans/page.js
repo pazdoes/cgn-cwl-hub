@@ -27,7 +27,7 @@ function FaqButton() {
   return (
     <div className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
-        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+        className={`w-6 h-6 rounded-lg flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
         ?
       </button>
       {open && (
@@ -86,7 +86,7 @@ function ContrastToggle() {
   }
   return (
     <button type="button" onClick={toggle} title={high ? "Normal contrast" : "High contrast"}
-      className={`w-6 h-6 rounded-full flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400"}`}>
+      className={`w-6 h-6 rounded-lg flex items-center justify-center border transition ${high ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400"}`}>
       <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -261,18 +261,18 @@ function ClanBoardManager({ pin }) {
             <div className="flex items-center gap-1.5 shrink-0">
               {!clan.is_side_war && (
                 <button onClick={() => save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: !clan.cwl_only, side_war_only: clan.side_war_only })} disabled={!!saving}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  className={`rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.cwl_only ? "bg-amber-500/10 border-amber-500/40 text-amber-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
                   CWL Only
                 </button>
               )}
               {clan.is_side_war && (
                 <button onClick={() => save(clan, { included: clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: clan.cwl_only, side_war_only: !clan.side_war_only })} disabled={!!saving}
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
+                  className={`rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.side_war_only ? "bg-blue-500/10 border-blue-500/40 text-blue-400" : "border-white/10 text-slate-600 hover:border-white/20"}`}>
                   SW Only
                 </button>
               )}
               <button onClick={() => save(clan, { included: !clan.included, seed_wins: clan.seed_wins, seed_draws: clan.seed_draws, seed_losses: clan.seed_losses, display_order: clan.display_order, cwl_only: clan.cwl_only, side_war_only: clan.side_war_only })} disabled={!!saving}
-                className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
+                className={`rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-widest border transition ${clan.included ? "bg-green-500/10 border-green-500/40 text-green-400 hover:border-green-400" : "border-white/10 text-slate-500 hover:border-white/20"}`}>
                 {clan.included ? "In" : "Out"}
               </button>
             </div>
@@ -373,8 +373,8 @@ function ClanInfoBoardTool({ pin }) {
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[10px] text-slate-500 truncate flex-1">{msg.webhook_url.replace("https://discord.com/api/webhooks/", "webhook/…/").slice(0, 40)}</p>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting} className="rounded-full border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">{posting ? "…" : "Update"}</button>
-                  <button onClick={() => handleDelete(msg.id)} disabled={posting} className="rounded-full border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">Delete</button>
+                  <button onClick={() => handleUpdate(msg.webhook_url)} disabled={posting} className="rounded-lg bg-blue-500/10 border border-blue-500/40 text-blue-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-blue-400 transition disabled:opacity-40">{posting ? "…" : "Update"}</button>
+                  <button onClick={() => handleDelete(msg.id)} disabled={posting} className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-0.5 text-[9px] uppercase tracking-widest hover:border-red-400 transition disabled:opacity-40">Delete</button>
                 </div>
               </div>
               {msg.last_updated && <p className="text-[9px] text-slate-700">Last updated {new Date(msg.last_updated).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC</p>}
@@ -565,7 +565,7 @@ export default function AdminClansPage() {
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {[["clans","Alliance Clans"],["infoboard","Info Board"]].map(([key,label]) => (
           <button key={key} onClick={() => setActiveTab(key)}
-            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               activeTab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"
