@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { TH_ICONS } from "../../lib/icons";
@@ -216,49 +216,6 @@ function AdminFooter() {
   );
 }
 
-function AdminNav_REMOVED() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-  return (
-    <div className="relative" ref={ref}>
-      <button onClick={() => setOpen(v => !v)}
-        className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white transition">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
-            className="absolute left-0 top-full mt-2 z-50 min-w-[180px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
-            <div className="p-1.5 space-y-0.5">
-              {[
-                { href: "/admin", label: "Overview", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/> },
-                { href: "/admin/pool", label: "Pool Manager", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/> },
-                { href: "/admin/clans", label: "Clan Manager", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/> },
-                { href: "/admin/season", label: "Season Manager", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/> },
-                { href: "/admin/directory", label: "Members", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6-3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/> },
-                { href: "/admin/announcements", label: "Announcements", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/> },
-              ].map(item => (
-                <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.06] hover:text-white transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>{item.icon}</svg>
-                  <span style={{fontFamily:"var(--font-orbitron)"}}>{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 function StatTile({ label, value, colour = "text-white", sub }) {
   return (
     <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 text-center">
@@ -278,16 +235,22 @@ function CwlCountdown({ season }) {
   const warStart = new Date(Date.UTC(y, m, 3, 8, 0, 0));
   const warEnd   = new Date(Date.UTC(y, m, 10, 8, 0, 0));
 
-  let target, label, active;
+  let target, label, active, phaseStart, phaseEnd;
   if (now < regOpen) {
+    // Downtime carrying over from the previous month's war end
+    const prevWarEnd = new Date(Date.UTC(y, m - 1, 10, 8, 0, 0));
     target = regOpen; label = "CWL Sign-Up Opens"; active = false;
+    phaseStart = prevWarEnd; phaseEnd = regOpen;
   } else if (now < warStart) {
     target = warStart; label = "CWL Wars Begin"; active = true;
+    phaseStart = regOpen; phaseEnd = warStart;
   } else if (now < warEnd) {
     target = warEnd; label = "CWL Season Ends"; active = true;
+    phaseStart = warStart; phaseEnd = warEnd;
   } else {
     const nextReg = new Date(Date.UTC(y, m + 1, 1, 8, 0, 0));
     target = nextReg; label = "CWL Sign-Up Opens"; active = false;
+    phaseStart = warEnd; phaseEnd = nextReg;
   }
 
   const diff = target - now;
@@ -296,9 +259,11 @@ function CwlCountdown({ season }) {
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const display = days > 0 ? `${days}d ${hours}h` : `${hours}h ${mins}m`;
 
+  const phasePct = Math.max(0, Math.min(100, Math.round(((now - phaseStart) / (phaseEnd - phaseStart)) * 100)));
+
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 mb-2">
         <div className="text-center flex-1">
           <p className={`text-lg font-thin ${active ? "text-purple-300" : "text-slate-400"}`}>{display}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest">Countdown</p>
@@ -308,6 +273,9 @@ function CwlCountdown({ season }) {
           <p className={`text-xs font-semibold ${active ? "text-purple-300" : "text-slate-500"}`}>{label}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">{active ? "Active" : "Upcoming"}</p>
         </div>
+      </div>
+      <div className="h-1 rounded-lg bg-white/[0.06] overflow-hidden">
+        <div className={`h-full rounded-lg transition-all ${active ? "bg-purple-500/60" : "bg-slate-500/40"}`} style={{width: `${phasePct}%`}}/>
       </div>
     </div>
   );
@@ -587,6 +555,10 @@ export default function AdminOverviewPage() {
       .then(r => r.json())
       .then(d => setLiveChecks(d))
       .catch(() => {});
+    fetch("/api/admin/war-day-tracker", { headers: { "x-officer-pin": activePin } })
+      .then(r => r.json())
+      .then(d => setCaptureProgress(d))
+      .catch(() => {});
   }
 
   useEffect(() => {
@@ -597,6 +569,7 @@ export default function AdminOverviewPage() {
   // ── Roster Compliance + Member Connectivity — shared cached snapshot ────
   const [liveChecks, setLiveChecks] = useState(null);
   const [liveChecksRefreshing, setLiveChecksRefreshing] = useState(false);
+  const [captureProgress, setCaptureProgress] = useState(null); // { season, clans: [{clanName, days, daysCaptured}] } from /api/admin/war-day-tracker
 
   function refreshLiveChecks() {
     if (!pin || liveChecksRefreshing) return;
@@ -624,7 +597,6 @@ export default function AdminOverviewPage() {
   }
 
   const pillSelect = "rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
-  const [adminTab, setAdminTab] = useState("dashboard");
 
   // ── Side Wars state ──────────────────────────────────────────────────────
   const [sideWars, setSideWars] = useState([]);
@@ -735,6 +707,12 @@ export default function AdminOverviewPage() {
   const statsAssigned = members.filter(m => m.assigned_clan).length;
   const statsPct = statsInPool > 0 ? Math.round((statsAssigned / statsInPool) * 100) : 0;
 
+  const captureClans = captureProgress?.clans || [];
+  const captureTotalPossible = captureClans.length * 7;
+  const captureTotalCaptured = captureClans.reduce((sum, c) => sum + c.daysCaptured, 0);
+  const capturePct = captureTotalPossible > 0 ? Math.round((captureTotalCaptured / captureTotalPossible) * 100) : 0;
+  const captureGaps = captureClans.flatMap(c => c.days.filter(d => !d.captured).map(d => `${c.clanName.replace(" {CGN}", "")} R${d.day}`));
+
   return (
     <main className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-4 pb-16">
       <div className="absolute inset-0 pointer-events-none">
@@ -760,9 +738,6 @@ export default function AdminOverviewPage() {
       ) : (
         <div className="relative z-10 space-y-4">
 
-          {/* ── DASHBOARD TAB ── */}
-          {adminTab === "dashboard" && (<>
-
           {/* CWL Countdown — most urgent, top of dashboard */}
           <CwlCountdown season={season}/>
 
@@ -786,6 +761,24 @@ export default function AdminOverviewPage() {
               <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
                 <div className="h-full rounded-full bg-purple-500/60 transition-all" style={{width: `${statsPct}%`}}/>
               </div>
+            </div>
+          )}
+
+          {/* Season Capture Progress — pure DB read, always live, no refresh needed */}
+          {captureClans.length > 0 && (
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+              <div className="flex items-baseline justify-between gap-3 mb-2">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Season Capture Progress</p>
+                <p className={`text-xs font-semibold ${capturePct === 100 ? "text-green-300" : capturePct >= 75 ? "text-amber-300" : "text-red-400"}`}>
+                  {captureTotalCaptured}/{captureTotalPossible} rounds
+                </p>
+              </div>
+              <div className="h-1 rounded-lg bg-white/[0.06] overflow-hidden">
+                <div className="h-full rounded-lg bg-purple-500/60 transition-all" style={{width: `${capturePct}%`}}/>
+              </div>
+              {captureGaps.length > 0 && (
+                <p className="text-[9px] text-slate-600 mt-2">Missing: {captureGaps.join(", ")}</p>
+              )}
             </div>
           )}
 
@@ -852,19 +845,6 @@ export default function AdminOverviewPage() {
             eventFilter={eventFilter}
             setEventFilter={setEventFilter}
           />
-
-          </>)} {/* end dashboard tab */}
-
-          {/* ── DIRECTORY TAB ── */}
-          {/* ── SIDE WARS TAB ── */}
-          {adminTab === "sidewars" && (
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-5 text-center">
-              <p className="text-slate-400 text-sm mb-3">Side Wars has moved to Clan Manager</p>
-              <Link href="/admin/clans" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs uppercase tracking-widest font-semibold bg-purple-600/30 border border-purple-500/30 text-purple-200 hover:bg-purple-600/50 transition">
-                Open Clan Manager
-              </Link>
-            </div>
-          )}
 
         </div>
       )}
