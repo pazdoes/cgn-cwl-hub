@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { upsertConnectivityCache } from "@/lib/pool";
 
 async function fetchClanMembers(clanTag) {
   const encoded = encodeURIComponent(clanTag);
@@ -30,10 +31,12 @@ export async function GET(request) {
   const connectedTags = new Set(accounts.map(a => normaliseTag(a.player_tag)));
 
   const missing = [];
+  let totalMembers = 0;
 
   for (const clan of clans) {
     try {
       const members = await fetchClanMembers(clan.clan_tag);
+      totalMembers += members.length;
       for (const m of members) {
         const tag = normaliseTag(m.tag);
         if (tag && !connectedTags.has(tag)) {
@@ -59,5 +62,16 @@ export async function GET(request) {
     return clanOrder(a.clan_name) - clanOrder(b.clan_name) || (b.town_hall_level - a.town_hall_level);
   });
 
-  return NextResponse.json({ missing, total: missing.length });
+  const connectedCount = totalMembers - missing.length;
+
+  // Feed the shared Overview dashboard cache — so a normal visit to this
+  // page keeps the Overview tile's snapshot fresh too, not just the
+  // dedicated refresh button on Overview itself.
+  try {
+    await upsertConnectivityCache({ connectedCount, totalMembers });
+  } catch (e) {
+    console.error("Failed to update live-checks cache:", e);
+  }
+
+  return NextResponse.json({ missing, total: missing.length, totalMembers, connectedCount });
 }

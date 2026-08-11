@@ -583,12 +583,45 @@ export default function AdminOverviewPage() {
       .then(r => r.json())
       .then(d => setScheduled(d.scheduled || []))
       .catch(() => setScheduled([]));
+    fetch("/api/admin/live-checks", { headers: { "x-officer-pin": activePin } })
+      .then(r => r.json())
+      .then(d => setLiveChecks(d))
+      .catch(() => {});
   }
 
   useEffect(() => {
     if (!authed || !pin) return;
     loadData(pin);
   }, [authed, pin]);
+
+  // ── Roster Compliance + Member Connectivity — shared cached snapshot ────
+  const [liveChecks, setLiveChecks] = useState(null);
+  const [liveChecksRefreshing, setLiveChecksRefreshing] = useState(false);
+
+  function refreshLiveChecks() {
+    if (!pin || liveChecksRefreshing) return;
+    setLiveChecksRefreshing(true);
+    fetch("/api/admin/live-checks/refresh", { method: "POST", headers: { "x-officer-pin": pin } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok) {
+          setLiveChecks({ compliance: d.compliance, connectivity: d.connectivity, checkedAt: d.checkedAt });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLiveChecksRefreshing(false));
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return "Never";
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.round(diffMs / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.round(hrs / 24)}d ago`;
+  }
 
   const pillSelect = "rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
   const [adminTab, setAdminTab] = useState("dashboard");
@@ -686,7 +719,6 @@ export default function AdminOverviewPage() {
   }
 
   const members = data?.members || [];
-  const stats = data?.stats || {};
   const season = data?.season || "";
 
   const filtered = members.filter(m => {
@@ -757,25 +789,57 @@ export default function AdminOverviewPage() {
             </div>
           )}
 
-          {/* Bar 2 — account health (matched style, no progress bar) */}
-          {members.length > 0 && (
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-white">{members.length}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
+          {/* Roster Compliance + Member Connectivity — shared live-check snapshot */}
+          <div className="flex items-center justify-between gap-3 px-1">
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest">
+              Live Checks · Last checked {timeAgo(liveChecks?.checkedAt)}
+            </p>
+            <button onClick={refreshLiveChecks} disabled={liveChecksRefreshing} title="Refresh Roster Compliance & Member Connectivity"
+              className="w-6 h-6 rounded-lg flex items-center justify-center border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:border-white/20 hover:bg-white/[0.08] transition disabled:opacity-40">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${liveChecksRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {(() => {
+              const c = liveChecks?.compliance;
+              const compliancePct = c && c.totalRostered > 0 ? Math.round((c.correctCount / c.totalRostered) * 100) : 0;
+              return (
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Roster Compliance</p>
+                  <div className="flex items-baseline gap-1.5 mb-2">
+                    <p className={`text-lg font-thin ${!c ? "text-slate-500" : compliancePct === 100 ? "text-green-300" : compliancePct >= 75 ? "text-amber-300" : "text-red-400"}`}>
+                      {c ? `${compliancePct}%` : "—"}
+                    </p>
+                    {c && <p className="text-[10px] text-slate-600">{c.correctCount}/{c.totalRostered} correct</p>}
+                  </div>
+                  <div className="h-1 rounded-lg bg-white/[0.06] overflow-hidden">
+                    <div className="h-full rounded-lg bg-purple-500/60 transition-all" style={{width: `${compliancePct}%`}}/>
+                  </div>
                 </div>
-                <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-blue-300">{stats.discordLinked ?? "—"}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Discord</p>
+              );
+            })()}
+            {(() => {
+              const c = liveChecks?.connectivity;
+              const connectPct = c && c.totalMembers > 0 ? Math.round((c.connectedCount / c.totalMembers) * 100) : 0;
+              return (
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3">
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Member Connectivity</p>
+                  <div className="flex items-baseline gap-1.5 mb-2">
+                    <p className={`text-lg font-thin ${!c ? "text-slate-500" : connectPct === 100 ? "text-green-300" : connectPct >= 75 ? "text-amber-300" : "text-red-400"}`}>
+                      {c ? `${connectPct}%` : "—"}
+                    </p>
+                    {c && <p className="text-[10px] text-slate-600">{c.connectedCount}/{c.totalMembers} linked</p>}
+                  </div>
+                  <div className="h-1 rounded-lg bg-white/[0.06] overflow-hidden">
+                    <div className="h-full rounded-lg bg-blue-500/60 transition-all" style={{width: `${connectPct}%`}}/>
+                  </div>
                 </div>
-                <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-green-300">{stats.apiVerified ?? "—"}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Token</p>
-                </div>
-              </div>
-            </div>
-          )}
+              );
+            })()}
+          </div>
 
           {/* Scheduled Events Calendar */}
           <ScheduledCalendar

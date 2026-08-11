@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getOpenPoolSeason } from "@/lib/season";
+import { upsertComplianceCache } from "@/lib/pool";
 
 async function fetchClanMembers(clanTag) {
   const encoded = encodeURIComponent(clanTag);
@@ -83,6 +84,15 @@ export async function GET(request) {
     if (a.rostered_clan !== b.rostered_clan) return a.rostered_clan.localeCompare(b.rostered_clan);
     return (b.town_hall_level || 0) - (a.town_hall_level || 0);
   });
+
+  // Feed the shared Overview dashboard cache — so a normal visit to this
+  // page keeps the Overview tile's snapshot fresh too, not just the
+  // dedicated refresh button on Overview itself.
+  try {
+    await upsertComplianceCache({ correctCount, totalRostered: rostered.length });
+  } catch (e) {
+    console.error("Failed to update live-checks cache:", e);
+  }
 
   return NextResponse.json({
     mismatches,
