@@ -150,7 +150,7 @@ export default function WarDayTrackerPage() {
       </div>
       <AdminHeader/>
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">War Day Tracker</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>War Day Tracker</h1>
         {data?.season && <p className="text-[10px] text-slate-600 uppercase tracking-widest">{data.season}</p>}
       </div>
 

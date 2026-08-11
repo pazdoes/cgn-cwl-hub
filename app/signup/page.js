@@ -605,7 +605,7 @@ export default function SignupPage() {
 
       {/* ── Hero card — flush to top ── */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Sign Up for CWL</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Sign Up for CWL</h1>
         {/* How to use — expandable info panel */}
         <div className="mt-1 mb-2">
           <button type="button" onClick={() => setInfoOpen(v => !v)}

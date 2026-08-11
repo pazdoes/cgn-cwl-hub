@@ -929,7 +929,7 @@ export default function AdminPoolPage() {
 
       {/* Hero card */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Pool Manager</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Pool Manager</h1>
         <p className="text-slate-500 text-xs">{season ? <><span className="text-purple-300">{season}</span> · {entries.length} in pool · {unassigned.length} unassigned</> : "Loading…"}</p>
       </div>
 

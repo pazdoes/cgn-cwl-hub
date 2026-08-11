@@ -156,7 +156,7 @@ export default function MissingMembersPage() {
       </div>
       <AdminHeader/>
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Missing Members</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Missing Members</h1>
       </div>
       <div className="relative z-10 space-y-3">
       <div className="relative z-10 space-y-3 mt-0">

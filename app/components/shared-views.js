@@ -967,7 +967,7 @@ export function PlayersView({ players, onBack, rosterSeasons = [], onNavigatePro
 
 
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest">All Players</h1>
+        <h1 className="text-4xl font-thin tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>All Players</h1>
         <p className="text-slate-500 text-xs mt-1">{displayPlayers.length} {isHistorical ? `in ${histSeason}` : "rostered this season"}</p>
         {rosterSeasons.length > 0 && (
           <div className="mt-3 flex justify-center">
@@ -1035,7 +1035,7 @@ export function ClansView({ clans, players, onBack, onOpenClan }) {
 
 
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest">All Clans</h1>
+        <h1 className="text-4xl font-thin tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>All Clans</h1>
         <p className="text-slate-500 text-xs mt-1">{clans.length} clans rostered this season</p>
       </div>
 
@@ -1187,7 +1187,7 @@ export function AvgThView({ players, clans, onBack }) {
 
       {/* Header tile — title, chart toggle, clan filter */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Town Hall Breakdown</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Town Hall Breakdown</h1>
         <p className="text-slate-500 text-xs mb-4">
           {total} player{total !== 1 ? "s" : ""}{selectedClanFilter !== "all" ? ` · ${selectedClanFilter}` : " · all clans"}
         </p>

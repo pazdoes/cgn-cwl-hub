@@ -253,7 +253,7 @@ function RecapView() {
 
       {/* Header */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Season Recap</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Season Recap</h1>
         {seasons.length > 1 ? (
           <select value={selectedSeason||""} onChange={e => { setSelectedSeason(e.target.value); setSelectedClan("alliance"); }}
             className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
@@ -320,7 +320,7 @@ function RecapView() {
                   <path strokeLinecap="round" strokeLinejoin="round" d={MEDAL_PATH}/>
                 </svg>
                 <div>
-                  <p className="text-2xl font-thin tracking-widest" style={{color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
+                  <p className="text-2xl font-thin tracking-widest" style={{fontFamily:"var(--font-orbitron)", color: medalColours[1]}}>{topClan.clan_name.split(" ")[0]}</p>
                   <p className="text-[10px] text-slate-500 mt-0.5">{topClan.cwl_rank}</p>
                 </div>
                 <div className="flex items-center justify-center gap-6 w-full pt-2 border-t border-white/[0.06]">
@@ -355,7 +355,7 @@ function RecapView() {
             return (
               <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 flex flex-col items-center text-center gap-3">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">{clanData.cwl_rank}</p>
-                <p className="text-2xl font-thin tracking-widest text-white">{selectedClan.split(" ")[0]}</p>
+                <p className="text-2xl font-thin tracking-widest text-white" style={{fontFamily:"var(--font-orbitron)"}}>{selectedClan.split(" ")[0]}</p>
                 <div className="flex items-center justify-center gap-4 w-full pt-2 border-t border-white/[0.06]">
                   <div className="text-center">
                     <p className="text-xl font-thin text-green-300">{clanData.wars_won}</p>
@@ -480,15 +480,15 @@ function RecapView() {
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-3">Alliance War Record</p>
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-center">
-                <p className="text-2xl font-thin text-green-300">{totalWins}</p>
+                <p className="text-2xl font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{totalWins}</p>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Won</p>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-center">
-                <p className="text-2xl font-thin text-red-400">{totalLosses}</p>
+                <p className="text-2xl font-thin text-red-400" style={{fontFamily:"var(--font-orbitron)"}}>{totalLosses}</p>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Lost</p>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-center">
-                <p className="text-2xl font-thin text-slate-500">{totalDraws}</p>
+                <p className="text-2xl font-thin text-slate-500" style={{fontFamily:"var(--font-orbitron)"}}>{totalDraws}</p>
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Drawn</p>
               </div>
             </div>

@@ -227,7 +227,7 @@ function LeaderboardView() {
       <AppHeader variant="bar"/>
 
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">CWL Leaderboard</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>CWL Leaderboard</h1>
         <p className="text-slate-500 text-xs mb-4">{lbTab === "player" ? "Player performance by season" : "Clan performance by season"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
           <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setSortDir("desc"); }}

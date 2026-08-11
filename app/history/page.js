@@ -70,7 +70,7 @@ function HistoryView() {
 
       {/* Hero card */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">History</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>History</h1>
         <p className="text-slate-500 text-xs mb-4">CWL performance records by season</p>
 
         {/* Tab indicator dots */}

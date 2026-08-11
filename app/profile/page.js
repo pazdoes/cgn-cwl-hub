@@ -205,7 +205,7 @@ function PlayerProfileView() {
 
         {/* Page title card — centred, no back button */}
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
-          <h1 className="text-4xl font-thin tracking-widest text-white">Player Profile</h1>
+          <h1 className="text-4xl font-thin tracking-widest text-white" style={{fontFamily:"var(--font-orbitron)"}}>Player Profile</h1>
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Hero · Equipment · Army · Upgrades</p>
         </div>
 
@@ -358,7 +358,7 @@ function PlayerProfileView() {
                   ) : null}
                   <div className="hidden flex-col items-center justify-center w-full h-full">
                     <span className="text-[8px] text-slate-600 uppercase tracking-widest">TH</span>
-                    <span className="text-2xl font-thin text-white">{army.townHallLevel}</span>
+                    <span className="text-2xl font-thin text-white" style={{fontFamily:"var(--font-orbitron)"}}>{army.townHallLevel}</span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0 text-center">

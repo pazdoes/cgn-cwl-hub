@@ -102,7 +102,7 @@ export default function RostersPage() {
         <AppHeader/>
         <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
           <img src={getRankIcon(rank)} alt={rank} className="w-12 h-12"/>
-          <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
+          <h1 className="text-4xl font-thin tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>{selectedClan}</h1>
           <p className="text-xs text-slate-400">{format}</p>
           {clanLink && (
             <a href={clanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition mt-1">
@@ -167,7 +167,7 @@ export default function RostersPage() {
 
       {/* Title */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">CWL Rosters</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>CWL Rosters</h1>
         {currentSeason && <p className="text-slate-500 text-xs uppercase tracking-widest">{currentSeason}</p>}
       </div>
 
@@ -213,15 +213,15 @@ export default function RostersPage() {
         <div className="space-y-2 mb-8 relative z-10">
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center shadow-xl">
-              <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{players.length}</div>
+              <div className="text-3xl font-thin tracking-widest text-white tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{players.length}</div>
               <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Players</div>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
-              <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{clans.length}</div>
+              <div className="text-3xl font-thin tracking-widest text-white tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{clans.length}</div>
               <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Clans</div>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center">
-              <div className="text-3xl font-thin tracking-widest text-white tabular-nums">
+              <div className="text-3xl font-thin tracking-widest text-white tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>
                 {players.length ? (players.reduce((s, p) => s + Number(p.townHall || 0), 0) / players.length).toFixed(1) : "-"}
               </div>
               <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Avg TH</div>

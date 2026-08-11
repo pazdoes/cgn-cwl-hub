@@ -166,7 +166,7 @@ export default function RosterCompliancePage() {
       </div>
       <AdminHeader/>
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Roster Compliance</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Roster Compliance</h1>
       </div>
       <div className="relative z-10 space-y-3">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">

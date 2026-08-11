@@ -184,7 +184,7 @@ export default function PlayerProfilePage() {
             {/* TH Level */}
             <div className="shrink-0 w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.06] flex flex-col items-center justify-center">
               <span className="text-[8px] text-slate-600 uppercase tracking-widest">TH</span>
-              <span className="text-2xl font-thin text-white">{army.townHallLevel}</span>
+              <span className="text-2xl font-thin text-white" style={{fontFamily:"var(--font-orbitron)"}}>{army.townHallLevel}</span>
             </div>
             {/* Name + clan */}
             <div className="flex-1 min-w-0">

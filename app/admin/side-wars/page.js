@@ -190,7 +190,7 @@ export default function SideWarsPage() {
       </div>
       <AppHeader/>
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Side Wars</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Side Wars</h1>
         <p className="text-slate-500 text-xs">{sideWars.length} clan{sideWars.length !== 1 ? "s" : ""} saved</p>
       </div>
 

@@ -1980,7 +1980,7 @@ export default function AnnouncementsPage() {
       <main className="min-h-screen bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6 flex flex-col items-center justify-center">
         <Card className="w-full max-w-sm text-center">
           <img src={BRANDING.cwlhub} alt="" className="w-14 h-14 mx-auto mb-4" />
-          <h1 className="text-2xl font-thin tracking-widest mb-1">Announcements</h1>
+          <h1 className="text-2xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Announcements</h1>
           <p className="text-slate-500 text-xs mb-5">Admin access required</p>
           <form onSubmit={handlePinSubmit} className="space-y-3">
             <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Officer PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
@@ -2237,7 +2237,7 @@ export default function AnnouncementsPage() {
 
       {/* Hero card */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Announcements</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Announcements</h1>
         <p className="text-slate-500 text-xs">Post rich embeds to your Discord server</p>
       </div>
 

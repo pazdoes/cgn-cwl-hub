@@ -39,7 +39,7 @@ function CwlProgressTile({ onNavigate }) {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-2xl font-thin text-purple-300 tabular-nums">{totals.totalStars}</p>
+            <p className="text-2xl font-thin text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{totals.totalStars}</p>
             <p className="text-[9px] text-slate-500 uppercase tracking-widest">Alliance Stars</p>
           </div>
           {!isComplete && (
@@ -625,7 +625,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       </div>
       <div className="relative z-10 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 mb-4 flex flex-col items-center text-center gap-2">
         <img src={CWL_ICONS[rank] || CWL_ICONS["unranked"]} alt={rank} className="w-12 h-12"/>
-        <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
+        <h1 className="text-4xl font-thin tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>{selectedClan}</h1>
         <p className="text-xs text-slate-400">{format}</p>
         {clanLink && (
           <a href={clanLink} target="_blank" rel="noopener noreferrer"
@@ -735,7 +735,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   className="relative z-20 mb-4 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center"
 >
 
-  <h1 className="text-4xl font-thin tracking-widest">
+  <h1 className="text-4xl font-thin tracking-widest" style={{fontFamily:"var(--font-orbitron)"}}>
     {currentSeason || players[0]?.season || "CWL Hub"}
   </h1>
 
@@ -823,19 +823,19 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         <div
           onClick={() => { window.history.pushState({}, "", "#players"); setStatView("players"); }}
           className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition shadow-xl">
-          <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{players.length}</div>
+          <div className="text-3xl font-thin tracking-widest text-white tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{players.length}</div>
           <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Players</div>
         </div>
         <div
           onClick={() => { window.history.pushState({}, "", "#clans"); setStatView("clans"); }}
           className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-          <div className="text-3xl font-thin tracking-widest text-white tabular-nums">{clans.length}</div>
+          <div className="text-3xl font-thin tracking-widest text-white tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{clans.length}</div>
           <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Clans</div>
         </div>
         <div
           onClick={() => { window.history.pushState({}, "", "#avgth"); setStatView("avgth"); }}
           className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 min-h-[90px] flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition">
-          <div className="text-3xl font-thin tracking-widest text-white tabular-nums">
+          <div className="text-3xl font-thin tracking-widest text-white tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>
             {players.length ? (players.reduce((sum, p) => sum + Number(p.townHall || 0), 0) / players.length).toFixed(1) : "-"}
           </div>
           <div className="text-slate-400 text-xs uppercase tracking-widest mt-1">Avg TH</div>

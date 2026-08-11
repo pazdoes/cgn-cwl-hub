@@ -557,7 +557,7 @@ export default function AdminClansPage() {
 
       {/* Hero card */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Clan Manager</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Clan Manager</h1>
         <p className="text-slate-500 text-xs">{clans.length} alliance clans · {sideWars.length} side war clans</p>
       </div>
 

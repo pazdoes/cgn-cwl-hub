@@ -297,7 +297,7 @@ export default function AdminDirectoryPage() {
 
       {/* Hero */}
       <div className="relative z-10 mb-6 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">Members</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Members</h1>
         <p className="text-slate-500 text-xs">{members.length} registered · {inAllianceCount} in alliance · {members.filter(m => m.in_pool).length} in pool</p>
       </div>
 

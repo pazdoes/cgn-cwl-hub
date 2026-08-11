@@ -105,7 +105,7 @@ function WarIntelView() {
 
       {/* Hero card */}
       <div className="relative z-10 mb-4 text-center">
-        <h1 className="text-4xl font-thin tracking-widest mb-1">War Intel</h1>
+        <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>War Intel</h1>
         <p className="text-slate-500 text-xs mb-4">Alliance war performance analytics</p>
         <div className="flex items-center justify-center gap-4 mb-3">
           <button onClick={() => router.back()} className="text-slate-500 hover:text-slate-300 transition p-1">

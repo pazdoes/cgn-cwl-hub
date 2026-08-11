@@ -59,7 +59,7 @@ function RankedLeaderboardView() {
 
         {/* Title card — centred, matches app design spec */}
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 text-center">
-          <h1 className="text-4xl font-thin tracking-widest text-white">Ranked Leaderboard</h1>
+          <h1 className="text-4xl font-thin tracking-widest text-white" style={{fontFamily:"var(--font-orbitron)"}}>Ranked Leaderboard</h1>
           <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest">Alliance Trophy Rankings</p>
           <div className="flex justify-center mt-4">
             <button onClick={handleRefresh} disabled={refreshing}
