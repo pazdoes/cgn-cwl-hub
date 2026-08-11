@@ -186,12 +186,12 @@ function SideWarTime({ war }) {
               <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Next Round In</p>
               <div className="flex items-baseline gap-1.5">
                 {nextDays > 0 && <>
-                  <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums">{nextDays}</span>
+                  <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{nextDays}</span>
                   <span className="text-[10px] text-slate-500 mr-1">d</span>
                 </>}
-                <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums">{String(nextHours).padStart(2,"0")}</span>
+                <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(nextHours).padStart(2,"0")}</span>
                 <span className="text-[10px] text-slate-500">h</span>
-                <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums">{String(nextMins).padStart(2,"0")}</span>
+                <span className="text-lg font-thin tracking-widest text-pink-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(nextMins).padStart(2,"0")}</span>
                 <span className="text-[10px] text-slate-500">m</span>
               </div>
             </div>
@@ -357,12 +357,12 @@ function CwlCountdown() {
             <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{timeLeft.days}</span>
             <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">days</span>
           </div>
-          <span className="text-2xl text-slate-600 font-thin">:</span>
+          <span className="text-2xl text-slate-600 font-thin" style={{fontFamily:"var(--font-orbitron)"}}>:</span>
           <div className="flex flex-col items-center">
             <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.hours).padStart(2,"0")}</span>
             <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">hrs</span>
           </div>
-          <span className="text-2xl text-slate-600 font-thin">:</span>
+          <span className="text-2xl text-slate-600 font-thin" style={{fontFamily:"var(--font-orbitron)"}}>:</span>
           <div className="flex flex-col items-center">
             <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.minutes).padStart(2,"0")}</span>
             <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">min</span>
@@ -421,7 +421,7 @@ function StatsHighlightReel() {
           <p className="text-sm font-semibold text-white truncate">{featured.player_name}</p>
           <p className="text-[10px] text-slate-500">{statLabel}</p>
         </div>
-        <span className={`ml-auto text-xl font-thin ${statColour}`}>{statValue}</span>
+        <span className={`ml-auto text-xl font-thin ${statColour}`} style={{fontFamily:"var(--font-orbitron)"}}>{statValue}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-purple-500/[0.06] border border-purple-500/20 p-2">

@@ -248,12 +248,12 @@ export default function RostersPage() {
                   <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{timeLeft.days}</span>
                   <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">days</span>
                 </div>
-                <span className="text-2xl text-slate-600 font-thin">:</span>
+                <span className="text-2xl text-slate-600 font-thin" style={{fontFamily:"var(--font-orbitron)"}}>:</span>
                 <div className="flex flex-col items-center">
                   <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.hours).padStart(2,"0")}</span>
                   <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">hrs</span>
                 </div>
-                <span className="text-2xl text-slate-600 font-thin">:</span>
+                <span className="text-2xl text-slate-600 font-thin" style={{fontFamily:"var(--font-orbitron)"}}>:</span>
                 <div className="flex flex-col items-center">
                   <span className="text-4xl font-thin tracking-widest text-purple-300 tabular-nums" style={{fontFamily:"var(--font-orbitron)"}}>{String(timeLeft.minutes).padStart(2,"0")}</span>
                   <span className="text-[9px] text-slate-500 uppercase tracking-widest mt-1">min</span>
@@ -266,7 +266,7 @@ export default function RostersPage() {
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Roster Progress</p>
-              <p className={`text-lg font-thin ${pct === 100 ? "text-green-300" : pct >= 75 ? "text-amber-300" : "text-red-400"}`}>{pct}%</p>
+              <p className={`text-lg font-thin ${pct === 100 ? "text-green-300" : pct >= 75 ? "text-amber-300" : "text-red-400"}`} style={{fontFamily:"var(--font-orbitron)"}}>{pct}%</p>
             </div>
             <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-purple-500/60 transition-all" style={{width: `${pct}%`}}/>

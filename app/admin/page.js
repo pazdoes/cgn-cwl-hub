@@ -265,7 +265,7 @@ function CwlCountdown({ season }) {
     <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="text-center flex-1">
-          <p className={`text-lg font-thin ${active ? "text-purple-300" : "text-slate-400"}`}>{display}</p>
+          <p className={`text-lg font-thin ${active ? "text-purple-300" : "text-slate-400"}`} style={{fontFamily:"var(--font-orbitron)"}}>{display}</p>
           <p className="text-[9px] text-slate-600 uppercase tracking-widest">Countdown</p>
         </div>
         <div className="w-px h-8 bg-white/[0.06] shrink-0"/>
@@ -674,7 +674,7 @@ export default function AdminOverviewPage() {
       <main className="min-h-screen flex flex-col flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] text-white p-6">
         <div className="w-full max-w-xs">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
-            <h1 className="text-xl font-thin tracking-widest mb-1">Admin</h1>
+            <h1 className="text-xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Admin</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePin} className="space-y-3">
               <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
@@ -746,15 +746,15 @@ export default function AdminOverviewPage() {
             <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
               <div className="flex items-center justify-between gap-3 mb-2">
                 <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-purple-300">{statsInPool}</p>
+                  <p className="text-lg font-thin text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{statsInPool}</p>
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest">In Pool</p>
                 </div>
                 <div className="text-center flex-1">
-                  <p className="text-lg font-thin text-green-300">{statsAssigned}</p>
+                  <p className="text-lg font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{statsAssigned}</p>
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest">Assigned</p>
                 </div>
                 <div className="text-center flex-1">
-                  <p className={`text-lg font-thin ${statsPct === 100 ? "text-green-300" : statsPct >= 75 ? "text-amber-300" : "text-red-400"}`}>{statsPct}%</p>
+                  <p className={`text-lg font-thin ${statsPct === 100 ? "text-green-300" : statsPct >= 75 ? "text-amber-300" : "text-red-400"}`} style={{fontFamily:"var(--font-orbitron)"}}>{statsPct}%</p>
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest">Ready</p>
                 </div>
               </div>
@@ -803,7 +803,7 @@ export default function AdminOverviewPage() {
                 <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3">
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Roster Compliance</p>
                   <div className="flex items-baseline gap-1.5 mb-2">
-                    <p className={`text-lg font-thin ${!c ? "text-slate-500" : compliancePct === 100 ? "text-green-300" : compliancePct >= 75 ? "text-amber-300" : "text-red-400"}`}>
+                    <p className={`text-lg font-thin ${!c ? "text-slate-500" : compliancePct === 100 ? "text-green-300" : compliancePct >= 75 ? "text-amber-300" : "text-red-400"}`} style={{fontFamily:"var(--font-orbitron)"}}>
                       {c ? `${compliancePct}%` : "—"}
                     </p>
                     {c && <p className="text-[10px] text-slate-600">{c.correctCount}/{c.totalRostered} correct</p>}
@@ -821,7 +821,7 @@ export default function AdminOverviewPage() {
                 <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3">
                   <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Member Connectivity</p>
                   <div className="flex items-baseline gap-1.5 mb-2">
-                    <p className={`text-lg font-thin ${!c ? "text-slate-500" : connectPct === 100 ? "text-green-300" : connectPct >= 75 ? "text-amber-300" : "text-red-400"}`}>
+                    <p className={`text-lg font-thin ${!c ? "text-slate-500" : connectPct === 100 ? "text-green-300" : connectPct >= 75 ? "text-amber-300" : "text-red-400"}`} style={{fontFamily:"var(--font-orbitron)"}}>
                       {c ? `${connectPct}%` : "—"}
                     </p>
                     {c && <p className="text-[10px] text-slate-600">{c.connectedCount}/{c.totalMembers} linked</p>}

@@ -143,7 +143,7 @@ export default function RosterCompliancePage() {
       <main className="min-h-screen flex flex-col flex items-center justify-center bg-gradient-to-b from-[#0b1020] via-[#070b17] to-[#05070f] p-6">
         <div className="relative z-10 w-full max-w-xs">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 text-center">
-            <h1 className="text-xl font-thin tracking-widest mb-1">Roster Compliance</h1>
+            <h1 className="text-xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Roster Compliance</h1>
             <p className="text-slate-600 text-xs mb-6">Enter your officer PIN to continue</p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <input type="password" inputMode="numeric" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}

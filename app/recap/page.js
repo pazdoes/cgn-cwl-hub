@@ -325,16 +325,16 @@ function RecapView() {
                 </div>
                 <div className="flex items-center justify-center gap-6 w-full pt-2 border-t border-white/[0.06]">
                   <div className="text-center">
-                    <p className="text-xl font-thin text-green-300">{topClan.wars_won}</p>
+                    <p className="text-xl font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{topClan.wars_won}</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Wins</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-thin text-purple-300">{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
+                    <p className="text-xl font-thin text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{parseFloat(topClan.attack_efficiency).toFixed(2)}</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <p className="text-xl font-thin text-purple-300">{topClan.overall.toFixed(2)}</p>
+                      <p className="text-xl font-thin text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{topClan.overall.toFixed(2)}</p>
                       {topClanDelta !== null && (
                         <span className={`text-[9px] font-semibold ${topClanDelta > 0 ? "text-green-400" : topClanDelta < 0 ? "text-red-400" : "text-slate-500"}`}>
                           {topClanDelta > 0 ? `↑${topClanDelta}` : topClanDelta < 0 ? `↓${Math.abs(topClanDelta)}` : "→"}
@@ -358,23 +358,23 @@ function RecapView() {
                 <p className="text-2xl font-thin tracking-widest text-white" style={{fontFamily:"var(--font-orbitron)"}}>{selectedClan.split(" ")[0]}</p>
                 <div className="flex items-center justify-center gap-4 w-full pt-2 border-t border-white/[0.06]">
                   <div className="text-center">
-                    <p className="text-xl font-thin text-green-300">{clanData.wars_won}</p>
+                    <p className="text-xl font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{clanData.wars_won}</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Wins</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-thin text-red-400">{clanData.wars_lost}</p>
+                    <p className="text-xl font-thin text-red-400" style={{fontFamily:"var(--font-orbitron)"}}>{clanData.wars_lost}</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Losses</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-thin text-amber-300">{clanStars}</p>
+                    <p className="text-xl font-thin text-amber-300" style={{fontFamily:"var(--font-orbitron)"}}>{clanStars}</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Stars</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-thin text-purple-300">{parseFloat(clanData.attack_efficiency||0).toFixed(2)}</p>
+                    <p className="text-xl font-thin text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{parseFloat(clanData.attack_efficiency||0).toFixed(2)}</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">Atk EFF</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-thin text-green-300">{totalAtks > 0 ? Math.round((threeStarCount/totalAtks)*100) : 0}%</p>
+                    <p className="text-xl font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{totalAtks > 0 ? Math.round((threeStarCount/totalAtks)*100) : 0}%</p>
                     <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-0.5">3★ Rate</p>
                   </div>
                 </div>
