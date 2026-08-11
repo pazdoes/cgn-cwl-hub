@@ -355,14 +355,14 @@ export function PlayerPerformanceChart({ allData, seasons }) {
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <select value={selectedStat} onChange={e => setSelectedStat(e.target.value)}
-          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
           {STAT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
         </select>
         {trackedPlayers.length < 3 && (
           <div className="relative flex-1 min-w-[140px]">
             <input type="text" placeholder="Add player…" value={playerSearch}
               onChange={e => setPlayerSearch(e.target.value)}
-              className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {searchResults.length > 0 && (
               <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
                 {searchResults.map(p => (
@@ -381,7 +381,7 @@ export function PlayerPerformanceChart({ allData, seasons }) {
       {trackedPlayers.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {trackedPlayers.map((p, i) => (
-            <div key={p.tag} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+            <div key={p.tag} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: PLAYER_COLORS[i] }}/>
               <span className="text-xs text-slate-300 max-w-[80px] truncate">{p.name}</span>
               <button onClick={() => removePlayer(p.tag)} className="text-slate-600 hover:text-red-400 transition text-[10px] ml-0.5">✕</button>
@@ -647,7 +647,7 @@ export function ClanPerformanceChart({ history }) {
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <select value={selectedStat} onChange={e => setSelectedStat(e.target.value)}
-          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
           {groups.map(g => (
             <optgroup key={g} label={g}>
               {CLAN_STAT_OPTIONS.filter(o => o.group === g).map(o => (
@@ -661,7 +661,7 @@ export function ClanPerformanceChart({ history }) {
           <div className="relative flex-1 min-w-[140px]">
             <input type="text" placeholder="Add clan…" value={clanSearch}
               onChange={e => setClanSearch(e.target.value)}
-              className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             {searchResults.length > 0 && (
               <div className="absolute left-0 top-full mt-1 z-50 w-full min-w-[200px] rounded-lg border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl shadow-xl overflow-hidden">
                 {searchResults.map(tag => (
@@ -683,7 +683,7 @@ export function ClanPerformanceChart({ history }) {
         <div className="flex flex-wrap gap-2 mb-4">
           {trackedClans.map((c, i) => (
             <div key={c.tag} title={isFormerTag(c.tag) ? `${c.name} — Former · ${formerRangeLabel(c.tag)}` : c.name}
-              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1">
               <span className={`w-2 h-2 rounded-full shrink-0 ${isFormerTag(c.tag) ? "border border-dashed" : ""}`}
                 style={isFormerTag(c.tag) ? { borderColor: CLAN_COLORS_CHART[i], background: "transparent" } : { background: CLAN_COLORS_CHART[i] }}/>
               <span className="text-xs text-slate-300 max-w-[100px] truncate">{c.name.split(" ")[0]}</span>
@@ -972,7 +972,7 @@ export function PlayersView({ players, onBack, rosterSeasons = [], onNavigatePro
         {rosterSeasons.length > 0 && (
           <div className="mt-3 flex justify-center">
             <select value={histSeason || ""} onChange={e => loadHistSeason(e.target.value || null)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+              className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
               <option value="">Current Season</option>
               {rosterSeasons.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -1004,7 +1004,7 @@ export function PlayersView({ players, onBack, rosterSeasons = [], onNavigatePro
                     <p className="text-xs text-slate-500 font-mono mt-0.5">{player.playerTag}</p>
                   </div>
                 </div>
-                <span className="shrink-0 inline-block text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">
+                <span className="shrink-0 inline-block text-[10px] px-2.5 py-0.5 rounded-lg border border-purple-500/40 bg-transparent text-purple-400 font-semibold">
                   {player.clan}
                 </span>
               </div>
@@ -1051,7 +1051,7 @@ export function ClansView({ clans, players, onBack, onOpenClan }) {
               <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <h2 className="text-lg font-bold truncate">{clan}</h2>
-                  <span className="shrink-0 inline-block text-[10px] px-2.5 py-0.5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 font-semibold">
+                  <span className="shrink-0 inline-block text-[10px] px-2.5 py-0.5 rounded-lg border border-purple-500/40 bg-transparent text-purple-400 font-semibold">
                     {clanPlayers.length}
                   </span>
                 </div>
@@ -1060,7 +1060,7 @@ export function ClansView({ clans, players, onBack, onOpenClan }) {
                     href={clanLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -1198,7 +1198,7 @@ export function AvgThView({ players, clans, onBack }) {
           <select
             value={selectedClanFilter}
             onChange={e => setSelectedClanFilter(e.target.value)}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]"
+            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]"
           >
             <option value="all">All Clans ({players.length})</option>
             {rostered.map(c => (
@@ -1500,7 +1500,7 @@ export function PlayerCard({ p, rank, isExpanded, onToggle, allSeasonData, seaso
             </div>
             <a href={`/player/${p.player_tag.replace("#","")}`} target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_8px_rgba(168,85,247,0.2)] transition">
+              className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-lg border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_8px_rgba(168,85,247,0.2)] transition">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
@@ -1528,7 +1528,7 @@ export function ClanCard({ c, rank, isExpanded, onToggle }) {
   const handleToggle = () => { if (isExpanded) setCardView("stats"); onToggle(); };
 
   const rankPill = c.cwl_rank ? (
-    <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-500 shrink-0">{c.cwl_rank}</span>
+    <span className="text-[9px] px-2 py-0.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-500 shrink-0">{c.cwl_rank}</span>
   ) : null;
 
   return (
@@ -1698,7 +1698,7 @@ export function LbInfoButton() {
   return (
     <>
       <button type="button" onClick={() => setOpen(v => !v)}
-        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-[9px] font-bold shrink-0 ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-purple-500/40 hover:text-purple-400"}`}>
+        className={`w-6 h-6 rounded-lg flex items-center justify-center border transition text-[9px] font-bold shrink-0 ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300" : "bg-transparent border-white/10 text-slate-500 hover:border-purple-500/40 hover:text-purple-400"}`}>
         i
       </button>
       {modal}
@@ -2265,7 +2265,7 @@ export function FaqButton() {
   return (
     <div className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
-        className={`w-6 h-6 rounded-full flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
+        className={`w-6 h-6 rounded-lg flex items-center justify-center border transition text-xs font-semibold ${open ? "bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]" : "bg-transparent border-purple-500/40 text-purple-400 hover:border-purple-400 hover:shadow-[0_0_8px_rgba(168,85,247,0.15)]"}`}>
         ?
       </button>
       {open && (

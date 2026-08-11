@@ -256,7 +256,7 @@ function RecapView() {
         <h1 className="text-4xl font-thin tracking-widest mb-1">Season Recap</h1>
         {seasons.length > 1 ? (
           <select value={selectedSeason||""} onChange={e => { setSelectedSeason(e.target.value); setSelectedClan("alliance"); }}
-            className="mt-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+            className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             {seasons.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         ) : (
@@ -265,7 +265,7 @@ function RecapView() {
         {/* Clan filter dropdown */}
         {seasonHistory.length > 0 && (
           <select value={selectedClan} onChange={e => setSelectedClan(e.target.value)}
-            className="mt-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+            className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
             <option value="alliance">Alliance</option>
             {[...seasonHistory].sort((a,b) => {
               const o = n => n.toLowerCase().startsWith("cognition") ? 0 : n.toLowerCase().startsWith("gems") ? 10 : 5;
@@ -285,7 +285,7 @@ function RecapView() {
           return (
             <div className="flex justify-center mt-3">
               <button onClick={onClick} disabled={isSharing}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full border transition text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg border transition text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed ${
                   isCopied
                     ? "border-green-500/50 bg-green-500/10 text-green-400"
                     : "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20"

@@ -115,7 +115,7 @@ function WarIntelView() {
           <span className="w-6 h-6"/>
         </div>
         <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
-          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
+          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]">
           <option value="all">All Seasons</option>
           {seasons.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -125,7 +125,7 @@ function WarIntelView() {
       <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
         {TABS.map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
+            className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold border transition ${
               tab === key
                 ? "border-purple-500/60 bg-purple-500/15 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
                 : "border-white/10 bg-transparent text-slate-500 hover:text-slate-300 hover:border-white/20"

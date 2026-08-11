@@ -239,9 +239,9 @@ function PlayerProfileView() {
             <form onSubmit={handleSearch} className="flex gap-2 pt-1">
               <input type="text" value={query} onChange={e => setQuery(e.target.value)}
                 placeholder="Search by #TAG or player name…"
-                className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
               <button type="submit" disabled={searching || !query.trim()}
-                className="shrink-0 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 px-3 py-1 text-xs font-semibold">
+                className="shrink-0 rounded-lg border border-purple-500/30 bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 transition disabled:opacity-40 px-3 py-1 text-xs font-semibold">
                 {searching ? "…" : "Search"}
               </button>
             </form>
@@ -253,9 +253,9 @@ function PlayerProfileView() {
           <form onSubmit={handleSearch} className="flex gap-2">
             <input type="text" value={query} onChange={e => setQuery(e.target.value)}
               placeholder="Search by #TAG or player name…"
-              className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+              className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
             <button type="submit" disabled={searching || !query.trim()}
-              className="shrink-0 rounded-full border border-purple-500/40 bg-transparent text-purple-400 hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 px-3 py-1 text-xs font-semibold">
+              className="shrink-0 rounded-lg border border-purple-500/30 bg-purple-600/30 text-purple-200 hover:bg-purple-600/50 transition disabled:opacity-40 px-3 py-1 text-xs font-semibold">
               {searching ? "…" : "Search"}
             </button>
           </form>
@@ -387,7 +387,7 @@ function PlayerProfileView() {
               </div>
               <div className="flex items-center justify-center gap-2 flex-wrap mt-4 pt-4 border-t border-white/[0.06]">
                 {/* Level — blue */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-blue-500/40 bg-transparent">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-blue-500/40 bg-transparent">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                   </svg>
@@ -395,7 +395,7 @@ function PlayerProfileView() {
                   <span className="text-[9px] text-slate-600 uppercase tracking-wide">Lvl</span>
                 </div>
                 {/* War Stars — amber */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/40 bg-transparent">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-amber-500/40 bg-transparent">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                   </svg>
@@ -403,7 +403,7 @@ function PlayerProfileView() {
                   <span className="text-[9px] text-slate-600 uppercase tracking-wide">War Stars</span>
                 </div>
                 {/* Donations — green house */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-green-500/40 bg-transparent">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-green-500/40 bg-transparent">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                   </svg>
@@ -411,7 +411,7 @@ function PlayerProfileView() {
                   <span className="text-[9px] text-slate-600 uppercase tracking-wide">Donations</span>
                 </div>
                 {/* Trophies — purple trophy */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-purple-500/40 bg-transparent">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-purple-500/40 bg-transparent">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-purple-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75H7.5m9 0c1.657 0 3 1.343 3 3H4.5c0-1.657 1.343-3 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.395 5.972M18.75 4.236V4.5a9.023 9.023 0 01-2.48 5.228m-10.48 0a9.024 9.024 0 005.23 2.478m5.25-2.478a9.024 9.024 0 01-5.25 2.478"/>
                   </svg>
@@ -490,7 +490,7 @@ function PlayerProfileView() {
                       {/* Row 1: date range + result badge */}
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] text-slate-500 uppercase tracking-widest">{dateRange}</span>
-                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-lg ${isPromoted ? "text-green-400 bg-green-500/10" : isDemoted ? "text-red-400 bg-red-500/10" : "text-slate-400 bg-white/[0.04]"}`}>
                           {isPromoted ? "↑ Promoted" : isDemoted ? "↓ Demoted" : "→ Stayed"}
                         </span>
                       </div>
@@ -688,7 +688,7 @@ function PlayerProfileView() {
                       <div className="flex gap-1">
                         {["rarity","hero"].map(m => (
                           <button key={m} type="button" onClick={() => setEqSort(m)}
-                            className={`text-[8px] px-2 py-0.5 rounded-full border transition ${eqSort===m?"border-purple-500/60 bg-purple-500/20 text-purple-300":"border-white/10 text-slate-600 hover:text-slate-400"}`}>
+                            className={`text-[8px] px-2 py-0.5 rounded-lg border transition ${eqSort===m?"border-purple-500/60 bg-purple-500/20 text-purple-300":"border-white/10 text-slate-600 hover:text-slate-400"}`}>
                             {m==="rarity"?"Epic/Common":"By Hero"}
                           </button>
                         ))}

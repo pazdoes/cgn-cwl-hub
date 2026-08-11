@@ -286,7 +286,7 @@ export default function PlayerProfilePage() {
                   <div className="flex gap-1">
                     {["rarity","hero"].map(m => (
                       <button key={m} type="button" onClick={() => setEqSort(m)}
-                        className={`text-[8px] px-2 py-0.5 rounded-full border transition ${eqSort===m?"border-purple-500/60 bg-purple-500/20 text-purple-300":"border-white/10 text-slate-600 hover:text-slate-400"}`}>
+                        className={`text-[8px] px-2 py-0.5 rounded-lg border transition ${eqSort===m?"border-purple-500/60 bg-purple-500/20 text-purple-300":"border-white/10 text-slate-600 hover:text-slate-400"}`}>
                         {m==="rarity"?"Epic/Common":"By Hero"}
                       </button>
                     ))}

@@ -267,7 +267,7 @@ export default function PlayerProfilePage() {
           <button
             onClick={handleShare}
             disabled={sharing}
-            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full border transition text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg border transition text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed ${
               copied
                 ? "border-green-500/50 bg-green-500/10 text-green-400"
                 : "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20"
@@ -483,7 +483,7 @@ export default function PlayerProfilePage() {
                           {["rarity","hero"].map(mode => (
                             <button key={mode} type="button"
                               onClick={() => setArmyEqSort(mode)}
-                              className={`text-[8px] px-2 py-0.5 rounded-full border transition ${armyEqSort === mode ? "border-purple-500/60 bg-purple-500/20 text-purple-300" : "border-white/10 text-slate-600 hover:text-slate-400"}`}>
+                              className={`text-[8px] px-2 py-0.5 rounded-lg border transition ${armyEqSort === mode ? "border-purple-500/60 bg-purple-500/20 text-purple-300" : "border-white/10 text-slate-600 hover:text-slate-400"}`}>
                               {mode === "rarity" ? "Epic/Common" : "By Hero"}
                             </button>
                           ))}

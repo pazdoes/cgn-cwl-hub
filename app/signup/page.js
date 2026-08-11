@@ -635,19 +635,19 @@ export default function SignupPage() {
         </div>
         <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
           {season && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
               {season}
             </div>
           )}
           {poolCount !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
               {poolCount} In
             </div>
           )}
           {outCount !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
               {outCount} Out
             </div>
@@ -683,7 +683,7 @@ export default function SignupPage() {
                   <Skeleton className="w-20 h-3"/>
                 </div>
               </div>
-              <Skeleton className="w-20 h-6 rounded-full shrink-0"/>
+              <Skeleton className="w-20 h-6 rounded-lg shrink-0"/>
             </div>
           ))}
         </div>
@@ -695,7 +695,7 @@ export default function SignupPage() {
           {/* Step card */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-6 h-6 rounded-full bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center shrink-0">1</span>
+              <span className="w-6 h-6 rounded-lg bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center shrink-0">1</span>
               <h2 className="text-sm font-semibold text-slate-300">Link Your Account</h2>
             </div>
             <div className="space-y-3">
@@ -710,7 +710,7 @@ export default function SignupPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1.5 ml-1">
                   <label className="text-xs text-slate-400">API Token</label>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-600">Optional</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-600">Optional</span>
                 </div>
                 <input type="text" placeholder="Paste from in-game settings, or leave blank" value={token}
                   onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}
@@ -738,7 +738,7 @@ export default function SignupPage() {
                 ["One tap next season", "Saved accounts rejoin with a single tap — no reverification needed."],
               ].map(([title, desc], i) => (
                 <li key={i} className="flex gap-3">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                  <span className="shrink-0 w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
                   <div>
                     <p className="text-xs font-semibold text-white">{title}</p>
                     <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
@@ -760,7 +760,7 @@ export default function SignupPage() {
               <div className="relative flex-1">
                 <input type="text" value={accountSearch} onChange={e => setAccountSearch(e.target.value)}
                   placeholder="Search accounts…"
-                  className="w-full rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
                 {accountSearch && <button onClick={() => setAccountSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white text-xs">✕</button>}
               </div>
               <button onClick={() => {
@@ -768,7 +768,7 @@ export default function SignupPage() {
                 const allSelected = visible.every(a => selectedTags.has(a.tag));
                 setSelectedTags(allSelected ? new Set() : new Set(visible.map(a => a.tag)));
               }}
-                className="px-3 py-1.5 rounded-full border border-white/10 text-slate-500 text-xs hover:text-slate-300 hover:border-white/20 transition whitespace-nowrap">
+                className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-500 text-xs hover:text-slate-300 hover:border-white/20 hover:bg-white/[0.08] transition whitespace-nowrap">
                 {selectedTags.size > 0 ? `${selectedTags.size} selected` : "Select All"}
               </button>
             </div>
@@ -776,11 +776,11 @@ export default function SignupPage() {
               <div className="flex items-center gap-2 px-1">
                 <span className="text-[10px] text-slate-500 flex-1">{selectedTags.size} account{selectedTags.size !== 1 ? "s" : ""} selected</span>
                 <button onClick={() => handleBulkIntent("in")} disabled={bulkBusy}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold border border-green-500/60 text-green-400 bg-green-500/10 hover:border-green-400 transition disabled:opacity-40">
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/60 text-green-400 bg-green-500/10 hover:border-green-400 transition disabled:opacity-40">
                   {bulkBusy ? "…" : "✓ In All"}
                 </button>
                 <button onClick={() => handleBulkIntent("out")} disabled={bulkBusy}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold border border-red-500/60 text-red-400 bg-red-500/10 hover:border-red-400 transition disabled:opacity-40">
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-500/60 text-red-400 bg-red-500/10 hover:border-red-400 transition disabled:opacity-40">
                   {bulkBusy ? "…" : "✕ Out All"}
                 </button>
                 <button onClick={() => setSelectedTags(new Set())} className="text-slate-600 hover:text-slate-400 text-xs transition">✕</button>
@@ -841,7 +841,7 @@ export default function SignupPage() {
                           }
                         }}
                         disabled={busy || leavingTag === acct.tag}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
                           acct.inCurrentPool
                             ? "bg-green-500/10 text-green-400 border-green-500/60 shadow-[0_0_8px_rgba(74,222,128,0.12)]"
                             : "bg-transparent text-slate-500 border-white/10 hover:text-green-400 hover:border-green-500/40"
@@ -856,7 +856,7 @@ export default function SignupPage() {
                           await handleIntent(acct.tag, acct.cwlIntent === "out" ? null : "out");
                         }}
                         disabled={busy || leavingTag === acct.tag}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
                           acct.cwlIntent === "out" && !acct.inCurrentPool
                             ? "bg-red-500/10 text-red-400 border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.12)]"
                             : "bg-transparent text-slate-500 border-white/10 hover:text-red-400 hover:border-red-500/40"
@@ -898,7 +898,7 @@ export default function SignupPage() {
                     <p className="text-[10px] text-slate-600 mt-0.5">Updates TH levels from the game</p>
                   </div>
                   <button type="button" onClick={handleThRefresh} disabled={thRefreshing}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-50 transition">
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-50 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${thRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
@@ -923,7 +923,7 @@ export default function SignupPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1.5 ml-1">
                       <label className="text-[10px] text-slate-500">API Token</label>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-600">Optional</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-600">Optional</span>
                     </div>
                     <input type="text" placeholder="From in-game settings" value={token}
                       onChange={e => setToken(e.target.value)} autoCorrect="off" spellCheck={false}

@@ -105,7 +105,7 @@ export default function RostersPage() {
           <h1 className="text-4xl font-thin tracking-widest">{selectedClan}</h1>
           <p className="text-xs text-slate-400">{format}</p>
           {clanLink && (
-            <a href={clanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition mt-1">
+            <a href={clanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition mt-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
               Open Clan
             </a>
@@ -127,7 +127,7 @@ export default function RostersPage() {
                   {TH_ICONS[player.townHall] && <img src={TH_ICONS[player.townHall]} alt={`TH${player.townHall}`} className="w-8 h-8 shrink-0"/>}
                   <span className="text-sm font-semibold text-white truncate">{player.account}</span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold shrink-0 ${
+                <span className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold shrink-0 ${
                   player.status?.toLowerCase() === "confirmed" || player.status?.toLowerCase() === "active" ? "bg-green-500/10 text-green-400 border-green-500/30"
                   : player.status?.toLowerCase() === "substitute" ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
                   : "bg-white/[0.04] text-slate-500 border-white/10"
@@ -176,9 +176,9 @@ export default function RostersPage() {
         <div className="relative">
           <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input type="text" placeholder="Search players…" value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 pl-10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
+            className="w-full rounded-lg border border-white/10 bg-white/[0.04] backdrop-blur-xl px-4 py-3 pl-10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/40 transition"/>
           {search && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           )}

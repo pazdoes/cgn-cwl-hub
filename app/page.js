@@ -114,7 +114,7 @@ function CwlProgressTile({ onNavigate }) {
           )}
         </div>
         <button onClick={() => onNavigate("leaderboard")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-purple-500/[0.1] text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-400 transition shrink-0">
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 hover:border-purple-400 transition shrink-0">
           Full Stats
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
@@ -298,7 +298,7 @@ function SideWarsSection({ onNavigate }) {
           <div className="px-5 py-4 flex items-center justify-between gap-3">
             <SideWarTime war={war}/>
             <a href={war.clan_link} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-pink-500/[0.1] text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:border-pink-400 transition shrink-0">
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-pink-600/30 text-pink-200 border border-pink-500/30 hover:bg-pink-600/50 hover:border-pink-400 transition shrink-0">
               Join Clan
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -629,7 +629,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
         <p className="text-xs text-slate-400">{format}</p>
         {clanLink && (
           <a href={clanLink} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-transparent text-purple-400 border border-purple-500/40 hover:border-purple-400 transition mt-1">
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition mt-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
             </svg>
@@ -662,7 +662,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
                 )}
                 <span className="text-sm font-semibold text-white truncate">{player.account}</span>
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold shrink-0
+              <span className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold shrink-0
                 ${player.status?.toLowerCase() === "confirmed" || player.status?.toLowerCase() === "active"
                   ? "bg-green-500/10 text-green-400 border-green-500/30"
                   : player.status?.toLowerCase() === "substitute"
@@ -746,7 +746,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
   <div className="mt-4">
     <Link
       href="/signup"
-      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_18px_rgba(168,85,247,0.28)] hover:border-purple-400 hover:text-purple-300 transition font-semibold text-sm"
+      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-600/30 text-purple-200 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:bg-purple-600/50 hover:shadow-[0_0_18px_rgba(168,85,247,0.28)] hover:border-purple-400 hover:text-purple-300 transition font-semibold text-sm"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -766,7 +766,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
       />
       {search && (
         <button onClick={() => setSearch("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg flex items-center justify-center bg-white/[0.08] text-slate-400 hover:text-white transition">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -795,7 +795,7 @@ const [currentSeason, setCurrentSeason] = useState(null); // Neon-backed truth s
                 {player.clanLink && (
                   <a href={player.clanLink} target="_blank" rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-500/20 hover:bg-purple-600/40 hover:text-white transition">
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 hover:text-white transition">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                     </svg>
