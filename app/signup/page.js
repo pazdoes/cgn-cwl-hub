@@ -85,6 +85,8 @@ export default function SignupPage() {
   const [manageTag,         setManageTag]         = useState("");
   const [manageSubmitting,  setManageSubmitting]  = useState(false);
   const [manageResult,      setManageResult]      = useState(null); // {ok, message}
+  const [addAccountSuccess, setAddAccountSuccess] = useState(null); // {name, tag} | null — Continue-gated confirmation
+  const [removeAccountSuccess, setRemoveAccountSuccess] = useState(null); // {tag} | null — Continue-gated confirmation
 
   // TH refresh button (item 15) — fetches fresh TH from CoC for all
   // linked accounts and updates Neon, so the stored TH reflects any
@@ -123,6 +125,14 @@ export default function SignupPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Safety net: if an account is removed and only one is left, any lingering
+  // bulk-action selection no longer has anything sensible to act on.
+  useEffect(() => {
+    if (myAccounts.length <= 1 && selectedTags.size > 0) {
+      setSelectedTags(new Set());
+    }
+  }, [myAccounts.length]);
+
   /* --- register a new account (token optional — item 8) --- */
   async function handleVerify(e) {
     if (e?.preventDefault) e.preventDefault();
@@ -156,11 +166,9 @@ export default function SignupPage() {
           setSignupSuccess({ name: data.name, tag: data.tag, season: data.season, townHallLevel: data.townHallLevel });
         } else {
           // Returning user adding another account via Account Manager —
-          // unchanged behaviour, no welcome screen (nothing renders it here).
-          setVerifyStatus({ ok: true, message: `${data.name} (${data.tag}) signed up for ${data.season}.` });
-          const mine = await fetch("/api/accounts/mine").then(r => r.json());
-          setMyAccounts(mine.accounts || []);
-          setSeason(mine.season || season);
+          // now gated behind an explicit Continue tap too, matching the
+          // welcome screen's pattern, instead of an unstyled status line.
+          setAddAccountSuccess({ name: data.name, tag: data.tag, townHallLevel: data.townHallLevel });
         }
       } else {
         setVerifyStatus({ ok: false, message: data.error || "Verification failed." });
@@ -180,6 +188,22 @@ export default function SignupPage() {
     setMyAccounts(mine.accounts || []);
     setSeason(mine.season || season);
     setSignupSuccess(null);
+  }
+
+  /* --- same Continue-gated pattern for adding/removing an account from
+     the returning-user's Account Manager panel --- */
+  async function handleContinueFromAddAccount() {
+    const mine = await fetch("/api/accounts/mine").then(r => r.json()).catch(() => ({}));
+    setMyAccounts(mine.accounts || []);
+    setSeason(mine.season || season);
+    setAddAccountSuccess(null);
+  }
+
+  async function handleContinueFromRemoveAccount() {
+    const mine = await fetch("/api/accounts/mine").then(r => r.json()).catch(() => ({}));
+    setMyAccounts(mine.accounts || []);
+    setManageTag("");
+    setRemoveAccountSuccess(null);
   }
 
   /* --- re-join an already-verified account --- */
@@ -363,11 +387,10 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setManageResult({ ok: true, message: `${normTag} removed from this device.` });
-        // refresh the list so the removed account disappears immediately
-        const mine = await fetch("/api/accounts/mine").then(r => r.json());
-        setMyAccounts(mine.accounts || []);
-        setManageTag("");
+        // Gated behind Continue, matching Add Account / the welcome screen —
+        // refresh + clear happen in handleContinueFromRemoveAccount instead
+        // of immediately here.
+        setRemoveAccountSuccess({ tag: normTag });
       } else {
         setManageResult({ ok: false, message: data.error || "Couldn't remove account." });
       }
@@ -610,6 +633,33 @@ export default function SignupPage() {
   // Determine which state we're in
   const isNewUser = !loadingMine && myAccounts.length === 0;
   const isReturningUser = !loadingMine && myAccounts.length > 0;
+
+  // Plain-text CWL countdown for the header — same calendar math as the
+  // admin Overview countdown, deliberately without its phase-progress bar
+  // to match this page's plain, no-tile typography.
+  const cwlCountdown = (() => {
+    const now = new Date();
+    const y = now.getUTCFullYear();
+    const m = now.getUTCMonth();
+    const regOpen  = new Date(Date.UTC(y, m, 1, 8, 0, 0));
+    const warStart = new Date(Date.UTC(y, m, 3, 8, 0, 0));
+    const warEnd   = new Date(Date.UTC(y, m, 10, 8, 0, 0));
+    let target, label, active;
+    if (now < regOpen) {
+      target = regOpen; label = "Sign-Up Opens"; active = false;
+    } else if (now < warStart) {
+      target = warStart; label = "Wars Begin"; active = true;
+    } else if (now < warEnd) {
+      target = warEnd; label = "Season Ends"; active = true;
+    } else {
+      target = new Date(Date.UTC(y, m + 1, 1, 8, 0, 0)); label = "Sign-Up Opens"; active = false;
+    }
+    const diff = target - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return { display: days > 0 ? `${days}d ${hours}h` : `${hours}h ${mins}m`, label, active };
+  })();
   const [accountManagerOpen, setAccountManagerOpen] = useState(false);
 
   return (
@@ -645,9 +695,11 @@ export default function SignupPage() {
                   ["✓ In", "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season."],
                   ["✕ Out", "Lets leaders know you're sitting this season out. No need to be chased or followed up with."],
                   ["No Response", "If neither In nor Out is selected, leaders will follow up with you directly."],
-                  ["Tap a tile", "Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually."],
-                  ["Select All", "Selects all your accounts at once for a bulk action."],
-                  ["Bulk In / Out All", "Applies your In or Out choice to all selected accounts simultaneously."],
+                  ...(myAccounts.length > 1 ? [
+                    ["Tap a tile", "Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually."],
+                    ["Select All", "Selects all your accounts at once for a bulk action."],
+                    ["Bulk In / Out All", "Applies your In or Out choice to all selected accounts simultaneously."],
+                  ] : []),
                   ["Account Manager", "Use the gear icon at the bottom to add or remove accounts linked to your profile."],
                 ].map(([label, desc]) => (
                   <div key={label} className="flex gap-2">
@@ -660,47 +712,34 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* Season + participation count — new users get plain, centered
-            Orbitron typography with no card wrapper, matching how the
-            returning-user pill row already sits directly in the header
-            rather than inside its own boxed section. Keeps the header
-            feeling like context, not a competing tile next to the real
-            action cards below it. No "sitting out" count here — avoids
-            informational overload on a first visit. */}
-        {!loadingMine && isNewUser ? (
-          <div className="mb-2 mt-1">
-            {season && (
-              <p className="text-lg font-thin tracking-widest text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{season}</p>
-            )}
+        {/* Countdown + season + participation — plain, centered typography
+            throughout, no tiles or borders. Sitting-out count only shows
+            for returning users; new users don't see it (avoids
+            informational overload on a first visit). */}
+        <div className="mb-2 mt-1 text-center">
+          <p className="text-sm font-thin tracking-widest text-purple-200" style={{fontFamily:"var(--font-orbitron)"}}>{cwlCountdown.display}</p>
+          <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-2">{cwlCountdown.label}</p>
+
+          {season && (
+            <p className="text-lg font-thin tracking-widest text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{season}</p>
+          )}
+
+          <div className="flex items-center justify-center gap-6 mt-1">
             {poolCount !== null && (
-              <div className="mt-1">
+              <div>
                 <p className="text-lg font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{poolCount}</p>
                 <p className="text-[9px] text-slate-500 uppercase tracking-widest">Participating</p>
               </div>
             )}
-          </div>
-        ) : (
-          <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
-            {season && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
-                {season}
-              </div>
-            )}
-            {poolCount !== null && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
-                {poolCount} In
-              </div>
-            )}
-            {outCount !== null && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
-                {outCount} Out
+            {isReturningUser && outCount !== null && (
+              <div>
+                <p className="text-lg font-thin text-red-300" style={{fontFamily:"var(--font-orbitron)"}}>{outCount}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-widest">Sitting Out</p>
               </div>
             )}
           </div>
-        )}
+        </div>
+
       </div>
 
       {/* ── State A: Loading ── */}
@@ -831,39 +870,43 @@ export default function SignupPage() {
       {!loadingMine && isReturningUser && (
         <div className="relative z-10 space-y-3">
 
-          {/* Search + select all + bulk actions */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input type="text" value={accountSearch} onChange={e => setAccountSearch(e.target.value)}
-                  placeholder="Search accounts…"
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
-                {accountSearch && <button onClick={() => setAccountSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white text-xs">✕</button>}
+          {/* Search + select all + bulk actions — only meaningful with
+              more than one account; nothing to search or bulk-act on
+              otherwise, so this stays hidden for single-account users. */}
+          {myAccounts.length > 1 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input type="text" value={accountSearch} onChange={e => setAccountSearch(e.target.value)}
+                    placeholder="Search accounts…"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                  {accountSearch && <button onClick={() => setAccountSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white text-xs">✕</button>}
+                </div>
+                <button onClick={() => {
+                  const visible = myAccounts.filter(a => !accountSearch || a.name?.toLowerCase().includes(accountSearch.toLowerCase()) || a.tag?.toLowerCase().includes(accountSearch.toLowerCase()));
+                  const allSelected = visible.every(a => selectedTags.has(a.tag));
+                  setSelectedTags(allSelected ? new Set() : new Set(visible.map(a => a.tag)));
+                }}
+                  className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-500 text-xs hover:text-slate-300 hover:border-white/20 hover:bg-white/[0.08] transition whitespace-nowrap">
+                  {selectedTags.size > 0 ? `${selectedTags.size} selected` : "Select All"}
+                </button>
               </div>
-              <button onClick={() => {
-                const visible = myAccounts.filter(a => !accountSearch || a.name?.toLowerCase().includes(accountSearch.toLowerCase()) || a.tag?.toLowerCase().includes(accountSearch.toLowerCase()));
-                const allSelected = visible.every(a => selectedTags.has(a.tag));
-                setSelectedTags(allSelected ? new Set() : new Set(visible.map(a => a.tag)));
-              }}
-                className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-500 text-xs hover:text-slate-300 hover:border-white/20 hover:bg-white/[0.08] transition whitespace-nowrap">
-                {selectedTags.size > 0 ? `${selectedTags.size} selected` : "Select All"}
-              </button>
+              {selectedTags.size > 0 && (
+                <div className="flex items-center gap-2 px-1">
+                  <span className="text-[10px] text-slate-500 flex-1">{selectedTags.size} account{selectedTags.size !== 1 ? "s" : ""} selected</span>
+                  <button onClick={() => handleBulkIntent("in")} disabled={bulkBusy}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/60 text-green-400 bg-green-500/10 hover:border-green-400 transition disabled:opacity-40">
+                    {bulkBusy ? "…" : "✓ In All"}
+                  </button>
+                  <button onClick={() => handleBulkIntent("out")} disabled={bulkBusy}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-500/60 text-red-400 bg-red-500/10 hover:border-red-400 transition disabled:opacity-40">
+                    {bulkBusy ? "…" : "✕ Out All"}
+                  </button>
+                  <button onClick={() => setSelectedTags(new Set())} className="text-slate-600 hover:text-slate-400 text-xs transition">✕</button>
+                </div>
+              )}
             </div>
-            {selectedTags.size > 0 && (
-              <div className="flex items-center gap-2 px-1">
-                <span className="text-[10px] text-slate-500 flex-1">{selectedTags.size} account{selectedTags.size !== 1 ? "s" : ""} selected</span>
-                <button onClick={() => handleBulkIntent("in")} disabled={bulkBusy}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/60 text-green-400 bg-green-500/10 hover:border-green-400 transition disabled:opacity-40">
-                  {bulkBusy ? "…" : "✓ In All"}
-                </button>
-                <button onClick={() => handleBulkIntent("out")} disabled={bulkBusy}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-500/60 text-red-400 bg-red-500/10 hover:border-red-400 transition disabled:opacity-40">
-                  {bulkBusy ? "…" : "✕ Out All"}
-                </button>
-                <button onClick={() => setSelectedTags(new Set())} className="text-slate-600 hover:text-slate-400 text-xs transition">✕</button>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Account cards */}
           <div className="space-y-2">
@@ -876,7 +919,7 @@ export default function SignupPage() {
                 <div
                   key={acct.tag}
                   data-account-tag={acct.tag}
-                  draggable
+                  draggable={myAccounts.length > 1}
                   onDragStart={() => onAccountDragStart(acct.tag)}
                   onDragOver={e => onAccountDragOver(e, acct.tag)}
                   onDragLeave={onAccountDragLeave}
@@ -885,11 +928,12 @@ export default function SignupPage() {
                   onTouchMove={onAccountTouchMove}
                   onTouchEnd={onAccountTouchEnd}
                   style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
-                  onClick={() => toggleSelectTag(acct.tag)}
-                  className={`rounded-lg border bg-white/[0.03] backdrop-blur-xl p-4 transition cursor-pointer
+                  onClick={myAccounts.length > 1 ? () => toggleSelectTag(acct.tag) : undefined}
+                  className={`rounded-lg border bg-white/[0.03] backdrop-blur-xl p-4 transition
+                    ${myAccounts.length > 1 ? "cursor-pointer" : ""}
                     ${isDragging ? "opacity-40 border-purple-500/40" : ""}
                     ${isDragOver ? "border-purple-400/60 bg-purple-500/5" : ""}
-                    ${selectedTags.has(acct.tag)
+                    ${myAccounts.length > 1 && selectedTags.has(acct.tag)
                       ? "border-purple-500/60 bg-purple-500/[0.06] shadow-[0_0_12px_rgba(168,85,247,0.12)]"
                       : acct.inCurrentPool
                         ? "border-green-500/40 bg-green-500/[0.04] shadow-[0_0_10px_rgba(74,222,128,0.08)]"
@@ -988,6 +1032,23 @@ export default function SignupPage() {
 
                 {/* Add account */}
                 <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                  {addAccountSuccess ? (
+                    <div className="rounded-lg border border-green-500/30 bg-green-500/[0.06] p-4 text-center">
+                      <div className="w-9 h-9 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <ThIcon level={addAccountSuccess.townHallLevel}/>
+                        <span className="text-sm text-slate-300">{addAccountSuccess.name} <span className="text-slate-600 font-mono text-xs">({addAccountSuccess.tag})</span></span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mb-3">Added to your accounts</p>
+                      <button type="button" onClick={handleContinueFromAddAccount}
+                        className="w-full py-2 rounded-lg text-xs font-semibold bg-green-600/30 text-green-200 border border-green-500/30 hover:bg-green-600/50 transition">
+                        Continue
+                      </button>
+                    </div>
+                  ) : (
+                    <>
                   <p className="text-xs text-slate-400 font-semibold">Add Account</p>
                   <div>
                     <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Player Tag</label>
@@ -1007,16 +1068,32 @@ export default function SignupPage() {
                       className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 transition font-mono text-sm"/>
                   </div>
                   <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {verifying ? "Verifying…" : "Add Account"}
                   </button>
                   {verifyStatus && (
                     <p className={`text-xs text-center ${verifyStatus.ok ? "text-green-300" : "text-red-400"}`}>{verifyStatus.message}</p>
                   )}
+                    </>
+                  )}
                 </div>
 
                 {/* Remove account */}
                 <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                  {removeAccountSuccess ? (
+                    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-center">
+                      <div className="w-9 h-9 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center mx-auto mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      </div>
+                      <p className="text-sm text-slate-300 mb-1 font-mono">{removeAccountSuccess.tag}</p>
+                      <p className="text-[11px] text-slate-500 mb-3">Removed from this device</p>
+                      <button type="button" onClick={handleContinueFromRemoveAccount}
+                        className="w-full py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-slate-300 border border-white/10 hover:bg-white/[0.1] transition">
+                        Continue
+                      </button>
+                    </div>
+                  ) : (
+                    <>
                   <p className="text-xs text-slate-400 font-semibold">Remove Account</p>
                   <div>
                     <label className="block text-[10px] text-slate-500 mb-1.5 ml-1">Player Tag</label>
@@ -1026,16 +1103,38 @@ export default function SignupPage() {
                       className="w-full rounded-lg border border-red-500/20 bg-white/[0.04] px-4 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50 transition font-mono tracking-wide text-sm"/>
                   </div>
                   <button type="button" onClick={handleManageSubmit} disabled={manageSubmitting || !manageTag.trim()}
-                    className="w-full py-2.5 rounded-lg font-semibold text-sm bg-transparent text-red-400 border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_16px_rgba(239,68,68,0.25)] hover:border-red-400 hover:text-red-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full py-2.5 rounded-lg font-semibold text-sm bg-red-600/30 text-red-200 border border-red-500/30 hover:bg-red-600/50 transition disabled:opacity-40 disabled:cursor-not-allowed">
                     {manageSubmitting ? "Removing…" : "Remove Account"}
                   </button>
                   {manageResult && (
                     <p className={`text-xs text-center ${manageResult.ok ? "text-green-300" : "text-red-400"}`}>{manageResult.message}</p>
                   )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
           </div>
+
+          {/* Discord — same treatment as the new-user card, placed last
+              since it's a secondary priority for someone already past
+              onboarding, not a blocking step. */}
+          {discordStatus === "unauthenticated" && (
+            <div className="rounded-xl border border-[#5865f2]/30 bg-[#5865f2]/[0.08] backdrop-blur-xl p-5 text-center">
+              <svg className="w-6 h-6 mx-auto mb-2 text-[#7289da]" viewBox="0 0 127.14 96.36" fill="currentColor">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+              </svg>
+              <p className="text-xs font-semibold text-indigo-200 mb-1">Never lose your accounts</p>
+              <p className="text-[11px] text-slate-400 leading-relaxed mb-3">Link Discord to keep everything synced across devices, automatically.</p>
+              <button type="button" onClick={() => signIn("discord")}
+                className="w-full py-2.5 rounded-lg text-xs font-semibold bg-[#5865f2]/20 text-indigo-200 border border-[#5865f2]/40 hover:bg-[#5865f2]/35 transition flex items-center justify-center gap-2">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 127.14 96.36" fill="currentColor">
+                  <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+                Connect Discord
+              </button>
+            </div>
+          )}
         </div>
       )}
 
