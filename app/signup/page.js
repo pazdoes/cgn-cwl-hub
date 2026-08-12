@@ -654,7 +654,7 @@ export default function SignupPage() {
           )}
         </div>
 
-        {discordStatus !== "authenticated" && (
+        {discordStatus === "unauthenticated" && (
             <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed text-center">
               Sign in with Discord to permanently bind your accounts to your profile across devices
             </p>
