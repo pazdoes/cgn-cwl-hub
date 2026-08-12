@@ -22,12 +22,30 @@ export async function POST(request) {
   const sql = getDb();
   const season = await getOpenPoolSeason();
 
-  // Ensure pool_entry exists
-  await sql`
-    INSERT INTO pool_entries (player_tag, season, cwl_intent)
-    VALUES (${tag}, ${season}, ${intent})
-    ON CONFLICT (player_tag, season) DO UPDATE SET cwl_intent = ${intent}
-  `;
+  if (intent === null) {
+    // Clearing intent should return to true "no response" — the same
+    // state as never having touched anything at all — not leave a row
+    // behind that would incorrectly read as "in the pool" once cwl_intent
+    // is blank. But never delete a row that already holds a real roster
+    // assignment (assigned_clan) — that's a stronger, more authoritative
+    // signal than a bare intent flag, and must survive this regardless of
+    // how unusual it'd be for an admin to have assigned someone marked Out.
+    const [existing] = await sql`
+      SELECT assigned_clan FROM pool_entries WHERE player_tag = ${tag} AND season = ${season}
+    `;
+    if (!existing || existing.assigned_clan === null) {
+      await sql`DELETE FROM pool_entries WHERE player_tag = ${tag} AND season = ${season}`;
+    } else {
+      await sql`UPDATE pool_entries SET cwl_intent = NULL WHERE player_tag = ${tag} AND season = ${season}`;
+    }
+  } else {
+    // Ensure pool_entry exists
+    await sql`
+      INSERT INTO pool_entries (player_tag, season, cwl_intent)
+      VALUES (${tag}, ${season}, ${intent})
+      ON CONFLICT (player_tag, season) DO UPDATE SET cwl_intent = ${intent}
+    `;
+  }
 
   // "Out" is a standing commitment, not a season-scoped toggle like "In" —
   // it carries forward into every future season (see season/close route)
