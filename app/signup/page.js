@@ -149,17 +149,11 @@ export default function SignupPage() {
         setToken("");
         if (isNewUser) {
           // First-ever account for this person — show the welcome screen
-          // instead of the plain status line. Refetching accounts
-          // immediately would flip isNewUser to false and swap the whole
-          // view out from under the confirmation before anyone could read
-          // it, so the refresh is deliberately delayed.
+          // instead of the plain status line. The account refresh (which
+          // flips isNewUser to false and swaps the whole view) happens on
+          // an explicit "Continue" tap, not automatically — see
+          // handleContinueFromWelcome below.
           setSignupSuccess({ name: data.name, tag: data.tag, season: data.season, townHallLevel: data.townHallLevel });
-          setTimeout(async () => {
-            const mine = await fetch("/api/accounts/mine").then(r => r.json()).catch(() => ({}));
-            setMyAccounts(mine.accounts || []);
-            setSeason(mine.season || season);
-            setSignupSuccess(null);
-          }, 1800);
         } else {
           // Returning user adding another account via Account Manager —
           // unchanged behaviour, no welcome screen (nothing renders it here).
@@ -176,6 +170,16 @@ export default function SignupPage() {
     } finally {
       setVerifying(false);
     }
+  }
+
+  /* --- dismiss the welcome screen and load into the returning-user
+     dashboard — triggered by an explicit tap, not a timer, so nobody
+     loses the confirmation before they're ready to move on --- */
+  async function handleContinueFromWelcome() {
+    const mine = await fetch("/api/accounts/mine").then(r => r.json()).catch(() => ({}));
+    setMyAccounts(mine.accounts || []);
+    setSeason(mine.season || season);
+    setSignupSuccess(null);
   }
 
   /* --- re-join an already-verified account --- */
@@ -721,9 +725,9 @@ export default function SignupPage() {
       {!loadingMine && isNewUser && (
         <div className="relative z-10 space-y-4">
           {signupSuccess ? (
-            /* ── Welcome screen — shown for a beat after a successful
-                sign-up, before settling into the returning-user dashboard.
-                Gives the confirmation somewhere to actually be read. ── */
+            /* ── Welcome screen — stays until the person taps Continue,
+                so nobody loses the confirmation to a timer before
+                they're actually ready to move on. ── */
             <div className="rounded-xl border border-green-500/30 bg-green-500/[0.06] backdrop-blur-xl p-6 text-center">
               <div className="w-12 h-12 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -733,7 +737,11 @@ export default function SignupPage() {
                 <ThIcon level={signupSuccess.townHallLevel}/>
                 <span className="text-sm text-slate-300">{signupSuccess.name} <span className="text-slate-600 font-mono text-xs">({signupSuccess.tag})</span></span>
               </div>
-              <p className="text-[11px] text-slate-500">Confirmed for {signupSuccess.season}</p>
+              <p className="text-[11px] text-slate-500 mb-4">Confirmed for {signupSuccess.season}</p>
+              <button type="button" onClick={handleContinueFromWelcome}
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-green-600/30 text-green-200 border border-green-500/30 hover:bg-green-600/50 transition">
+                Continue
+              </button>
             </div>
           ) : (
             <>
