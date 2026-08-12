@@ -35,7 +35,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "You don't own this account" }, { status: 403 });
   }
 
-  const season = getOpenPoolSeason();
+  const season = await getOpenPoolSeason();
   const stillInPool = await isInPool(tag, season);
   if (stillInPool) {
     return NextResponse.json(

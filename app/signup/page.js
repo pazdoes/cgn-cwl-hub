@@ -646,13 +646,13 @@ export default function SignupPage() {
     const warEnd   = new Date(Date.UTC(y, m, 10, 8, 0, 0));
     let target, label, active;
     if (now < regOpen) {
-      target = regOpen; label = "Sign-Up Opens"; active = false;
+      target = regOpen; label = "Till CWL Begins"; active = false;
     } else if (now < warStart) {
       target = warStart; label = "Wars Begin"; active = true;
     } else if (now < warEnd) {
       target = warEnd; label = "Season Ends"; active = true;
     } else {
-      target = new Date(Date.UTC(y, m + 1, 1, 8, 0, 0)); label = "Sign-Up Opens"; active = false;
+      target = new Date(Date.UTC(y, m + 1, 1, 8, 0, 0)); label = "Till CWL Begins"; active = false;
     }
     const diff = target - now;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
