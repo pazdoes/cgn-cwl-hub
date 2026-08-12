@@ -690,23 +690,97 @@ export default function SignupPage() {
               <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 transition-transform ${infoOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
             </button>
             {infoOpen && (
-              <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] p-4 text-left space-y-2.5">
-                {[
-                  ["✓ In", "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season."],
-                  ["✕ Out", "Lets leaders know you're sitting this season out. No need to be chased or followed up with."],
-                  ["No Response", "If neither In nor Out is selected, leaders will follow up with you directly."],
-                  ...(myAccounts.length > 1 ? [
-                    ["Tap a tile", "Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually."],
-                    ["Select All", "Selects all your accounts at once for a bulk action."],
-                    ["Bulk In / Out All", "Applies your In or Out choice to all selected accounts simultaneously."],
-                  ] : []),
-                  ["Account Manager", "Use the gear icon at the bottom to add or remove accounts linked to your profile."],
-                ].map(([label, desc]) => (
-                  <div key={label} className="flex gap-2">
-                    <span className="text-[10px] font-semibold text-purple-300 shrink-0 w-24">{label}</span>
-                    <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
+              <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] p-4 text-left space-y-4">
+                <div>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2.5">CWL Intent</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { label: "✓ In", desc: "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season.", bg: "bg-green-500/20", border: "border-green-500/30", text: "text-green-300", icon: "M5 13l4 4L19 7" },
+                      { label: "✕ Out", desc: "Lets leaders know you're sitting this season out. No need to be chased or followed up with.", bg: "bg-red-500/20", border: "border-red-500/30", text: "text-red-300", icon: "M6 18L18 6M6 6l12 12" },
+                    ].map(({ label, desc, bg, border, text, icon }) => (
+                      <div key={label} className="flex gap-3">
+                        <span className={`shrink-0 w-6 h-6 rounded-lg ${bg} border ${border} ${text} flex items-center justify-center mt-0.5`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d={icon}/>
+                          </svg>
+                        </span>
+                        <div>
+                          <p className="text-xs font-semibold text-white">{label}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex gap-3">
+                      <span className="shrink-0 w-6 h-6 rounded-lg bg-white/[0.06] border border-white/10 text-slate-400 flex items-center justify-center mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <circle cx="12" cy="12" r="9"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3"/>
+                        </svg>
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold text-white">No Response</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">If neither In nor Out is selected, leaders will follow up with you directly.</p>
+                      </div>
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                <div className="pt-3 border-t border-white/[0.06]">
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2.5">Using This Page</p>
+                  <div className="space-y-2.5">
+                    {myAccounts.length > 1 && (
+                      <>
+                        <div className="flex gap-3">
+                          <span className="shrink-0 w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 flex items-center justify-center mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <rect x="5" y="5" width="14" height="14" rx="3"/>
+                            </svg>
+                          </span>
+                          <div>
+                            <p className="text-xs font-semibold text-white">Tap a tile</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="shrink-0 w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 flex items-center justify-center mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <rect x="4" y="4" width="16" height="16" rx="3"/>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12l2.5 2.5L16 9"/>
+                            </svg>
+                          </span>
+                          <div>
+                            <p className="text-xs font-semibold text-white">Select All</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Selects all your accounts at once for a bulk action.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="shrink-0 w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 flex items-center justify-center mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <rect x="3" y="3" width="12" height="12" rx="2"/>
+                              <rect x="9" y="9" width="12" height="12" rx="2"/>
+                            </svg>
+                          </span>
+                          <div>
+                            <p className="text-xs font-semibold text-white">Bulk In / Out All</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Applies your In or Out choice to all selected accounts simultaneously.</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex gap-3">
+                      <span className="shrink-0 w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 flex items-center justify-center mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold text-white">Account Manager</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Use the gear icon at the bottom to add or remove accounts linked to your profile.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
