@@ -656,23 +656,22 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* Informational tile — new users get a short, self-explanatory
-            season/signed-up readout with no "sitting out" count (avoids
-            informational overload on a first visit). Returning users and
-            the loading state keep the original compact pill row, since
-            it already carries meaning once you know the system. */}
+        {/* Season + participation count — new users get plain, centered
+            Orbitron typography with no card wrapper, matching how the
+            returning-user pill row already sits directly in the header
+            rather than inside its own boxed section. Keeps the header
+            feeling like context, not a competing tile next to the real
+            action cards below it. No "sitting out" count here — avoids
+            informational overload on a first visit. */}
         {!loadingMine && isNewUser ? (
-          <div className="mx-auto max-w-[280px] rounded-lg border border-white/10 bg-white/[0.04] p-3 mb-2 mt-1 text-left">
+          <div className="mb-2 mt-1">
             {season && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[9px] font-semibold uppercase tracking-widest mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
-                {season}
-              </div>
+              <p className="text-lg font-thin tracking-widest text-purple-300" style={{fontFamily:"var(--font-orbitron)"}}>{season}</p>
             )}
             {poolCount !== null && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{poolCount}</span>
-                <p className="text-[10px] text-slate-500 leading-snug">Players confirmed for this season so far</p>
+              <div className="mt-1">
+                <p className="text-lg font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{poolCount}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-widest">Participating</p>
               </div>
             )}
           </div>
@@ -696,15 +695,6 @@ export default function SignupPage() {
                 {outCount} Out
               </div>
             )}
-          </div>
-        )}
-
-        {/* Step indicator — only for new users */}
-        {(isNewUser || loadingMine) && accountsView === "accounts" && (
-          <div className="flex items-center justify-center gap-1.5 mt-4">
-            {["add", "accounts"].map((v, i) => (
-              <span key={v} className={`w-1.5 h-1.5 rounded-full transition ${accountsView === v || (i === 0) ? "bg-purple-400" : "bg-white/20"}`}/>
-            ))}
           </div>
         )}
       </div>
