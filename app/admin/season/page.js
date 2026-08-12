@@ -244,7 +244,12 @@ export default function AdminSeasonPage() {
       const res = await fetch("/api/admin/season/close", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ confirm: "CONFIRM" }) });
       const data = await res.json();
       if (res.ok) {
-        setMigrateResult({ ok: true, message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived · ${data.permanentOutCarried ?? 0} indefinite opt-outs carried forward` });
+        const hasFailures = data.sheetsClearFailed?.length > 0;
+        const failedNote = hasFailures ? ` ⚠ Sheet clear failed for: ${data.sheetsClearFailed.join(", ")} — clear these tabs manually` : "";
+        setMigrateResult({
+          ok: hasFailures ? "warning" : true,
+          message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived · ${data.permanentOutCarried ?? 0} indefinite opt-outs carried forward${failedNote}`,
+        });
         setMigrateConfirm("");
         setShowMigrateForm(false);
         loadSeason(pin);
@@ -333,7 +338,7 @@ export default function AdminSeasonPage() {
               {migrateSubmitting ? "Migrating…" : `Migrate ${season} → Next Season`}
             </button>
           </form>
-          {migrateResult && <p className={`text-[11px] text-center ${migrateResult.ok ? "text-green-400" : "text-red-400"}`}>{migrateResult.message}</p>}
+          {migrateResult && <p className={`text-[11px] text-center ${migrateResult.ok === true ? "text-green-400" : migrateResult.ok === "warning" ? "text-amber-400" : "text-red-400"}`}>{migrateResult.message}</p>}
         </div>
 
         {/* Fetch CWL data */}

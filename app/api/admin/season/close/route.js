@@ -37,11 +37,16 @@ export async function POST(request) {
 
   // Step 1b: clear Google Sheet roster assignments
   let sheetsCleared = 0;
+  let sheetsClearFailed = [];
   try {
-    sheetsCleared = await clearRosterAssignments();
+    const result = await clearRosterAssignments();
+    sheetsCleared = result.cleared;
+    sheetsClearFailed = result.failed;
   } catch (err) {
     console.error("Sheet clear failed:", err);
-    // Non-fatal — continue with migration
+    // Non-fatal — continue with migration, but this is now also visible
+    // in the response below, not just here in the server log
+    sheetsClearFailed = ["(all clans — clearRosterAssignments threw)"];
   }
 
   // Step 2 & 3: advance to next season
@@ -88,6 +93,7 @@ export async function POST(request) {
     opened: nextSeason,
     snapshotCount,
     sheetsCleared,
+    sheetsClearFailed,
     permanentOutCarried,
   });
 }
