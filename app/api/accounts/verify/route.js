@@ -79,6 +79,7 @@ export async function POST(request) {
     tag: normalizedTag,
     name: player.name,
     season,
+    townHallLevel: player.townHallLevel ?? null,
   });
 
   setOwnerCookie(response, ownerSecret);

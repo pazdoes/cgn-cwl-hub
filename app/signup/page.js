@@ -64,6 +64,7 @@ export default function SignupPage() {
   const [token, setToken] = useState("");
   const [verifyStatus, setVerifyStatus] = useState(null); // {ok, message, name}
   const [verifying, setVerifying]       = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(null); // {name, tag, season, townHallLevel} | null — drives the welcome screen
 
   // re-join existing account
   const [joiningTag, setJoiningTag]   = useState(null);
@@ -140,18 +141,33 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setVerifyStatus({ ok: true, message: `${data.name} (${data.tag}) signed up for ${data.season}.` });
-        // refresh quick-pick list — TH level is now included in the
-        // accounts/mine response from Neon, no separate CoC API call needed
         // Re-run discord link to ensure newly added account gets discord_id
         if (discordStatus === "authenticated") {
           await fetch("/api/accounts/link-discord", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ discordId: discordUser?.discordId, discordUsername: discordUser?.discordUsername || null }) }).catch(() => {});
         }
-        const mine = await fetch("/api/accounts/mine").then(r => r.json());
-        setMyAccounts(mine.accounts || []);
-        setSeason(mine.season || season);
         setTag("");
         setToken("");
+        if (isNewUser) {
+          // First-ever account for this person — show the welcome screen
+          // instead of the plain status line. Refetching accounts
+          // immediately would flip isNewUser to false and swap the whole
+          // view out from under the confirmation before anyone could read
+          // it, so the refresh is deliberately delayed.
+          setSignupSuccess({ name: data.name, tag: data.tag, season: data.season, townHallLevel: data.townHallLevel });
+          setTimeout(async () => {
+            const mine = await fetch("/api/accounts/mine").then(r => r.json()).catch(() => ({}));
+            setMyAccounts(mine.accounts || []);
+            setSeason(mine.season || season);
+            setSignupSuccess(null);
+          }, 1800);
+        } else {
+          // Returning user adding another account via Account Manager —
+          // unchanged behaviour, no welcome screen (nothing renders it here).
+          setVerifyStatus({ ok: true, message: `${data.name} (${data.tag}) signed up for ${data.season}.` });
+          const mine = await fetch("/api/accounts/mine").then(r => r.json());
+          setMyAccounts(mine.accounts || []);
+          setSeason(mine.season || season);
+        }
       } else {
         setVerifyStatus({ ok: false, message: data.error || "Verification failed." });
       }
@@ -606,60 +622,82 @@ export default function SignupPage() {
       {/* ── Hero card — flush to top ── */}
       <div className="relative z-10 mb-4 text-center">
         <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Sign Up for CWL</h1>
-        {/* How to use — expandable info panel */}
-        <div className="mt-1 mb-2">
-          <button type="button" onClick={() => setInfoOpen(v => !v)}
-            className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            How does this work?
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 transition-transform ${infoOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          {infoOpen && (
-            <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] p-4 text-left space-y-2.5">
-              {[
-                ["✓ In", "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season."],
-                ["✕ Out", "Lets leaders know you're sitting this season out. No need to be chased or followed up with."],
-                ["No Response", "If neither In nor Out is selected, leaders will follow up with you directly."],
-                ["Tap a tile", "Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually."],
-                ["Select All", "Selects all your accounts at once for a bulk action."],
-                ["Bulk In / Out All", "Applies your In or Out choice to all selected accounts simultaneously."],
-                ["Account Manager", "Use the gear icon at the bottom to add or remove accounts linked to your profile."],
-              ].map(([label, desc]) => (
-                <div key={label} className="flex gap-2">
-                  <span className="text-[10px] font-semibold text-purple-300 shrink-0 w-24">{label}</span>
-                  <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
-          {season && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
-              {season}
-            </div>
-          )}
-          {poolCount !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
-              {poolCount} In
-            </div>
-          )}
-          {outCount !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
-              {outCount} Out
-            </div>
-          )}
-        </div>
 
-        {discordStatus === "unauthenticated" && (
-            <p className="text-[10px] text-slate-600 max-w-[220px] leading-relaxed text-center">
-              Sign in with Discord to permanently bind your accounts to your profile across devices
-            </p>
-          )}
+        {/* How to use — expandable info panel. Its content (tap/select-all/
+            bulk/account-manager) describes the returning-user dashboard —
+            kept only there so a first-time visitor isn't shown mechanics
+            for a screen they haven't reached yet. */}
+        {!isNewUser && (
+          <div className="mt-1 mb-2">
+            <button type="button" onClick={() => setInfoOpen(v => !v)}
+              className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              How does this work?
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 transition-transform ${infoOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            {infoOpen && (
+              <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] p-4 text-left space-y-2.5">
+                {[
+                  ["✓ In", "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season."],
+                  ["✕ Out", "Lets leaders know you're sitting this season out. No need to be chased or followed up with."],
+                  ["No Response", "If neither In nor Out is selected, leaders will follow up with you directly."],
+                  ["Tap a tile", "Select an account tile to highlight it. Tap again to deselect. Select multiple accounts individually."],
+                  ["Select All", "Selects all your accounts at once for a bulk action."],
+                  ["Bulk In / Out All", "Applies your In or Out choice to all selected accounts simultaneously."],
+                  ["Account Manager", "Use the gear icon at the bottom to add or remove accounts linked to your profile."],
+                ].map(([label, desc]) => (
+                  <div key={label} className="flex gap-2">
+                    <span className="text-[10px] font-semibold text-purple-300 shrink-0 w-24">{label}</span>
+                    <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* Informational tile — new users get a short, self-explanatory
+            season/signed-up readout with no "sitting out" count (avoids
+            informational overload on a first visit). Returning users and
+            the loading state keep the original compact pill row, since
+            it already carries meaning once you know the system. */}
+        {!loadingMine && isNewUser ? (
+          <div className="mx-auto max-w-[280px] rounded-lg border border-white/10 bg-white/[0.04] p-3 mb-2 mt-1 text-left">
+            {season && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[9px] font-semibold uppercase tracking-widest mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
+                {season}
+              </div>
+            )}
+            {poolCount !== null && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{poolCount}</span>
+                <p className="text-[10px] text-slate-500 leading-snug">Players confirmed for this season so far</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2 flex-wrap mb-2 mt-1">
+            {season && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-semibold uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"/>
+                {season}
+              </div>
+            )}
+            {poolCount !== null && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400"/>
+                {poolCount} In
+              </div>
+            )}
+            {outCount !== null && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400"/>
+                {outCount} Out
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Step indicator — only for new users */}
         {(isNewUser || loadingMine) && accountsView === "accounts" && (
@@ -692,6 +730,23 @@ export default function SignupPage() {
       {/* ── State B: New user — 3-step add account form ── */}
       {!loadingMine && isNewUser && (
         <div className="relative z-10 space-y-4">
+          {signupSuccess ? (
+            /* ── Welcome screen — shown for a beat after a successful
+                sign-up, before settling into the returning-user dashboard.
+                Gives the confirmation somewhere to actually be read. ── */
+            <div className="rounded-xl border border-green-500/30 bg-green-500/[0.06] backdrop-blur-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <p className="text-sm font-semibold text-white mb-1">You're signed up</p>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <ThIcon level={signupSuccess.townHallLevel}/>
+                <span className="text-sm text-slate-300">{signupSuccess.name} <span className="text-slate-600 font-mono text-xs">({signupSuccess.tag})</span></span>
+              </div>
+              <p className="text-[11px] text-slate-500">Confirmed for {signupSuccess.season}</p>
+            </div>
+          ) : (
+            <>
           {/* Step card */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -718,7 +773,7 @@ export default function SignupPage() {
                 <p className="text-[10px] text-slate-600 mt-1.5 ml-1 leading-relaxed">Providing your token confirms account ownership and enables future personalisation features</p>
               </div>
               <button type="button" onClick={handleVerify} disabled={verifying || !tag.trim()}
-                className="w-full py-3 rounded-lg font-semibold text-sm bg-transparent text-purple-400 border border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] hover:border-purple-400 hover:text-purple-300 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="w-full py-3 rounded-lg font-semibold text-sm bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {verifying ? "Verifying…" : "Verify & Sign Up"}
               </button>
               {verifyStatus && (
@@ -727,15 +782,37 @@ export default function SignupPage() {
             </div>
           </div>
 
+          {/* Discord — standalone, own brand color, optional and parallel
+              to account linking rather than a numbered step in it. Order
+              (account first, Discord second) doesn't affect whether
+              linking actually works — /api/accounts/link-discord binds
+              every account under this browser's cookie the moment Discord
+              auth completes, regardless of which happened first. */}
+          {discordStatus === "unauthenticated" && (
+            <div className="rounded-xl border border-[#5865f2]/30 bg-[#5865f2]/[0.08] backdrop-blur-xl p-5 text-center">
+              <svg className="w-6 h-6 mx-auto mb-2 text-[#7289da]" viewBox="0 0 127.14 96.36" fill="currentColor">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+              </svg>
+              <p className="text-xs font-semibold text-indigo-200 mb-1">Never lose your accounts</p>
+              <p className="text-[11px] text-slate-400 leading-relaxed mb-3">Link Discord to keep everything synced across devices, automatically.</p>
+              <button type="button" onClick={() => signIn("discord")}
+                className="w-full py-2.5 rounded-lg text-xs font-semibold bg-[#5865f2]/20 text-indigo-200 border border-[#5865f2]/40 hover:bg-[#5865f2]/35 transition flex items-center justify-center gap-2">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 127.14 96.36" fill="currentColor">
+                  <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+                Connect Discord
+              </button>
+            </div>
+          )}
+
           {/* How it works */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">How it works</h2>
             <ol className="space-y-3">
               {[
-                ["Link your account", "Enter your player tag. API token is optional but confirms ownership and unlocks future features."],
-                ["Join the pool", "Your account enters the shared player pool for this season."],
-                ["Get assigned", "Admins assign players to clan rosters each season."],
-                ["One tap next season", "Saved accounts rejoin with a single tap — no reverification needed."],
+                ["Verify & you're in", "Enter your tag and you're both saved and signed up for this season's pool — one step, nothing else to do."],
+                ["Get assigned", "Admins place pool members onto a clan roster each season."],
+                ["Next season: one tap", "Your account stays saved. Future seasons, just tap to rejoin the pool — no re-verifying needed."],
               ].map(([title, desc], i) => (
                 <li key={i} className="flex gap-3">
                   <span className="shrink-0 w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
@@ -747,6 +824,8 @@ export default function SignupPage() {
               ))}
             </ol>
           </div>
+            </>
+          )}
         </div>
       )}
 
