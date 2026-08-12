@@ -68,6 +68,7 @@ export default function SignupPage() {
 
   // re-join existing account
   const [joiningTag, setJoiningTag]   = useState(null);
+  const [confirmOutTag, setConfirmOutTag] = useState(null); // {tag, name} | null — pending indefinite-Out confirmation
   const [joinResult, setJoinResult]   = useState({}); // { [tag]: {ok, message} }
 
   // leave the pool entirely (item 5)
@@ -264,6 +265,17 @@ export default function SignupPage() {
       const mine = await fetch("/api/accounts/mine").then(r => r.json());
       setMyAccounts(mine.accounts || []);
     }
+  }
+
+  // Runs the actual Out transition once someone confirms — "Out" now
+  // carries forward every future season automatically (see the intent
+  // route + season/close route), so this is only reached after the
+  // person has explicitly acknowledged that in the confirmation dialog.
+  async function executeIndefiniteOut(accountTag) {
+    const acct = myAccounts.find(a => a.tag === accountTag);
+    if (acct?.inCurrentPool) await handleLeave(accountTag);
+    await handleIntent(accountTag, "out");
+    setConfirmOutTag(null);
   }
 
   /* --- bulk intent for selected accounts --- */
@@ -696,7 +708,7 @@ export default function SignupPage() {
                   <div className="space-y-2.5">
                     {[
                       { label: "✓ In", desc: "Adds you to the CWL player pool. Leaders can assign you to a clan roster for this season.", bg: "bg-green-500/20", border: "border-green-500/30", text: "text-green-300", icon: "M5 13l4 4L19 7" },
-                      { label: "✕ Out", desc: "Lets leaders know you're sitting this season out. No need to be chased or followed up with.", bg: "bg-red-500/20", border: "border-red-500/30", text: "text-red-300", icon: "M6 18L18 6M6 6l12 12" },
+                      { label: "✕ Out", desc: "Marks you as sitting out — carries forward every future season automatically until you tap ✓ In again.", bg: "bg-red-500/20", border: "border-red-500/30", text: "text-red-300", icon: "M6 18L18 6M6 6l12 12" },
                     ].map(({ label, desc, bg, border, text, icon }) => (
                       <div key={label} className="flex gap-3">
                         <span className={`shrink-0 w-6 h-6 rounded-lg ${bg} border ${border} ${text} flex items-center justify-center mt-0.5`}>
@@ -1049,8 +1061,15 @@ export default function SignupPage() {
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          if (acct.inCurrentPool) await handleLeave(acct.tag);
-                          await handleIntent(acct.tag, acct.cwlIntent === "out" ? null : "out");
+                          if (acct.cwlIntent === "out") {
+                            // Cancelling an existing Out — no confirmation needed,
+                            // this removes the standing commitment, doesn't create one.
+                            await handleIntent(acct.tag, null);
+                          } else {
+                            // Entering Out is now a standing commitment (carries
+                            // forward every future season) — confirm first.
+                            setConfirmOutTag({ tag: acct.tag, name: acct.name });
+                          }
                         }}
                         disabled={busy || leavingTag === acct.tag}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition disabled:opacity-50 whitespace-nowrap ${
@@ -1069,6 +1088,34 @@ export default function SignupPage() {
               );
             })}
           </div>
+
+          {/* Indefinite-Out confirmation — appears only when transitioning
+              into Out for the first time, not when cancelling an existing
+              one. "Out" now carries forward every future season, so this
+              is the one moment that consequence needs explaining. */}
+          {confirmOutTag && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setConfirmOutTag(null)}>
+              <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-red-500/30 bg-[#0b1020] p-5 text-center">
+                <div className="w-10 h-10 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-white mb-1">Sit out indefinitely?</p>
+                <p className="text-[11px] text-slate-400 leading-relaxed mb-4">{confirmOutTag.name} will be marked Out every season automatically from now on — no need to opt out again each month. Tap ✓ In anytime to resume normal sign-up.</p>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setConfirmOutTag(null)}
+                    className="flex-1 py-2.5 rounded-lg text-xs font-semibold bg-white/[0.06] text-slate-300 border border-white/10 hover:bg-white/[0.1] transition">
+                    Cancel
+                  </button>
+                  <button type="button" onClick={() => executeIndefiniteOut(confirmOutTag.tag)}
+                    className="flex-1 py-2.5 rounded-lg text-xs font-semibold bg-red-600/30 text-red-200 border border-red-500/30 hover:bg-red-600/50 transition">
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Account Manager — collapsible */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">

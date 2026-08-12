@@ -244,7 +244,7 @@ export default function AdminSeasonPage() {
       const res = await fetch("/api/admin/season/close", { method: "POST", headers: { "Content-Type": "application/json", "x-officer-pin": pin }, body: JSON.stringify({ confirm: "CONFIRM" }) });
       const data = await res.json();
       if (res.ok) {
-        setMigrateResult({ ok: true, message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived` });
+        setMigrateResult({ ok: true, message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived · ${data.permanentOutCarried ?? 0} indefinite opt-outs carried forward` });
         setMigrateConfirm("");
         setShowMigrateForm(false);
         loadSeason(pin);

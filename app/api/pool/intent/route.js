@@ -29,5 +29,15 @@ export async function POST(request) {
     ON CONFLICT (player_tag, season) DO UPDATE SET cwl_intent = ${intent}
   `;
 
+  // "Out" is a standing commitment, not a season-scoped toggle like "In" —
+  // it carries forward into every future season (see season/close route)
+  // until the player explicitly taps back to In or clears it. Any
+  // transition away from "out" (to "in" or back to neutral) clears the
+  // flag, so cancelling this season's Out also cancels the standing
+  // commitment rather than leaving it silently active.
+  await sql`
+    UPDATE accounts SET permanent_out = ${intent === "out"} WHERE player_tag = ${tag}
+  `;
+
   return NextResponse.json({ ok: true, tag, intent, season });
 }

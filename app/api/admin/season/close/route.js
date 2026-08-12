@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOpenPoolSeason, setCurrentSeason, getOpenPoolSeasonFromDate } from "@/lib/season";
 import { snapshotRoster } from "@/lib/pool";
 import { clearRosterAssignments } from "@/lib/sheetsWrite";
+import { getDb } from "@/lib/db";
 
 // Migrate Season — three steps in order:
 //   1. Snapshot current assigned roster into roster_history
@@ -59,10 +60,34 @@ export async function POST(request) {
 
   await setCurrentSeason(nextSeason);
 
+  // Carry forward indefinite opt-outs into the newly-opened season, so
+  // pool_entries (and therefore every admin view — Roster Compliance,
+  // Missing Members, etc.) reflects them immediately. Deliberately not
+  // dependent on the player ever revisiting the signup page — that lazy
+  // approach would leave officers seeing "no response" for someone who
+  // has, in fact, already told the system they're out indefinitely.
+  let permanentOutCarried = 0;
+  try {
+    const sql = getDb();
+    const permanentOutAccounts = await sql`SELECT player_tag FROM accounts WHERE permanent_out = true`;
+    for (const acc of permanentOutAccounts) {
+      await sql`
+        INSERT INTO pool_entries (player_tag, season, cwl_intent)
+        VALUES (${acc.player_tag}, ${nextSeason}, 'out')
+        ON CONFLICT (player_tag, season) DO NOTHING
+      `;
+    }
+    permanentOutCarried = permanentOutAccounts.length;
+  } catch (err) {
+    console.error("Permanent opt-out carryover failed:", err);
+    // Non-fatal — season migration itself already succeeded above
+  }
+
   return NextResponse.json({
     closed: closingSeason,
     opened: nextSeason,
     snapshotCount,
     sheetsCleared,
+    permanentOutCarried,
   });
 }
