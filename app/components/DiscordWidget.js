@@ -61,22 +61,6 @@ export default function DiscordWidget({ variant = "corner" }) {
         <DiscordLogo />
         {isCenter && "Discord"}
       </button>
-      <div className="relative">
-        <button type="button" onClick={() => { setShowInfo(v => !v); }}
-          className="w-6 h-6 rounded-xl flex items-center justify-center text-purple-400 transition border border-purple-500/40 bg-transparent hover:border-purple-400 shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </button>
-        {showInfo && mounted && createPortal(
-          <div style={{position:"fixed",top:"56px",right:"12px",zIndex:9999}} className="w-56 rounded-xl border border-white/10 bg-[#0b1020] backdrop-blur-xl shadow-xl p-3">
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              Sign in with Discord to keep your CoC accounts linked across devices.
-            </p>
-          </div>,
-          document.body
-        )}
-      </div>
     </div>
   );
 }

@@ -787,7 +787,9 @@ export default function SignupPage() {
           {/* Step card */}
           <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-6 h-6 rounded-lg bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-center shrink-0">1</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-4.242 4.242a4 4 0 01-5.656-5.656l1.414-1.414M10.172 13.828a4 4 0 010-5.656l4.242-4.242a4 4 0 015.656 5.656l-1.414 1.414"/>
+              </svg>
               <h2 className="text-sm font-semibold text-slate-300">Link Your Account</h2>
             </div>
             <div className="space-y-3">
