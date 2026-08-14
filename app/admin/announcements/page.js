@@ -2934,25 +2934,6 @@ export default function AnnouncementsPage() {
           )}
         </div>
 
-
-        </>)} {/* end manage tab */}
-
-        {/* ── TOOLS TAB ── */}
-        {mainTab === "tools" && (<>
-
-        {/* Timestamp Generator */}
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button onClick={() => setManageTab(manageTab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
-            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          {manageTab === "timestamp" && (
-            <div className="px-5 pb-5 border-t border-white/10 pt-4">
-              <TimestampTool/>
-            </div>
-          )}
-        </div>
-
         {/* Announcement Tags */}
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
           <button onClick={() => setManageTab(manageTab==="tags"?"":"tags")} className="w-full flex items-center justify-between px-5 py-4">
@@ -3012,6 +2993,25 @@ export default function AnnouncementsPage() {
             </div>
           </div>
         )}
+
+
+        </>)} {/* end manage tab */}
+
+        {/* ── TOOLS TAB ── */}
+        {mainTab === "tools" && (<>
+
+        {/* Timestamp Generator */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setManageTab(manageTab==="timestamp"?"":"timestamp")} className="w-full flex items-center justify-between px-5 py-4">
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Timestamp Generator</p><p className="text-[10px] text-slate-600 mt-0.5">Auto timezone-aware Discord timestamps</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="timestamp"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {manageTab === "timestamp" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4">
+              <TimestampTool/>
+            </div>
+          )}
+        </div>
 
 
 
