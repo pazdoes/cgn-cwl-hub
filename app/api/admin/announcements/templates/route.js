@@ -14,7 +14,7 @@ export async function GET(request) {
 export async function POST(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const body = await request.json().catch(() => ({}));
-  const { action, id, name, webhookId, embedJson, username, avatarUrl } = body;
+  const { action, id, name, webhookId, embedJson, username, avatarUrl, tagIds } = body;
 
   if (action === "use") {
     // Record usage — update use_count and last_used_at
@@ -25,7 +25,7 @@ export async function POST(request) {
   }
 
   if (!name || !embedJson) return NextResponse.json({ error: "name and embedJson required" }, { status: 400 });
-  const template = await saveAnnouncementTemplate({ name, webhookId: webhookId || null, embedJson, username: username || null, avatarUrl: avatarUrl || null });
+  const template = await saveAnnouncementTemplate({ name, webhookId: webhookId || null, embedJson, username: username || null, avatarUrl: avatarUrl || null, tagIds: tagIds || [] });
   return NextResponse.json({ template });
 }
 
@@ -33,9 +33,9 @@ export async function POST(request) {
 export async function PATCH(request) {
   if (!checkPin(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   const body = await request.json().catch(() => ({}));
-  const { id, name, webhookId, embedJson, username, avatarUrl } = body;
+  const { id, name, webhookId, embedJson, username, avatarUrl, tagIds } = body;
   if (!id || !name || !embedJson) return NextResponse.json({ error: "id, name and embedJson required" }, { status: 400 });
-  const template = await updateAnnouncementTemplate(id, { name, webhookId: webhookId || null, embedJson, username: username || null, avatarUrl: avatarUrl || null });
+  const template = await updateAnnouncementTemplate(id, { name, webhookId: webhookId || null, embedJson, username: username || null, avatarUrl: avatarUrl || null, tagIds: tagIds || [] });
   return NextResponse.json({ template });
 }
 

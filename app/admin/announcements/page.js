@@ -1258,6 +1258,13 @@ export default function AnnouncementsPage() {
   const recapRoleSearchRef = useRef(null);
   const [history, setHistory] = useState([]);
   const [templates, setTemplates] = useState([]);
+  const [announcementTags, setAnnouncementTags] = useState([]); // [{id, name, template_count}]
+  const [newTagName, setNewTagName] = useState("");
+  const [tagCreateResult, setTagCreateResult] = useState(null); // {ok, message} | null
+  const [tagDeleteConfirm, setTagDeleteConfirm] = useState(null); // {id, name, template_count} | null
+  const [templateTagFilter, setTemplateTagFilter] = useState(null); // tag id | null
+  const [templateSort, setTemplateSort] = useState("recent"); // "recent" | "mostUsed" | "newest" | "az"
+  const [selectedTagIds, setSelectedTagIds] = useState([]); // tag ids applied to the template currently being saved/edited
   const [scheduled, setScheduled] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
@@ -1374,16 +1381,18 @@ export default function AnnouncementsPage() {
     Promise.all([
       fetch("/api/admin/announcements", { headers: { "x-officer-pin": pin } }).then(r => r.json()),
       fetch("/api/admin/announcements/templates", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ templates: [] })),
+      fetch("/api/admin/announcements/tags", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ tags: [] })),
       fetch("/api/admin/announcements/schedule", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ scheduled: [] })),
       fetch("/api/admin/discord-meta").then(r => r.json()).catch(() => ({ roles: [], channels: [], emojis: [] })),
       fetch("/api/admin/announcements/history", { headers: { "x-officer-pin": pin } }).then(r => r.json()).catch(() => ({ history: [] })),
       fetch("/api/leaderboard").then(r => r.json()).catch(() => ({ seasons: [] })),
-    ]).then(([wData, tData, sData, metaData, histData, lbData]) => {
+    ]).then(([wData, tData, tagData, sData, metaData, histData, lbData]) => {
       setDiscordMeta({ roles: metaData.roles || [], channels: metaData.channels || [], emojis: metaData.emojis || [] });
       const wh = wData.webhooks || [];
       setWebhooks(wh);
       if (wh.length > 0 && !selectedWebhookId) setSelectedWebhookId(wh[0].id);
       setTemplates(tData.templates || []);
+      setAnnouncementTags(tagData.tags || []);
       setScheduled(sData.scheduled || []);
       setHistory(histData.history || []);
       if (lbData.seasons?.length) setRecapSeasons(lbData.seasons);
@@ -1902,8 +1911,8 @@ export default function AnnouncementsPage() {
     try {
       const method = templateOverwriteId ? "PATCH" : "POST";
       const fetchBody = templateOverwriteId
-        ? { id: templateOverwriteId, name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl }
-        : { name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl };
+        ? { id: templateOverwriteId, name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl, tagIds: selectedTagIds }
+        : { name: templateName.trim(), webhookId: selectedWebhookId, embedJson: finalEmbed, username, avatarUrl, tagIds: selectedTagIds };
       const res = await fetch("/api/admin/announcements/templates", {
         method,
         headers: { "Content-Type": "application/json", "x-officer-pin": pin },
@@ -1911,14 +1920,25 @@ export default function AnnouncementsPage() {
       });
       const data = await res.json();
       if (res.ok) {
+        // saveAnnouncementTemplate/updateAnnouncementTemplate return raw
+        // columns (RETURNING *), which has tag_ids as bare ids, not the
+        // joined {id,name} shape getAnnouncementTemplates() provides —
+        // build that shape here from what's already in state, so the list
+        // reflects the new tags immediately without a full refetch.
+        const savedWebhook = webhooks.find(w => w.id === data.template.webhook_id);
+        const templateWithTags = {
+          ...data.template,
+          webhook_label: savedWebhook?.label ?? null,
+          tags: announcementTags.filter(t => selectedTagIds.includes(t.id)),
+        };
         if (templateOverwriteId) {
-          setTemplates(prev => prev.map(t => t.id === templateOverwriteId ? data.template : t));
+          setTemplates(prev => prev.map(t => t.id === templateOverwriteId ? templateWithTags : t));
           setTemplateOverwriteId(null);
         } else {
-          setTemplates(prev => [data.template, ...prev]);
+          setTemplates(prev => [templateWithTags, ...prev]);
         }
         setSaveTemplateResult({ ok: true, message: templateOverwriteId ? "Template updated ✓" : "Template saved ✓" });
-        setTemplateName(""); setShowSaveTemplate(false);
+        setTemplateName(""); setShowSaveTemplate(false); setSelectedTagIds([]);
       } else { setSaveTemplateResult({ ok: false, message: data.error || "Failed to save" }); }
     } catch { setSaveTemplateResult({ ok: false, message: "Network error" }); }
     finally { setSavingTemplate(false); }
@@ -1931,6 +1951,42 @@ export default function AnnouncementsPage() {
       body: JSON.stringify({ id }),
     });
     setTemplates(prev => prev.filter(t => t.id !== id));
+  }
+
+  async function handleCreateTag(e) {
+    e.preventDefault();
+    if (!newTagName.trim()) return;
+    setTagCreateResult(null);
+    try {
+      const res = await fetch("/api/admin/announcements/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+        body: JSON.stringify({ name: newTagName.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAnnouncementTags(prev => [...prev, data.tag].sort((a, b) => a.name.localeCompare(b.name)));
+        setNewTagName("");
+      } else {
+        setTagCreateResult({ ok: false, message: data.error || "Failed to create tag" });
+      }
+    } catch {
+      setTagCreateResult({ ok: false, message: "Network error" });
+    }
+  }
+
+  async function handleDeleteTag(id) {
+    await fetch("/api/admin/announcements/tags", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", "x-officer-pin": pin },
+      body: JSON.stringify({ id }),
+    });
+    setAnnouncementTags(prev => prev.filter(t => t.id !== id));
+    // Strip the deleted tag from any templates that had it, matching the
+    // backend, so the list doesn't briefly show a chip for a tag that's gone.
+    setTemplates(prev => prev.map(t => ({ ...t, tags: (t.tags || []).filter(tg => tg.id !== id) })));
+    if (templateTagFilter === id) setTemplateTagFilter(null);
+    setTagDeleteConfirm(null);
   }
 
   async function handleAddWebhook(e) {
@@ -2617,22 +2673,6 @@ export default function AnnouncementsPage() {
         {/* ── TEMPLATES TAB ── */}
         {mainTab === "templates" && (<>
 
-        {/* Favourites — top 3 most used */}
-        {templates.filter(t => t.use_count > 0).sort((a,b) => (b.use_count||0)-(a.use_count||0)).slice(0,3).length > 0 && (
-          <Card>
-            <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-3">Favourites</p>
-            <div className="flex flex-wrap gap-2">
-              {templates.filter(t => t.use_count > 0).sort((a,b) => (b.use_count||0)-(a.use_count||0)).slice(0,3).map(t => (
-                <button key={t.id} type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
-                  className="px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition flex items-center gap-1.5">
-                  {t.name}
-                  <span className="text-[9px] text-purple-600">{t.use_count}×</span>
-                </button>
-              ))}
-            </div>
-          </Card>
-        )}
-
         {/* Saved templates */}
         <Card>
           {/* Header row: search + manage */}
@@ -2650,32 +2690,99 @@ export default function AnnouncementsPage() {
             </button>
           </div>
 
+          {/* Sort control */}
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-[9px] text-slate-600 uppercase tracking-widest shrink-0">Sort</span>
+            {[["recent","Recently Used"],["mostUsed","Most Used"],["newest","Newest"],["az","A–Z"]].map(([key,label]) => (
+              <button key={key} type="button" onClick={() => setTemplateSort(key)}
+                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                  templateSort === key
+                    ? "bg-purple-600/30 text-purple-200 border-purple-500/30"
+                    : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tag filter chips */}
+          {announcementTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+              <span className="text-[9px] text-slate-600 uppercase tracking-widest shrink-0">Filter</span>
+              {announcementTags.map(tag => (
+                <button key={tag.id} type="button" onClick={() => setTemplateTagFilter(prev => prev === tag.id ? null : tag.id)}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                    templateTagFilter === tag.id
+                      ? "bg-purple-600/30 text-purple-200 border-purple-500/30"
+                      : "bg-transparent text-slate-500 border-white/10 hover:text-slate-300 hover:border-white/20"
+                  }`}>
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           {templates.length === 0 ? (
             <p className="text-slate-700 text-xs text-center py-4">No saved templates yet</p>
           ) : (
             <div className="space-y-1.5">
               {templates
                 .filter(t => !templateSearch || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
-                .map(t => (
+                .filter(t => !templateTagFilter || (t.tags || []).some(tg => tg.id === templateTagFilter))
+                .sort((a, b) => {
+                  if (templateSort === "mostUsed") return (b.use_count || 0) - (a.use_count || 0);
+                  if (templateSort === "az") return a.name.localeCompare(b.name);
+                  if (templateSort === "newest") return new Date(b.created_at) - new Date(a.created_at);
+                  // "recent" — most recently used first; never-used templates sort last
+                  if (!a.last_used_at && !b.last_used_at) return new Date(b.created_at) - new Date(a.created_at);
+                  if (!a.last_used_at) return 1;
+                  if (!b.last_used_at) return -1;
+                  return new Date(b.last_used_at) - new Date(a.last_used_at);
+                })
+                .map(t => {
+                  const embed = t.embed_json ? (typeof t.embed_json === "string" ? JSON.parse(t.embed_json) : t.embed_json) : null;
+                  const snippet = embed?.title || embed?.description || "";
+                  const lastUsedLabel = (() => {
+                    if (!t.last_used_at) return "Never used";
+                    const diffMs = Date.now() - new Date(t.last_used_at).getTime();
+                    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    if (days < 1) return "Used today";
+                    if (days === 1) return "Used 1d ago";
+                    if (days < 30) return `Used ${days}d ago`;
+                    return `Used ${Math.floor(days / 30)}mo ago`;
+                  })();
+                  return (
                 <div key={t.id} className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2">
+                  <div className="flex items-center gap-2 px-3 pt-2">
                     <button type="button" onClick={() => setExpandedTemplate(expandedTemplate === t.id ? null : t.id)}
                       className="flex-1 text-left text-xs text-slate-300 hover:text-white flex items-center gap-2 min-w-0">
                       <svg xmlns="http://www.w3.org/2000/svg" className={"w-3 h-3 text-slate-600 shrink-0 transition-transform " + (expandedTemplate === t.id ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
                       <span className="truncate">{t.name}</span>
                     </button>
-                    {t.use_count > 0 && <span className="text-[9px] text-slate-700 shrink-0">{t.use_count}×</span>}
                     {!templateManageMode && <>
                       <button type="button" onClick={() => { applySavedTemplate(t); setMainTab("compose"); }}
                         className="text-[10px] text-purple-200 bg-purple-600/30 border border-purple-500/30 hover:bg-purple-600/50 rounded-lg px-2 py-0.5 transition shrink-0">Use</button>
-                      <button type="button" onClick={() => { setTemplateOverwriteId(t.id); setTemplateName(t.name); setShowSaveTemplate(true); }}
+                      <button type="button" onClick={() => { setTemplateOverwriteId(t.id); setTemplateName(t.name); setSelectedTagIds((t.tags || []).map(tg => tg.id)); setShowSaveTemplate(true); }}
                         className="text-[10px] text-slate-500 hover:text-slate-300 border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] rounded-lg px-2 py-0.5 transition shrink-0">Edit</button>
                     </>}
+                  </div>
+                  {/* Context row: channel, tags, snippet, last used, use count — all visible without expanding */}
+                  <div className="px-3 pb-2 pt-1 pl-8">
+                    {snippet && <p className="text-[10px] text-slate-500 truncate mb-1.5">{snippet}</p>}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {t.webhook_label && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-lg border border-white/10 bg-white/[0.04] text-slate-500">#{t.webhook_label}</span>
+                      )}
+                      {(t.tags || []).map(tag => (
+                        <span key={tag.id} className="text-[9px] px-1.5 py-0.5 rounded-lg border border-purple-500/20 bg-purple-500/[0.06] text-purple-300">{tag.name}</span>
+                      ))}
+                      <span className="text-[9px] text-slate-600 ml-auto shrink-0">{lastUsedLabel}{t.use_count > 0 ? ` · ${t.use_count}×` : ""}</span>
+                    </div>
                   </div>
                   {/* Template embed preview */}
                   {expandedTemplate === t.id && t.embed_json && (
                     <div className="border-t border-white/[0.06] px-3 py-3 bg-black/20">
-                      <EmbedPreview embed={typeof t.embed_json === "string" ? JSON.parse(t.embed_json) : t.embed_json} username={t.username} avatarUrl={t.avatar_url}/>
+                      <EmbedPreview embed={embed} username={t.username} avatarUrl={t.avatar_url}/>
                     </div>
                   )}
                   {/* Manage mode: confirm delete */}
@@ -2696,7 +2803,8 @@ export default function AnnouncementsPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                  );
+              })}
             </div>
           )}
 
@@ -2706,15 +2814,33 @@ export default function AnnouncementsPage() {
                 {templateOverwriteId && <p className="text-[10px] text-amber-400">Overwriting existing template</p>}
                 <input type="text" placeholder="Template name" value={templateName} onChange={e => setTemplateName(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                {announcementTags.length > 0 && (
+                  <div>
+                    <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1.5">Tags</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {announcementTags.map(tag => (
+                        <button key={tag.id} type="button"
+                          onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                            selectedTagIds.includes(tag.id)
+                              ? "bg-purple-600/30 text-purple-200 border-purple-500/30"
+                              : "bg-white/[0.04] text-slate-500 border-white/10 hover:border-white/20 hover:text-slate-300"
+                          }`}>
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button type="button" onClick={handleSaveTemplate} disabled={savingTemplate||!templateName.trim()}
-                    className="flex-1 py-2 rounded-xl text-xs font-semibold bg-transparent text-purple-400 border border-purple-500/60 hover:border-purple-400 transition disabled:opacity-40">{savingTemplate ? (templateOverwriteId ? "Updating…" : "Saving…") : (templateOverwriteId ? "Update Template" : "Save")}</button>
-                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); setTemplateOverwriteId(null); }} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
+                    className="flex-1 py-2 rounded-xl text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition disabled:opacity-40">{savingTemplate ? (templateOverwriteId ? "Updating…" : "Saving…") : (templateOverwriteId ? "Update Template" : "Save")}</button>
+                  <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); setTemplateOverwriteId(null); setSelectedTagIds([]); }} className="px-4 py-2 rounded-xl text-xs text-slate-500 border border-white/10 hover:text-slate-300 transition">Cancel</button>
                 </div>
                 {saveTemplateResult && <p className={`text-xs text-center ${saveTemplateResult.ok?"text-green-400":"text-red-400"}`}>{saveTemplateResult.message}</p>}
               </div>
             ) : (
-              <button type="button" onClick={() => { setShowSaveTemplate(true); setTemplateOverwriteId(null); }}
+              <button type="button" onClick={() => { setShowSaveTemplate(true); setTemplateOverwriteId(null); setSelectedTagIds([]); }}
                 className="w-full py-2 rounded-xl text-xs font-semibold bg-transparent text-slate-400 border border-white/10 hover:text-white hover:border-white/30 transition">+ Save current as template</button>
             )}
           </div>
@@ -2826,6 +2952,66 @@ export default function AnnouncementsPage() {
             </div>
           )}
         </div>
+
+        {/* Announcement Tags */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+          <button onClick={() => setManageTab(manageTab==="tags"?"":"tags")} className="w-full flex items-center justify-between px-5 py-4">
+            <div className="text-left"><p className="text-sm font-semibold text-slate-300">Announcement Tags</p><p className="text-[10px] text-slate-600 mt-0.5">Manage the tags available for saved templates</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-600 transition-transform ${manageTab==="tags"?"rotate-180":""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          {manageTab === "tags" && (
+            <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
+              {announcementTags.length === 0 ? (
+                <p className="text-slate-700 text-xs text-center py-2">No tags yet</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {announcementTags.map(tag => (
+                    <span key={tag.id} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-500/[0.06] text-purple-300 border border-purple-500/20">
+                      {tag.name}
+                      {tag.template_count > 0 && <span className="text-[9px] text-purple-600">{tag.template_count}×</span>}
+                      <button type="button" onClick={() => setTagDeleteConfirm(tag)}
+                        className="text-purple-600 hover:text-red-400 transition text-[11px] leading-none px-0.5">✕</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <form onSubmit={handleCreateTag} className="flex gap-2 pt-1">
+                <input type="text" placeholder="New tag name" value={newTagName}
+                  onChange={e => { setNewTagName(e.target.value); setTagCreateResult(null); }}
+                  className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                <button type="submit" disabled={!newTagName.trim()}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600/30 text-purple-200 border border-purple-500/30 hover:bg-purple-600/50 transition disabled:opacity-40">
+                  Add
+                </button>
+              </form>
+              {tagCreateResult && !tagCreateResult.ok && <p className="text-[11px] text-red-400">{tagCreateResult.message}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Tag delete confirmation */}
+        {tagDeleteConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setTagDeleteConfirm(null)}>
+            <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-red-500/30 bg-[#0b1020] p-5 text-center">
+              <p className="text-sm font-semibold text-white mb-1">Delete "{tagDeleteConfirm.name}"?</p>
+              <p className="text-[11px] text-slate-400 leading-relaxed mb-4">
+                {tagDeleteConfirm.template_count > 0
+                  ? `This tag is currently applied to ${tagDeleteConfirm.template_count} template${tagDeleteConfirm.template_count !== 1 ? "s" : ""}. It will be removed from ${tagDeleteConfirm.template_count !== 1 ? "them" : "it"} too.`
+                  : "This tag isn't applied to any templates."}
+              </p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setTagDeleteConfirm(null)}
+                  className="flex-1 py-2.5 rounded-lg text-xs font-semibold bg-white/[0.06] text-slate-300 border border-white/10 hover:bg-white/[0.1] transition">
+                  Cancel
+                </button>
+                <button type="button" onClick={() => handleDeleteTag(tagDeleteConfirm.id)}
+                  className="flex-1 py-2.5 rounded-lg text-xs font-semibold bg-red-600/30 text-red-200 border border-red-500/30 hover:bg-red-600/50 transition">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
 
 
