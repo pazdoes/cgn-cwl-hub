@@ -15,6 +15,7 @@ export async function GET(request) {
   return NextResponse.json({
     compliance: cache ? { correctCount: cache.compliance_correct, totalRostered: cache.compliance_total } : null,
     connectivity: cache ? { connectedCount: cache.connected_count, totalMembers: cache.connected_total } : null,
+    outsideAlliance: cache && cache.outside_alliance_count !== null ? { count: cache.outside_alliance_count } : null,
     checkedAt: cache?.checked_at || null,
   });
 }

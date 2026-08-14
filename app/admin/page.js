@@ -578,7 +578,7 @@ export default function AdminOverviewPage() {
       .then(r => r.json())
       .then(d => {
         if (d.ok) {
-          setLiveChecks({ compliance: d.compliance, connectivity: d.connectivity, checkedAt: d.checkedAt });
+          setLiveChecks({ compliance: d.compliance, connectivity: d.connectivity, outsideAlliance: d.outsideAlliance, checkedAt: d.checkedAt });
         }
       })
       .catch(() => {})
@@ -691,6 +691,7 @@ export default function AdminOverviewPage() {
   }
 
   const members = data?.members || [];
+  const stats = data?.stats || {};
   const season = data?.season || "";
 
   const filtered = members.filter(m => {
@@ -741,6 +742,29 @@ export default function AdminOverviewPage() {
           {/* CWL Countdown — most urgent, top of dashboard */}
           <CwlCountdown season={season}/>
 
+          {/* Season Capture Progress — only shown while there's an actual
+              gap to flag. Disappears entirely once the season is fully
+              captured, rather than sitting empty for the ~3 weeks a month
+              CWL isn't running. Reappears automatically if a gap is ever
+              found outside the usual capture window too, since visibility
+              is tied to whether there's a real problem, not the calendar. */}
+          {captureClans.length > 0 && capturePct < 100 && (
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+              <div className="flex items-baseline justify-between gap-3 mb-2">
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Season Capture Progress</p>
+                <p className={`text-xs font-semibold ${capturePct === 100 ? "text-green-300" : capturePct >= 75 ? "text-amber-300" : "text-red-400"}`}>
+                  {captureTotalCaptured}/{captureTotalPossible} rounds
+                </p>
+              </div>
+              <div className="h-1 rounded-lg bg-white/[0.06] overflow-hidden">
+                <div className="h-full rounded-lg bg-purple-500/60 transition-all" style={{width: `${capturePct}%`}}/>
+              </div>
+              {captureGaps.length > 0 && (
+                <p className="text-[9px] text-slate-600 mt-2">Missing: {captureGaps.join(", ")}</p>
+              )}
+            </div>
+          )}
+
           {/* Bar 1 — roster state (primary) */}
           {members.length > 0 && (
             <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
@@ -764,30 +788,12 @@ export default function AdminOverviewPage() {
             </div>
           )}
 
-          {/* Season Capture Progress — pure DB read, always live, no refresh needed */}
-          {captureClans.length > 0 && (
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
-              <div className="flex items-baseline justify-between gap-3 mb-2">
-                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Season Capture Progress</p>
-                <p className={`text-xs font-semibold ${capturePct === 100 ? "text-green-300" : capturePct >= 75 ? "text-amber-300" : "text-red-400"}`}>
-                  {captureTotalCaptured}/{captureTotalPossible} rounds
-                </p>
-              </div>
-              <div className="h-1 rounded-lg bg-white/[0.06] overflow-hidden">
-                <div className="h-full rounded-lg bg-purple-500/60 transition-all" style={{width: `${capturePct}%`}}/>
-              </div>
-              {captureGaps.length > 0 && (
-                <p className="text-[9px] text-slate-600 mt-2">Missing: {captureGaps.join(", ")}</p>
-              )}
-            </div>
-          )}
-
           {/* Roster Compliance + Member Connectivity — shared live-check snapshot */}
           <div className="flex items-center justify-between gap-3 px-1">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest">
               Live Checks · Last checked {timeAgo(liveChecks?.checkedAt)}
             </p>
-            <button onClick={refreshLiveChecks} disabled={liveChecksRefreshing} title="Refresh Roster Compliance & Member Connectivity"
+            <button onClick={refreshLiveChecks} disabled={liveChecksRefreshing} title="Refresh Roster Compliance, Member Connectivity & Connected Accounts"
               className="w-6 h-6 rounded-lg flex items-center justify-center border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white hover:border-white/20 hover:bg-white/[0.08] transition disabled:opacity-40">
               <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${liveChecksRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -832,6 +838,33 @@ export default function AdminOverviewPage() {
                 </div>
               );
             })()}
+          </div>
+
+          {/* Connected Accounts — Total/Discord/Token are pure DB reads,
+              always current on every page load. Outside Alliance is the
+              one number here that depends on the same live-check data as
+              Compliance/Connectivity above, so it only updates when that
+              refresh runs. */}
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-2">Connected Accounts</p>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="text-center">
+                <p className="text-lg font-thin text-white" style={{fontFamily:"var(--font-orbitron)"}}>{members.length}</p>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Total</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-thin text-blue-300" style={{fontFamily:"var(--font-orbitron)"}}>{stats.discordLinked ?? "—"}</p>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Discord</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-thin text-green-300" style={{fontFamily:"var(--font-orbitron)"}}>{stats.apiVerified ?? "—"}</p>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">API</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-thin text-amber-300" style={{fontFamily:"var(--font-orbitron)"}}>{liveChecks?.outsideAlliance?.count ?? "—"}</p>
+                <p className="text-[9px] text-slate-600 uppercase tracking-widest">Outside</p>
+              </div>
+            </div>
           </div>
 
           {/* Scheduled Events Calendar */}

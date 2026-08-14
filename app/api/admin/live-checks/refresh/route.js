@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getOpenPoolSeason } from "@/lib/season";
-import { upsertComplianceCache, upsertConnectivityCache } from "@/lib/pool";
+import { upsertComplianceCache, upsertConnectivityCache, upsertOutsideAllianceCache } from "@/lib/pool";
 
 async function fetchClanMembers(clanTag) {
   const encoded = encodeURIComponent(clanTag);
@@ -74,13 +74,24 @@ export async function POST(request) {
     if (connectedTags.has(tag)) connectedCount++;
   }
 
+  // ── Outside alliance: of every account we have on file, how many aren't
+  // currently in any of our clans right now (left, or never joined one) ──
+  // Reuses the same connectedTags/liveClanByTag sets built above — no extra
+  // CoC API calls needed.
+  let outsideAllianceCount = 0;
+  for (const tag of connectedTags) {
+    if (!liveClanByTag.has(tag)) outsideAllianceCount++;
+  }
+
   await upsertComplianceCache({ correctCount, totalRostered });
   await upsertConnectivityCache({ connectedCount, totalMembers });
+  await upsertOutsideAllianceCache({ outsideAllianceCount });
 
   return NextResponse.json({
     ok: true,
     compliance: { correctCount, totalRostered },
     connectivity: { connectedCount, totalMembers },
+    outsideAlliance: { count: outsideAllianceCount },
     errors,
     checkedAt: new Date().toISOString(),
   });
