@@ -49,6 +49,26 @@ export async function POST(request) {
     sheetsClearFailed = ["(all clans — clearRosterAssignments threw)"];
   }
 
+  // Step 1c: reset every clan's publish flag for the new season.
+  // roster_published lives on the season-agnostic `clans` table, not
+  // scoped to any particular season — nothing was resetting it on
+  // migration, so a clan published at any point in the past stayed
+  // "published" forever. /api/admin/assign checks this flag on every
+  // single player assignment (not just when Publish is clicked) and
+  // writes straight to the live public Sheet if it's true — so a stale
+  // true flag meant the very first assignment made while building a new
+  // season's roster went live immediately, before anyone had actually
+  // decided the roster was ready.
+  let clansResetToUnpublished = 0;
+  try {
+    const sql = getDb();
+    const rows = await sql`UPDATE clans SET roster_published = false WHERE roster_published = true RETURNING clan_name`;
+    clansResetToUnpublished = rows.length;
+  } catch (err) {
+    console.error("Failed to reset roster_published for new season:", err);
+    // Non-fatal — continue with migration
+  }
+
   // Step 2 & 3: advance to next season
   let nextSeason;
   try {
@@ -94,6 +114,7 @@ export async function POST(request) {
     snapshotCount,
     sheetsCleared,
     sheetsClearFailed,
+    clansResetToUnpublished,
     permanentOutCarried,
   });
 }

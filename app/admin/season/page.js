@@ -248,7 +248,7 @@ export default function AdminSeasonPage() {
         const failedNote = hasFailures ? ` ⚠ Sheet clear failed for: ${data.sheetsClearFailed.join(", ")} — clear these tabs manually` : "";
         setMigrateResult({
           ok: hasFailures ? "warning" : true,
-          message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived · ${data.permanentOutCarried ?? 0} indefinite opt-outs carried forward${failedNote}`,
+          message: `${data.closed} migrated → ${data.opened} open · ${data.snapshotCount ?? 0} players archived · ${data.clansResetToUnpublished ?? 0} clans reset to unpublished · ${data.permanentOutCarried ?? 0} indefinite opt-outs carried forward${failedNote}`,
         });
         setMigrateConfirm("");
         setShowMigrateForm(false);
