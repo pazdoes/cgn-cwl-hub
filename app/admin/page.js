@@ -748,7 +748,7 @@ export default function AdminOverviewPage() {
               CWL isn't running. Reappears automatically if a gap is ever
               found outside the usual capture window too, since visibility
               is tied to whether there's a real problem, not the calendar. */}
-          {captureClans.length > 0 && capturePct < 100 && (
+          {captureTotalCaptured > 0 && capturePct < 100 && (
             <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-5 py-3">
               <div className="flex items-baseline justify-between gap-3 mb-2">
                 <p className="text-[9px] text-slate-600 uppercase tracking-widest">Season Capture Progress</p>
