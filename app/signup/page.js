@@ -44,6 +44,31 @@ export default function SignupPage() {
     }
   }, [discordStatus, discordUser?.discordId]);
 
+  // If Discord sign-in fails for any reason, Auth.js redirects back here
+  // with ?error=<code> — previously nothing read this, so a failure and a
+  // successful-but-silent return looked identical to the person, and
+  // there was no way to even ask them what went wrong. Reads directly
+  // from window.location.search (not useSearchParams) to avoid Next's
+  // Suspense-boundary requirement for that hook. Cleans the URL after
+  // reading so refreshing the page doesn't keep re-showing a stale error.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("error");
+    if (!code) return;
+    const messages = {
+      AccessDenied: "Discord sign-in was cancelled before it finished.",
+      OAuthSignin: "Couldn't start the Discord sign-in — please try again.",
+      OAuthCallback: "Discord didn't respond as expected — please try again.",
+      OAuthCreateAccount: "Couldn't complete the Discord connection — please try again.",
+      Callback: "Something went wrong finishing the Discord sign-in — please try again.",
+      Configuration: "Discord sign-in isn't configured correctly right now — please let an officer know.",
+    };
+    setDiscordError(messages[code] || "Discord sign-in didn't complete — please try again.");
+    params.delete("error");
+    const cleanUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+    window.history.replaceState({}, "", cleanUrl);
+  }, []);
+
   /* --- state --- */
   const [season, setSeason]         = useState(null);
   const [myAccounts, setMyAccounts] = useState([]);   // quick-pick list from cookie
@@ -53,6 +78,7 @@ export default function SignupPage() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [discordError, setDiscordError] = useState(null); // friendly message | null — see effect below
   const [loadingMine, setLoadingMine] = useState(true);
 
   // manual drag-and-drop reordering (item 13)
@@ -688,6 +714,19 @@ export default function SignupPage() {
       {/* ── Hero card — flush to top ── */}
       <div className="relative z-10 mb-4 text-center">
         <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Sign Up for CWL</h1>
+
+        {/* Discord sign-in failure — shown regardless of new/returning
+            state, since either could have triggered the attempt that
+            failed. Dismissable; also self-clears if they try again. */}
+        {discordError && (
+          <div className="max-w-sm mx-auto mb-3 rounded-lg border border-red-500/30 bg-red-500/[0.06] px-3 py-2 flex items-start gap-2 text-left">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+            </svg>
+            <p className="text-[11px] text-red-300 leading-relaxed flex-1">{discordError}</p>
+            <button type="button" onClick={() => setDiscordError(null)} className="text-red-500 hover:text-red-300 transition text-xs shrink-0">✕</button>
+          </div>
+        )}
 
         {/* How to use — expandable info panel. Its content (tap/select-all/
             bulk/account-manager) describes the returning-user dashboard —
