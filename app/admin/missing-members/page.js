@@ -110,6 +110,16 @@ export default function MissingMembersPage() {
     if (saved) { setPinState(saved); setAuthed(true); }
   }, []);
 
+  // Fetch automatically once authed (covers both a fresh PIN submit and
+  // returning with an already-saved PIN session) rather than requiring
+  // a manual Refresh press every time the page loads — matching the same
+  // pattern already used on the Roster Compliance page.
+  useEffect(() => {
+    if (authed && pin && !missingLoaded && !missingLoading) {
+      handleCheckMissing();
+    }
+  }, [authed, pin]);
+
   async function handleCheckMissing() {
     setMissingLoading(true); setShowMissing(true);
     try {
@@ -125,7 +135,8 @@ export default function MissingMembersPage() {
     const p = pinInput.trim();
     setPinState(p); setAuthed(true); setPinError(false);
     sessionStorage.setItem(SESSION_KEY, p);
-    handleCheckMissing();
+    // Fetch is handled by the authed/pin useEffect above — avoids a
+    // double-fetch race between this direct call and that effect.
   }
 
   if (!authed) {
