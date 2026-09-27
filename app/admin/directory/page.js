@@ -115,6 +115,8 @@ export default function AdminDirectoryPage() {
   const [actionResult, setActionResult] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshResult, setRefreshResult] = useState(null);
+  const [nameRefreshing, setNameRefreshing] = useState(false);
+  const [nameRefreshResult, setNameRefreshResult] = useState(null);
 
   const { status: discordStatus } = useSession();
   const SESSION_KEY = "cwl_admin_pin_confirmed";
@@ -180,50 +182,6 @@ export default function AdminDirectoryPage() {
     } catch {} finally { setActionLoading(false); }
   }
 
-  async function handleSetActive(playerTag, active) {
-    setActionLoading(true); setActionResult(null);
-    try {
-      const res = await fetch("/api/admin/members", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-        body: JSON.stringify({ playerTag, action: "setActive", active }),
-      });
-      if (res.ok) {
-        setMembers(prev => prev.map(m => m.player_tag === playerTag ? { ...m, active } : m));
-        setActionResult({ ok: true, message: active ? "Account activated" : "Account deactivated" });
-      }
-    } catch {} finally { setActionLoading(false); }
-  }
-
-  async function handleDelete(playerTag) {
-    if (confirmInput !== "CONFIRM") return;
-    setActionLoading(true); setActionResult(null);
-    try {
-      const res = await fetch("/api/admin/members", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", "x-officer-pin": pin },
-        body: JSON.stringify({ playerTag }),
-      });
-      if (res.ok) {
-        setMembers(prev => prev.filter(m => m.player_tag !== playerTag));
-        setConfirmDelete(null); setConfirmInput(""); setManagingTag(null);
-        setActionResult({ ok: true, message: "Account deleted" });
-      }
-    } catch {} finally { setActionLoading(false); }
-  }
-
-  async function handleCheckMissing() {
-    setMissingLoading(true); setShowMissing(true);
-    try {
-      const res = await fetch("/api/admin/members/missing", {
-        headers: { "x-officer-pin": pin },
-      });
-      const d = await res.json();
-      setMissing(d.missing || []);
-      setMissingLoaded(true);
-    } catch {} finally { setMissingLoading(false); }
-  }
-
   async function handleRefreshClanMembership() {
     setRefreshing(true); setRefreshResult(null);
     try {
@@ -243,9 +201,27 @@ export default function AdminDirectoryPage() {
     } finally { setRefreshing(false); }
   }
 
+  async function doRefreshNames() {
+    setNameRefreshing(true); setNameRefreshResult(null);
+    try {
+      const res = await fetch("/api/admin/pool/refresh-names", {
+        method: "POST",
+        headers: { "x-officer-pin": pin },
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setNameRefreshResult({ ok: true, message: `Updated ${d.count ?? 0} names` });
+        await loadMembers(pin);
+      } else {
+        setNameRefreshResult({ ok: false, message: d.error || "Failed" });
+      }
+    } catch (e) {
+      setNameRefreshResult({ ok: false, message: "Network error" });
+    } finally { setNameRefreshing(false); }
+  }
+
   const pillSelect = "rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white focus:outline-none [color-scheme:dark]";
 
-  // Build unique Discord user list
   const discordUsers = [...new Map(
     members.filter(m => m.discord_id && m.discord_username).map(m => [m.discord_id, m.discord_username])
   ).entries()].sort((a, b) => (a[1] || "").localeCompare(b[1] || ""));
@@ -295,51 +271,32 @@ export default function AdminDirectoryPage() {
 
       <AdminHeader/>
 
-      {/* Hero */}
       <div className="relative z-10 mb-6 text-center">
         <h1 className="text-4xl font-thin tracking-widest mb-1" style={{fontFamily:"var(--font-orbitron)"}}>Members</h1>
         <p className="text-slate-500 text-xs">{members.length} registered · {inAllianceCount} in alliance · {members.filter(m => m.in_pool).length} in pool</p>
       </div>
 
-      {/* Tab nav */}
-      <div className="relative z-10 flex items-center justify-center gap-1 mb-4">
-      </div>
-
-      {/* Delete confirm modal */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-          <div className="rounded-xl border border-red-500/30 bg-[#0d1424] p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-sm font-semibold text-red-400">Delete Account</h2>
-            <p className="text-xs text-slate-400">This will permanently remove <span className="text-white font-semibold">{confirmDelete.name}</span> ({confirmDelete.tag}) from the accounts table.</p>
-            <p className="text-xs text-slate-500">Type <span className="font-mono text-white">CONFIRM</span> to proceed.</p>
-            <input type="text" value={confirmInput} onChange={e => setConfirmInput(e.target.value)}
-              placeholder="CONFIRM" className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/40 transition"/>
-            <div className="flex gap-2">
-              <button onClick={() => { setConfirmDelete(null); setConfirmInput(""); }}
-                className="flex-1 py-2 rounded-lg text-xs border border-white/10 text-slate-400 hover:text-white transition">Cancel</button>
-              <button onClick={() => handleDelete(confirmDelete.tag)} disabled={confirmInput !== "CONFIRM" || actionLoading}
-                className="flex-1 py-2 rounded-lg text-xs border border-red-500/60 text-red-400 hover:border-red-400 hover:text-red-300 transition disabled:opacity-40">
-                {actionLoading ? "Deleting…" : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="relative z-10 space-y-3">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-          {/* Header row */}
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Member Directory</h2>
             <div className="flex items-center gap-2">
               {refreshResult && <span className={`text-[10px] ${refreshResult.ok ? "text-green-400" : "text-red-400"}`}>{refreshResult.message}</span>}
+              {nameRefreshResult && <span className={`text-[10px] ${nameRefreshResult.ok ? "text-green-400" : "text-red-400"}`}>{nameRefreshResult.message}</span>}
+              
+              <button onClick={doRefreshNames} disabled={nameRefreshing}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 hover:bg-purple-500/20 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3 h-3 ${nameRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                {nameRefreshing ? "Syncing Names…" : "Sync Names"}
+              </button>
+
               <button onClick={handleRefreshClanMembership} disabled={refreshing}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:border-amber-400/60 hover:bg-amber-500/20 transition text-[10px] uppercase tracking-widest font-semibold disabled:opacity-40">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 {refreshing ? "Refreshing…" : "Refresh Clans"}
               </button>
               <button onClick={() => loadMembers(pin)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400/60 transition text-[10px] uppercase tracking-widest font-semibold">
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-white/10 bg-white/[0.03] text-slate-500 hover:text-slate-300 hover:border-white/20 transition text-[10px] uppercase tracking-widest font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Refresh
               </button>
@@ -348,8 +305,6 @@ export default function AdminDirectoryPage() {
 
           {actionResult && <p className={`text-xs text-center mb-3 ${actionResult.ok ? "text-green-400" : "text-red-400"}`}>{actionResult.message}</p>}
 
-          {/* Filters */}
-          {/* Search + dropdowns */}
           <div className="flex flex-wrap gap-2 mb-2">
             <div className="relative flex-1 min-w-[140px]">
               <input type="text" placeholder="Search name, tag or clan…" value={search} onChange={e => setSearch(e.target.value)}
@@ -368,7 +323,6 @@ export default function AdminDirectoryPage() {
               ))}
             </select>
           </div>
-          {/* Toggle pill filters */}
           <div className="flex flex-wrap gap-1.5 mb-4">
             {[
               { key: "filterStatus",  val: filterStatus,  set: setFilterStatus,  opts: [["all","Status"],["active","Active"],["inactive","Inactive"]], colours: { active: "green", inactive: "red" } },
@@ -400,7 +354,6 @@ export default function AdminDirectoryPage() {
             <div className="space-y-2">
               {filtered.map(m => (
                 <div key={m.player_tag} className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-                  {/* Main row */}
                   <div className="flex items-center gap-3 px-3 py-2.5">
                     <ThIcon level={m.town_hall_level}/>
                     <div className="flex-1 min-w-0">
@@ -429,14 +382,12 @@ export default function AdminDirectoryPage() {
                         className={`w-5 h-5 rounded-lg flex items-center justify-center border ${m.api_token_verified ? "border-green-500/40 text-green-400" : "border-white/10 text-slate-700"}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                       </span>
-                      {/* Manage toggle */}
                       <button onClick={() => setManagingTag(managingTag === m.player_tag ? null : m.player_tag)}
                         className={`w-5 h-5 rounded-lg flex items-center justify-center border transition ${managingTag === m.player_tag ? "border-purple-500/60 text-purple-400 bg-purple-500/10" : "border-white/10 text-slate-600 hover:text-slate-300 hover:border-white/20"}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                       </button>
                     </div>
                   </div>
-                  {/* Manage panel */}
                   {managingTag === m.player_tag && (
                     <div className="px-3 pb-3 pt-1 border-t border-white/[0.06] flex items-center gap-2 flex-wrap">
                       <button onClick={() => handleSetActive(m.player_tag, m.active === false)} disabled={actionLoading}
@@ -457,8 +408,6 @@ export default function AdminDirectoryPage() {
           )}
         </div>
       </div>
-
-
 
       <AdminFooter/>
     </main>
