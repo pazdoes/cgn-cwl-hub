@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOpenPoolSeason } from "@/lib/season";
-import { markAssigned } from "@/lib/pool";
+import { markAssigned, joinPool } from "@/lib/pool";
 import { assignPlayerToRoster } from "@/lib/sheetsWrite";
 import { getDb } from "@/lib/db";
 
@@ -19,6 +19,10 @@ export async function POST(request) {
 
   const season = await getOpenPoolSeason();
   const sql = getDb();
+
+  // CRITICAL FIX: Ensure a row exists in pool_entries.
+  // This allows us to force-assign connected members who haven't signed up.
+  await joinPool(tag, season);
 
   // Check if roster is published
   const [clanRow] = await sql`SELECT roster_published FROM clans WHERE clan_name = ${clan} LIMIT 1`;
@@ -45,7 +49,7 @@ export async function POST(request) {
 
     try {
       await markAssigned(tag, season, clan);
-      // Set status to confirmed in Neon after sheet write
+      // Set status to substitute in Neon after sheet write
       await sql`UPDATE pool_entries SET status = 'substitute' WHERE player_tag = ${tag} AND season = ${season}`;
     } catch (err) {
       console.error("DB mark-assigned failed (non-fatal):", err);
@@ -60,7 +64,7 @@ export async function POST(request) {
     });
 
   } else {
-    // Unpublished — skip sheet write, assign in Neon only with confirmed status
+    // Unpublished — skip sheet write, assign in Neon only
     try {
       await markAssigned(tag, season, clan);
       await sql`UPDATE pool_entries SET status = 'substitute' WHERE player_tag = ${tag} AND season = ${season}`;
