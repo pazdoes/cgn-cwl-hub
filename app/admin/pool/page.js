@@ -378,6 +378,7 @@ export default function AdminPoolPage() {
   const [mainPoolTab, setMainPoolTab] = useState("roster");
   const [activeClanIdx, setActiveClanIdx] = useState(0);
   const [poolSearch, setPoolSearch] = useState("");
+  const [connectedSearch, setConnectedSearch] = useState("");
 
   async function loadPool(savedPin) {
     setLoading(true); setError(null);
@@ -786,6 +787,9 @@ export default function AdminPoolPage() {
   const filteredUnassigned = unassigned.filter(e =>
     !poolSearch || e.player_name.toLowerCase().includes(poolSearch.toLowerCase()) || e.player_tag.toLowerCase().includes(poolSearch.toLowerCase())
   );
+  const filteredConnected = unsignedMembers.filter(e => 
+    !connectedSearch || e.player_name.toLowerCase().includes(connectedSearch.toLowerCase()) || e.player_tag.toLowerCase().includes(connectedSearch.toLowerCase())
+  );
 
   if (!authed) {
     return (
@@ -902,9 +906,14 @@ export default function AdminPoolPage() {
 
                 {poolTab === "connected" && (
                   <div className="space-y-2">
-                    {unsignedMembers.length === 0 ? (
-                      <p className="text-slate-600 text-xs text-center py-6">No unsigned connected members</p>
-                    ) : unsignedMembers.map(member => (
+                    <div className="relative flex-1 mb-3">
+                      <input type="text" placeholder="Search connected members…" value={connectedSearch} onChange={e => setConnectedSearch(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition"/>
+                      {connectedSearch && <button onClick={() => setConnectedSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition text-xs">✕</button>}
+                    </div>
+                    {filteredConnected.length === 0 ? (
+                      <p className="text-slate-600 text-xs text-center py-6">{connectedSearch ? "No matches" : "No unsigned connected members"}</p>
+                    ) : filteredConnected.map(member => (
                       <div key={member.player_tag} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.02]">
                         <div className="w-7 h-7 shrink-0 flex items-center justify-center">
                           <img src={`/icons/th/th${member.town_hall_level}.png`} alt={`TH${member.town_hall_level}`} className="w-6 h-6 object-contain"/>
